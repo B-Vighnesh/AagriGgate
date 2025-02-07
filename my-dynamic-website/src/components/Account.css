@@ -1,0 +1,240 @@
+/* Account.css */
+.accept-content h3{
+  color:  #2a9d8f;
+}
+.account-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e3fdfd, #ffe6fa);
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  padding: 40px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.account-content {
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+  padding: 40px 50px;
+  width: 70%;
+  max-width: 800px;
+  text-align: center;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.account-heading {
+  font-size: 2.4rem;
+  color:  #2a9d8f;;
+  margin-bottom: 30px;
+}
+
+.image-container {
+  margin-bottom: 20px;
+}
+
+.profile-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 5px solid #2a9d8f;
+  object-fit: cover;
+}
+
+.account-info {
+  text-align: center;
+  margin-top: 25px;
+}
+
+.account-info p {
+  font-size: 1.2rem;
+  margin: 15px 0;
+  line-height: 1.8;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.button-group button {
+  font-size: 1.2rem;
+  padding: 15px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.button-group button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.edit-button {
+  background-color: #2a9d8f;
+  color: white;
+}
+
+.delete-button {
+  background-color:#c20101;
+  color: white;
+}
+.enquiry-button{
+  background-color: #1323ad;
+}
+.enquiry-button:hover{
+  background-color: #0c1675;
+}
+.edit-button:hover {
+  background-color: #1e756b;
+}
+
+.delete-button:hover {
+  background-color:#9c0d0d;
+}
+
+.logout-button {
+  background-color: #f44336;
+  color: white;
+  margin-top: 30px;
+  width: 100%;
+  padding: 15px;
+  font-size: 1.2rem;
+}
+.logout-button:hover{
+  background-color:#8a2720;
+}
+.action-button {
+  background-color: #ff9800;
+  color: white;
+  margin: 0 15px;
+  width: 150px;
+  font-size: 1.1rem;
+}
+
+.action-button:hover {
+  background-color: #fb8c00;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 1rem;
+  margin-top: 15px;
+}
+
+.account-guest {
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+  padding: 40px 50px;
+  text-align: center;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+.ya-button {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin:20px;
+  font-size: 18px;
+}
+
+.ya-button:hover {
+  background-color: #218838;
+}
+.no-button {
+  background-color: #d32f2f;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin:20px;
+  font-size: 18px;
+}
+
+.no-button:hover {
+  background-color: #851c1c;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .account-content,
+  .account-guest {
+    width: 90%;
+    padding: 30px 40px;
+  }
+
+  .profile-image {
+    width: 120px;
+    height: 120px;
+  }
+
+  .account-heading {
+    font-size: 2rem;
+  }
+
+  .account-info p {
+    font-size: 1.1rem;
+  }
+
+  button {
+    font-size: 1.1rem;
+    padding: 12px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .account-content,
+  .account-guest {
+    width: 100%;
+    padding: 20px 25px;
+  }
+
+  .profile-image {
+    width: 100px;
+    height: 100px;
+  }
+
+  .account-heading {
+    font-size: 1.8rem;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .button-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  button {
+    font-size: 1rem;
+    padding: 10px 15px;
+  }
+}

@@ -1,0 +1,220 @@
+/* General Styling */
+.back-button {
+  width: 70px; /* Make the button width flexible */
+  /* Set a maximum width for larger screens */
+  display: block; /* Ensure it remains a block element */
+   /* Center horizontally with margin */
+  background-color: #2a9d8f;
+  color: white;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+  margin-top: 0;
+  margin-left:10%;
+}
+
+.back-button:hover {
+  background-color: #1c796e;
+}
+.settings-page {
+  display: flex;
+  justify-content: space-between;
+  padding: 40px;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+.settings-section {
+  flex: 1;
+  margin: 0 10px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.delete-section {
+  border-color: #f5c6cb;
+}
+
+h2 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+label {
+  display: block;
+  margin: 10px 0 5px;
+  font-weight: bold;
+  color: #555;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.settings-button,
+.delete-account-button {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.settings-button {
+  background-color: #2a9d8f;
+}
+
+.n-button {
+  background-color: #dc3545;
+}
+
+.y-button {
+  background-color: #2a9d8f;
+}
+
+.n-button:hover {
+  background-color: #a52935;
+}
+
+.delete-account-button {
+  background-color: #dc3545;
+}
+
+.settings-button:hover {
+  background-color: #217a70;
+}
+
+.delete-account-button:hover {
+  background-color: #c82333;
+}
+
+/* Popup styling */
+.pop {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.pop p {
+  margin-bottom: 10px;
+}
+
+.pop button {
+  padding: 8px 16px;
+  font-size: 18px;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pop button:hover {
+  opacity: 0.9;
+}
+
+/* Password toggle */
+.password-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.password-toggle label {
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+.password-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #888;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: all 0.2s ease-in-out;
+}
+
+.password-toggle input[type="checkbox"]:checked {
+  background-color: #4caf50;
+  border-color: #4caf50;
+}
+
+.password-toggle input[type="checkbox"]:checked::after {
+  content: '✓';
+  font-size: 12px;
+  color: #fff;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.password-toggle input[type="checkbox"]:hover {
+  border-color: #4caf50;
+}
+
+/* Responsive Styling */
+@media (max-width: 1024px) {
+  .settings-page {
+    flex-direction: column;
+    padding: 20px;
+    max-width: 95%;
+  }
+  .settings-section {
+    margin: 10px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  h2 {
+    font-size: 18px;
+  }
+  input,
+  .settings-button,
+  .delete-account-button {
+    font-size: 14px;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-page {
+    padding: 15px;
+  }
+  h2 {
+    font-size: 16px;
+  }
+  input,
+  .settings-button,
+  .delete-account-button {
+    font-size: 12px;
+  }
+  .pop {
+    width: 90%;
+    padding: 15px;
+  }
+  .password-toggle label {
+    font-size: 12px;
+  }
+}
