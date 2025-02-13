@@ -21,6 +21,7 @@ The **AagriGgate** application is designed to help farmers manage their resource
 - **Database:** MySQL
 - **APIs:** OpenWeather API, Data.gov.in API, OpenCageData API, GovIn API
 - **Tools & Platforms:** Git, Postman
+- **Security:** JWT-based authentication
 
 ## 🛠️ Setup & Installation
 1. Clone the repository:
