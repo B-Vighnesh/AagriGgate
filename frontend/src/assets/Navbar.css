@@ -1,0 +1,207 @@
+/* Navbar */
+.navbar {
+  padding: 0 20px;
+  height: 90px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #2a9d8f; /* Main background color */
+  color: white;
+  transition: background-color 0.3s ease; /* Smooth transition for background color */
+  position: relative; /* Position for dropdown positioning */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+.navbar a{
+  color: white;
+}.nav-name {
+  display: flex; /* Align icon and text horizontally */
+  align-items: center; /* Vertically center align */
+  text-decoration: none; /* Remove default link underline */
+  color: #333; /* Default text color */
+  font-size: 35px; /* Adjust text size */
+  font-weight: bold; /* Make text bold */
+  transition: color 0.3s ease; /* Smooth color change on hover */
+}
+
+.nav-name:hover {
+  color: white;
+  text-decoration: none; /* Change color on hover (example: blue) */
+}
+
+.nav-icon {
+  width: 30px; /* Adjust icon width */
+  height: 24px; /* Adjust icon height */
+  margin-right: 8px; /* Space between icon and text */
+  border-radius: 50%; /* Example: make icon circular */
+  object-fit: cover; /* Ensure image fits inside its dimensions */
+}
+
+
+.navbar-logo {
+  color: #ffffff;
+  font-size: 28px;
+  font-style: inherit;
+}
+
+.navbar-links {
+  list-style: none;
+  display: flex;
+  gap: 15px;
+}
+.navbar-links a {
+  font-size: 20px;
+  font-family: 'Times New Roman', Times, serif;
+  color: #ffffff;
+  text-decoration: none;
+  position: relative; /* To position the underline effect */
+  transition: color 0.3s ease; /* Smooth color transition */
+}
+
+.navbar-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -5px; /* Position the underline slightly below the text */
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #61dafb; /* Underline color */
+  transition: width 0.3s ease; /* Smooth underline animation */
+}
+
+.navbar-links a:hover {
+  color: #61dafb; /* Change text color on hover */
+  text-decoration: none;
+}
+
+.navbar-links a:hover::after {
+  width: 100%; /* Expand underline on hover */
+}
+
+.navbar-links a:active {
+  color: #104757; /* Text color on active state */
+}
+
+.navbar-links a.active {
+  color: #f0a500; /* Active link color */
+  font-weight: bold; /* Make the active link stand out */
+}
+
+.navbar-links a.active::after {
+  width: 100%; /* Keep underline for active link */
+  background-color: #f0a500; /* Match underline color with active text */
+}
+
+/* Dropdown Styles */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #1c6b5e; /* Dropdown background */
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 10px 0;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.dropdown-menu li {
+  width: 100%;
+}
+
+.dropdown-menu a {
+  padding: 10px 20px;
+  display: block;
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+.dropdown-menu a:hover {
+  background-color: #61dafb;
+  color: #1c6b5e;
+}
+
+.dropdown:hover .dropdown-menu,
+.dropdown-menu.open {
+  display: block;
+}
+
+/* Hamburger menu */
+.hamburger-menu {
+  display: none; /* Hide by default */
+  cursor: pointer;
+  font-size: 28px;
+}
+
+/* Mobile menu styling */
+.mobile-menu {
+  display: none; /* Hide by default */
+  flex-direction: column;
+  background-color: #2a9d8f;
+  padding: 10px;
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+  .navbar-links {
+    display: none; /* Hide navbar links on smaller screens */
+  }
+
+  .hamburger-menu {
+    display: block;
+    position: absolute; /* Position it relative to the navbar */
+    top: 50%;
+    right: 20px; /* Adjust the distance from the right edge */
+    transform: translateY(-50%); /* Center it vertically */
+    margin: 0; /* Remove additional margins */
+    cursor: pointer;
+    font-size: 28px;
+    color: white;
+  }
+  
+  .navbar-links.active {
+    display: flex; /* Show the links when active */
+    flex-direction: column; /* Stack vertically */
+    background-color: #2a9d8f; /* Background for dropdown */
+    position: absolute; /* Positioning dropdown */
+    top: 90px; /* Below the navbar */
+    left: 0; /* Align to left */
+    width: 100%; /* Full width */
+    z-index: 10; /* Above other content */
+    padding: 10px 0; /* Add padding for better spacing */
+  }
+
+  .mobile-menu.active {
+    display: flex; /* Show mobile menu when active */
+  }
+
+  /* Adjust logo and font sizes on smaller screens */
+  .navbar-logo {
+    font-size: 24px; /* Slightly smaller logo */
+  }
+
+  .navbar-links a {
+    font-size: 18px; /* Slightly smaller font size for links */
+  }
+}
+
+/* Additional styles for better visual aesthetics */
+.navbar a {
+  transition: transform 0.2s; /* Smooth scale transition */
+}
+
+.navbar a:hover {
+  transform: scale(1.05); /* Slightly enlarge on hover for emphasis */
+}
+
+/* Shadow effect on scroll */
+.navbar.scrolled {
+  background-color: #1c6b5e; /* Darker shade on scroll */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Deeper shadow on scroll */
+}

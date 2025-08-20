@@ -1,0 +1,154 @@
+/* General Page Styling */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  padding: 15px;
+  background: linear-gradient(135deg, #e3fdfd, #ffe6fa);
+  border-radius: 8px;
+
+  width: 95%;
+}
+.filter-container select{
+  width: 100px;
+}
+h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+/* Table Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 12px;
+  text-align: left;
+}
+
+table thead tr {
+  background-color: #009879;
+  color: #ffffff;
+}
+
+table th {
+  padding: 12px 15px;
+  border: 1px solid #dddddd;
+  text-align: center;
+  font-size: 1em;
+}
+
+table td {
+  padding: 12px 15px;
+  border: 1px solid #dddddd;
+  color: black;
+  font-size: 1.5em;
+}
+
+table tbody tr:nth-child(even) {
+  background-color: #f3f3f3;
+}
+
+table tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+table tbody tr:hover {
+  background-color: #f1f1f1;
+  cursor: pointer;
+}
+
+.reject-button{
+  background-color: rgb(211, 5, 5);
+}
+
+.reject-button:hover{
+  background-color: rgb(189, 7, 7);
+}
+/* Button Styling */
+button {
+  display: inline-block;
+  background-color: #009879;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 5px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #007d68;
+}
+
+/* Error and Loading Messages */
+.error-message {
+  color: #ff4d4d;
+  text-align: center;
+  font-size: 18px;
+  margin: 20px 0;
+}
+
+.loading-message {
+  text-align: center;
+  font-size: 18px;
+  color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+
+  h2 {
+    font-size: 14px;
+  }
+
+  table {
+    font-size: 10px;
+  }
+
+  table th,
+  table td {
+    font-size: 0.9em;
+    padding: 10px;
+  }
+
+  button {
+    font-size: 14px;
+    padding: 3px ;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: 95%;
+    padding: 5px;
+  }
+
+  h2 {
+    font-size: 12px;
+  }
+
+  table {
+    font-size: 6px;
+  }
+
+  table th,
+  table td {
+    font-size: 8px;
+    padding: 8px;
+  }
+
+  button {
+    font-size: 7px;
+  }
+}

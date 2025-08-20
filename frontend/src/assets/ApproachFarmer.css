@@ -1,0 +1,79 @@
+/* Modal overlay */
+.approach-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal content styling */
+.approach-modal-content {
+ 
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+/* Success message styling */
+.success-message {   margin-left: 20px;
+  margin-top: 15px;
+  color: #28a745; /* Green color */
+  font-size: 1em;
+  font-weight: bold;
+}
+
+/* Error message styling */
+.error-message {
+      
+  margin-top: 15px;
+  color: #dc3545; /* Red color */
+  font-size: 1em;
+  font-weight: bold;
+}
+
+/* Button styles */
+.yes-button, .cancel-button {
+  padding: 10px 20px;
+  font-size: 1em;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.yes-button {
+  background-color: #28a745; /* Green for 'Yes' */
+  color: white;
+}
+
+.cancel-button {
+  background-color: #dc3545; /* Red for 'Cancel' */
+  color: white;
+}
+
+.yes-button:hover {
+  background-color: #218838; /* Darker green for hover */
+}
+
+.cancel-button:hover {
+  background-color: #c82333; /* Darker red for hover */
+}
+
+/* Button group */
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+ 
+}

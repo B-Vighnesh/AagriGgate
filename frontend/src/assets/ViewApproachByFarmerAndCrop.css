@@ -1,0 +1,169 @@
+/* General Page Styling */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  padding: 15px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin: 20px auto;
+  width: 1200px; /* Maximum width for larger screens */
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 16px; /* Slightly larger for better readability */
+}
+
+/* Table Styling */
+table {
+  width: 100%; /* Use full width for responsiveness */
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 12px; /* Adjust font size for better readability */
+  text-align: left;
+}
+
+table thead tr {
+  background-color: #009879;
+  color: #ffffff;
+}
+
+table th {
+  padding: 12px 15px;
+  border: 1px solid #dddddd;
+  font-size: 1.2em; /* Reduced for responsiveness */
+  text-align: center;
+}
+
+table td {
+  padding: 12px 15px;
+  border: 1px solid #dddddd;
+  color: black;
+  font-size: 1em; /* Adjusted font size for responsiveness */
+}
+
+table tbody tr:nth-child(even) {
+  background-color: #f3f3f3;
+}
+
+table tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+table tbody tr:hover {
+  background-color: #f1f1f1;
+  cursor: pointer;
+}
+
+/* Button Styling */
+button {
+  display: inline-block;
+  background-color: #009879;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #007d68;
+}
+
+/* Back Button Styling */
+.back-button {
+  width: auto; /* Make the button width flexible */
+  max-width: 150px; /* Set a maximum width for larger screens */
+  display: block; /* Ensure it remains a block element */
+   /* Center horizontally with margin */
+  background-color: #2a9d8f;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+  background-color: #1c796e;
+}
+
+/* Error and Loading Messages */
+.error-message {
+  color: red;
+  text-align: center;
+  margin-top: 20px;
+  font-size: 16px; /* Reduced for responsiveness */
+}
+
+.loading-message {
+  text-align: center;
+  font-size: 16px;
+  color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+    margin: 10px;
+  }
+
+  h2 {
+    font-size: 14px; /* Smaller font size for smaller screens */
+  }
+
+  table {
+    font-size: 10px; /* Reduced font size for smaller screens */
+  }
+
+  table th,
+  table td {
+    padding: 8px; /* Reduce padding for better fit */
+  }
+
+  button,
+  .back-button {
+    font-size: 14px; /* Adjust button font size */
+    padding: 8px 15px; /* Adjust button padding */
+  }
+}
+
+@media (max-width: 480px) {
+  h2 {
+    font-size: 1.5em; /* Reduce header size for very small screens */
+  }
+
+  table {
+    font-size: 9px; /* Further adjust for very small screens */
+  }
+
+  table th,
+  table td {
+    padding: 5px; /* Reduce padding further for small devices */
+  }
+
+  button,
+  .back-button {
+    font-size: 12px;
+    padding: 5px 10px; /* Smaller padding for compact look */
+  }
+
+  .back-button {
+    max-width: 100px; /* Ensure the button doesn’t take up too much space */
+  }
+}
+td:hover{
+  text-decoration: underline;
+}

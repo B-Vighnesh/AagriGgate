@@ -1,0 +1,111 @@
+.view-crop-container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto; /* Center the container */
+  text-align: center;
+  font-size: 0.5em;
+  position: relative;
+  padding: 10px; /* Added padding for smaller screens */
+}
+
+.go-back-button {
+  width: auto; /* Allow dynamic sizing */
+  font-size: 1rem;
+  padding: 8px 12px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10; /* Ensure it stays above other content */
+}
+
+.crop-card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* Center cards on smaller screens */
+  gap: 20px;
+}
+
+.crop-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  width: calc(33.33% - 40px); /* 3 cards per row on larger screens */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+  flex: 1 1 300px; /* Minimum width for cards */
+  max-width: 300px;
+}
+
+.crop-card:hover {
+  transform: scale(1.02);
+}
+
+.crop-card h3 {
+  font-size: 1.5em;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.crop-card p {
+  margin: 5px 0;
+}
+
+.crop-card img.crop-image {
+  width: 100%;
+  height: auto;
+  max-width: 300px;
+  margin-bottom: 10px;
+  object-fit: cover; /* Ensures consistent scaling */
+}
+
+.view-details-button {
+  background-color: #2a9d8f;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.view-details-button:hover {
+  background-color: #207f74;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .view-crop-container {
+    padding: 10px;
+  }
+
+  .crop-card {
+    width: calc(50% - 30px); /* 2 cards per row */
+  }
+
+  .go-back-button {
+    font-size: 0.9rem;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .crop-card {
+    width: 100%; /* Full width for smaller screens */
+  }
+
+  .crop-card h3 {
+    font-size: 1.2em;
+  }
+
+  .crop-card img.crop-image {
+    width: 100%; /* Maintain responsive width */
+  }
+
+  .go-back-button {
+    font-size: 0.8rem;
+    padding: 5px 8px;
+    top: 5px;
+    left: 5px;
+  }
+}

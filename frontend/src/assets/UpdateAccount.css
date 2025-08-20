@@ -1,0 +1,177 @@
+/* Container Styles */
+.update-account-container {
+  max-width: 90%;
+  width: 800px;
+  padding: 20px;
+  margin: 30px auto;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Heading Styles */
+.update-account-container h2 {
+  text-align: center;
+  color: #333;
+  font-size: 1.8em;
+  margin-bottom: 20px;
+}
+
+/* Label Styles */
+.update-account-container label {
+  display: block;
+  font-weight: 600;
+  margin-top: 10px;
+  color: #555;
+  font-size: 0.95em;
+}
+
+/* Input and Select Fields */
+.update-account-container input,
+.update-account-container select {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0 25px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+  color: #333;
+  background-color: #fff;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+.update-account-container input:focus,
+.update-account-container select:focus {
+  border-color: #2a9d8f;
+  outline: none;
+}
+
+/* Buttons */
+.update-account-container button {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background-color: #2a9d8f;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background-color 0.3s ease;
+}
+
+.update-account-container button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.update-account-container button:hover:not(:disabled) {
+  background-color: #1e8074;
+}
+
+/* Back Button */
+.back button {
+  width:70px;
+  padding: 10px 20px;
+  background-color: #2a9d8f;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 30px;
+}
+
+.back button:hover {
+  background-color: #1e8074;
+}
+
+/* Error Message */
+.error-message {
+  color: #e74c3c;
+  font-size: 0.9em;
+  margin-top: -5px;
+  margin-bottom: 10px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .update-account-container {
+    width: 80%;
+    padding: 15px;
+  }
+
+  .update-account-container button {
+    margin-left: 0;
+    width: 100%;
+  }
+  .back button {
+    width:70px;
+    padding: 10px 20px;
+    background-color: #2a9d8f;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .update-account-container {
+    width: 90%;
+  }
+
+  .update-account-container input,
+  .update-account-container select {
+    height: 45px;
+  }
+
+  .update-account-container button {
+    width: 100%;
+    font-size: 1em;
+  }
+  .back button {
+    width: 70px;
+    padding: 10px 20px;
+    background-color: #2a9d8f;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .update-account-container {
+    width: 100%;
+    padding: 15px;
+    box-shadow: none;
+    border: none;
+  }
+
+  .update-account-container h2 {
+    font-size: 1.5em;
+  }
+
+  .update-account-container input,
+  .update-account-container select {
+    height: 40px;
+    font-size: 0.9em;
+  }
+
+  .update-account-container button {
+    height: 45px;
+    font-size: 0.9em;
+  }
+}

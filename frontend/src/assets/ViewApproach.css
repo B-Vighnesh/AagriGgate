@@ -1,0 +1,144 @@
+/* General Page Styling */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 0;
+}
+td:hover{
+  text-decoration: underline;
+}
+.container {
+  padding: 15px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin: 20px auto;
+  width: 90%; /* Ensures it doesn't stretch too wide on large screens */
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+/* Table Styling */
+table {
+  width: 100%; /* Use full width by default */
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 12px; /* Adjust for better readability on smaller screens */
+  text-align: left;
+}
+
+table thead tr {
+  background-color: #009879;
+  color: #ffffff;
+  text-align: left;
+}
+
+table th {
+  padding: 12px 15px;
+  border: 1px solid #dddddd;
+  text-align: center;
+  font-size: 1.2em; /* Adjusted for responsiveness */
+}
+
+table td {
+  padding: 12px 15px;
+  border: 1px solid #dddddd;
+  color: black;
+  font-size: 1.5em; /* Scaled down for smaller screens */
+}
+
+table tbody tr:nth-child(even) {
+  background-color: #f3f3f3;
+}
+
+table tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+table tbody tr:hover {
+  background-color: #f1f1f1;
+  cursor: pointer;
+}
+
+/* Button Styling */
+button {
+  display: inline-block;
+  background-color: #009879;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #007d68;
+}
+
+/* Error and Loading Messages */
+.error-message {
+  color: #ff4d4d;
+  text-align: center;
+  font-size: 16px;
+  margin: 20px 0;
+}
+
+.loading-message {
+  text-align: center;
+  font-size: 16px;
+  color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+      padding: 10px;
+      margin: 10px;
+  }
+
+  h2 {
+      font-size: 14px;
+  }
+
+  table {
+      font-size: 10px; /* Adjust table font size */
+  }
+
+  table th,
+  table td {
+      padding: 8px; /* Reduce padding for smaller screens */
+  }
+
+  button {
+      font-size: 1.5px;
+      padding: 8px 15px; /* Adjust button size */
+  }
+}
+
+@media (max-width: 480px) {
+  h2 {
+      font-size: 12px; /* Reduce header size for very small screens */
+  }
+
+  table {
+      font-size: 9px; /* Further adjust for smaller screens */
+  }
+
+  table th,
+  table td {
+      padding: 5px;
+  }
+
+  button {
+      font-size: 12px;
+      padding: 5px 10px;
+  }
+}
