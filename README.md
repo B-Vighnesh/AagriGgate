@@ -1,68 +1,169 @@
 # 🌾 AagriGgate
 
-## 📌 Project Overview
-The **AagriGgate** application is designed to help farmers manage their resources efficiently, connect with buyers, and get real-time insights for better agricultural practices. This platform leverages technology to bridge the gap between farmers and the market. 
+AagriGgate is a full-stack web application designed to connect **farmers, buyers, and administrators** in a seamless platform for agricultural trade, market insights, and crop management.
 
-### 🎯 Key Benefits:
-- **Eliminates Middlemen:** Ensures direct transactions between farmers and buyers, maximizing profits.
-- **Increases Profits:** Farmers can sell their produce at competitive rates without unnecessary deductions.
-- **Finds Suitable Rates:** Real-time price comparisons help farmers make informed selling decisions.
+The project is divided into:
+
+* **Frontend** → React + Vite
+* **Backend** → Spring Boot + MySQL (with JWT Authentication & Spring Security)
+
+---
+
+## 📂 Project Structure
+
+```
+AagriGgate-main/
+│── frontend/         # React + Vite frontend
+│── backend/          # Spring Boot + MySQL backend
+│── README.md         # Documentation
+```
+
+---
 
 ## 🚀 Features
-- 📊 **Dashboard:** A user-friendly interface displaying key farming insights.
-- 🛒 **Marketplace:** Connect farmers with buyers to sell produce at fair prices.
-- 🌦️ **Weather Forecasting:** Provides real-time weather updates to help farmers plan their activities.
-- 📋 **Crop Management:** Track crop growth, yield predictions, and best farming practices.
-- 📱 **Mobile Support:** Fully responsive for mobile access.
 
-## 🔧 Tech Stack
-- **Frontend:** React.js, HTML, CSS, JavaScript
-- **Backend:** Java Spring Boot
-- **Database:** MySQL
-- **APIs:** OpenWeather API, Data.gov.in API, OpenCageData API
-- **Tools & Platforms:** Git, Postman
-- **Security:** JWT-based authentication
+### 🌱 Farmers
 
-## 🛠️ Setup & Installation
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/B-Vighnesh/AagriGgate.git
-   cd AagriGgate
-   ```
-2. Install dependencies:
-   ```sh
-   npm install   # For frontend
-   mvn install   # For backend
-   ```
-3. Run the application:
-   ```sh
-   npm start  # Start frontend
-   mvn spring-boot:run  # Start backend
-   ```
-4. Open your browser and navigate to `http://localhost:3000`
+* Register/Login securely (JWT Auth)
+* Add, update, and delete crops
+* Manage trade approaches
+* View buyer enquiries
 
-## 🔧 Database Configuration
-1. **Create the Database:**
-   ```sql
-   CREATE DATABASE app;
+### 🚲 Buyers
+
+* Browse available crops
+* Approach farmers
+* Save market data
+* Enquiry system
+
+### 🔐 Authentication & Security
+
+* JWT-based authentication
+* Role-based access (Admin, Farmer, Buyer)
+* OTP & Email verification support
+
+---
+
+## ⚙️ Backend Setup (Spring Boot + MySQL)
+
+1. Navigate to the backend folder:
+
+   ```bash
+   cd backend
    ```
 
-## 🔧 Email Configuration
-1. **Create an App Password for Gmail:**
-   - Go to [Google App Passwords](https://myaccount.google.com/apppasswords).
-   - Sign in to your Google Account.
-   - Select "Mail" as the app and "Other (Custom Name)" as the device.
-   - Enter a name like "AagriGgate App" and click **Generate**.
-   - Copy the generated password and use it as `spring.mail.password` in `application.properties`.
+2. Configure database in **`src/main/resources/application.properties`** or **`application.yml`**:
 
-2. Open `application.properties` and update the following details with your Gmail credentials:
    ```properties
-   spring.mail.username=your-email@gmail.com
-   spring.mail.password=your-email-password(app-password)
+   spring.datasource.url=jdbc:mysql://localhost:3306/agrigate
+   spring.datasource.username=your_username
+   spring.datasource.password=your_password
+   spring.jpa.hibernate.ddl-auto=update
+   spring.jpa.show-sql=true
    ```
 
+3. Run the backend:
 
-## 📬 Contact
-For queries and collaborations, reach out at: **vighneshsheregar2004@gmail.com**
+   ```bash
+   ./mvnw spring-boot:run
+   ```
 
-📌 Connect with me on [LinkedIn](https://www.linkedin.com/in/b-vighnesh-kumar/)
+4. The API will be available at:
+
+   ```
+   http://localhost:8080
+   ```
+
+---
+
+## 🌈 Frontend Setup (React + Vite)
+
+1. Navigate to the frontend folder:
+
+   ```bash
+   cd frontend
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Start development server:
+
+   ```bash
+   npm run dev
+   ```
+
+4. The frontend will run at:
+
+   ```
+   http://localhost:5173
+   ```
+
+---
+
+## 🔗 Connecting Frontend & Backend
+
+Update API URLs in frontend (inside `src/components/` or services) to match your backend server:
+
+```js
+const API_BASE_URL = "http://localhost:8080";
+```
+
+---
+
+## 📦 Build & Deployment
+
+### Frontend
+
+```bash
+npm run build
+```
+
+This will generate a `dist/` folder for deployment.
+For GitHub Pages, update `vite.config.js` with:
+
+```js
+export default defineConfig({
+  base: "/your-repo-name/",
+});
+```
+
+### Backend
+
+Build the JAR file:
+
+```bash
+./mvnw clean package
+```
+
+Run it:
+
+```bash
+java -jar target/backend-0.0.1-SNAPSHOT.jar
+```
+
+---
+
+## 🛡️ Tech Stack
+
+* **Frontend** → React, Vite, Tailwind CSS
+* **Backend** → Spring Boot, Spring Security, JWT, Hibernate, MySQL
+* **Build Tools** → Maven, npm
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a new branch (`feature/xyz`)
+3. Commit changes
+4. Open a pull request
+
+---
+
+## 📜 License
+
+This project is for educational & development purposes.
