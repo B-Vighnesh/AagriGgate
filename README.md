@@ -149,9 +149,9 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 
 ## 🛡️ Tech Stack
 
-* **Frontend** → React, Vite, Tailwind CSS
-* **Backend** → Spring Boot, Spring Security, JWT, Hibernate, MySQL
-* **Build Tools** → Maven, npm
+* **Frontend** → React, Vite
+* **Backend** → Spring Boot, MySQL
+* **Build Tools** → Maven
 
 ---
 
