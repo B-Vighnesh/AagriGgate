@@ -1,38 +1,36 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Button from './common/Button';
+import Card from './common/Card';
 import ValidateToken from './ValidateToken';
 import { getFarmerId, getToken, getRole } from '../lib/auth';
 
 const FEATURES = [
   {
-    icon: '\u{1F33E}',
     title: 'Direct Market Access',
-    desc: 'Farmers list crops and set their own prices. Buyers browse, compare, and contact farmers directly - no middlemen.',
+    desc: 'Farmers list crops and set prices. Buyers browse and connect directly with no middleman.',
   },
   {
-    icon: '\u2600\uFE0F',
     title: 'Real-Time Weather',
-    desc: 'Get hyper-local weather data to make informed decisions on planting, harvesting, and protecting your crops.',
+    desc: 'Use local weather information for harvest planning and crop safety.',
   },
   {
-    icon: '\u{1F4CA}',
     title: 'Market Insights',
-    desc: 'Stay updated on market trends, average prices, and demand to price competitively and grow strategically.',
+    desc: 'Track demand and pricing trends to make better trade decisions.',
   },
 ];
 
 const STEPS = [
-  { n: '01', title: 'Register', desc: 'Create your account as a farmer or buyer in minutes.' },
-  { n: '02', title: 'List or Browse', desc: 'Farmers add crop listings; buyers browse the live marketplace.' },
-  { n: '03', title: 'Connect Directly', desc: 'Negotiate and transact transparently with no fees.' },
-  { n: '04', title: 'Grow Together', desc: 'Access weather data and market insights to make smarter decisions.' },
+  { id: '01', title: 'Register', desc: 'Create your farmer or buyer account in minutes.' },
+  { id: '02', title: 'List or Browse', desc: 'Farmers list crops and buyers browse offers.' },
+  { id: '03', title: 'Connect', desc: 'Discuss requirements and complete transactions directly.' },
+  { id: '04', title: 'Grow', desc: 'Use weather and market data to improve outcomes.' },
 ];
 
 const FAQS = [
-  { q: 'How do I register?', a: 'Click "Register" in the top navbar, choose your role (Farmer or Buyer), and follow the steps.' },
-  { q: 'Is the platform free?', a: 'Yes - AgriGate is completely free for both farmers and buyers, forever.' },
-  { q: 'How do I contact support?', a: 'Reach us via the Contact Us page or email webappfarmer@gmail.com.' },
-  { q: 'Is my data safe?', a: 'We never sell your data. Personal details are used solely to provide our service.' },
+  { q: 'How do I register?', a: 'Open Register from the top menu and complete the steps.' },
+  { q: 'Is AagriGgate free?', a: 'Yes. The platform is free for both farmers and buyers.' },
+  { q: 'How can I contact support?', a: 'Use Contact Us page or email webappfarmer@gmail.com.' },
 ];
 
 export default function Home() {
@@ -43,196 +41,95 @@ export default function Home() {
   const [openFaq, setOpenFaq] = useState(null);
 
   return (
-    <div>
-      <ValidateToken farmerId={farmerId} token={token} role={role} />
+    <div className="home-page">
+      <ValidateToken token={token} role={role} farmerId={farmerId} />
 
-      <section
-        className="relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 60%, var(--color-primary-light) 100%)',
-          minHeight: '520px',
-        }}
-      >
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div style={{
-            position: 'absolute', top: '-80px', right: '-80px',
-            width: '400px', height: '400px', borderRadius: '50%',
-            background: 'rgba(244,162,97,0.15)',
-          }} />
-          <div style={{
-            position: 'absolute', bottom: '-60px', left: '-60px',
-            width: '300px', height: '300px', borderRadius: '50%',
-            background: 'rgba(255,255,255,0.07)',
-          }} />
-        </div>
-
-        <div className="relative max-w-5xl mx-auto px-6 py-24 text-center animate-fade-in-up">
-          <span
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6"
-            style={{ background: 'rgba(244,162,97,0.25)', color: 'var(--color-accent-light)' }}
-          >
-            {'\u{1F331}'} India&apos;s Farmer-First Marketplace
-          </span>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-5">
-            Farm to Table,<br />
-            <span style={{ color: 'var(--color-accent)' }}>Without the Middleman</span>
+      <section className="hero">
+        <div className="container">
+          <p className="hero__tag">India&apos;s Farmer-First Marketplace</p>
+          <h1 className="hero__title">
+            Farm to Table, <span>Without the Middleman</span>
           </h1>
-          <p className="text-lg text-green-100 max-w-2xl mx-auto mb-8 leading-relaxed">
-            AgriGate connects farmers directly with buyers for fair trade, better prices, and a sustainable agricultural future.
+          <p className="hero__subtitle">
+            AagriGgate connects farmers and buyers for transparent trade and better prices.
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {!farmerId ? (
+          <div className="hero__actions">
+            {!farmerId && (
               <>
-                <button className="btn-accent btn-lg" onClick={() => navigate('/register')}>
-                  Get Started Free
-                </button>
-                <button
-                  className="btn btn-lg border-2 border-white text-white"
-                  style={{ background: 'transparent' }}
-                  onClick={() => navigate('/view-all-crops')}
-                >
-                  Browse Crops
-                </button>
+                <Button variant="accent" size="lg" onClick={() => navigate('/register')}>Get Started</Button>
+                <Button variant="outline" size="lg" className="hero-outline" onClick={() => navigate('/view-all-crops')}>Browse Crops</Button>
               </>
-            ) : (
-              <button className="btn-accent btn-lg" onClick={() => navigate('/market')}>
-                Go to Market
-              </button>
+            )}
+            {farmerId && (
+              <Button variant="accent" size="lg" onClick={() => navigate('/market')}>Go to Market</Button>
             )}
           </div>
         </div>
       </section>
 
-      <div style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)' }}>
-        <div className="max-w-5xl mx-auto px-6 py-5 grid grid-cols-3 gap-4 text-center">
-          {[
-            { value: '5,000+', label: 'Farmers' },
-            { value: '12,000+', label: 'Buyers' },
-            { value: 'Rs 2Cr+', label: 'Trade Volume' },
-          ].map(({ value, label }) => (
-            <div key={label}>
-              <p className="text-2xl font-bold" style={{ color: 'var(--color-primary)' }}>{value}</p>
-              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{label}</p>
-            </div>
-          ))}
+      <section className="stats">
+        <div className="container stats__grid">
+          <div><strong>5,000+</strong><span>Farmers</span></div>
+          <div><strong>12,000+</strong><span>Buyers</span></div>
+          <div><strong>Rs 2Cr+</strong><span>Trade Volume</span></div>
         </div>
-      </div>
+      </section>
 
-      <section className="max-w-5xl mx-auto px-6 py-16">
-        <div className="text-center mb-10">
-          <h2 className="section-title">Why AgriGate?</h2>
-          <p className="section-subtitle">Everything you need to connect, trade, and grow.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {FEATURES.map(({ icon, title, desc }) => (
-            <div key={title} className="card card-hover p-6 text-center">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4"
-                style={{ background: 'var(--color-bg)' }}
-              >
-                {icon}
-              </div>
-              <h3 className="font-bold text-base mb-2" style={{ color: 'var(--color-primary-dark)' }}>{title}</h3>
-              <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{desc}</p>
-            </div>
+      <section className="container section">
+        <h2 className="section-title">Why AagriGgate?</h2>
+        <p className="section-subtitle">Everything you need to connect, trade, and grow.</p>
+        <div className="feature-grid">
+          {FEATURES.map((item) => (
+            <Card key={item.title} className="feature-card">
+              <h3>{item.title}</h3>
+              <p>{item.desc}</p>
+            </Card>
           ))}
         </div>
       </section>
 
-      <section id="htw" style={{ background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
-        <div className="max-w-5xl mx-auto px-6 py-16">
-          <div className="text-center mb-10">
-            <h2 className="section-title">How It Works</h2>
-            <p className="section-subtitle">Simple steps to start trading smarter.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {STEPS.map(({ n, title, desc }) => (
-              <div key={n} className="relative text-center">
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-base font-extrabold text-white mx-auto mb-3"
-                  style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-light))' }}
-                >
-                  {n}
-                </div>
-                <h3 className="font-semibold mb-1 text-sm" style={{ color: 'var(--color-primary-dark)' }}>{title}</h3>
-                <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{desc}</p>
-              </div>
+      <section className="section section--surface">
+        <div className="container">
+          <h2 className="section-title">How It Works</h2>
+          <div className="steps-grid">
+            {STEPS.map((step) => (
+              <Card key={step.id} className="step-card">
+                <span>{step.id}</span>
+                <h3>{step.title}</h3>
+                <p>{step.desc}</p>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="faq" className="max-w-3xl mx-auto px-6 py-16">
-        <div className="text-center mb-10">
-          <h2 className="section-title">Frequently Asked Questions</h2>
-        </div>
-        <div className="flex flex-col gap-3">
-          {FAQS.map(({ q, a }, i) => (
-            <div key={i} className="card overflow-hidden">
-              <button
-                className="w-full text-left px-5 py-4 flex items-center justify-between gap-4"
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-              >
-                <span className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{q}</span>
-                <span
-                  className="shrink-0 text-xl font-light transition-transform duration-200"
-                  style={{ color: 'var(--color-primary)', transform: openFaq === i ? 'rotate(45deg)' : 'rotate(0)' }}
-                >
-                  +
-                </span>
-              </button>
-              <div
-                className="overflow-hidden transition-all duration-300"
-                style={{ maxHeight: openFaq === i ? '200px' : '0', padding: openFaq === i ? '0 20px 16px' : '0 20px' }}
-              >
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{a}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section
-        id="ts"
-        style={{ background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)' }}
-      >
-        <div className="max-w-5xl mx-auto px-6 py-12 grid md:grid-cols-2 gap-8">
-          <div>
-            <h2 className="section-title text-lg">Terms of Service</h2>
-            <p className="text-sm mb-3" style={{ color: 'var(--color-text-muted)' }}>
-              By using AgriGate you agree to: provide accurate information during registration, use the platform for lawful purposes only, and acknowledge that AgriGate facilitates connections but does not guarantee transaction outcomes.
-            </p>
-          </div>
-          <div id="pp">
-            <h2 className="section-title text-lg">Privacy Policy</h2>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              Your privacy matters. We collect only the data needed to run the platform - your name, contact info, and usage data. We never sell your information. Data is shared only where necessary to provide the service.
-            </p>
-          </div>
+      <section id="faq" className="container section">
+        <h2 className="section-title">Frequently Asked Questions</h2>
+        <div className="faq-list">
+          {FAQS.map((item, index) => {
+            const open = openFaq === index;
+            return (
+              <Card key={item.q} className="faq-card">
+                <button className="faq-card__button" onClick={() => setOpenFaq(open ? null : index)}>
+                  <span>{item.q}</span>
+                  <span>{open ? '-' : '+'}</span>
+                </button>
+                {open && <p className="faq-card__answer">{item.a}</p>}
+              </Card>
+            );
+          })}
         </div>
       </section>
 
       {!farmerId && (
-        <section
-          id="cs"
-          className="text-center px-6 py-16"
-          style={{ background: 'linear-gradient(135deg, var(--color-primary-dark), var(--color-primary))' }}
-        >
-          <h2 className="text-3xl font-extrabold text-white mb-3">Join 5,000+ Farmers Today</h2>
-          <p className="text-green-200 text-sm mb-6 max-w-xl mx-auto">
-            Be part of the AgriGate community. Sign up free and start trading directly - no middlemen, no fees.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <button className="btn-accent btn-lg" onClick={() => navigate('/register')}>
-              Sign Up Free
-            </button>
-            <button
-              className="btn btn-lg border-2 border-white text-white"
-              style={{ background: 'transparent' }}
-              onClick={() => navigate('/login')}
-            >
-              I already have an account
-            </button>
+        <section className="cta">
+          <div className="container">
+            <h2>Join AagriGgate Today</h2>
+            <p>Sign up free and start trading directly.</p>
+            <div className="hero__actions">
+              <Button variant="accent" onClick={() => navigate('/register')}>Sign Up</Button>
+              <Button variant="outline" className="hero-outline" onClick={() => navigate('/login')}>I already have an account</Button>
+            </div>
           </div>
         </section>
       )}
