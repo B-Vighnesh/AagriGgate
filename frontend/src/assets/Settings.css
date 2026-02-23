@@ -14,7 +14,12 @@
   margin-top: 0;
   margin-left:10%;
 }
+.back-button-settings  button{
+  background-color: #1c796e;
+  width:60px;
+  height:30px;
 
+}
 .back-button:hover {
   background-color: #1c796e;
 }

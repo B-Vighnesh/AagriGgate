@@ -126,6 +126,7 @@ const ViewAllCrop = () => {
     );
 
     setFilteredCrops(dynamicFilteredCrops);
+    applyFilters();
   };
 
   const handleFilterChange = (event) => {

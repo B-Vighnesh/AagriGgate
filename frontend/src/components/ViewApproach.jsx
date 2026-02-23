@@ -88,10 +88,13 @@ const ViewApproach = () => {
         fetchApproachesByFarmerId();
       } else {
         const errorText = await response.text();
+      console.log(error)
+
         setError('Action failed: ' + errorText);
       }
     } catch (error) {
       console.error('Error occurred:', error);
+      console.log(error)
       setError('An error occurred while processing your request.');
     }
   };

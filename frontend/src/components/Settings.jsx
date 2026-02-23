@@ -156,7 +156,7 @@ const Settings = () => {
       )}
 
       <div className="settings-page"> <ValidateToken farmerId={farmerId} token={token} role={role} />
-      <div className="back-button">
+       <div className="back-button-settings">
           <button onClick={() => navigate(-1)} >
         <i className="fas fa-arrow-left"></i>
       </button>
