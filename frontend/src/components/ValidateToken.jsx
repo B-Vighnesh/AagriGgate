@@ -1,87 +1,44 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiGet } from '../lib/api';
+import { clearAuth } from '../lib/auth';
 
-function ValidateToken({ farmerId, token, role }) {
+export default function ValidateToken({ token }) {
   const navigate = useNavigate();
-  const [popupMessage, setPopupMessage] = useState(null);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
+    if (!token) return;
+
+    let alive = true;
     const checkTokenValidity = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          handleSessionExpired();
-          return;
+        const response = await apiGet('/auth/isTokenValid');
+        if (!response.ok && alive) {
+          clearAuth();
+          setMessage('Session expired. Please login again.');
+          setTimeout(() => navigate('/login'), 1500);
         }
-
-        const response = await fetch('http://localhost:8080/auth/isTokenValid', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          handleSessionExpired();
+      } catch {
+        if (alive) {
+          clearAuth();
+          setMessage('Unable to validate session. Please login again.');
+          setTimeout(() => navigate('/login'), 1500);
         }
-      } catch (error) {
-        handleSessionExpired();
       }
     };
 
-    const handleSessionExpired = () => {
-      localStorage.removeItem('farmerId');
-      localStorage.removeItem('token');
-      localStorage.removeItem('role');
-      setPopupMessage('Session has expired. Please log in again.');
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000); 
+    checkTokenValidity();
+    return () => {
+      alive = false;
     };
+  }, [token, navigate]);
 
-    if (token) {
-      checkTokenValidity();
-    }
-  }, [token, farmerId, role, navigate]);
-
-  const closePopup = () => {
-    setPopupMessage(null);
-  };
+  if (!message) return null;
 
   return (
-    <div>
-      {popupMessage && (
-        <div className="popup-overlay" style={styles.overlay} onClick={closePopup}>
-          <div className="popup" style={styles.popup}>
-            <p>{popupMessage}</p>
-          </div>
-        </div>
-      )}
+    <div className="session-overlay" role="status" aria-live="polite">
+      <div className="session-modal">{message}</div>
     </div>
   );
 }
-
-export default ValidateToken;
-
-const styles = {
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  popup: {
-    backgroundColor: 'white',
-    padding: '20px',
-    borderRadius: '10px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-    textAlign: 'center',
-  },
-};
