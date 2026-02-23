@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.JWT;
+package com.MyWebpage.register.login.security.jwt;
 
 
 import com.MyWebpage.register.login.service.MyUserDetailsService;

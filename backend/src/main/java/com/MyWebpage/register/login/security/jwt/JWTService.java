@@ -1,5 +1,5 @@
 
-package com.MyWebpage.register.login.JWT;
+package com.MyWebpage.register.login.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

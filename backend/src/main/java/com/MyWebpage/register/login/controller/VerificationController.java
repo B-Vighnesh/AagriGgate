@@ -1,39 +1,24 @@
 package com.MyWebpage.register.login.controller;
-import com.MyWebpage.register.login.model.Farmer;
-import com.MyWebpage.register.login.model.VerificationToken;
-import com.MyWebpage.register.login.repositor.FarmerRepo;
-import com.MyWebpage.register.login.repositor.VerificationTokenRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+
+import com.MyWebpage.register.login.service.VerificationService;
 import org.springframework.http.ResponseEntity;
-import java.time.LocalDateTime;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/v1/farmers")
 public class VerificationController {
 
-    @Autowired
-    private VerificationTokenRepository tokenRepository;
+    private final VerificationService verificationService;
 
-
-    @Autowired
-    private FarmerRepo farmerRepository;
+    public VerificationController(VerificationService verificationService) {
+        this.verificationService = verificationService;
+    }
 
     @GetMapping("/verify")
     public ResponseEntity<String> verifyEmail(@RequestParam("token") String token) {
-        VerificationToken verificationToken = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
-
-        if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.badRequest().body("Token has expired!");
-        }
-
-        Farmer farmer = verificationToken.getFarmer();
-
-        farmerRepository.save(farmer);
-
-        tokenRepository.delete(verificationToken);
-
-        return ResponseEntity.ok("Email verified successfully. You can now log in.");
+        return verificationService.verifyEmail(token);
     }
 }

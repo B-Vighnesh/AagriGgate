@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.repositor;
+package com.MyWebpage.register.login.repository;
 
 import com.MyWebpage.register.login.model.Crop;
 import jakarta.transaction.Transactional;
@@ -15,9 +15,11 @@ import java.util.List;
 @Repository
 public interface CropRepo extends JpaRepository<Crop,Long> {
     @Query("SELECT c FROM Crop c WHERE c.farmer.farmerId = :farmerId")
-    List<Crop> findByFarmerId(Long farmerId);
+    List<Crop> findByFarmerId(@Param("farmerId") Long farmerId);
 
     List<Crop> findByCropName(String cropName);
+
+    Page<Crop> findByCropNameContaining(String keyword, Pageable pageable);
 
     Page<Crop> findByCropNameContainingIgnoreCase(String keyword, Pageable pageable);
 

@@ -1,6 +1,6 @@
 package com.MyWebpage.register.login.config;
 
-import com.MyWebpage.register.login.JWT.JwtFilter;
+import com.MyWebpage.register.login.security.jwt.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,10 +42,22 @@ public class SecurityConfig {
                     return source;
                 }))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/enquiries/getAll","/users/register", "/users/login", "/auth/send-otp/{email}", "/auth/verify-otp", "/buyer/register", "/buyer/login","/buyer/findEmail/{email}", "/users/findEmail/{email}","/users/findEmailorUsername","/buyer/findEmailorUsername","/auth/reset-otp/{principal}","/users/resetpassword","/buyer/resetpassword","/enquiries/**")
+                        .requestMatchers(
+                                "/api/v1/farmers/register",
+                                "/api/v1/farmers/login",
+                                "/api/v1/farmers/resetpassword",
+                                "/api/v1/buyers/register",
+                                "/api/v1/buyers/login",
+                                "/api/v1/buyers/resetpassword",
+                                "/api/v1/auth/send-otp/**",
+                                "/api/v1/auth/verify-otp",
+                                "/api/v1/auth/reset-otp/**",
+                                "/api/v1/admin/login",
+                                "/api/v1/admin/enquiry",
+                                "/api/v1/farmers/verify")
                         .permitAll()
-                        .requestMatchers("/buyer/**","/buyer/approach/**").hasRole("BUYER")
-                        .requestMatchers("/users/**","/crops/farmer/**","/seller/approach/**","/api/saved-market-data/**").hasRole("SELLER")
+                        .requestMatchers("/api/v1/buyers/**", "/api/v1/buyer/approach/**").hasRole("BUYER")
+                        .requestMatchers("/api/v1/farmers/**", "/api/v1/crops/**", "/api/v1/seller/approach/**", "/api/v1/saved-market-data/**").hasRole("SELLER")
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

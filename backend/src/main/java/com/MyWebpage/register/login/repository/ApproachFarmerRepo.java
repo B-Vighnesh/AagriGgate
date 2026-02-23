@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.repositor;
+package com.MyWebpage.register.login.repository;
 import com.MyWebpage.register.login.model.ApproachFarmer;
 import org.springframework.data.jpa.repository.JpaRepository;
 

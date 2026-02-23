@@ -6,8 +6,8 @@ import com.MyWebpage.register.login.exception.ResourceNotFoundException;
 import com.MyWebpage.register.login.mapper.CropMapper;
 import com.MyWebpage.register.login.model.Crop;
 import com.MyWebpage.register.login.model.Farmer;
-import com.MyWebpage.register.login.repositor.CropRepo;
-import com.MyWebpage.register.login.repositor.FarmerRepo;
+import com.MyWebpage.register.login.repository.CropRepo;
+import com.MyWebpage.register.login.repository.FarmerRepo;
 import com.MyWebpage.register.login.service.CropService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,8 +67,8 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public List<Crop> getAllCropsV1() {
-        return cropRepo.findAll();
+    public Page<Crop> getAllCropsV1(int page, int size) {
+        return cropRepo.findAll(PageRequest.of(page, size));
     }
 
     @Override
@@ -133,8 +133,8 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public List<CropResponseDTO> getAllCropsV2() {
-        return cropRepo.findAll().stream().map(cropMapper::toResponse).toList();
+    public Page<CropResponseDTO> getAllCropsV2(int page, int size) {
+        return cropRepo.findAll(PageRequest.of(page, size)).map(cropMapper::toResponse);
     }
 
     @Override

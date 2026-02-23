@@ -2,19 +2,24 @@ package com.MyWebpage.register.login.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public class FarmerRequestDTO {
     @NotBlank
     private String username;
     @NotBlank
+    @Size(min = 2, max = 50)
     private String firstName;
     private String lastName;
     @Email
     @NotBlank
     private String email;
     @NotBlank
+    @Pattern(regexp = "^[0-9]{10}$", message = "phoneNo must be 10 digits")
     private String phoneNo;
     @NotBlank
+    @Size(min = 6, max = 100)
     private String password;
 
     public String getUsername() { return username; }
