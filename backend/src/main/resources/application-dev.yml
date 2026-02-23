@@ -45,6 +45,14 @@ market:
     url: ${MARKET_API_URL:https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24}
     key: ${MARKET_API_KEY:579b464db66ec23bdd000001602edb9ef1a64cd961329419d730f705}   # your project currently does not use API key
 
+location:
+  api:
+    url: ${MARKET_API_URL:https://api.opencagedata.com/geocode/v1/json}
+    key: ${MARKET_API_KEY:4138beff07ea4a259f0c2ff71ba19378}
+#  const res = await fetch(
+#    `https://api.opencagedata.com/geocode/v1/json?q=${coords.latitude}+${coords.longitude}&key=4138beff07ea4a259f0c2ff71ba19378`
+#    );
 admin:
   username: ${ADMIN_USERNAME:admin}
   password: ${ADMIN_PASSWORD:admin123}
+#
