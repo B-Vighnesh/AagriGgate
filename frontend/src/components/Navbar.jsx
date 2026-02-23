@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { getRole } from '../lib/auth';
 import agrigateIcon from '../images/agrigate.jpg';
 
-/** Build nav items based on current role */
 function useNavItems(role) {
   const base = [{ label: 'Home', to: '/' }];
 
@@ -27,7 +26,6 @@ function useNavItems(role) {
     ];
   }
 
-  // buyer
   return [
     ...base,
     {
@@ -42,34 +40,24 @@ function useNavItems(role) {
 
 export default function Navbar() {
   const location = useLocation();
-  const navigate = useNavigate();
   const [role, setRole] = useState(getRole);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dropdown, setDropdown] = useState(null); // label of open dropdown
+  const [dropdown, setDropdown] = useState(null);
 
-  /* Sync role whenever localStorage changes (login / logout) */
   useEffect(() => {
     const sync = () => setRole(getRole());
     window.addEventListener('storage', sync);
-
-    // Fallback: watch on route changes (SPA doesn't fire 'storage' for same-tab writes)
     sync();
-
     return () => window.removeEventListener('storage', sync);
   }, [location.pathname]);
 
   const navItems = useNavItems(role);
-
-  const isActive = (to) =>
-    to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
-
+  const isActive = (to) => (to === '/' ? location.pathname === '/' : location.pathname.startsWith(to));
   const closeAll = () => { setMenuOpen(false); setDropdown(null); };
 
   return (
     <nav className="glass sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-
-        {/* ── Logo ── */}
         <Link to="/" className="flex items-center gap-2.5 shrink-0" onClick={closeAll}>
           <img
             src={agrigateIcon}
@@ -81,7 +69,6 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* ── Desktop Links ── */}
         <ul className="hidden md:flex items-center gap-1">
           {navItems.map((item) =>
             item.dropdown ? (
@@ -94,8 +81,8 @@ export default function Navbar() {
                 <button
                   className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
                   style={{ color: 'var(--color-text)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-border)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-border)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
                   {item.label}
                   <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${dropdown === item.label ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
@@ -103,7 +90,6 @@ export default function Navbar() {
                   </svg>
                 </button>
 
-                {/* Dropdown */}
                 <div
                   className={`absolute top-full left-0 mt-1 w-48 card py-1.5 transition-all duration-200 origin-top ${dropdown === item.label ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
                     }`}
@@ -115,8 +101,8 @@ export default function Navbar() {
                       onClick={closeAll}
                       className="block px-4 py-2 text-sm transition-colors duration-150"
                       style={{ color: 'var(--color-text)' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-bg)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-bg)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                     >
                       {sub.label}
                     </Link>
@@ -142,7 +128,6 @@ export default function Navbar() {
           )}
         </ul>
 
-        {/* ── Mobile Hamburger ── */}
         <button
           className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -154,7 +139,6 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* ── Mobile Drawer ── */}
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${menuOpen ? 'max-h-screen border-t' : 'max-h-0'
           }`}

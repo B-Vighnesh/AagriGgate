@@ -37,12 +37,12 @@ export default function Account() {
       : `/users/getFarmer/${farmerId}`;
 
     apiGet(endpoint)
-      .then(res => {
+      .then((res) => {
         if (!res.ok) throw new Error('session_expired');
         return res.json();
       })
-      .then(data => setUserData(data))
-      .catch(err => {
+      .then((data) => setUserData(data))
+      .catch((err) => {
         if (err.message === 'session_expired') setError('Your session has expired. Please log in again.');
         else setError('Server busy. Please try again.');
       })
@@ -66,7 +66,7 @@ export default function Account() {
     return (
       <div className="page-wrapper flex items-center justify-center min-h-[60vh]">
         <div className="card p-8 text-center max-w-sm">
-          <p className="text-3xl mb-3">⚠️</p>
+          <p className="text-3xl mb-3">{'\u26A0\uFE0F'}</p>
           <p className="text-sm mb-4" style={{ color: 'var(--color-error)' }}>{error}</p>
           <button className="btn-primary w-full" onClick={() => navigate('/login')}>Go to Login</button>
         </div>
@@ -78,17 +78,17 @@ export default function Account() {
 
   const quickActions = isFarmer
     ? [
-      { icon: '🌱', label: 'Add Crop', to: '/add-crop' },
-      { icon: '📋', label: 'My Crops', to: '/view-crop' },
-      { icon: '📊', label: 'Market', to: '/market' },
-      { icon: '📨', label: 'Requests', to: '/view-approach' },
-      { icon: '🌤️', label: 'Weather', to: '/weather' },
-      { icon: '✉️', label: 'Enquiry', to: '/enquiry' },
+      { icon: '\u{1F331}', label: 'Add Crop', to: '/add-crop' },
+      { icon: '\u{1F4CB}', label: 'My Crops', to: '/view-crop' },
+      { icon: '\u{1F4CA}', label: 'Market', to: '/market' },
+      { icon: '\u{1F4E8}', label: 'Requests', to: '/view-approach' },
+      { icon: '\u{1F324}\uFE0F', label: 'Weather', to: '/weather' },
+      { icon: '\u2709\uFE0F', label: 'Enquiry', to: '/enquiry' },
     ]
     : [
-      { icon: '🌾', label: 'Browse Crops', to: '/view-all-crops' },
-      { icon: '📨', label: 'My Requests', to: '/view-approaches-user' },
-      { icon: '✉️', label: 'Enquiry', to: '/enquiry' },
+      { icon: '\u{1F33E}', label: 'Browse Crops', to: '/view-all-crops' },
+      { icon: '\u{1F4E8}', label: 'My Requests', to: '/view-approaches-user' },
+      { icon: '\u2709\uFE0F', label: 'Enquiry', to: '/enquiry' },
     ];
 
   return (
@@ -96,7 +96,6 @@ export default function Account() {
       <ValidateToken farmerId={farmerId} token={token} role={role} />
 
       <div className="grid md:grid-cols-3 gap-6">
-        {/* Left — Profile Card */}
         <div className="card p-6 flex flex-col items-center text-center">
           <div className="relative mb-4">
             <img
@@ -109,7 +108,7 @@ export default function Account() {
               className="absolute bottom-0 right-0 text-xs badge"
               style={{ background: 'var(--color-primary)', color: '#fff' }}
             >
-              {isFarmer ? '🌾 Farmer' : '🛒 Buyer'}
+              {isFarmer ? '\u{1F33E} Farmer' : '\u{1F6D2} Buyer'}
             </span>
           </div>
           <h2 className="text-xl font-extrabold" style={{ color: 'var(--color-primary-dark)' }}>
@@ -118,29 +117,26 @@ export default function Account() {
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>@{userData?.username}</p>
 
           <div className="flex gap-2 mt-5 w-full flex-col">
-            <Link to="/update-account" className="btn-primary w-full text-sm py-2 text-center">✏️ Edit Profile</Link>
-            <Link to="/settings" className="btn-outline  w-full text-sm py-2 text-center">⚙️ Settings</Link>
+            <Link to="/update-account" className="btn-primary w-full text-sm py-2 text-center">{'\u270F\uFE0F'} Edit Profile</Link>
+            <Link to="/settings" className="btn-outline  w-full text-sm py-2 text-center">{'\u2699\uFE0F'} Settings</Link>
             <button className="btn-ghost w-full text-sm py-2" onClick={() => setShowLogoutModal(true)}>
-              🚪 Logout
+              {'\u{1F6AA}'} Logout
             </button>
           </div>
         </div>
 
-        {/* Right — Info + Quick Actions */}
         <div className="md:col-span-2 flex flex-col gap-5">
-          {/* Account Details */}
           <div className="card p-5">
             <h3 className="font-bold mb-3 text-base" style={{ color: 'var(--color-primary-dark)' }}>Account Details</h3>
             <div>
-              <InfoRow icon="📧" label="Email" value={userData?.email} />
-              <InfoRow icon="📞" label="Phone" value={userData?.phoneNo} />
-              <InfoRow icon="🗺️" label="State" value={userData?.state} />
-              <InfoRow icon="📍" label="District" value={userData?.district} />
-              <InfoRow icon="🎂" label="DOB" value={userData?.dob} />
+              <InfoRow icon={'\u{1F4E7}'} label="Email" value={userData?.email} />
+              <InfoRow icon={'\u{1F4DE}'} label="Phone" value={userData?.phoneNo} />
+              <InfoRow icon={'\u{1F5FA}\uFE0F'} label="State" value={userData?.state} />
+              <InfoRow icon={'\u{1F4CD}'} label="District" value={userData?.district} />
+              <InfoRow icon={'\u{1F382}'} label="DOB" value={userData?.dob} />
             </div>
           </div>
 
-          {/* Quick Actions */}
           <div className="card p-5">
             <h3 className="font-bold mb-3 text-base" style={{ color: 'var(--color-primary-dark)' }}>Quick Actions</h3>
             <div className="grid grid-cols-3 gap-3">
@@ -160,7 +156,6 @@ export default function Account() {
         </div>
       </div>
 
-      {/* Logout Confirmation Modal */}
       {showLogoutModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
