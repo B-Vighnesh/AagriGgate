@@ -142,7 +142,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
 
     @Override
     public boolean sendMail(ApproachFarmer approachFarmer) {
-        Farmer farmer = farmerRepository.findByEmail(approachFarmer.getUserEmail());
+        Farmer farmer = farmerRepository.findByEmail(approachFarmer.getUserEmail()).orElse(null);
         if (farmer == null) {
             return false;
         }

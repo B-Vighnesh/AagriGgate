@@ -22,7 +22,7 @@ spring:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
     username: ${EMAIL_USERNAME:webappfarmer@gmail.com}
-    password: ${EMAIL_PASSWORD:gycx zlja btlp huke}
+    password: ${EMAIL_PASSWORD:syoz atph yahs vfts}
     properties:
       mail:
         smtp:
@@ -42,7 +42,7 @@ weather:
 market:
   api:
     url: ${MARKET_API_URL:https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24}
-    key: ${MARKET_API_KEY:}   # your project currently does not use API key
+    key: ${MARKET_API_KEY:579b464db66ec23bdd000001602edb9ef1a64cd961329419d730f705}   # your project currently does not use API key
 
 admin:
   username: ${ADMIN_USERNAME:admin}
