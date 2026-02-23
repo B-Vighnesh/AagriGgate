@@ -47,6 +47,13 @@ export default function ViewDetails() {
     });
   };
 
+  const parseJsonIfPresent = async (response) => {
+    if (response.status === 204) return null;
+    const text = await response.text();
+    if (!text) return null;
+    return JSON.parse(text);
+  };
+
   useEffect(() => {
     if (!token) {
       navigate('/login');
@@ -59,15 +66,15 @@ export default function ViewDetails() {
         const detailRes = await safeFetch(`/crops/legacy/${cropId}`, { method: 'GET' });
 
         if (!detailRes.ok) throw new Error('This crop is not available anymore.');
-        const detailData = await detailRes.json();
-        console.log(detailData);
+        const detailData = await parseJsonIfPresent(detailRes);
+        if (!detailData) throw new Error('This crop is not available anymore.');
         if (!mounted) return;
         setCropDetails(detailData);
 
         if (role === 'farmer') {
           const reqRes = await safeFetch(`/seller/approach/requests/farmer/${currentUserId}/${cropId}`, { method: 'GET' });
           if (reqRes.ok) {
-            const reqData = await reqRes.json();
+            const reqData = await parseJsonIfPresent(reqRes);
             if (mounted) setRequests(Array.isArray(reqData) ? reqData.length : 0);
           }
         }
@@ -75,7 +82,7 @@ export default function ViewDetails() {
         if (role === 'buyer') {
           const statusRes = await safeFetch(`/buyer/approach/requests/user/${currentUserId}/${cropId}`, { method: 'GET' });
           if (statusRes.ok) {
-            const status = await statusRes.json();
+            const status = await parseJsonIfPresent(statusRes);
             if (!mounted) return;
             setApproachStatus(status);
             if (status === true) setInfoAlert('Farmer accepted your request. Check your email for next steps.');
