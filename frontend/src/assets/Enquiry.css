@@ -84,6 +84,11 @@
   margin-left:0;
   height: 30px;
 }
+.back-button-enquiry  button{
+  background-color: #1c796e;
+  width:15%;
+
+}
 
 .back-button:hover {
   background-color: #1c796e;

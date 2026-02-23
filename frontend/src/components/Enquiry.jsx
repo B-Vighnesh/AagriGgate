@@ -61,7 +61,7 @@ const Enquiry = () => {
     <span>R</span>
     <span>Y</span>
 </h1>
-             <div className="back-button">
+             <div className="back-button-enquiry">
           <button onClick={() => navigate(-1)} >
         <i className="fas fa-arrow-left"></i>
       </button>

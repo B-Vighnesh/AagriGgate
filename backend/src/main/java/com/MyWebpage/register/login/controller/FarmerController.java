@@ -103,7 +103,6 @@ public class FarmerController {
     @GetMapping("/getFarmer/{farmerId}")
     public ResponseEntity<Farmer> getFarmer(@PathVariable Long farmerId)
     {
-        System.out.println("hiiiiiiiiiiii");
         try {
             Farmer curFarmer = farmerService.find(farmerId);
             System.out.println(curFarmer);
@@ -118,7 +117,21 @@ public class FarmerController {
         }
 
     }
-
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@RequestBody Farmer farmer) {
+        try{ System.out.println("hiiii seller");
+            AuthResponse authResponse = farmerService.verify(farmer);
+            if (authResponse.getFarmer().getRole().equals("BUYER")) {
+                System.out.println(authResponse.getFarmer().getRole());
+                throw new Exception();
+            }
+            System.out.println(authResponse + "jhhhhhhhhhhh");
+            return ResponseEntity.ok(authResponse);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>( new AuthResponse(), HttpStatus.UNAUTHORIZED);
+        }
+    }
     @PostMapping("/register")
     public ResponseEntity<Farmer> register(@RequestBody Farmer farmer) {
         farmer.setRole("SELLER");
@@ -139,13 +152,13 @@ public class FarmerController {
             role="Trader";
         }
         String subject = "Welcome to AggriGgate - Registration Successful";
-        String msg = "Dear "+role+",\n\n" +
+        String msg = "Dear " + role + ",\n\n" +
                 "Congratulations! Your registration with AggriGgate was successful.\n\n" +
                 "We’re thrilled to have you onboard and can’t wait for you to explore the benefits of our platform.\n\n" +
                 "If you have any questions or need assistance, feel free to contact our support team anytime.\n\n" +
                 "Best regards,\n" +
                 "AggriGgate Team\n" +
-                "Mangalore, Karnataka\n" ;
+                "Mangalore, Karnataka\n";
 emailService.sendMail(to,msg,subject);
 
         return response;
@@ -161,21 +174,7 @@ public ResponseEntity<String> resetpassword(@RequestBody ResetPasswordRequest re
     System.out.println("controller ffff");
     return farmerService.resetPassword(resetPasswordRequest.getEmail(),resetPasswordRequest.getNewPassword());
 }
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody Farmer farmer) {
-       try{ System.out.println("hiiii seller");
-        AuthResponse authResponse = farmerService.verify(farmer);
-        if (authResponse.getFarmer().getRole().equals("BUYER")) {
-            System.out.println(authResponse.getFarmer().getRole());
-            throw new Exception();
-        }
-        System.out.println(authResponse + "jhhhhhhhhhhh");
-        return ResponseEntity.ok(authResponse);
-    }
-        catch (Exception e) {
-            return new ResponseEntity<>( new AuthResponse(), HttpStatus.UNAUTHORIZED);
-        }
-    }
+
 
     @DeleteMapping("/delete")
     public ResponseEntity delete(  @RequestBody ResetPasswordRequest resetPasswordRequest)
