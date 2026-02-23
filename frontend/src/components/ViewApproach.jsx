@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getToken, getFarmerId, getRole } from '../lib/auth';
-import { apiGet, apiFetch } from '../lib/api';
+import Button from './common/Button';
+import Card from './common/Card';
+import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
+import { apiFetch, apiGet } from '../lib/api';
+import { getFarmerId, getRole, getToken } from '../lib/auth';
 
-const STATUS_COLORS = {
-  pending: 'badge-amber',
-  accepted: 'badge-green',
-  rejected: 'badge-red',
+const STATUS_CLASS = {
+  pending: 'approach-badge--pending',
+  accepted: 'approach-badge--accepted',
+  rejected: 'approach-badge--rejected',
 };
 
 export default function ViewApproach() {
@@ -18,110 +21,129 @@ export default function ViewApproach() {
 
   const [approaches, setApproaches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
   const [filter, setFilter] = useState('All');
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState({ message: '', type: 'info' });
 
-  const showToast = (msg, type = 'info') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast({ message: '', type: 'info' }), 2600);
   };
 
-  const fetchApproaches = async () => {
+  const loadApproaches = async () => {
+    setLoading(true);
+    setError('');
     try {
-      const res = await apiGet(`/seller/approach/requests/farmer/${farmerId}`);
-      if (res.ok) setApproaches(await res.json());
-      else setError('No requests found.');
-    } catch { setError('Server busy. Please refresh.'); }
-    finally { setLoading(false); }
+      const response = await apiGet(`/seller/approach/requests/farmer/${farmerId}`);
+      if (!response.ok) throw new Error('No requests found.');
+      const data = await response.json();
+      setApproaches(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setApproaches([]);
+      setError(err.message || 'Server busy. Please refresh.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    if (!role) { navigate('/login'); return; }
-    if (role === 'buyer') { navigate('/404'); return; }
-    fetchApproaches();
+    if (!role) {
+      navigate('/login');
+      return;
+    }
+    if (role === 'buyer') {
+      navigate('/404');
+      return;
+    }
+    loadApproaches();
   }, []);
 
-  const handleAction = async (approachId, accept) => {
+  const onAction = async (approachId, accept) => {
     const endpoint = accept
       ? `/seller/approach/accept/${approachId}`
       : `/seller/approach/reject/${approachId}`;
     try {
-      const res = await apiFetch(endpoint, { method: 'POST' });
-      if (res.ok) { showToast(accept ? 'Request accepted!' : 'Request rejected.', accept ? 'success' : 'info'); fetchApproaches(); }
-      else showToast('Action failed.', 'error');
-    } catch { showToast('Server busy.', 'error'); }
+      const response = await apiFetch(endpoint, { method: 'POST' });
+      if (!response.ok) throw new Error('Action failed.');
+      showToast(accept ? 'Request accepted.' : 'Request rejected.', accept ? 'success' : 'info');
+      loadApproaches();
+    } catch (err) {
+      showToast(err.message || 'Unable to process request.', 'error');
+    }
   };
 
-  const filtered = useMemo(() =>
-    filter === 'All' ? approaches : approaches.filter(a => a.status.toLowerCase() === filter.toLowerCase()),
-    [approaches, filter]
-  );
+  const filteredApproaches = useMemo(() => {
+    if (filter === 'All') return approaches;
+    return approaches.filter((item) => (item.status || '').toLowerCase() === filter.toLowerCase());
+  }, [approaches, filter]);
 
-  if (loading) return (
-    <div className="page-wrapper flex justify-center items-center min-h-[60vh]">
-      <span className="spinner" style={{ color: 'var(--color-primary)', width: '32px', height: '32px', borderWidth: '3px' }} />
-    </div>
-  );
+  if (loading) {
+    return (
+      <section className="page page--center">
+        <div className="ui-spinner ui-spinner--lg" />
+      </section>
+    );
+  }
 
   return (
-    <div className="page-wrapper">
-      <ValidateToken farmerId={farmerId} token={token} role={role} />
-
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="section-title text-3xl">Buying Proposals</h1>
-          <p className="section-subtitle">Manage approach requests from buyers for your crops.</p>
-        </div>
-        <select
-          className="form-select w-auto"
-          value={filter}
-          onChange={e => setFilter(e.target.value)}
-        >
-          {['All', 'Pending', 'Accepted', 'Rejected'].map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-      </div>
-
-      {error && (
-        <div className="card p-10 text-center">
-          <p className="text-4xl mb-3">📬</p>
-          <p className="font-semibold" style={{ color: 'var(--color-text)' }}>{error}</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>When buyers show interest in your crops, requests will appear here.</p>
-        </div>
-      )}
-
-      {!error && filtered.length === 0 && (
-        <div className="card p-8 text-center">
-          <p className="text-4xl mb-3">🔍</p>
-          <p className="font-semibold" style={{ color: 'var(--color-text)' }}>No {filter !== 'All' ? filter.toLowerCase() : ''} requests</p>
-        </div>
-      )}
-
-      <div className="grid gap-4">
-        {filtered.map(a => (
-          <div key={a.approachId} className="card p-4 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>{a.cropName}</p>
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Buyer: <strong>{a.userName}</strong></p>
-            </div>
-            <span className={`badge ${STATUS_COLORS[a.status?.toLowerCase()] || 'badge-blue'}`}>
-              {a.status}
-            </span>
-            <div className="flex gap-2 flex-wrap">
-              <button className="btn-outline btn-sm" onClick={() => navigate(`/view-details/${a.cropId}`)}>View Crop</button>
-              <button className="btn-ghost btn-sm" onClick={() => navigate(`/view-buyer/${a.userId}`)}>View Buyer</button>
-              {a.status?.toLowerCase() === 'pending' && (
-                <>
-                  <button className="btn-primary btn-sm" onClick={() => handleAction(a.approachId, true)}>✓ Accept</button>
-                  <button className="btn-danger btn-sm" onClick={() => handleAction(a.approachId, false)}>✕ Reject</button>
-                </>
-              )}
-            </div>
+    <section className="page view-approach-page">
+      <ValidateToken token={token} />
+      <div className="ag-container">
+        <div className="view-approach-head">
+          <div>
+            <h1>Buying Proposals</h1>
+            <p>Manage buyer requests for your crops.</p>
           </div>
-        ))}
+          <select value={filter} onChange={(event) => setFilter(event.target.value)}>
+            <option value="All">All</option>
+            <option value="Pending">Pending</option>
+            <option value="Accepted">Accepted</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+
+        {error ? (
+          <Card className="view-approach-empty">
+            <h3>{error}</h3>
+            <p>When buyers send requests, they will appear here.</p>
+          </Card>
+        ) : null}
+
+        {!error && filteredApproaches.length === 0 ? (
+          <Card className="view-approach-empty">
+            <h3>No {filter !== 'All' ? filter.toLowerCase() : ''} requests</h3>
+          </Card>
+        ) : null}
+
+        <div className="view-approach-list">
+          {filteredApproaches.map((item) => (
+            <Card key={item.approachId} className="approach-card">
+              <div className="approach-card__head">
+                <div>
+                  <h3>{item.cropName}</h3>
+                  <p>Buyer: <strong>{item.userName}</strong></p>
+                </div>
+                <span className={`approach-badge ${STATUS_CLASS[(item.status || '').toLowerCase()] || ''}`}>
+                  {item.status}
+                </span>
+              </div>
+
+              <div className="approach-actions">
+                <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${item.cropId}`)}>View Crop</Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/view-buyer/${item.userId}`)}>View Buyer</Button>
+                {(item.status || '').toLowerCase() === 'pending' ? (
+                  <>
+                    <Button size="sm" onClick={() => onAction(item.approachId, true)}>Accept</Button>
+                    <Button variant="danger" size="sm" onClick={() => onAction(item.approachId, false)}>Reject</Button>
+                  </>
+                ) : null}
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
 
-      {toast && <div className={`toast toast-${toast.type}`}>{toast.type === 'success' ? '✅' : 'ℹ️'} {toast.msg}</div>}
-    </div>
+      <Toast message={toast.message} type={toast.type} />
+    </section>
   );
 }

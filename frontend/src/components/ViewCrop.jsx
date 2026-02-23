@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { apiGet, apiFetch } from '../lib/api';
-import { getToken, getFarmerId, getRole } from '../lib/auth';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import Card from './common/Card';
 import ValidateToken from './ValidateToken';
+import { apiFetch, apiGet } from '../lib/api';
+import { getFarmerId, getRole, getToken } from '../lib/auth';
 
-const LEAF_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23d8f3dc" width="100" height="100"/><text y="60" x="50" text-anchor="middle" font-size="40">🌾</text></svg>';
+const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180"><rect width="320" height="180" fill="%23d8f3dc"/><text x="50%" y="54%" text-anchor="middle" font-size="26" fill="%231f6f54">No Image</text></svg>';
 
 export default function ViewCrop() {
   const navigate = useNavigate();
@@ -13,123 +14,139 @@ export default function ViewCrop() {
   const role = getRole();
 
   const [crops, setCrops] = useState([]);
-  const [imageUrls, setImageUrls] = useState({});
+  const [images, setImages] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState('');
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
-    if (!token || !farmerId) { navigate('/login'); return; }
-    if (role === 'buyer') { navigate('/404'); return; }
+    if (!token || !farmerId) {
+      navigate('/login');
+      return;
+    }
+    if (role === 'buyer') {
+      navigate('/404');
+      return;
+    }
 
-    apiGet(`/crops/farmer/viewCrop/${farmerId}`)
-      .then(res => {
-        if (!res.ok) throw new Error('session_expired');
-        return res.json();
-      })
-      .then(data => {
-        setCrops(data);
-        data.forEach(c => {
-          apiFetch(`/crops/viewUrl/${c.cropID}`)
-            .then(r => r.ok ? r.blob() : null)
-            .then(blob => blob && setImageUrls(prev => ({ ...prev, [c.cropID]: URL.createObjectURL(blob) })))
-            .catch(() => { });
+    let mounted = true;
+    (async () => {
+      try {
+        const response = await apiGet(`/crops/farmer/viewCrop/${farmerId}`);
+        if (!response.ok) throw new Error('Unable to load crops.');
+        const data = await response.json();
+        if (!mounted) return;
+        setCrops(Array.isArray(data) ? data : []);
+
+        data.forEach(async (crop) => {
+          try {
+            const imgRes = await apiFetch(`/crops/viewUrl/${crop.cropID}`, { method: 'GET' });
+            if (!imgRes.ok) return;
+            const blob = await imgRes.blob();
+            if (!mounted) return;
+            setImages((prev) => ({ ...prev, [crop.cropID]: URL.createObjectURL(blob) }));
+          } catch {
+            // ignore image errors only
+          }
         });
-      })
-      .catch(err => setError(err.message === 'session_expired' ? 'Session expired. Please log in again.' : 'Server busy. Try again.'))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        if (mounted) setError(err.message || 'Server busy. Try again.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+      Object.values(images).forEach((url) => {
+        try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+      });
+    };
   }, []);
 
-  const filtered = useMemo(() => {
-    const q = searchQuery.toLowerCase();
-    if (!q) return crops;
-    return crops.filter(c =>
-      c.cropName.toLowerCase().includes(q) ||
-      c.cropType.toLowerCase().includes(q) ||
-      c.region.toLowerCase().includes(q)
+  const filteredCrops = useMemo(() => {
+    if (!query.trim()) return crops;
+    const q = query.toLowerCase();
+    return crops.filter((crop) =>
+      (crop.cropName || '').toLowerCase().includes(q) ||
+      (crop.cropType || '').toLowerCase().includes(q) ||
+      (crop.region || '').toLowerCase().includes(q)
     );
-  }, [crops, searchQuery]);
+  }, [crops, query]);
 
-  if (loading) return (
-    <div className="page-wrapper flex justify-center items-center min-h-[60vh]">
-      <span className="spinner" style={{ color: 'var(--color-primary)', width: '32px', height: '32px', borderWidth: '3px' }} />
-    </div>
-  );
+  if (loading) {
+    return (
+      <section className="page page--center">
+        <div className="ui-spinner ui-spinner--lg" />
+      </section>
+    );
+  }
 
-  if (error) return (
-    <div className="page-wrapper text-center">
-      <p className="text-3xl mb-3">⚠️</p>
-      <p className="text-sm mb-4" style={{ color: 'var(--color-error)' }}>{error}</p>
-      <button className="btn-primary" onClick={() => navigate('/login')}>Login</button>
-    </div>
-  );
+  if (error) {
+    return (
+      <section className="page page--center">
+        <Card className="narrow-card text-center">
+          <h2>Unable to load crops</h2>
+          <p className="error-text">{error}</p>
+          <button type="button" className="ui-btn ui-btn--primary" onClick={() => navigate('/login')}>Go to Login</button>
+        </Card>
+      </section>
+    );
+  }
 
   return (
-    <div className="page-wrapper max-w-7xl mx-auto">
-      <ValidateToken farmerId={farmerId} token={token} role={role} />
-
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-          <h1 className="section-title text-3xl">My Crops Dashboard</h1>
-          <p className="section-subtitle">{crops.length} crop{crops.length !== 1 ? 's' : ''} listed</p>
+    <section className="page view-crop-page">
+      <ValidateToken token={token} />
+      <div className="ag-container">
+        <div className="view-crop-head">
+          <div>
+            <h1>My Crops Dashboard</h1>
+            <p>{crops.length} crop{crops.length !== 1 ? 's' : ''} listed</p>
+          </div>
+          <Link to="/add-crop" className="ui-btn ui-btn--primary">Add New Crop</Link>
         </div>
-        <Link to="/add-crop" className="btn-primary shrink-0">+ Add New Crop</Link>
-      </div>
 
-      {/* Search */}
-      <div className="mb-5">
-        <input
-          className="form-input max-w-md"
-          type="text"
-          placeholder="🔍 Search by name, type or region…"
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-        />
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-5xl mb-3">🌱</p>
-          <p className="font-semibold" style={{ color: 'var(--color-text-muted)' }}>
-            {crops.length === 0 ? 'No crops yet. Add your first one!' : 'No crops match your search.'}
-          </p>
-          {crops.length === 0 && (
-            <Link to="/add-crop" className="btn-primary mt-4 inline-flex">+ Add Your First Crop</Link>
-          )}
+        <div className="view-crop-search">
+          <input
+            type="text"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search by crop name, type, or region"
+          />
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filtered.map(crop => (
-            <div key={crop.cropID} className="card card-hover flex flex-col overflow-hidden cursor-pointer"
-              onClick={() => navigate(`/view-details/${crop.cropID}`)}>
-              <div className="h-40 overflow-hidden bg-gray-50">
-                <img
-                  src={imageUrls[crop.cropID] || LEAF_PLACEHOLDER}
-                  alt={crop.cropName}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                  onError={e => { e.currentTarget.src = LEAF_PLACEHOLDER; }}
-                />
-              </div>
-              <div className="p-4 flex flex-col flex-1">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="font-bold text-sm" style={{ color: 'var(--color-primary-dark)' }}>{crop.cropName}</h3>
-                  <span className="badge badge-green shrink-0">{crop.cropType}</span>
+
+        {filteredCrops.length === 0 ? (
+          <Card className="view-crop-empty">
+            {crops.length === 0 ? 'No crops listed yet. Add your first crop.' : 'No crops match your search.'}
+          </Card>
+        ) : (
+          <div className="view-crop-grid">
+            {filteredCrops.map((crop) => (
+              <Card key={crop.cropID} className="view-crop-card" onClick={() => navigate(`/view-details/${crop.cropID}`)}>
+                <div className="view-crop-card__image-wrap">
+                  <img
+                    src={images[crop.cropID] || PLACEHOLDER}
+                    alt={crop.cropName}
+                    onError={(event) => { event.currentTarget.src = PLACEHOLDER; }}
+                  />
                 </div>
-                <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>📍 {crop.region}</p>
-                <div className="mt-auto pt-3 flex items-center justify-between">
-                  <div>
-                    <p className="font-extrabold" style={{ color: 'var(--color-primary)' }}>₹{crop.marketPrice?.toFixed(2)}</p>
-                    <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>per {crop.unit}</p>
+                <div className="view-crop-card__body">
+                  <div className="view-crop-card__top">
+                    <h3>{crop.cropName}</h3>
+                    <span>{crop.cropType}</span>
                   </div>
-                  <p className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
-                    {crop.quantity} {crop.unit}
-                  </p>
+                  <p className="region">{crop.region}</p>
+                  <div className="view-crop-card__price">
+                    <strong>Rs {Number(crop.marketPrice || 0).toFixed(2)}</strong>
+                    <small>per {crop.unit}</small>
+                  </div>
+                  <p className="qty">{crop.quantity} {crop.unit}</p>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
