@@ -111,7 +111,10 @@ export default function Settings() {
   return (
     <section className="page settings-page">
       <ValidateToken token={token} />
+      
       <div className="ag-container">
+          <button type="button" className="link-back" onClick={() => navigate(-1)}>Back</button>
+
         <header className="settings-head">
           <h1>Settings</h1>
           <p>Manage your account security and preferences.</p>

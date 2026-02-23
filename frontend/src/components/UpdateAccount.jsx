@@ -144,8 +144,9 @@ export default function UpdateAccount() {
     <section className="page update-account-page">
       <ValidateToken token={token} />
       <div className="ag-container">
+          <button type="button" className="link-back" onClick={() => navigate(-1)}>Back</button>
+
         <div className="update-account-head">
-          {/* <button type="button" className="link-back" onClick={() => navigate(-1)}>Back</button> */}
           <div>
             <h1>Edit Account</h1>
             <p>Update your personal details.</p>
