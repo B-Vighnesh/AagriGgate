@@ -1,247 +1,202 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import '../assets/UpdateCrop.css';
-
+import { getToken, getFarmerId, getRole } from '../lib/auth';
+import { apiFetch } from '../lib/api';
 import ValidateToken from './ValidateToken';
-const UpdateCrop = () => {
+
+const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
+const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
+
+export default function UpdateCrop() {
   const navigate = useNavigate();
   const { cropId } = useParams();
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(null);
-  const [cropData, setCropData] = useState({
-    cropName: '',
-    cropType: '',
-    region: '',
-    marketPrice: '',
-    quantity: '',
-  });
-  const [image, setImage] = useState(null);
-  const [existingImageUrl, setExistingImageUrl] = useState(null);
+  const farmerId = getFarmerId();
+  const token = getToken();
+  const role = getRole();
 
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');
-  const farmerId = localStorage.getItem('farmerId');
+  const [cropData, setCropData] = useState({ cropName: '', cropType: '', region: '', marketPrice: '', quantity: '', unit: 'kg', description: '' });
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [existingImage, setExistingImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type = 'info') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   useEffect(() => {
-    const userRole = localStorage.getItem("role");
-    if (userRole ===null) {
-      navigate("/login"); 
-    }
-    else if(userRole==="buyer")
-    {
-      navigate("/404");
-    }
-    const fetchCropData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('No token found. Please log in.');
-          return;
+    if (!role) { navigate('/login'); return; }
+    if (role === 'buyer') { navigate('/404'); return; }
+
+    Promise.all([
+      apiFetch(`/crops/crop/${cropId}`),
+      apiFetch(`/crops/viewUrl/${cropId}`),
+    ])
+      .then(async ([detailsRes, imgRes]) => {
+        if (detailsRes.ok) setCropData(await detailsRes.json());
+        else { showToast('Could not load crop data.', 'error'); navigate(-1); return; }
+        if (imgRes.ok) {
+          const blob = await imgRes.blob();
+          setExistingImage(URL.createObjectURL(blob));
         }
-
-        // Fetch crop data
-        const response = await fetch(`http://localhost:8080/crops/crop/${cropId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setCropData(data);
-
-          // Fetch existing image data
-          const imageResponse = await fetch(`http://localhost:8080/crops/viewUrl/${data.cropID}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (imageResponse.ok) {
-            const imageBlob = await imageResponse.blob();
-            const imageUrl = URL.createObjectURL(imageBlob);
-            setExistingImageUrl(imageUrl);
-          }
-        } else {
-          setError('Failed to fetch crop data');
-        }
-      } catch (error) {
-        setError('Server Busy');
-      }
-    };
-
-    fetchCropData();
+      })
+      .catch(() => showToast('Server busy. Please try again.', 'error'))
+      .finally(() => setFetchLoading(false));
   }, [cropId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCropData({
-      ...cropData,
-      [name]: value,
-    });
+    setCropData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e) => {
-    setImage(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) { setImage(file); setImagePreview(URL.createObjectURL(file)); }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-
-
     const formData = new FormData();
-
-    const cropObject = {
+    const cropObj = {
       cropID: parseInt(cropId),
       cropName: cropData.cropName,
       cropType: cropData.cropType,
       region: cropData.region,
       marketPrice: parseFloat(cropData.marketPrice),
       quantity: parseFloat(cropData.quantity),
+      unit: cropData.unit,
+      description: cropData.description,
       farmer: { farmerId: parseInt(farmerId) },
     };
 
-    formData.append('crop', new Blob([JSON.stringify(cropObject)], { type: 'application/json' }));
-
-    if (image) {
-      formData.append('imageFile', image);
-    }
-
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      setError('No token found. Please log in.');
-      setLoading(false);
-      return;
-    }
+    formData.append('crop', new Blob([JSON.stringify(cropObj)], { type: 'application/json' }));
+    if (image) formData.append('imageFile', image);
 
     try {
-      const response = await fetch(`http://localhost:8080/crops/farmer/update/${cropId}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+      const res = await fetch(`http://localhost:8080/crops/farmer/update/${cropId}`, {
+        method: 'PUT', headers: { Authorization: `Bearer ${token}` }, body: formData,
       });
-
-      if (response.ok) {
-        setSuccessMessage('Crop updated successfully!');
+      if (res.ok) {
+        showToast('Crop updated successfully! Redirecting…', 'success');
+        setTimeout(() => navigate(`/view-details/${cropId}`), 1500);
       } else {
-        setError('Failed to update crop');
-        window.location.reload();
+        showToast('Failed to update crop. Try again.', 'error');
       }
-    } catch (error) {
-      setError('Server Busy');
+    } catch {
+      showToast('Server busy. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleView = () => {
-    navigate('/view-crop');
-  };
-
-  const handleGoBack = () => {
-    navigate('/trade');
-  };
+  if (fetchLoading) return (
+    <div className="page-wrapper flex justify-center items-center min-h-[60vh]">
+      <span className="spinner" style={{ color: 'var(--color-primary)', width: '32px', height: '32px', borderWidth: '3px' }} />
+    </div>
+  );
 
   return (
-    <div className="update-crop-container">
-      
-  <button onClick={() => navigate(-1)} className="back-button">
-    <ValidateToken farmerId={farmerId} token={token} role={role} />
-    <i className="fas fa-arrow-left"></i>
-  </button>
-  <h1 className="heading">
-  <div class="word">
-  <span>U</span>
-  <span>P</span>
-  <span>D</span>
-  <span>A</span>
-  <span>T</span>
-  <span>E</span>
-  </div>
-  <div class="word">
-  <span>C</span>
-  <span>R</span>
-  <span>O</span>
-  <span>P</span>
-  </div>
-</h1>
-      {error && <div className="error-message">{error}</div>}
-      <form onSubmit={handleSubmit} className="update-crop-form">
-        <label htmlFor="cropName">Crop Name:</label>
-        <input
-          type="text"
-          id="cropName"
-          name="cropName"
-          value={cropData.cropName}
-          required
-          onChange={handleChange}
-        />
+    <div className="page-wrapper max-w-2xl mx-auto">
+      <ValidateToken farmerId={farmerId} token={token} role={role} />
 
-        <label htmlFor="cropType">Crop Category:</label>
-        <input
-          type="text"
-          id="cropType"
-          name="cropType"
-          value={cropData.cropType}
-          required
-          onChange={handleChange}
-        />
+      <div className="mb-6 flex items-center gap-4">
+        <button onClick={() => navigate(-1)} className="text-sm font-medium" style={{ color: 'var(--color-primary)' }}>← Back</button>
+        <div>
+          <h1 className="section-title text-3xl">Update Crop</h1>
+          <p className="section-subtitle">Make changes and save.</p>
+        </div>
+      </div>
 
-        <label htmlFor="marketPrice">Market Price:</label>
-        <input
-          type="number"
-          id="marketPrice"
-          name="marketPrice"
-          value={cropData.marketPrice}
-          required
-          onChange={handleChange}
-        />
-
-        <label htmlFor="quantity">Quantity:</label>
-        <input
-          type="number"
-          id="quantity"
-          name="quantity"
-          value={cropData.quantity}
-          required
-          onChange={handleChange}
-        />
-
-        {existingImageUrl && (
-          <div className="existing-image">
-            <p>Existing Image:</p>
-            <img src={existingImageUrl} alt="Crop" style={{ maxWidth: '200px', maxHeight: '200px' }} />
+      <div className="card p-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-group">
+              <label className="form-label">Crop Name *</label>
+              <input className="form-input" name="cropName" required value={cropData.cropName} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Category *</label>
+              <select className="form-select" name="cropType" required value={cropData.cropType} onChange={handleChange}>
+                <option value="">Select</option>
+                {CROP_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
           </div>
-        )}
 
-        <label htmlFor="image">Upload New Image (if needed):</label>
-        <input
-          type="file"
-          id="image"
-          accept="image/*"
-          onChange={handleImageChange}
-        />
-
-        <button type="submit" className="submit-button" disabled={loading}>
-          {loading ? 'Updating Crop...' : 'Update Crop'}
-        </button>
-      </form>
-      {successMessage && (
-        <div className="success-modal">
-          <div className="success-message">
-            <p>{successMessage}</p>
-            <button onClick={handleView} className="ok-button">Ok</button>
+          <div className="form-group">
+            <label className="form-label">Region</label>
+            <input className="form-input" name="region" value={cropData.region} onChange={handleChange} />
           </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="form-group">
+              <label className="form-label">Market Price (₹) *</label>
+              <input className="form-input" type="number" min="0" step="0.01" name="marketPrice" required value={cropData.marketPrice} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Quantity *</label>
+              <input className="form-input" type="number" min="0" name="quantity" required value={cropData.quantity} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Unit *</label>
+              <select className="form-select" name="unit" required value={cropData.unit} onChange={handleChange}>
+                {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Description</label>
+            <textarea className="form-input min-h-[80px] resize-none" name="description" value={cropData.description} onChange={handleChange} />
+          </div>
+
+          {/* Image section */}
+          <div className="form-group">
+            <label className="form-label">Crop Photo</label>
+            <div className="flex gap-4 items-start flex-wrap">
+              {existingImage && !imagePreview && (
+                <div className="relative">
+                  <img src={existingImage} alt="Current" className="w-32 h-32 object-cover rounded-xl shadow" />
+                  <span className="absolute -bottom-1 left-0 right-0 text-center text-xs" style={{ color: 'var(--color-text-muted)' }}>Current</span>
+                </div>
+              )}
+              <label
+                className="flex flex-col items-center justify-center border-2 border-dashed rounded-xl w-32 h-32 cursor-pointer transition-all duration-200"
+                style={{ borderColor: 'var(--color-primary-light)', color: 'var(--color-text-muted)' }}
+              >
+                <span className="text-3xl">📷</span>
+                <span className="text-xs mt-1">Replace Photo</span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              </label>
+              {imagePreview && (
+                <div className="relative">
+                  <img src={imagePreview} alt="New" className="w-32 h-32 object-cover rounded-xl shadow" />
+                  <button type="button"
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-xs flex items-center justify-center"
+                    style={{ background: '#ef4444', color: '#fff' }}
+                    onClick={() => { setImage(null); setImagePreview(null); }}
+                  >×</button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <button type="submit" className="btn-primary w-full py-3" disabled={loading}>
+            {loading ? <><span className="spinner" /> Saving…</> : '💾 Save Changes'}
+          </button>
+        </form>
+      </div>
+
+      {toast && (
+        <div className={`toast toast-${toast.type}`}>
+          {toast.type === 'success' ? '✅' : '❌'} {toast.msg}
         </div>
       )}
     </div>
   );
-};
-
-export default UpdateCrop;
+}

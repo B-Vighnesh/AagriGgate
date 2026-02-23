@@ -1,476 +1,295 @@
-import React, { useEffect, useState, useCallback } from "react";
-import "../assets/Market.css";
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { apiPost, apiGet, apiDelete, apiFetch } from '../lib/api';
+import { getToken, getFarmerId, getRole } from '../lib/auth';
+import ValidateToken from './ValidateToken';
 import commodities from './commodities';
 import statesAndDistricts from './statesAndDistricts';
-import ValidateToken from './ValidateToken';
 
-const Market = () => {
+function StatCard({ label, value, sub, color }) {
+  return (
+    <div className="card p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--color-text-muted)' }}>{label}</p>
+      <p className="text-2xl font-extrabold" style={{ color }}>₹{value ?? '—'}</p>
+      {sub && <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{sub}</p>}
+    </div>
+  );
+}
+
+function MarketItemCard({ item, onSave, onDelete, isSaved }) {
+  return (
+    <div className="card card-hover p-4 flex flex-col gap-1">
+      <div className="flex items-start justify-between mb-2">
+        <h3 className="font-bold text-sm" style={{ color: 'var(--color-primary-dark)' }}>
+          {item.Commodity || 'N/A'}
+        </h3>
+        {item.Grade && <span className="badge badge-green">{item.Grade}</span>}
+      </div>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+        {item.Market && <p><span className="font-medium">Market:</span> {item.Market}</p>}
+        {item.State && <p><span className="font-medium">State:</span> {item.State}</p>}
+        {item.District && <p><span className="font-medium">District:</span> {item.District}</p>}
+        {item.Variety && <p><span className="font-medium">Variety:</span> {item.Variety}</p>}
+        {item.Arrival_Date && <p><span className="font-medium">Arrival:</span> {item.Arrival_Date}</p>}
+      </div>
+      <div className="flex gap-3 mt-2 text-xs font-bold">
+        {item.Min_Price && <span style={{ color: 'var(--color-success)' }}>Low ₹{item.Min_Price}</span>}
+        {item.Modal_Price && <span style={{ color: 'var(--color-primary)' }}>Modal ₹{item.Modal_Price}</span>}
+        {item.Max_Price && <span style={{ color: 'var(--color-warning)' }}>High ₹{item.Max_Price}</span>}
+      </div>
+      <div className="mt-3">
+        {isSaved ? (
+          <button className="btn btn-sm btn-danger w-full" onClick={() => onDelete(item.id)}>
+            🗑 Remove Saved
+          </button>
+        ) : (
+          <button className="btn btn-sm btn-outline w-full" onClick={() => onSave(item)}>
+            💾 Save
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function Market() {
+  const navigate = useNavigate();
+  const farmerId = getFarmerId();
+  const token = getToken();
+  const role = getRole();
+
+  const todayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
   const [marketData, setMarketData] = useState([]);
+  const [savedData, setSavedData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [commodity, setCommodity] = useState("Tomato"); // Default commodity
-  const navigate = useNavigate();
-  const [arrivalDate, setArrivalDate] = useState(() => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-    const dd = String(today.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  });
-  const [state, setState] = useState("");
-  const [district, setDistrict] = useState("");
+  const [toast, setToast] = useState(null);
+  const [showSaved, setShowSaved] = useState(false);
+
+  const [commodity, setCommodity] = useState('Tomato');
+  const [arrivalDate, setArrivalDate] = useState(todayStr);
+  const [state, setState] = useState('');
+  const [district, setDistrict] = useState('');
   const [districtOptions, setDistrictOptions] = useState([]);
+
   const [averagePrice, setAveragePrice] = useState(null);
-  const [bestPriceData, setBestPriceData] = useState(null); // Includes price and market
-  const [highestPriceData, setHighestPriceData] = useState(null); // Includes price and market
-  const apiKey="579b464db66ec23bdd000001602edb9ef1a64cd961329419d730f705";
-  const [savedData, setSavedData] = useState([]);
-  const [filterCommodity, setFilterCommodity] = useState("");
-const [filterState, setFilterState] = useState("");
-const [filterDistrict, setFilterDistrict] = useState("");
-const [minPriceFilter, setMinPriceFilter] = useState("");
-const [maxPriceFilter, setMaxPriceFilter] = useState("");
-const [selectedState, setSelectedState] = useState("");
-const [selectedDistrict, setSelectedDistrict] = useState("");
-const [popupMessage, setPopupMessage] = useState(null);
-const filteredData = savedData.filter((item) => {
-  let matchesFilter = true;
+  const [bestPriceData, setBestPriceData] = useState(null);
+  const [highestPriceData, setHighestPriceData] = useState(null);
 
-  // Filter by Commodity
-  if (filterCommodity && item.Commodity !== filterCommodity) {
+  // Saved-data filters
+  const [filterCommodity, setFilterCommodity] = useState('');
+  const [filterState, setFilterState] = useState('');
+  const [filterDistrict, setFilterDistrict] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
 
-    matchesFilter = false;
-  }
+  const API_KEY = '579b464db66ec23bdd000001602edb9ef1a64cd961329419d730f705';
 
-  // Filter by State
-  if (selectedState && item.State !== selectedState) {
-   
-    matchesFilter = false;
-  }
-
-  // Filter by District
-  if (selectedDistrict && item.District !==selectedDistrict) {
-    matchesFilter = false;
-  }
-
-  // Filter by Min Price
-  if (minPriceFilter && parseFloat(item.Min_Price) < parseFloat(minPriceFilter)) {
-    matchesFilter = false;
-  }
-
-  // Filter by Max Price
-  if (maxPriceFilter && parseFloat(item.Max_Price) > parseFloat(maxPriceFilter)) {
-    matchesFilter = false;
-  }
-
-  return matchesFilter;
-});
-const farmerId=localStorage.getItem('farmerId')
-
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');
-
-
-  const handleSaveData = async (item) => {
-    const token = localStorage.getItem("token"); 
-    item.farmerId=localStorage.getItem("farmerId"); 
-    try {
-      const response = await fetch("http://localhost:8080/api/saved-market-data/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Add Bearer token
-        },
-        body: JSON.stringify(item), // Convert item to JSON string
-      });
-  if(response.ok)
-  {
-    const savedItem = await response.json();
-    setPopupMessage(`Data for ${savedItem.Commodity || "Market"} saved successfully!`);
-    handleViewSavedData();
-  }
-      if (!response.ok) {
-        window.location.reload();
-      }
-     
-    } catch (error) {
-      setPopupMessage("Server busy");
-    }
+  const showToast = (msg, type = 'info') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
   };
-  const handleDeleteData = async (id) => {
-    const token = localStorage.getItem("token"); // Fetch Bearer token
-    if (!token) {
-      setPopupMessage("User not authenticated. Please log in.");
-      setTimeout(() => navigate('/login'), 2000);
-      return;
-    }
-  
-    try {
-      const response = await fetch(`http://localhost:8080/api/saved-market-data/delete`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`, // Add Bearer token
-          "X-Id": id,
-        },
-      });
-  
-      if (!response.ok) {
-      window.location.reload();
-      }
-  
-      setPopupMessage("Data deleted successfully!");
-      handleViewSavedData();
-    } catch (error) {
-     setPopupMessage("Server busy");
-    }
-  };
-  
-  const handleViewSavedData = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const farmerId = localStorage.getItem("farmerId"); // Replace with the actual farmerId
-      const response = await fetch("http://localhost:8080/api/saved-market-data/getAll", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`, // Add Bearer token
-          "X-Farmer-Id": farmerId, // Custom header for farmerId
-        },
-      });
-  
-      if (!response.ok) {
-      window.location.reload();
-      }
-  
-      const savedData = await response.json();
-      setSavedData(savedData);
-    } catch (error) {
-     setPopupMessage("Server busy");
-      
-    }
-  };
-  
-  
+
+  useEffect(() => {
+    const r = getRole();
+    if (!r) navigate('/login');
+    else if (r === 'buyer') navigate('/404');
+    else fetchSavedData();
+  }, []);
+
   const fetchMarketData = useCallback(async () => {
+    if (!state || !district || !commodity) return;
     setLoading(true);
     setError(null);
-const apiUrl = `https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24?api-key=${apiKey}&format=json&offset=0&limit=1000&filters[State]=${state}&filters[District]=${district}&filters[Commodity]=${commodity}&filters[Arrival_Date]=${arrivalDate}`;
-
-
+    const url = `https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24?api-key=${API_KEY}&format=json&offset=0&limit=1000&filters[State]=${state}&filters[District]=${district}&filters[Commodity]=${commodity}&filters[Arrival_Date]=${arrivalDate}`;
     try {
-      const response = await fetch(apiUrl);
-      if (!response.ok) {
-        if (response.status === 503) {
-          throw new Error("Server is busy. Please try again later.");
-        } else {
-          throw new Error("Server is busy. Please try again later.");
-        }
-      }
-
-      const data = await response.json();
+      const res = await fetch(url);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
       const records = data.records || [];
       setMarketData(records);
-console.log(marketData)
-      // Calculate average price, best price, and highest price with their respective markets
-      const modalPrices = records
-        .map((item) => parseFloat(item.Modal_Price))
-        .filter((price) => !isNaN(price)); // Ensure valid numbers
-      const minPrices = records
-        .map((item) => ({ price: parseFloat(item.Min_Price), market: item.Market }))
-        .filter((item) => !isNaN(item.price));
-      const maxPrices = records
-        .map((item) => ({ price: parseFloat(item.Max_Price), market: item.Market }))
-        .filter((item) => !isNaN(item.price));
 
-      const avgPrice = modalPrices.length > 0
-        ? (modalPrices.reduce((acc, price) => acc + price, 0) / modalPrices.length).toFixed(2)
-        : null;
-      
-      const bestPrice = minPrices.length > 0
-        ? minPrices.reduce((prev, curr) => (curr.price < prev.price ? curr : prev), minPrices[0])
-        : null;
+      const modal = records.map(r => parseFloat(r.Modal_Price)).filter(v => !isNaN(v));
+      const mins = records.map(r => ({ price: parseFloat(r.Min_Price), market: r.Market })).filter(v => !isNaN(v.price));
+      const maxs = records.map(r => ({ price: parseFloat(r.Max_Price), market: r.Market })).filter(v => !isNaN(v.price));
 
-      const highestPrice = maxPrices.length > 0
-        ? maxPrices.reduce((prev, curr) => (curr.price > prev.price ? curr : prev), maxPrices[0])
-        : null;
-
-      setAveragePrice(avgPrice);
-      setBestPriceData(bestPrice);
-      setHighestPriceData(highestPrice);
-
-      setLoading(false);
-    } catch (error) {
-      console.error("Server is busy. Please try again later.");
-      setError("Server is busy. Please try again later.");
+      setAveragePrice(modal.length ? (modal.reduce((a, b) => a + b, 0) / modal.length).toFixed(2) : null);
+      setBestPriceData(mins.length ? mins.reduce((p, c) => c.price < p.price ? c : p, mins[0]) : null);
+      setHighestPriceData(maxs.length ? maxs.reduce((p, c) => c.price > p.price ? c : p, maxs[0]) : null);
+    } catch {
+      setError('Server is busy or no data available. Please try again.');
+    } finally {
       setLoading(false);
     }
   }, [commodity, arrivalDate, state, district]);
 
-  useEffect(() => {
-    const userRole = localStorage.getItem("role");
-    if (userRole ===null) {
-      navigate("/login"); 
-    }
-    else if(userRole==="buyer")
-    {
-      navigate("/404");
-    }
-    if (state && district && commodity) {
-      fetchMarketData();
-    }
-  }, [fetchMarketData]);
+  const fetchSavedData = async () => {
+    try {
+      const res = await apiFetch('/api/saved-market-data/getAll', {
+        method: 'GET',
+        headers: { 'X-Farmer-Id': getFarmerId() },
+      });
+      if (res.ok) setSavedData(await res.json());
+    } catch { /* silently fail */ }
+  };
 
-  const handleStateChange = (selectedState) => {
-    setState(selectedState);
-    setDistrictOptions(statesAndDistricts[selectedState] || []);
-    setDistrict(""); // Reset district when state changes
+  const handleSave = async (item) => {
+    try {
+      const res = await apiPost('/api/saved-market-data/save', { ...item, farmerId: getFarmerId() });
+      if (res.ok) { showToast(`${item.Commodity} saved!`, 'success'); fetchSavedData(); }
+      else showToast('Save failed. Try again.', 'error');
+    } catch { showToast('Server busy.', 'error'); }
   };
-  const closePopup = () => {
-    setPopupMessage(null);
+
+  const handleDelete = async (id) => {
+    try {
+      const res = await apiFetch('/api/saved-market-data/delete', { method: 'DELETE', headers: { 'X-Id': id } });
+      if (res.ok) { showToast('Removed from saved.', 'success'); fetchSavedData(); }
+      else showToast('Delete failed.', 'error');
+    } catch { showToast('Server busy.', 'error'); }
   };
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    fetchMarketData();
+
+  const handleStateChange = (val) => {
+    setState(val);
+    setDistrictOptions(statesAndDistricts[val] || []);
+    setDistrict('');
   };
+
+  const filteredSaved = savedData.filter(item => {
+    if (filterCommodity && item.Commodity !== filterCommodity) return false;
+    if (filterState && item.State !== filterState) return false;
+    if (filterDistrict && item.District !== filterDistrict) return false;
+    if (minPrice && parseFloat(item.Min_Price) < parseFloat(minPrice)) return false;
+    if (maxPrice && parseFloat(item.Max_Price) > parseFloat(maxPrice)) return false;
+    return true;
+  });
+
+  const savedIds = new Set(savedData.map(s => s.id));
 
   return (
-    <div>
+    <div className="page-wrapper max-w-7xl mx-auto">
       <ValidateToken farmerId={farmerId} token={token} role={role} />
 
-      <h1 class="heading">
-        <span>M</span>
-        <span>A</span>
-        <span>R</span>
-        <span>K</span>
-        <span>E</span>
-        <span>T</span>
-        
-    </h1>
-      <div className="market">
-        
-      <form onSubmit={handleSubmit} className="market-form">
-  <label>
-    Commodity:
-    <select
-      value={commodity}
-      onChange={(e) => setCommodity(e.target.value)}
-    >
-      {commodities.map((commodityItem) => (
-        <option key={commodityItem} value={commodityItem}>
-          {commodityItem}
-        </option>
-      ))}
-    </select>
-  </label>
-  <label>
-    Arrival Date:
-    <input
-      type="date"
-      value={arrivalDate}
-      max={new Date().toISOString().split("T")[0]} // Set the maximum date to today
-      onChange={(e) => setArrivalDate(e.target.value)}
-    />
-  </label>
-  <label>
-    State:
-    <select
-      value={state}
-      required
-      onChange={(e) => handleStateChange(e.target.value)}
-    >
-      <option value="">Select State</option>
-      {Object.keys(statesAndDistricts).map((stateName) => (
-        <option key={stateName} value={stateName}>
-          {stateName}
-        </option>
-      ))}
-    </select>
-  </label>
-  <label>
-    District:
-    <select
-      value={district}
-      required
-      onChange={(e) => setDistrict(e.target.value)}
-      disabled={!state}
-    >
-      <option value="">Select District</option>
-      {districtOptions.map((districtName) => (
-        <option key={districtName} value={districtName}>
-          {districtName}
-        </option>
-      ))}
-    </select>
-  </label>
-  <button type="submit">Fetch Data</button>
-  <button type="button" onClick={handleViewSavedData} className="view-saved-button">
-    View Saved Data
-  </button>
-</form>
+      <div className="mb-6">
+        <h1 className="section-title text-3xl">Market Prices</h1>
+        <p className="section-subtitle">Live commodity prices from government data — updated daily.</p>
+      </div>
 
-
-        {state && district && commodity && arrivalDate&&(
-          <div className="market-summary">
-            <h2>Prices of {commodity} in {district}, {state} on {arrivalDate}</h2>
-            {averagePrice !== null ? (
-              <>
-                <p>
-                  <strong>Average Price:</strong> ₹{averagePrice}
-                </p>
-                <p>
-                  <strong>Lowest Price:</strong> ₹{bestPriceData?.price || "N/A"} at {bestPriceData?.market || "N/A"}
-                </p>
-                <p>
-                  <strong>Highest Price:</strong> ₹{highestPriceData?.price || "N/A"} at {highestPriceData?.market || "N/A"}
-                </p>
-                <p>
-                  <strong>Arrival Date:</strong> {arrivalDate}
-                </p>
-              </>
-            ) : (
-              <p></p>
-            )}
-          </div>
-        )}
-        
-
-<div className="market-list">
-  {loading && <p>Loading market data...</p>}
-  {error && <p className="market-error">Server is busy. Please try again later.</p>}
-  {!loading && !error && marketData.length > 0 ? (
-    marketData.map((item, index) => (
-      <div className="market-item" key={index}>
-        <h3>Commodity: {item.Commodity || "N/A"}</h3>
-        {item.State && <p><strong>State:</strong> {item.State}</p>}
-        {item.District && <p><strong>District:</strong> {item.District}</p>}
-        {item.Market && <p><strong>Market:</strong> {item.Market}</p>}
-        {item.Variety && <p><strong>Variety:</strong> {item.Variety}</p>}
-        {item.Grade && <p><strong>Grade:</strong> {item.Grade}</p>}
-        {item.Arrival_Date && <p><strong>Arrival Date:</strong> {item.Arrival_Date}</p>}
-        {item.Min_Price && <p><strong>Min Price:</strong> ₹{item.Min_Price}</p>}
-        {item.Max_Price && <p><strong>Max Price:</strong> ₹{item.Max_Price}</p>}
-        {item.Modal_Price && <p><strong>Modal Price:</strong> ₹{item.Modal_Price}</p>}
-        
-        {/* Save Button */}
-        <button
-          onClick={() => handleSaveData(item)}
-          className="save-button"
+      {/* ── Search Form ── */}
+      <div className="card p-5 mb-6">
+        <form
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end"
+          onSubmit={(e) => { e.preventDefault(); fetchMarketData(); }}
         >
-          Save
-        </button>
+          <div className="form-group mb-0">
+            <label className="form-label">Commodity</label>
+            <select className="form-select" value={commodity} onChange={e => setCommodity(e.target.value)}>
+              {commodities.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="form-group mb-0">
+            <label className="form-label">Arrival Date</label>
+            <input type="date" className="form-input" value={arrivalDate}
+              max={todayStr()} onChange={e => setArrivalDate(e.target.value)} />
+          </div>
+          <div className="form-group mb-0">
+            <label className="form-label">State</label>
+            <select className="form-select" value={state} required onChange={e => handleStateChange(e.target.value)}>
+              <option value="">Select State</option>
+              {Object.keys(statesAndDistricts).map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="form-group mb-0">
+            <label className="form-label">District</label>
+            <select className="form-select" value={district} required onChange={e => setDistrict(e.target.value)} disabled={!state}>
+              <option value="">Select District</option>
+              {districtOptions.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div className="lg:col-span-4 flex gap-3 justify-end mt-1">
+            <button type="submit" className="btn-primary" disabled={!state || !district}>
+              🔍 Fetch Prices
+            </button>
+            <button type="button" className="btn-outline" onClick={() => { setShowSaved(!showSaved); fetchSavedData(); }}>
+              {showSaved ? 'Hide Saved' : '💾 Saved Data'}
+            </button>
+          </div>
+        </form>
       </div>
-    ))
-  ) : !loading && !error && marketData.length === 0 ? (
-    <p>No price data available for {commodity}</p>
-  ) : null}
-</div>
-{savedData.length > 0 && (
-  <div className="saved-data">
-    <h2>Saved Market Data</h2>
 
-    {/* Filter Section */}
-    <div className="filter-section">
-      <label>
-        Filter by Commodity:
-        <select value={filterCommodity} onChange={(e) => setFilterCommodity(e.target.value)}>
-          <option value="">All</option>
-          {commodities.map((commodityItem) => (
-            <option key={commodityItem} value={commodityItem}>
-              {commodityItem}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label>
-  Filter by State:
-  <select value={selectedState} onChange={(e) => setSelectedState(e.target.value)}>
-    <option value="">All</option>
-    {Object.keys(statesAndDistricts).map((state) => (
-      <option key={state} value={state}>
-        {state}
-      </option>
-    ))}
-  </select>
-</label>
-
-<label>
-  Filter by District:
-  <select value={selectedDistrict} onChange={(e) => setSelectedDistrict(e.target.value)}>
-    <option value="">All</option>
-    {statesAndDistricts[selectedState]?.map((district) => (
-      <option key={district} value={district}>
-        {district}
-      </option>
-    ))}
-  </select>
-</label>
-
-
-      <label>
-        Min Price:
-        <input
-          type="number"
-          value={minPriceFilter}
-          onChange={(e) => setMinPriceFilter(e.target.value)}
-          placeholder="Min Price"
-        />
-      </label>
-
-      <label>
-        Max Price:
-        <input
-          type="number"
-          value={maxPriceFilter}
-          onChange={(e) => setMaxPriceFilter(e.target.value)}
-          placeholder="Max Price"
-        />
-      </label>
-    </div>
-
-    {/* Display Filtered Market List */}
-    <div className="market-list">
-      {filteredData.map((item, index) => (
-        <div className="market-item" key={index}>
-          <h3>Commodity: {item.Commodity || "N/A"}</h3>
-          {item.State && <p><strong>State:</strong> {item.State}</p>}
-          {item.District && <p><strong>District:</strong> {item.District}</p>}
-          {item.Market && <p><strong>Market:</strong> {item.Market}</p>}
-          {item.Variety && <p><strong>Variety:</strong> {item.Variety}</p>}
-          {item.Grade && <p><strong>Grade:</strong> {item.Grade}</p>}
-          {item.Arrival_Date && <p><strong>Arrival Date:</strong> {item.Arrival_Date}</p>}
-          {item.Min_Price && <p><strong>Min Price:</strong> ₹{item.Min_Price}</p>}
-          {item.Max_Price && <p><strong>Max Price:</strong> ₹{item.Max_Price}</p>}
-          {item.Modal_Price && <p><strong>Modal Price:</strong> ₹{item.Modal_Price}</p>}
-          {/* Delete Button */}
-          <button
-            onClick={() => handleDeleteData(item.id)}
-            className="delete-button"
-          >
-            Delete
-          </button>
+      {/* ── Stats ── */}
+      {averagePrice && !loading && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 animate-fade-in">
+          <StatCard label="Average (Modal)" value={averagePrice} color="var(--color-primary)" />
+          <StatCard label="Lowest Available" value={bestPriceData?.price} sub={bestPriceData?.market} color="var(--color-success)" />
+          <StatCard label="Highest Available" value={highestPriceData?.price} sub={highestPriceData?.market} color="var(--color-warning)" />
         </div>
-      ))}
-    </div>
-  </div>
-)}{popupMessage && (
-  <div className="popup-overlay" onClick={closePopup}>
-    <div className="popup">
-      <p>{popupMessage}</p>
-      {/* <button className="popup-close" onClick={closePopup}>
-        Close
-      </button> */}
-    </div>
-  </div>
-)}
+      )}
 
+      {/* ── Market Data Grid ── */}
+      {loading && (
+        <div className="flex items-center justify-center py-16 gap-3">
+          <span className="spinner" style={{ color: 'var(--color-primary)' }} />
+          <span style={{ color: 'var(--color-text-muted)' }}>Fetching market data…</span>
+        </div>
+      )}
+      {error && (
+        <div className="card p-4 text-center mb-6" style={{ borderColor: '#fecaca', background: '#fef2f2' }}>
+          <p style={{ color: 'var(--color-error)' }}>⚠️ {error}</p>
+        </div>
+      )}
+      {!loading && !error && marketData.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+          {marketData.map((item, i) => (
+            <MarketItemCard key={i} item={item} onSave={handleSave} onDelete={handleDelete} isSaved={savedIds.has(item.id)} />
+          ))}
+        </div>
+      )}
+      {!loading && !error && marketData.length === 0 && state && district && (
+        <div className="text-center py-10" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-4xl mb-2">🌾</p>
+          <p>No data found for <strong>{commodity}</strong> in {district}, {state} on {arrivalDate}.</p>
+        </div>
+      )}
 
+      {/* ── Saved Data Panel ── */}
+      {showSaved && savedData.length > 0 && (
+        <div className="mt-6 animate-fade-in">
+          <h2 className="section-title text-xl mb-4">💾 Saved Market Data</h2>
+          {/* Filters */}
+          <div className="card p-4 mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            <select className="form-select" value={filterCommodity} onChange={e => setFilterCommodity(e.target.value)}>
+              <option value="">All Commodities</option>
+              {commodities.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select className="form-select" value={filterState} onChange={e => setFilterState(e.target.value)}>
+              <option value="">All States</option>
+              {Object.keys(statesAndDistricts).map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select className="form-select" value={filterDistrict} onChange={e => setFilterDistrict(e.target.value)}>
+              <option value="">All Districts</option>
+              {statesAndDistricts[filterState]?.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+            <input className="form-input" type="number" placeholder="Min Price" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
+            <input className="form-input" type="number" placeholder="Max Price" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredSaved.map((item, i) => (
+              <MarketItemCard key={i} item={item} onSave={handleSave} onDelete={handleDelete} isSaved />
+            ))}
+          </div>
+        </div>
+      )}
 
-
-      </div>
+      {toast && (
+        <div className={`toast toast-${toast.type}`}>
+          {toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : 'ℹ️'} {toast.msg}
+        </div>
+      )}
     </div>
   );
-};
-
-export default Market;
+}

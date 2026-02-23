@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './components/Home';
 import Account from './components/Account';
 import Market from './components/Market';
@@ -14,10 +15,9 @@ import AddCrop from './components/AddCrop';
 import ViewDetails from './components/ViewDetails';
 import DeleteCrop from './components/DeleteCrop';
 import UpdateCrop from './components/UpdateCrop';
-import Footer from './components/Footer';
 import ContactUs from './components/ContactUs';
 import UpdateAccount from './components/UpdateAccount';
-import  ViewAllCrop from './components/ViewAllCrop';
+import ViewAllCrop from './components/ViewAllCrop';
 import ForgotPassword from './components/ForgotPassword';
 import ApproachFarmer from './components/ApproachFarmer';
 import ViewApproach from './components/ViewApproach';
@@ -27,17 +27,17 @@ import ViewApproachForUser from './components/ViewApproachForUser';
 import Settings from './components/Settings';
 import Enquiry from './components/Enquiry';
 import Error from './components/Error';
-import ValidateToken from './components/ValidateToken'; 
-import './App.css';
+import ValidateToken from './components/ValidateToken';
 import BuyerDetails from './components/BuyerDetails';
+import './index.css';
+
 function App() {
   return (
-    <Router><Routes> <Route path="/404" element={<Error/>} /></Routes>
-      <div className="App">
+    <Router>
+      <div className="flex flex-col min-h-screen">
         <Navbar />
-        <div className="main-container">
+        <main className="flex-1">
           <Routes>
-            {/* Define all your routes here */}
             <Route path="/" element={<Home />} />
             <Route path="/account" element={<Account />} />
             <Route path="/market" element={<Market />} />
@@ -52,21 +52,22 @@ function App() {
             <Route path="/delete-crop/:cropId" element={<DeleteCrop />} />
             <Route path="/update-crop/:cropId" element={<UpdateCrop />} />
             <Route path="/contact-us" element={<ContactUs />} />
-            <Route path="/view-all-crops" element={< ViewAllCrop />} />
+            <Route path="/view-all-crops" element={<ViewAllCrop />} />
             <Route path="/update-account" element={<UpdateAccount />} />
-            <Route path="forgot-password" element={<ForgotPassword/>}/>
-            <Route path="approach-farmer" element={<ApproachFarmer/>}/>
-            <Route path="view-approach" element={<ViewApproach/>}/>
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/approach-farmer" element={<ApproachFarmer />} />
+            <Route path="/view-approach" element={<ViewApproach />} />
             <Route path="/view-approaches-user" element={<ViewApproachForUser />} />
-            <Route path="/settings" element={<Settings/>} />
-            <Route path="/settings" element={<Settings/>} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/view-buyer/:buyerId" element={<BuyerDetails />} />
-        <Route path="/delete-approach/:approachId" element={<DeleteApproach />} />
-        <Route path="/view-approaches/farmer/:farmerId/crop/:cropId"  element={<ViewApproachByFarmerAndCrop/>}/>
-        <Route path="/enquiry" element={<Enquiry/>} />
-        <Route path="/validate-token" element={<ValidateToken />} />
+            <Route path="/delete-approach/:approachId" element={<DeleteApproach />} />
+            <Route path="/view-approaches/farmer/:farmerId/crop/:cropId" element={<ViewApproachByFarmerAndCrop />} />
+            <Route path="/enquiry" element={<Enquiry />} />
+            <Route path="/validate-token" element={<ValidateToken />} />
+            <Route path="/404" element={<Error />} />
+            <Route path="*" element={<Error />} />
           </Routes>
-        </div>
+        </main>
         <Footer />
       </div>
     </Router>
