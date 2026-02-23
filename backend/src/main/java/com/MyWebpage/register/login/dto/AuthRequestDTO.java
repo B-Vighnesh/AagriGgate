@@ -1,11 +1,14 @@
 package com.MyWebpage.register.login.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class AuthRequestDTO {
     @NotBlank
+    @Size(min = 3, max = 100)
     private String principal;
     @NotBlank
+    @Size(min = 6, max = 100)
     private String password;
 
     public String getPrincipal() { return principal; }

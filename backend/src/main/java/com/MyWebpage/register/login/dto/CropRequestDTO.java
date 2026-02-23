@@ -2,17 +2,22 @@ package com.MyWebpage.register.login.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public class CropRequestDTO {
     @NotBlank
+    @Size(min = 2, max = 100)
     private String cropName;
     @NotBlank
     private String cropType;
     @NotBlank
     private String region;
     @NotNull
+    @Positive
     private Double marketPrice;
     @NotNull
+    @Positive
     private Double quantity;
     @NotNull
     private Long farmerId;
