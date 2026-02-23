@@ -57,9 +57,8 @@ public class WeatherService {
         }
     }
 
-    public Map<String, Object> getWeatherByFarmerEmail(String email) {
-        Optional<Farmer> farmerOptional = farmerRepo.findByEmail(email);
-        Farmer farmer = farmerOptional.orElseThrow(() -> new ResourceNotFoundException("Farmer not found"));
+    public Map<String, Object> getWeatherByFarmerEmail(String username) {
+        Farmer farmer = farmerRepo.findByUsername(username);
 
         String queryCity = firstNonBlank(farmer.getCity(), farmer.getDistrict(), farmer.getState());
         if (queryCity == null) {
