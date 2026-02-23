@@ -1,91 +1,48 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../assets/Trade.css'; // Importing the CSS for styling
+import React, { useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { getToken, getRole } from '../lib/auth';
 
-// Modal Component
-const Modal = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
+export default function Trade() {
+  const navigate = useNavigate();
+  const token = getToken();
+  const role = getRole();
+
+  // Unauthenticated → Login
+  useEffect(() => {
+    if (!token) { navigate('/login'); return; }
+    if (role === 'buyer') { navigate('/view-all-crops'); }
+  }, [token, role]);
+
+  // Buyer auto-navigates; this UI is only for farmers
+  if (!token || role === 'buyer') return null;
+
+  const actions = [
+    { icon: '🌱', label: 'Add Crop', desc: 'List a new crop for buyers to discover.', to: '/add-crop' },
+    { icon: '📦', label: 'My Crops', desc: 'View and manage all your listed crops.', to: '/view-crop' },
+    { icon: '🤝', label: 'Proposals', desc: 'Review and respond to buyer approach requests.', to: '/view-approach' },
+  ];
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h2>Please Login</h2>
-        <p>You need to be logged in to access the trading features.</p>
-        <button onClick={onClose}>Close</button>
+    <div className="page-wrapper max-w-3xl mx-auto">
+      <div className="mb-8 text-center">
+        <h1 className="section-title text-4xl">Trade Dashboard</h1>
+        <p className="section-subtitle text-base">Manage your crops and buyer interactions.</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        {actions.map(({ icon, label, desc, to }) => (
+          <Link
+            key={to}
+            to={to}
+            className="card card-hover p-6 text-center flex flex-col items-center gap-2 no-underline"
+            style={{ textDecoration: 'none' }}
+          >
+            <span className="text-4xl">{icon}</span>
+            <p className="font-bold text-base mt-1" style={{ color: 'var(--color-primary-dark)' }}>{label}</p>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{desc}</p>
+          </Link>
+        ))}
       </div>
     </div>
   );
-};
-
-const Trade = () => {
-  const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [role, setRole] = useState(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userRole = localStorage.getItem('role'); // Get the role from localStorage
-    if (!token) {
-      setIsModalOpen(true); // Show modal if not authenticated
-    } else {
-      setRole(userRole); // Set the role for conditional rendering
-    }
-  }, [navigate]);
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    navigate('/login'); // Redirect to login page when closing the modal
-  };
-
-  const handleAddCropClick = () => {
-    navigate('/add-crop'); // Redirect to AddCrop component
-  };
-
-  const handleViewCropClick = () => {
-    if (role === 'farmer') {
-      navigate('/view-crop'); // Redirect to ViewCrop component for farmers
-    }
-  };
-  const handleViewApproachClick=()=>{
-    navigate('/view-approach')
-  }
-
-  // If the user is a buyer, automatically navigate to ViewAllCrops
-  useEffect(() => {
-    if (role === 'buyer') {
-      navigate('/view-all-crops');
-    }
-  }, [role, navigate]);
-
-  return (
-    <div className="trade-container">
-      <h1>Trade</h1>
-
-      {/* Show buttons based on role */}
-      {!isModalOpen && role && role === 'farmer' && (
-        <div className="trade-buttons">
-          <div className="addCrop">
-            <button className="add-crop-button" onClick={handleAddCropClick}>
-              Add Crop
-            </button>
-          </div>
-          <div className="viewCrop">
-            <button className="view-crop-button" onClick={handleViewCropClick}>
-              View Crop
-            </button>
-          </div>
-          <div className="viewApproach">
-            <button className="view-approach-button" onClick={handleViewApproachClick}>
-             View Approach
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Modal for login alert */}
-      <Modal isOpen={isModalOpen} onClose={handleModalClose} />
-    </div>
-  );
-};
-
-export default Trade;
+}
