@@ -45,7 +45,7 @@ export default function Home() {
       <ValidateToken token={token} role={role} farmerId={farmerId} />
 
       <section className="hero">
-        <div className="container">
+        <div className="ag-container">
           <p className="hero__tag">India&apos;s Farmer-First Marketplace</p>
           <h1 className="hero__title">
             Farm to Table, <span>Without the Middleman</span>
@@ -75,7 +75,7 @@ export default function Home() {
         </div>
       </section> */}
 
-      <section className="container section">
+      <section className="ag-container section">
         <h2 className="section-title">Why AagriGgate?</h2>
         <p className="section-subtitle">Everything you need to connect, trade, and grow.</p>
         <div className="feature-grid">
@@ -89,7 +89,7 @@ export default function Home() {
       </section>
 
       <section className="section section--surface">
-        <div className="container">
+        <div className="ag-container">
           <h2 className="section-title">How It Works</h2>
           <div className="steps-grid">
             {STEPS.map((step) => (
@@ -103,16 +103,16 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="faq" className="container section">
+      <section id="faq" className="ag-container section">
         <h2 className="section-title">Frequently Asked Questions</h2>
         <div className="faq-list">
           {FAQS.map((item, index) => {
             const open = openFaq === index;
             return (
               <Card key={item.q} className="faq-card">
-                <button className="faq-card__button" onClick={() => setOpenFaq(open ? null : index)}>
-                  <span>{item.q}</span>
-                  <span>{open ? '-' : '+'}</span>
+                <button type="button" className="faq-card__button" onClick={() => setOpenFaq(open ? null : index)}>
+                  <span className="faq-card__question">{item.q}</span>
+                  <span className="faq-card__toggle">{open ? '-' : '+'}</span>
                 </button>
                 {open && <p className="faq-card__answer">{item.a}</p>}
               </Card>
@@ -123,7 +123,7 @@ export default function Home() {
 
       {!farmerId && (
         <section className="cta">
-          <div className="container">
+          <div className="ag-container">
             <h2>Join AagriGgate Today</h2>
             <p>Sign up free and start trading directly.</p>
             <div className="hero__actions">
