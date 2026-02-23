@@ -164,7 +164,9 @@ export default function Market() {
         district,
         arrivalDate: queryDate,
       });
-      const records = response?.data?.records || [];
+      const records = response.data || [];
+      console.log(records);
+
       setMarketData(records);
       if (manual) showToast(`Loaded ${records.length} records.`, 'success');
     } catch (err) {
