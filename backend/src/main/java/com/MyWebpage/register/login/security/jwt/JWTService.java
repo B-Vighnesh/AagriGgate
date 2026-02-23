@@ -22,64 +22,73 @@ public class JWTService {
     @Value("${jwt.secret}")
     private String secretkey;
 
-    public JWTService() {}
+    public String generateToken(String username, String role) {
 
-    public String generateToken(String username,String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", "ROLE_" + role);
+
         return Jwts.builder()
                 .claims()
                 .add(claims)
                 .subject(username)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 60*60*2 * 1000))
-
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 2 * 60 * 60 * 1000))
                 .and()
-                .signWith(getKey())
+                .signWith(getKey(), Jwts.SIG.HS256)
                 .compact();
-
     }
 
     private SecretKey getKey() {
+
         if (!StringUtils.hasText(secretkey)) {
             throw new IllegalStateException("JWT secret is not configured.");
         }
+
         byte[] keyBytes = Decoders.BASE64.decode(secretkey);
+
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException("JWT secret must be at least 256 bits.");
+        }
+
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String extractUsername(String token) {
-        // extract the username from jwt token
         return extractClaim(token, Claims::getSubject);
     }
 
-    private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimResolver.apply(claims);
-    }
-
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
-
-    public boolean validateToken(String token, UserDetails userDetails) {
-        final String userName = extractUsername(token);
-        return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
-    }
     public String extractRole(String token) {
         return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
+    public boolean validateToken(String token, UserDetails userDetails) {
+
+        try {
+
+            final String userName = extractUsername(token);
+
+            return userName.equals(userDetails.getUsername())
+                    && !isTokenExpired(token);
+
+        } catch (Exception e) {
+
+            return false;
+
+        }
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractClaim(token, Claims::getExpiration).before(new Date());
+    }
+
+    private <T> T extractClaim(String token, Function<Claims, T> resolver) {
+
+        final Claims claims = Jwts.parser()
+                .verifyWith(getKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return resolver.apply(claims);
+    }
 }
