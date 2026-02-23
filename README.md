@@ -20,6 +20,7 @@ The system is built using a Spring Boot backend and a React (Vite) frontend, wit
 - Authentication and Security
 - Environment Configuration
 - Build and Deployment
+- License
 
 ---
 
@@ -75,87 +76,91 @@ The project is divided into two main modules:
 
 # Project Structure
 
-AagriGgate-main
-
-├── backend
+```
+AagriGgate/
+│
+├── backend/
 │   ├── pom.xml
 │   ├── mvnw
 │   ├── mvnw.cmd
-│   ├── src/main/java/com/MyWebpage/register/login
-│   │   ├── Application.java
-│   │   ├── WebConfig.java
-│   │   │
-│   │   ├── controller
-│   │   │   ├── AdminController.java
-│   │   │   ├── AuthController.java
-│   │   │   ├── BuyerController.java
-│   │   │   ├── FarmerController.java
-│   │   │   ├── CropController.java
-│   │   │   ├── ApproachFarmerController.java
-│   │   │   ├── ApproachFarmerController2.java
-│   │   │   ├── SavedMarketDataController.java
-│   │   │   └── VerificationController.java
-│   │   │
-│   │   ├── model
-│   │   │   ├── Admin.java
-│   │   │   ├── Buyer.java
-│   │   │   ├── Farmer.java
-│   │   │   ├── Crop.java
-│   │   │   ├── ApproachFarmer.java
-│   │   │   ├── Enquiry.java
-│   │   │   ├── SavedMarketData.java
-│   │   │   ├── VerificationToken.java
-│   │   │   ├── VerificationTokenBuyer.java
-│   │   │   └── ResetPasswordRequest.java
-│   │   │
-│   │   ├── repositor
-│   │   │   ├── BuyerRepo.java
-│   │   │   ├── FarmerRepo.java
-│   │   │   ├── CropRepo.java
-│   │   │   ├── ApproachFarmerRepo.java
-│   │   │   ├── EnquiryRepository.java
-│   │   │   ├── SavedMarketDataRepository.java
-│   │   │   └── VerificationTokenRepository.java
-│   │   │
-│   │   ├── service
-│   │   │   ├── AdminService.java
-│   │   │   ├── BuyerService.java
-│   │   │   ├── FarmerService.java
-│   │   │   ├── CropService.java
-│   │   │   ├── ApproachFarmerService.java
-│   │   │   ├── SavedMarketDataService.java
-│   │   │   ├── EmailService.java
-│   │   │   ├── OtpService.java
-│   │   │   ├── MyUserDetailsService.java
-│   │   │   └── AuthResponse.java
-│   │   │
-│   │   ├── security
-│   │   │   ├── SecurityConfig.java
-│   │   │   └── UserPrincipal.java
-│   │   │
-│   │   └── JWT
-│   │       ├── JWTService.java
-│   │       ├── JwtFilter.java
-│   │       ├── JwtBuyerAuthenticationFilter.java
-│   │       └── JwtSellerAuthenticationFilter.java
 │   │
-│   └── src/main/resources
-│       ├── application.properties
-│       ├── application.yml
-│       └── templates/home.html
+│   └── src/main/
+│       ├── java/com/MyWebpage/register/login/
+│       │   ├── Application.java
+│       │   ├── WebConfig.java
+│       │   │
+│       │   ├── controller/
+│       │   │   ├── AdminController.java
+│       │   │   ├── AuthController.java
+│       │   │   ├── BuyerController.java
+│       │   │   ├── FarmerController.java
+│       │   │   ├── CropController.java
+│       │   │   ├── ApproachFarmerController.java
+│       │   │   ├── ApproachFarmerController2.java
+│       │   │   ├── SavedMarketDataController.java
+│       │   │   └── VerificationController.java
+│       │   │
+│       │   ├── model/
+│       │   │   ├── Admin.java
+│       │   │   ├── Buyer.java
+│       │   │   ├── Farmer.java
+│       │   │   ├── Crop.java
+│       │   │   ├── ApproachFarmer.java
+│       │   │   ├── Enquiry.java
+│       │   │   ├── SavedMarketData.java
+│       │   │   ├── VerificationToken.java
+│       │   │   ├── VerificationTokenBuyer.java
+│       │   │   └── ResetPasswordRequest.java
+│       │   │
+│       │   ├── repositor/
+│       │   │   ├── BuyerRepo.java
+│       │   │   ├── FarmerRepo.java
+│       │   │   ├── CropRepo.java
+│       │   │   ├── ApproachFarmerRepo.java
+│       │   │   ├── EnquiryRepository.java
+│       │   │   ├── SavedMarketDataRepository.java
+│       │   │   └── VerificationTokenRepository.java
+│       │   │
+│       │   ├── service/
+│       │   │   ├── AdminService.java
+│       │   │   ├── BuyerService.java
+│       │   │   ├── FarmerService.java
+│       │   │   ├── CropService.java
+│       │   │   ├── ApproachFarmerService.java
+│       │   │   ├── SavedMarketDataService.java
+│       │   │   ├── EmailService.java
+│       │   │   ├── OtpService.java
+│       │   │   ├── MyUserDetailsService.java
+│       │   │   └── AuthResponse.java
+│       │   │
+│       │   ├── security/
+│       │   │   ├── SecurityConfig.java
+│       │   │   └── UserPrincipal.java
+│       │   │
+│       │   └── JWT/
+│       │       ├── JWTService.java
+│       │       ├── JwtFilter.java
+│       │       ├── JwtBuyerAuthenticationFilter.java
+│       │       └── JwtSellerAuthenticationFilter.java
+│       │
+│       └── resources/
+│           ├── application.properties
+│           ├── application.yml
+│           └── templates/
+│               └── home.html
 │
-├── frontend
+├── frontend/
 │   ├── package.json
 │   ├── vite.config.js
 │   ├── index.html
 │   ├── .env.example
 │   │
-│   ├── src
+│   ├── src/
 │   │   ├── main.jsx
 │   │   ├── App.jsx
 │   │   ├── index.css
 │   │   │
-│   │   ├── components
+│   │   ├── components/
 │   │   │   ├── Login.jsx
 │   │   │   ├── Register.jsx
 │   │   │   ├── Account.jsx
@@ -169,18 +174,17 @@ AagriGgate-main
 │   │   │   ├── Navbar.jsx
 │   │   │   ├── Footer.jsx
 │   │   │   ├── Weather.jsx
-│   │   │   └── others
+│   │   │   └── others/
 │   │   │
-│   │   ├── lib
+│   │   ├── lib/
 │   │   │   ├── api.js
 │   │   │   └── auth.js
 │   │   │
-│   │   └── assets
+│   │   └── assets/
 │   │
-│   └── public
+│   └── public/
 │
 └── README.md
-
 ```
 
 ---
@@ -189,49 +193,37 @@ AagriGgate-main
 
 The backend follows layered architecture:
 
-## Controller Layer
-
+Controller Layer  
 Handles HTTP requests and responses.
 
 Location:
 ```
-
 backend/src/main/java/com/MyWebpage/register/login/controller/
-
 ```
 
-## Service Layer
-
+Service Layer  
 Contains business logic.
 
 Location:
 ```
-
 backend/src/main/java/com/MyWebpage/register/login/service/
-
 ```
 
-## Repository Layer
-
+Repository Layer  
 Handles database access using Spring Data JPA.
 
 Location:
 ```
-
 backend/src/main/java/com/MyWebpage/register/login/repositor/
-
 ```
 
-## Security Layer
-
+Security Layer  
 Handles authentication and authorization.
 
 Location:
 ```
-
 backend/src/main/java/com/MyWebpage/register/login/security/
 backend/src/main/java/com/MyWebpage/register/login/JWT/
-
 ```
 
 ---
@@ -240,28 +232,20 @@ backend/src/main/java/com/MyWebpage/register/login/JWT/
 
 The frontend uses React with component-based architecture.
 
-## Main directories
-
 Components:
 ```
-
 frontend/src/components/
-
 ```
 
 API utilities:
 ```
-
 frontend/src/lib/api.js
 frontend/src/lib/auth.js
-
 ```
 
 Entry point:
 ```
-
 frontend/src/main.jsx
-
 ```
 
 ---
@@ -269,8 +253,6 @@ frontend/src/main.jsx
 # Installation and Setup
 
 ## Prerequisites
-
-Install:
 
 - Java 17 or higher
 - Node.js 18 or higher
@@ -281,96 +263,55 @@ Install:
 
 # Backend Configuration
 
-Navigate to backend:
-
 ```
-
 cd backend
-
 ```
 
 Configure database in:
 
 ```
-
 src/main/resources/application.properties
-
 ```
 
 Example:
 
 ```
-
 spring.datasource.url=jdbc:mysql://localhost:3306/agrigate
 spring.datasource.username=YOUR_USERNAME
 spring.datasource.password=YOUR_PASSWORD
 spring.jpa.hibernate.ddl-auto=update
-
 ```
 
 ---
 
 # Frontend Configuration
 
-Navigate to frontend:
-
 ```
-
 cd frontend
-
-```
-
-Install dependencies:
-
-```
-
 npm install
-
 ```
 
 ---
 
 # Running the Application
 
-## Run Backend
+Backend:
 
 ```
-
 ./mvnw spring-boot:run
-
 ```
 
-Backend runs on:
+Frontend:
 
 ```
-
-[http://localhost:8080](http://localhost:8080)
-
-```
-
----
-
-## Run Frontend
-
-```
-
 npm run dev
-
-```
-
-Frontend runs on:
-
-```
-
-[http://localhost:5173](http://localhost:5173)
-
 ```
 
 ---
 
 # Authentication and Security
 
-Authentication is implemented using:
+Authentication components:
 
 - JWTService.java
 - JwtFilter.java
@@ -383,52 +324,33 @@ JWT is used to secure API endpoints and validate users.
 
 # Environment Configuration
 
-Frontend example environment file:
+Example file:
 
 ```
-
 frontend/.env.example
-
 ```
-
-This file can be used to configure API URLs and environment variables.
 
 ---
 
 # Build and Deployment
 
-## Backend Build
+Backend:
 
 ```
-
 ./mvnw clean package
-
-```
-
-Run JAR:
-
-```
-
 java -jar target/*.jar
-
 ```
 
----
-
-## Frontend Build
+Frontend:
 
 ```
-
 npm run build
-
 ```
 
-Output directory:
+Output:
 
 ```
-
 dist/
-
 ```
 
 ---
