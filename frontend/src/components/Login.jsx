@@ -4,7 +4,7 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import { requestJson, ApiError } from '../lib/api';
-import { clearAuth, isLoggedIn, setAuth } from '../lib/auth';
+import { isLoggedIn, setAuth } from '../lib/auth';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -25,7 +25,6 @@ export default function Login() {
   };
 
   const handleLogout = () => {
-    clearAuth();
     navigate('/logout');
   };
 

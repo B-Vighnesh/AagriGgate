@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getToken, getFarmerId, getRole } from '../lib/auth';
-import { apiGet, apiFetch } from '../lib/api';
-import statesWithDistricts from './StatesWithDistricts';
+import Button from './common/Button';
+import Card from './common/Card';
+import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
+import statesWithDistricts from './StatesWithDistricts';
+import { apiFetch, apiGet } from '../lib/api';
+import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 export default function UpdateAccount() {
   const navigate = useNavigate();
@@ -11,155 +14,212 @@ export default function UpdateAccount() {
   const token = getToken();
   const role = getRole();
 
-  const [userDetails, setUserDetails] = useState({
-    firstName: '', lastName: '', phoneNo: '', dob: '', state: '', district: '', aadharNo: '',
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    phoneNo: '',
+    dob: '',
+    state: '',
+    district: '',
+    aadharNo: '',
   });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState({ message: '', type: 'info' });
 
-  const showToast = (msg, type = 'info') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 4000);
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast({ message: '', type: 'info' }), 2800);
   };
 
   useEffect(() => {
-    if (!role) { navigate('/login'); return; }
-    const endpoint = role === 'buyer' ? `/buyer/getBuyer/${farmerId}` : `/users/getFarmer/${farmerId}`;
-    apiGet(endpoint)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => setUserDetails(data))
-      .catch(() => navigate('/account'))
-      .finally(() => setLoading(false));
+    if (!role || !token || !farmerId) {
+      navigate('/login');
+      return;
+    }
+
+    const endpoint = role === 'buyer'
+      ? `/buyer/getBuyer/${farmerId}`
+      : `/users/getFarmer/${farmerId}`;
+
+    (async () => {
+      try {
+        const response = await apiGet(endpoint);
+        if (!response.ok) throw new Error('Unable to load account details.');
+        const data = await response.json();
+        setForm({
+          firstName: data?.firstName || '',
+          lastName: data?.lastName || '',
+          phoneNo: data?.phoneNo || '',
+          dob: data?.dob || '',
+          state: data?.state || '',
+          district: data?.district || '',
+          aadharNo: data?.aadharNo || '',
+        });
+      } catch {
+        navigate('/account');
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   const validate = (name, value) => {
-    const errs = { ...errors };
-    if (name === 'firstName') {
-      /^[a-zA-Z\s]{2,}$/.test(value) ? delete errs.firstName : (errs.firstName = 'Min 2 letters, alphabets only.');
-    }
-    if (name === 'phoneNo') {
-      (/^\d{10}$/.test(value) && /^[6-9]/.test(value)) ? delete errs.phoneNo : (errs.phoneNo = 'Enter valid 10-digit phone starting with 6-9.');
-    }
-    if (name === 'aadharNo') {
-      /^\d{12}$/.test(value) ? delete errs.aadharNo : (errs.aadharNo = 'Aadhaar must be exactly 12 digits.');
-    }
-    if (name === 'dob') {
-      const age = new Date().getFullYear() - new Date(value).getFullYear();
-      age >= 18 ? delete errs.dob : (errs.dob = 'You must be at least 18 years old.');
-    }
-    setErrors(errs);
+    setErrors((prev) => {
+      const next = { ...prev };
+
+      if (name === 'firstName') {
+        if (!/^[a-zA-Z\s]{2,}$/.test(value)) next.firstName = 'Minimum 2 letters, alphabets only.';
+        else delete next.firstName;
+      }
+
+      if (name === 'phoneNo') {
+        if (!(/^\d{10}$/.test(value) && /^[6-9]/.test(value))) next.phoneNo = 'Enter valid 10-digit number starting with 6-9.';
+        else delete next.phoneNo;
+      }
+
+      if (name === 'aadharNo') {
+        if (!/^\d{12}$/.test(value)) next.aadharNo = 'Aadhaar must be exactly 12 digits.';
+        else delete next.aadharNo;
+      }
+
+      if (name === 'dob') {
+        const years = new Date().getFullYear() - new Date(value).getFullYear();
+        if (!value || Number.isNaN(years) || years < 18) next.dob = 'You must be at least 18 years old.';
+        else delete next.dob;
+      }
+
+      return next;
+    });
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setUserDetails(prev => ({ ...prev, [name]: value }));
+  const onChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
     validate(name, value);
   };
 
-  const handleStateChange = (e) => {
-    setUserDetails(prev => ({ ...prev, state: e.target.value, district: '' }));
+  const onStateChange = (event) => {
+    const value = event.target.value;
+    setForm((prev) => ({ ...prev, state: value, district: '' }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (Object.keys(errors).length) { showToast('Please fix validation errors first.', 'error'); return; }
+  const onSubmit = async (event) => {
+    event.preventDefault();
+    if (Object.keys(errors).length > 0) {
+      showToast('Please fix validation errors first.', 'error');
+      return;
+    }
+
     setSaving(true);
-    const endpoint = role === 'buyer' ? `/buyer/update/${farmerId}` : `/users/update/${farmerId}`;
+    const endpoint = role === 'buyer'
+      ? `/buyer/update/${farmerId}`
+      : `/users/update/${farmerId}`;
+
     try {
-      const res = await apiFetch(endpoint, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(userDetails),
+      const response = await apiFetch(endpoint, {
+        method: 'PUT',
+        body: JSON.stringify(form),
       });
-      if (res.ok) {
-        showToast('Account updated successfully! Redirecting…', 'success');
-        setTimeout(() => navigate('/account'), 1500);
-      } else {
-        showToast('Update failed. Please try again.', 'error');
-      }
-    } catch { showToast('Server busy. Try again.', 'error'); }
-    finally { setSaving(false); }
+      if (!response.ok) throw new Error('Update failed. Please try again.');
+      showToast('Account updated successfully.', 'success');
+      setTimeout(() => navigate('/account'), 700);
+    } catch (err) {
+      showToast(err.message || 'Server busy. Try again.', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (loading) return (
-    <div className="page-wrapper flex justify-center items-center min-h-[60vh]">
-      <span className="spinner" style={{ color: 'var(--color-primary)', width: '32px', height: '32px', borderWidth: '3px' }} />
-    </div>
-  );
+  if (loading) {
+    return (
+      <section className="page page--center">
+        <div className="ui-spinner ui-spinner--lg" />
+      </section>
+    );
+  }
 
   return (
-    <div className="page-wrapper max-w-2xl mx-auto">
-      <ValidateToken farmerId={farmerId} token={token} role={role} />
-
-      <div className="mb-6 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-sm font-medium" style={{ color: 'var(--color-primary)' }}>← Back</button>
-        <div>
-          <h1 className="section-title text-3xl">Edit Account</h1>
-          <p className="section-subtitle">Update your personal details.</p>
+    <section className="page update-account-page">
+      <ValidateToken token={token} />
+      <div className="ag-container">
+        <div className="update-account-head">
+          {/* <button type="button" className="link-back" onClick={() => navigate(-1)}>Back</button> */}
+          <div>
+            <h1>Edit Account</h1>
+            <p>Update your personal details.</p>
+          </div>
         </div>
+
+        <Card className="update-account-card">
+          <form className="update-account-form" onSubmit={onSubmit}>
+            <div className="update-account-grid update-account-grid--2">
+              <div className="update-account-field">
+                <label htmlFor="firstName">First Name</label>
+                <input id="firstName" name="firstName" value={form.firstName} onChange={onChange} />
+                {errors.firstName ? <small>{errors.firstName}</small> : null}
+              </div>
+              <div className="update-account-field">
+                <label htmlFor="lastName">Last Name</label>
+                <input id="lastName" name="lastName" value={form.lastName} onChange={onChange} />
+              </div>
+            </div>
+
+            <div className="update-account-grid update-account-grid--2">
+              <div className="update-account-field">
+                <label htmlFor="phoneNo">Phone Number</label>
+                <input id="phoneNo" name="phoneNo" value={form.phoneNo} onChange={onChange} />
+                {errors.phoneNo ? <small>{errors.phoneNo}</small> : null}
+              </div>
+              <div className="update-account-field">
+                <label htmlFor="dob">Date of Birth</label>
+                <input id="dob" type="date" name="dob" value={form.dob} onChange={onChange} />
+                {errors.dob ? <small>{errors.dob}</small> : null}
+              </div>
+            </div>
+
+            <div className="update-account-grid update-account-grid--2">
+              <div className="update-account-field">
+                <label htmlFor="state">State</label>
+                <select id="state" name="state" value={form.state} onChange={onStateChange}>
+                  <option value="">Select State</option>
+                  {Object.keys(statesWithDistricts).map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="update-account-field">
+                <label htmlFor="district">District</label>
+                <select
+                  id="district"
+                  name="district"
+                  value={form.district}
+                  onChange={onChange}
+                  disabled={!form.state}
+                >
+                  <option value="">Select District</option>
+                  {(statesWithDistricts[form.state] || []).map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="update-account-field">
+              <label htmlFor="aadharNo">Aadhaar Number</label>
+              <input id="aadharNo" name="aadharNo" value={form.aadharNo} maxLength={12} onChange={onChange} />
+              {errors.aadharNo ? <small>{errors.aadharNo}</small> : null}
+            </div>
+
+            <Button type="submit" loading={saving} disabled={Object.keys(errors).length > 0}>
+              {saving ? 'Saving changes...' : 'Save Changes'}
+            </Button>
+          </form>
+        </Card>
       </div>
 
-      <div className="card p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="form-group">
-              <label className="form-label">First Name</label>
-              <input className="form-input" name="firstName" value={userDetails.firstName} onChange={handleChange} />
-              {errors.firstName && <p className="form-error">{errors.firstName}</p>}
-            </div>
-            <div className="form-group">
-              <label className="form-label">Last Name</label>
-              <input className="form-input" name="lastName" value={userDetails.lastName} onChange={handleChange} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="form-group">
-              <label className="form-label">Phone Number</label>
-              <input className="form-input" type="tel" name="phoneNo" value={userDetails.phoneNo} onChange={handleChange} />
-              {errors.phoneNo && <p className="form-error">{errors.phoneNo}</p>}
-            </div>
-            <div className="form-group">
-              <label className="form-label">Date of Birth</label>
-              <input className="form-input" type="date" name="dob" value={userDetails.dob} onChange={handleChange} />
-              {errors.dob && <p className="form-error">{errors.dob}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="form-group">
-              <label className="form-label">State</label>
-              <select className="form-select" name="state" value={userDetails.state} onChange={handleStateChange}>
-                <option value="">Select State</option>
-                {Object.keys(statesWithDistricts).map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">District</label>
-              <select className="form-select" name="district" value={userDetails.district} onChange={handleChange} disabled={!userDetails.state}>
-                <option value="">Select District</option>
-                {userDetails.state && statesWithDistricts[userDetails.state]?.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Aadhaar Number</label>
-            <input className="form-input" name="aadharNo" maxLength={12} value={userDetails.aadharNo} onChange={handleChange} />
-            {errors.aadharNo && <p className="form-error">{errors.aadharNo}</p>}
-          </div>
-
-          <button type="submit" className="btn-primary w-full py-3" disabled={saving || !!Object.keys(errors).length}>
-            {saving ? <><span className="spinner" /> Saving…</> : '💾 Save Changes'}
-          </button>
-        </form>
-      </div>
-
-      {toast && (
-        <div className={`toast toast-${toast.type}`}>
-          {toast.type === 'success' ? '✅' : '❌'} {toast.msg}
-        </div>
-      )}
-    </div>
+      <Toast message={toast.message} type={toast.type} />
+    </section>
   );
 }

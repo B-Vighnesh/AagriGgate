@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Card from './common/Card';
 import Button from './common/Button';
 import ValidateToken from './ValidateToken';
-import { clearAuth, getFarmerId, getRole, getToken } from '../lib/auth';
+import { getFarmerId, getRole, getToken } from '../lib/auth';
 import { requestJson, ApiError } from '../lib/api';
 import farmerIcon from '../images/farmer.jpg';
 import buyerIcon from '../images/buyer.jpg';
@@ -60,7 +60,6 @@ export default function Account() {
   }, [navigate, farmerId, role, token]);
 
   const onLogout = () => {
-    clearAuth();
     navigate('/logout');
   };
 
