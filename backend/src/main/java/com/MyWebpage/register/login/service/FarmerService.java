@@ -1,6 +1,8 @@
 package com.MyWebpage.register.login.service;
 
 import com.MyWebpage.register.login.dto.AuthResponseDTO;
+import com.MyWebpage.register.login.dto.FarmerResponseDTO;
+import com.MyWebpage.register.login.dto.FarmerUpdateDTO;
 import com.MyWebpage.register.login.model.Farmer;
 import org.springframework.http.ResponseEntity;
 
@@ -17,4 +19,5 @@ public interface FarmerService {
     Farmer findByEmail(String email);
     Farmer findByUsername(String username);
     ResponseEntity<String> resetPassword(String email, String newPassword);
+    FarmerResponseDTO updateProfile(FarmerUpdateDTO dto, String email);
 }

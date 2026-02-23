@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface FarmerRepo extends JpaRepository<Farmer,Long> {
 
@@ -17,7 +19,7 @@ public interface FarmerRepo extends JpaRepository<Farmer,Long> {
 
     void deleteByUsername(String username);
 
-    Farmer findByEmail(String email);
+    Optional<Farmer> findByEmail(String email);
 
     void deleteByFarmerId(Long farmerId);
 }

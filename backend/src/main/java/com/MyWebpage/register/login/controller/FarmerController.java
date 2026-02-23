@@ -3,8 +3,11 @@ package com.MyWebpage.register.login.controller;
 import com.MyWebpage.register.login.dto.AuthRequestDTO;
 import com.MyWebpage.register.login.dto.AuthResponseDTO;
 import com.MyWebpage.register.login.dto.FarmerRequestDTO;
+import com.MyWebpage.register.login.dto.FarmerResponseDTO;
+import com.MyWebpage.register.login.dto.FarmerUpdateDTO;
 import com.MyWebpage.register.login.model.Farmer;
 import com.MyWebpage.register.login.model.ResetPasswordRequest;
+import com.MyWebpage.register.login.response.ApiResponse;
 import com.MyWebpage.register.login.security.jwt.JWTService;
 import com.MyWebpage.register.login.service.EmailService;
 import com.MyWebpage.register.login.service.FarmerService;
@@ -12,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -114,6 +118,15 @@ public class FarmerController {
         return new ResponseEntity<>(updatedFarmer, HttpStatus.OK);
     }
 
+    @PutMapping("/me")
+    public ApiResponse<FarmerResponseDTO> updateProfile(
+            @RequestBody FarmerUpdateDTO dto,
+            Authentication authentication) {
+        String email = authentication.getName();
+        FarmerResponseDTO response = farmerService.updateProfile(dto, email);
+        return ApiResponse.success("Profile updated", response);
+    }
+
     @GetMapping("/findEmail/{email}")
     public Boolean findEmail(@PathVariable String email) {
         return farmerService.findEmail(email);
@@ -125,11 +138,13 @@ public class FarmerController {
             @RequestHeader("Authorization") String token) {
         try {
             String email = jwtService.extractUsername(token.substring(7));
+
             return farmerService.changePassword(
                     email,
                     resetPasswordRequest.getFarmerId(),
                     resetPasswordRequest.getCurrentPassword(),
                     resetPasswordRequest.getNewPassword());
+
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {

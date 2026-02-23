@@ -1,6 +1,9 @@
 package com.MyWebpage.register.login.service.impl;
 
 import com.MyWebpage.register.login.dto.AuthResponseDTO;
+import com.MyWebpage.register.login.dto.FarmerResponseDTO;
+import com.MyWebpage.register.login.dto.FarmerUpdateDTO;
+import com.MyWebpage.register.login.mapper.FarmerMapper;
 import com.MyWebpage.register.login.model.Farmer;
 import com.MyWebpage.register.login.repository.ApproachFarmerRepo;
 import com.MyWebpage.register.login.repository.CropRepo;
@@ -20,6 +23,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 public class FarmerServiceImpl implements FarmerService {
@@ -33,6 +37,7 @@ public class FarmerServiceImpl implements FarmerService {
     private final CropRepo cropRepo;
     private final OtpService otpService;
     private final EmailService emailService;
+    private final FarmerMapper farmerMapper;
     private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(12);
 
     public FarmerServiceImpl(
@@ -42,7 +47,8 @@ public class FarmerServiceImpl implements FarmerService {
             AuthenticationManager authenticationManager,
             CropRepo cropRepo,
             OtpService otpService,
-            EmailService emailService) {
+            EmailService emailService,
+            FarmerMapper farmerMapper) {
         this.farmerRepo = farmerRepo;
         this.jwtService = jwtService;
         this.approachFarmerRepository = approachFarmerRepository;
@@ -50,12 +56,13 @@ public class FarmerServiceImpl implements FarmerService {
         this.cropRepo = cropRepo;
         this.otpService = otpService;
         this.emailService = emailService;
+        this.farmerMapper = farmerMapper;
     }
 
     @Override
     @Transactional
     public ResponseEntity<Farmer> register(Farmer farmer) {
-        if (farmerRepo.findByEmail(farmer.getEmail()) != null) {
+        if (farmerRepo.findByEmail(farmer.getEmail()).isPresent()) {
             logger.info("Registration conflict for email: {}", farmer.getEmail());
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
@@ -86,7 +93,7 @@ public class FarmerServiceImpl implements FarmerService {
 
             if (authentication.isAuthenticated()) {
                 Farmer verifiedFarmer = principal.contains("@")
-                        ? farmerRepo.findByEmail(principal)
+                        ? farmerRepo.findByEmail(principal).orElse(null)
                         : farmerRepo.findByUsername(principal);
 
                 if (verifiedFarmer == null) {
@@ -164,31 +171,38 @@ public class FarmerServiceImpl implements FarmerService {
 
     @Override
     @Transactional
-    public Farmer update(Farmer farmer, String emailFromJwt) {
+    public Farmer update(Farmer farmer) {
+        Farmer existingFarmer = farmerRepo.findByFarmerId(farmer.getFarmerId());
+        if (existingFarmer == null) {
+            return null;
+        }
 
-        Farmer existingFarmer =
-                farmerRepo.findByEmail(emailFromJwt)
-                        .orElseThrow(() ->
-                                new RuntimeException("Farmer not found"));
-
-        if (farmer.getFirstName() != null) {
+        if (StringUtils.hasText(farmer.getFirstName())) {
             existingFarmer.setFirstName(farmer.getFirstName());
         }
-
-        if (farmer.getLastName() != null) {
+        if (StringUtils.hasText(farmer.getLastName())) {
             existingFarmer.setLastName(farmer.getLastName());
         }
-
-        if (farmer.getPhoneNo() != null) {
+        if (StringUtils.hasText(farmer.getPhoneNo())) {
             existingFarmer.setPhoneNo(farmer.getPhoneNo());
         }
-
-        if (farmer.getState() != null) {
+        if (StringUtils.hasText(farmer.getDob())) {
+            existingFarmer.setDob(farmer.getDob());
+        }
+        if (StringUtils.hasText(farmer.getState())) {
             existingFarmer.setState(farmer.getState());
         }
+        if (StringUtils.hasText(farmer.getDistrict())) {
+            existingFarmer.setDistrict(farmer.getDistrict());
+        }
+        if (StringUtils.hasText(farmer.getCity())) {
+            existingFarmer.setCity(farmer.getCity());
+        }
+        if (StringUtils.hasText(farmer.getAadharNo())) {
+            existingFarmer.setAadharNo(farmer.getAadharNo());
+        }
 
-        logger.info("Farmer profile updated: {}", existingFarmer.getFarmerId());
-
+        logger.info("Farmer profile updated by ID: {}", existingFarmer.getFarmerId());
         return farmerRepo.save(existingFarmer);
     }
 
@@ -204,12 +218,12 @@ public class FarmerServiceImpl implements FarmerService {
 
     @Override
     public Boolean findEmail(String email) {
-        return farmerRepo.findByEmail(email) != null;
+        return farmerRepo.findByEmail(email).isPresent();
     }
 
     @Override
     public Farmer findByEmail(String email) {
-        return farmerRepo.findByEmail(email);
+        return farmerRepo.findByEmail(email).orElse(null);
     }
 
     @Override
@@ -220,7 +234,7 @@ public class FarmerServiceImpl implements FarmerService {
     @Override
     @Transactional
     public ResponseEntity<String> resetPassword(String email, String newPassword) {
-        Farmer farmer = farmerRepo.findByEmail(email);
+        Farmer farmer = farmerRepo.findByEmail(email).orElse(null);
         if (farmer == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
@@ -235,5 +249,32 @@ public class FarmerServiceImpl implements FarmerService {
         farmerRepo.save(farmer);
         logger.info("Password reset via OTP for email: {}", email);
         return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
+    @Override
+    @Transactional
+    public FarmerResponseDTO updateProfile(FarmerUpdateDTO dto, String email) {
+        Farmer existingFarmer = farmerRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Farmer not found"));
+
+        if (dto.getFirstName() != null) {
+            existingFarmer.setFirstName(dto.getFirstName());
+        }
+        if (dto.getLastName() != null) {
+            existingFarmer.setLastName(dto.getLastName());
+        }
+        if (dto.getPhoneNo() != null) {
+            existingFarmer.setPhoneNo(dto.getPhoneNo());
+        }
+        if (dto.getState() != null) {
+            existingFarmer.setState(dto.getState());
+        }
+        // "village" in DTO is mapped to persisted district field in Farmer entity.
+        if (dto.getVillage() != null) {
+            existingFarmer.setDistrict(dto.getVillage());
+        }
+
+        Farmer savedFarmer = farmerRepo.save(existingFarmer);
+        return farmerMapper.toResponse(savedFarmer);
     }
 }
