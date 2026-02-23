@@ -28,7 +28,7 @@ export default function Enquiry() {
     }
     setLoading(true);
     try {
-      const response = await apiFetch('/enquiries/enquiry', {
+      const response = await apiFetch('/admin/enquiry', {
         method: 'POST',
         body: JSON.stringify({ message }),
       });

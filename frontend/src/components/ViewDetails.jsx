@@ -56,20 +56,12 @@ export default function ViewDetails() {
     let mounted = true;
     (async () => {
       try {
-        const [detailRes, imgRes] = await Promise.all([
-          safeFetch(`/crops/crop/${cropId}`, { method: 'GET' }),
-          safeFetch(`/crops/viewUrl/${cropId}`, { method: 'GET' }),
-        ]);
+        const detailRes = await safeFetch(`/crops/legacy/${cropId}`, { method: 'GET' });
 
         if (!detailRes.ok) throw new Error('This crop is not available anymore.');
         const detailData = await detailRes.json();
         if (!mounted) return;
         setCropDetails(detailData);
-
-        if (imgRes.ok) {
-          const blob = await imgRes.blob();
-          if (mounted) setImageUrl(URL.createObjectURL(blob));
-        }
 
         if (role === 'farmer') {
           const reqRes = await safeFetch(`/seller/approach/requests/farmer/${currentUserId}/${cropId}`, { method: 'GET' });

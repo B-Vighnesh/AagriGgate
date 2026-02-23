@@ -102,7 +102,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const endpoint = role === 'buyer' ? '/buyer/register' : '/users/register';
+      const endpoint = role === 'buyer' ? '/buyers/register' : '/farmers/register';
       await requestJson(endpoint, {
         method: 'POST',
         body: JSON.stringify(form),

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { apiGet, apiFetch } from '../lib/api';
+import { apiGet } from '../lib/api';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
 import ValidateToken from './ValidateToken';
 import Button from './common/Button';
@@ -50,7 +50,6 @@ export default function ViewAllCrop() {
   const role = getRole();
 
   const [crops, setCrops] = useState([]);
-  const [imageUrls, setImageUrls] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,24 +65,13 @@ export default function ViewAllCrop() {
 
     const loadData = async () => {
       try {
-        const response = await apiGet('/crops/viewCrop');
+        const response = await apiGet('/crops/legacy?page=0&size=500');
         if (!response.ok) throw new Error('Failed to load crops. Please try again.');
 
         const data = await response.json();
+        const cropList = Array.isArray(data?.content) ? data.content : [];
         if (!mounted) return;
-        setCrops(Array.isArray(data) ? data : []);
-
-        data.forEach(async (crop) => {
-          try {
-            const imageResponse = await apiFetch(`/crops/viewUrl/${crop.cropID}`);
-            if (!imageResponse.ok) return;
-            const blob = await imageResponse.blob();
-            if (!mounted) return;
-            setImageUrls((prev) => ({ ...prev, [crop.cropID]: URL.createObjectURL(blob) }));
-          } catch {
-            // Ignore image errors; fallback image remains.
-          }
-        });
+        setCrops(cropList);
       } catch (loadError) {
         if (mounted) setError(loadError.message || 'Failed to load crops.');
       } finally {
@@ -95,7 +83,6 @@ export default function ViewAllCrop() {
 
     return () => {
       mounted = false;
-      Object.values(imageUrls).forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
 
@@ -204,7 +191,7 @@ export default function ViewAllCrop() {
               <CropCard
                 key={crop.cropID}
                 crop={crop}
-                imageUrl={imageUrls[crop.cropID]}
+                imageUrl={null}
                 onViewDetails={(id) => navigate(`/view-details/${id}`)}
               />
             ))}

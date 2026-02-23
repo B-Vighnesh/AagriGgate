@@ -55,10 +55,7 @@ export default function UpdateCrop() {
     const loadCrop = async () => {
       setFetchLoading(true);
       try {
-        const [detailsRes, imageRes] = await Promise.all([
-          apiFetch(`/crops/crop/${cropId}`),
-          apiFetch(`/crops/viewUrl/${cropId}`),
-        ]);
+        const detailsRes = await apiFetch(`/crops/legacy/${cropId}`);
 
         if (!detailsRes.ok) throw new Error('Could not load crop data.');
 
@@ -75,11 +72,7 @@ export default function UpdateCrop() {
           });
         }
 
-        if (imageRes.ok) {
-          const blob = await imageRes.blob();
-          existingObjectUrl = URL.createObjectURL(blob);
-          if (mounted) setExistingImage(existingObjectUrl);
-        }
+        setExistingImage('');
       } catch (error) {
         showToast(error.message || 'Server busy. Please try again.', 'error');
         navigate(-1);
@@ -144,7 +137,7 @@ export default function UpdateCrop() {
     if (image) formData.append('imageFile', image);
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/crops/farmer/update/${cropId}`, {
+      const response = await fetch(`${getApiBaseUrl()}/crops/farmer/${cropId}`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
