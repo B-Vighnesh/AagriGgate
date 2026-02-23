@@ -1,169 +1,438 @@
-# 🌾 AagriGgate
+# AagriGgate
 
-AagriGgate is a full-stack web application designed to connect **farmers, buyers, and administrators** in a seamless platform for agricultural trade, market insights, and crop management.
+AagriGgate is a full-stack web application designed to facilitate agricultural trade by connecting farmers and buyers through a secure and structured digital platform. The application provides functionality for farmer registration, crop management, buyer interaction, authentication, and market data handling.
 
-The project is divided into:
-
-* **Frontend** → React + Vite
-* **Backend** → Spring Boot + MySQL (with JWT Authentication & Spring Security)
+The system is built using a Spring Boot backend and a React (Vite) frontend, with MySQL as the primary database and JWT-based authentication for secure access.
 
 ---
 
-## 📂 Project Structure
+# Table of Contents
+
+- Project Overview
+- Technology Stack
+- Project Structure
+- Backend Architecture
+- Frontend Architecture
+- Installation and Setup
+- Backend Configuration
+- Frontend Configuration
+- Running the Application
+- Authentication and Security
+- Environment Configuration
+- Build and Deployment
+
+---
+
+# Project Overview
+
+The platform provides the following capabilities:
+
+- Farmer registration and account management
+- Buyer registration and authentication
+- Crop listing and management
+- Farmer–buyer interaction system
+- Enquiry and approach management
+- Market data storage
+- Email verification and OTP services
+- Secure authentication using JWT
+- Role-based security configuration
+
+The project is divided into two main modules:
+
+- Backend – Spring Boot REST API
+- Frontend – React application using Vite
+
+---
+
+# Technology Stack
+
+## Backend
+
+- Java
+- Spring Boot
+- Spring Security
+- JWT Authentication
+- Spring Data JPA
+- Hibernate
+- Maven
+- MySQL
+
+## Frontend
+
+- React.js
+- Vite
+- JavaScript
+- CSS
+
+## Tools and Configuration
+
+- Maven Wrapper
+- ESLint
+- PostCSS
+- Environment configuration support
+
+---
+
+# Project Structure
+
+AagriGgate-main
+
+├── backend
+│   ├── pom.xml
+│   ├── mvnw
+│   ├── mvnw.cmd
+│   ├── src/main/java/com/MyWebpage/register/login
+│   │   ├── Application.java
+│   │   ├── WebConfig.java
+│   │   │
+│   │   ├── controller
+│   │   │   ├── AdminController.java
+│   │   │   ├── AuthController.java
+│   │   │   ├── BuyerController.java
+│   │   │   ├── FarmerController.java
+│   │   │   ├── CropController.java
+│   │   │   ├── ApproachFarmerController.java
+│   │   │   ├── ApproachFarmerController2.java
+│   │   │   ├── SavedMarketDataController.java
+│   │   │   └── VerificationController.java
+│   │   │
+│   │   ├── model
+│   │   │   ├── Admin.java
+│   │   │   ├── Buyer.java
+│   │   │   ├── Farmer.java
+│   │   │   ├── Crop.java
+│   │   │   ├── ApproachFarmer.java
+│   │   │   ├── Enquiry.java
+│   │   │   ├── SavedMarketData.java
+│   │   │   ├── VerificationToken.java
+│   │   │   ├── VerificationTokenBuyer.java
+│   │   │   └── ResetPasswordRequest.java
+│   │   │
+│   │   ├── repositor
+│   │   │   ├── BuyerRepo.java
+│   │   │   ├── FarmerRepo.java
+│   │   │   ├── CropRepo.java
+│   │   │   ├── ApproachFarmerRepo.java
+│   │   │   ├── EnquiryRepository.java
+│   │   │   ├── SavedMarketDataRepository.java
+│   │   │   └── VerificationTokenRepository.java
+│   │   │
+│   │   ├── service
+│   │   │   ├── AdminService.java
+│   │   │   ├── BuyerService.java
+│   │   │   ├── FarmerService.java
+│   │   │   ├── CropService.java
+│   │   │   ├── ApproachFarmerService.java
+│   │   │   ├── SavedMarketDataService.java
+│   │   │   ├── EmailService.java
+│   │   │   ├── OtpService.java
+│   │   │   ├── MyUserDetailsService.java
+│   │   │   └── AuthResponse.java
+│   │   │
+│   │   ├── security
+│   │   │   ├── SecurityConfig.java
+│   │   │   └── UserPrincipal.java
+│   │   │
+│   │   └── JWT
+│   │       ├── JWTService.java
+│   │       ├── JwtFilter.java
+│   │       ├── JwtBuyerAuthenticationFilter.java
+│   │       └── JwtSellerAuthenticationFilter.java
+│   │
+│   └── src/main/resources
+│       ├── application.properties
+│       ├── application.yml
+│       └── templates/home.html
+│
+├── frontend
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── index.html
+│   ├── .env.example
+│   │
+│   ├── src
+│   │   ├── main.jsx
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   │
+│   │   ├── components
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   ├── Account.jsx
+│   │   │   ├── AddCrop.jsx
+│   │   │   ├── UpdateCrop.jsx
+│   │   │   ├── DeleteCrop.jsx
+│   │   │   ├── ViewCrop.jsx
+│   │   │   ├── Market.jsx
+│   │   │   ├── ApproachFarmer.jsx
+│   │   │   ├── Enquiry.jsx
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── Weather.jsx
+│   │   │   └── others
+│   │   │
+│   │   ├── lib
+│   │   │   ├── api.js
+│   │   │   └── auth.js
+│   │   │
+│   │   └── assets
+│   │
+│   └── public
+│
+└── README.md
 
 ```
-AagriGgate-main/
-│── frontend/         # React + Vite frontend
-│── backend/          # Spring Boot + MySQL backend
-│── README.md         # Documentation
+
+---
+
+# Backend Architecture
+
+The backend follows layered architecture:
+
+## Controller Layer
+
+Handles HTTP requests and responses.
+
+Location:
+```
+
+backend/src/main/java/com/MyWebpage/register/login/controller/
+
+```
+
+## Service Layer
+
+Contains business logic.
+
+Location:
+```
+
+backend/src/main/java/com/MyWebpage/register/login/service/
+
+```
+
+## Repository Layer
+
+Handles database access using Spring Data JPA.
+
+Location:
+```
+
+backend/src/main/java/com/MyWebpage/register/login/repositor/
+
+```
+
+## Security Layer
+
+Handles authentication and authorization.
+
+Location:
+```
+
+backend/src/main/java/com/MyWebpage/register/login/security/
+backend/src/main/java/com/MyWebpage/register/login/JWT/
+
 ```
 
 ---
 
-## 🚀 Features
+# Frontend Architecture
 
-### 🌱 Farmers
+The frontend uses React with component-based architecture.
 
-* Register/Login securely (JWT Auth)
-* Add, update, and delete crops
-* Manage trade approaches
-* View buyer enquiries
+## Main directories
 
-### 🚲 Buyers
+Components:
+```
 
-* Browse available crops
-* Approach farmers
-* Save market data
-* Enquiry system
+frontend/src/components/
 
-### 🔐 Authentication & Security
+```
 
-* JWT-based authentication
-* Role-based access (Admin, Farmer, Buyer)
-* OTP & Email verification support
+API utilities:
+```
 
----
+frontend/src/lib/api.js
+frontend/src/lib/auth.js
 
-## ⚙️ Backend Setup (Spring Boot + MySQL)
+```
 
-1. Navigate to the backend folder:
+Entry point:
+```
 
-   ```bash
-   cd backend
-   ```
+frontend/src/main.jsx
 
-2. Configure database in **`src/main/resources/application.properties`** or **`application.yml`**:
-
-   ```properties
-   spring.datasource.url=jdbc:mysql://localhost:3306/agrigate
-   spring.datasource.username=your_username
-   spring.datasource.password=your_password
-   spring.jpa.hibernate.ddl-auto=update
-   spring.jpa.show-sql=true
-   ```
-
-3. Run the backend:
-
-   ```bash
-   ./mvnw spring-boot:run
-   ```
-
-4. The API will be available at:
-
-   ```
-   http://localhost:8080
-   ```
-
----
-
-## 🌈 Frontend Setup (React + Vite)
-
-1. Navigate to the frontend folder:
-
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-3. Start development server:
-
-   ```bash
-   npm run dev
-   ```
-
-4. The frontend will run at:
-
-   ```
-   http://localhost:5173
-   ```
-
----
-
-## 🔗 Connecting Frontend & Backend
-
-Update API URLs in frontend (inside `src/components/` or services) to match your backend server:
-
-```js
-const API_BASE_URL = "http://localhost:8080";
 ```
 
 ---
 
-## 📦 Build & Deployment
+# Installation and Setup
 
-### Frontend
+## Prerequisites
 
-```bash
-npm run build
+Install:
+
+- Java 17 or higher
+- Node.js 18 or higher
+- MySQL 8 or higher
+- Maven
+
+---
+
+# Backend Configuration
+
+Navigate to backend:
+
 ```
 
-This will generate a `dist/` folder for deployment.
-For GitHub Pages, update `vite.config.js` with:
+cd backend
 
-```js
-export default defineConfig({
-  base: "/your-repo-name/",
-});
 ```
 
-### Backend
+Configure database in:
 
-Build the JAR file:
+```
 
-```bash
+src/main/resources/application.properties
+
+```
+
+Example:
+
+```
+
+spring.datasource.url=jdbc:mysql://localhost:3306/agrigate
+spring.datasource.username=YOUR_USERNAME
+spring.datasource.password=YOUR_PASSWORD
+spring.jpa.hibernate.ddl-auto=update
+
+```
+
+---
+
+# Frontend Configuration
+
+Navigate to frontend:
+
+```
+
+cd frontend
+
+```
+
+Install dependencies:
+
+```
+
+npm install
+
+```
+
+---
+
+# Running the Application
+
+## Run Backend
+
+```
+
+./mvnw spring-boot:run
+
+```
+
+Backend runs on:
+
+```
+
+[http://localhost:8080](http://localhost:8080)
+
+```
+
+---
+
+## Run Frontend
+
+```
+
+npm run dev
+
+```
+
+Frontend runs on:
+
+```
+
+[http://localhost:5173](http://localhost:5173)
+
+```
+
+---
+
+# Authentication and Security
+
+Authentication is implemented using:
+
+- JWTService.java
+- JwtFilter.java
+- SecurityConfig.java
+- UserPrincipal.java
+
+JWT is used to secure API endpoints and validate users.
+
+---
+
+# Environment Configuration
+
+Frontend example environment file:
+
+```
+
+frontend/.env.example
+
+```
+
+This file can be used to configure API URLs and environment variables.
+
+---
+
+# Build and Deployment
+
+## Backend Build
+
+```
+
 ./mvnw clean package
+
 ```
 
-Run it:
+Run JAR:
 
-```bash
-java -jar target/backend-0.0.1-SNAPSHOT.jar
+```
+
+java -jar target/*.jar
+
 ```
 
 ---
 
-## 🛡️ Tech Stack
+## Frontend Build
 
-* **Frontend** → React, Vite
-* **Backend** → Spring Boot, MySQL
-* **Build Tools** → Maven
+```
+
+npm run build
+
+```
+
+Output directory:
+
+```
+
+dist/
+
+```
 
 ---
 
-## 🤝 Contributing
+# License
 
-1. Fork the repository
-2. Create a new branch (`feature/xyz`)
-3. Commit changes
-4. Open a pull request
-
----
-
-## 📜 License
-
-This project is for educational & development purposes.
+This project is intended for development and educational purposes.
