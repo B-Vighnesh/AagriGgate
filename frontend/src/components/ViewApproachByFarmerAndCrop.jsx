@@ -1,217 +1,182 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import '../assets/ViewApproachByFarmerAndCrop.css';
-
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import Button from './common/Button';
+import Card from './common/Card';
+import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
-const ViewApproachByFarmerAndCrop = () => {
-  const { farmerId, cropId } = useParams(); // Extract farmerId and cropId from route params
+import { apiFetch, apiGet } from '../lib/api';
+import { getRole, getToken } from '../lib/auth';
+
+const STATUS_CLASS = {
+  pending: 'approach-crop-status--pending',
+  accepted: 'approach-crop-status--accepted',
+  rejected: 'approach-crop-status--rejected',
+};
+
+export default function ViewApproachByFarmerAndCrop() {
+  const { farmerId, cropId } = useParams();
+  const navigate = useNavigate();
+
+  const token = getToken();
+  const role = getRole();
+
   const [approaches, setApproaches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
-  const [filteredApproaches, setFilteredApproaches] = useState([]);
+  const [toast, setToast] = useState({ message: '', type: 'info' });
 
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');
-  // Function to fetch approaches by farmerId and cropId
-  const fetchApproaches = async () => {
-    try {
-      const token = localStorage.getItem('token'); // Retrieve the token for authorization
-
-      const response = await fetch(`http://localhost:8080/seller/approach/requests/farmer/${farmerId}/${cropId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`, // Include the token in the request header
-        },
-      });
-
-      if (response.ok&&response!==null) {
-       
-        const data = await response.json();
-        setApproaches(data); // Update state with the fetched data
-      } else {
-        setError("Session has been expired please login");
-        navigate('/account')
-      }
-    } catch (error) {
-      
-      console.error('No approach records found for this  crop.');
-    //   setError('No approach records found for this farmer and crop.');
-    } finally {
-      setLoading(false); // Stop loading spinner
-    }
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast({ message: '', type: 'info' }), 2800);
   };
 
-  // Fetch approaches on component mount
-  useEffect(() => {
-    const userRole = localStorage.getItem("role");
-    if (userRole ===null) {
-      navigate("/login"); 
-    }
-    else if(userRole==="buyer")
-    {
-      navigate("/404");
-    }
-    if (farmerId && cropId) {
-      fetchApproaches();
-    } else {
-      setError('Farmer ID or Crop ID is missing!');
+  const loadApproaches = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await apiGet(`/seller/approach/requests/farmer/${farmerId}/${cropId}`);
+      if (!response.ok) {
+        throw new Error(response.status === 404 ? 'No approach records found for this crop.' : 'Unable to load requests.');
+      }
+
+      const data = await response.json();
+      setApproaches(Array.isArray(data) ? data : []);
+    } catch (loadError) {
+      setApproaches([]);
+      setError(loadError.message || 'Unable to load requests.');
+    } finally {
       setLoading(false);
     }
-  }, [farmerId, cropId]);
+  };
+
   useEffect(() => {
-    applyFilter(filterStatus, approaches);
-  }, [approaches, filterStatus]);
-  const applyFilter = (status, data = approaches) => {
-    if (status === 'All') {
-      setFilteredApproaches(data);
-    } else {
-      const filtered = data.filter((approach) => approach.status.toLowerCase() === status.toLowerCase());
-      setFilteredApproaches(filtered);
-    }
-  };
-
-  const handleViewBuyer = (buyerId) => {
-    navigate(`/view-buyer/${buyerId}`);
-  };
-  const handleFilterChange = (event) => {
-    const status = event.target.value;
-    setFilterStatus(status);
-    applyFilter(status);
-  };
-  const handleViewDetails = (cropId) => {
-    navigate(`/view-details/${cropId}`);
-  };
-
-  const handleAction = async (approachId, accept) => {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      setError('No token found. Please log in.');
+    if (!role) {
+      navigate('/login');
       return;
     }
 
+    if (role === 'buyer') {
+      navigate('/404');
+      return;
+    }
+
+    if (!farmerId || !cropId) {
+      setLoading(false);
+      setError('Farmer ID or Crop ID is missing.');
+      return;
+    }
+
+    loadApproaches();
+  }, [farmerId, cropId, role]);
+
+  const filteredApproaches = useMemo(() => {
+    if (filterStatus === 'All') return approaches;
+    return approaches.filter((approach) => (approach.status || '').toLowerCase() === filterStatus.toLowerCase());
+  }, [approaches, filterStatus]);
+
+  const handleAction = async (approachId, accept) => {
+    const endpoint = accept
+      ? `/seller/approach/accept/${approachId}`
+      : `/seller/approach/reject/${approachId}`;
+
     try {
-      const endpoint = accept
-        ? `http://localhost:8080/seller/approach/accept/${approachId}`
-        : `http://localhost:8080/seller/approach/reject/${approachId}`;
-
-      const response = await fetch(endpoint, {
-        method: 'POST', // Assuming the request type is POST
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.text();
-        console.log('Success:', data);
-        // Update the UI after successful action
-        fetchApproaches();// Refresh data after action
-      } else {
-        const errorText = await response.text(); // Handle non-JSON response
-       
-        setError('Action failed: ' + errorText);
-      }
-    } catch (error) {
-      console.error('Error occurred:', error);
-      setError('An error occurred while processing your request.');
+      const response = await apiFetch(endpoint, { method: 'POST' });
+      if (!response.ok) throw new Error('Action failed. Try again.');
+      showToast(accept ? 'Request accepted.' : 'Request rejected.', accept ? 'success' : 'info');
+      loadApproaches();
+    } catch (requestError) {
+      showToast(requestError.message || 'Unable to process request.', 'error');
     }
   };
-  if (loading) {
-    return <div>Loading approaches...</div>;
-  }
 
-  if (error) {
-    return <div className="error-message">Error: {error}</div>;
+  if (loading) {
+    return (
+      <section className="page page--center">
+        <div className="ui-spinner ui-spinner--lg" />
+      </section>
+    );
   }
 
   return (
-    <div className="container">
+    <section className="page approach-crop-page">
       <ValidateToken farmerId={farmerId} token={token} role={role} />
 
-       <button onClick={() => navigate(-1)} className="back-button">
-      <i class="fas fa-arrow-left"></i>
-      </button>
-      <h1 class="heading">
-   
-    <span>R</span>
-    <span>E</span>
-    <span>Q</span>
-    <span>U</span>
-    <span>E</span>
-    <span>S</span>
-    <span>T</span>
-    <span>S</span>
-</h1>
+      <div className="ag-container">
+        <div className="approach-crop-head">
+          <div>
+            <button className="link-back" onClick={() => navigate(-1)}>Back</button>
+            <h1>Crop Requests</h1>
+            <p>Manage buyer requests for this crop.</p>
+          </div>
 
-      <div className="filter-container">
-        <label htmlFor="status-filter">Filter by Status: </label>
-        <select id="status-filter" value={filterStatus} onChange={handleFilterChange}>
-          <option value="All">All</option>
-          <option value="Pending">Pending</option>
-          <option value="Accepted">Accepted</option>
-          <option value="Rejected">Rejected</option>
-        </select>
+          <div className="approach-crop-filter">
+            <label htmlFor="status-filter">Filter by Status</label>
+            <select id="status-filter" value={filterStatus} onChange={(event) => setFilterStatus(event.target.value)}>
+              <option value="All">All</option>
+              <option value="Pending">Pending</option>
+              <option value="Accepted">Accepted</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+
+        {error ? (
+          <Card className="approach-crop-empty">
+            <h3>{error}</h3>
+            <p>Requests will appear here when buyers approach this crop.</p>
+          </Card>
+        ) : null}
+
+        {!error && filteredApproaches.length === 0 ? (
+          <Card className="approach-crop-empty">
+            <h3>No {filterStatus !== 'All' ? filterStatus.toLowerCase() : ''} requests</h3>
+          </Card>
+        ) : null}
+
+        {!error && filteredApproaches.length > 0 ? (
+          <div className="approach-crop-list">
+            {filteredApproaches.map((approach) => {
+              const status = (approach.status || 'pending').toLowerCase();
+              const isPending = status === 'pending';
+
+              return (
+                <Card key={approach.approachId} className="approach-crop-card">
+                  <div className="approach-crop-card__main">
+                    <h3>{approach.cropName}</h3>
+                    <p>Buyer: <strong>{approach.userName}</strong></p>
+                  </div>
+
+                  <span className={`approach-crop-status ${STATUS_CLASS[status] || ''}`}>
+                    {approach.status || 'Pending'}
+                  </span>
+
+                  <div className="approach-crop-actions">
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${approach.cropId}`)}>
+                      View Crop
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/view-buyer/${approach.userId}`)}>
+                      View Buyer
+                    </Button>
+
+                    {isPending ? (
+                      <>
+                        <Button size="sm" onClick={() => handleAction(approach.approachId, true)}>Accept</Button>
+                        <Button variant="danger" size="sm" onClick={() => handleAction(approach.approachId, false)}>Reject</Button>
+                      </>
+                    ) : (
+                      <span className="approach-crop-done">Action completed</span>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
-      {approaches.length === 0 ? (
-        <p>No approach records found for this  crop.</p>
-      ) : (
-        <table >
-          <thead>
-            <tr>
-              <th>Crop Name</th>
-              {/* <th>Farmer Name</th>
-              <th>Farmer Email</th>
-              <th>Farmer Phone No</th> */}
-              <th>Buyer Name</th>
-              <th>Status</th>
-              <th>Action</th>
-              <th>View</th>
-            </tr>
-          </thead>
-          <tbody>
-          {filteredApproaches.map((approach) => (
-              <tr key={approach.approachId}>
-                <td onClick={() => handleViewDetails(approach.cropId)} >{approach.cropName}</td>
-                {/* <td>{approach.farmerName}</td>
-                <td>{approach.farmerEmail}</td>
-                <td>{approach.farmerPhoneNo}</td> */}
-                <td onClick={() => handleViewBuyer(approach.userId)}>{approach.userName}</td>
-                <td>{approach.status}</td>
-               
-               {approach.status.toLowerCase() === 'pending' ? (
-                 <>
-                   <button
-                     onClick={() => handleAction(approach.approachId, true)}
-                     className="accept-button"
-                   >
-                     Accept
-                   </button>
-                   <button
-                     onClick={() => handleAction(approach.approachId, false)}
-                     className="reject-button"
-                   >
-                     Reject
-                   </button>
-                 </>
-               ) : (
-                 <td>Action completed</td>
-               )
-               }
-              <td>
-                  <button onClick={() => handleViewDetails(approach.cropId)} className="view-button">View Crop</button>
-                  <button onClick={() => handleViewBuyer(approach.userId)} className="view-buyer-button">View Buyer</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    
-    </div>
-  );
-};
 
-export default ViewApproachByFarmerAndCrop;
+      <Toast message={toast.message} type={toast.type} />
+    </section>
+  );
+}

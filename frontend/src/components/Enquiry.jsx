@@ -45,8 +45,9 @@ export default function Enquiry() {
   return (
     <section className="page enquiry-page">
       <div className="ag-container">
+        
         <Card className="enquiry-card">
-          {/* <button type="button" className="link-back" onClick={() => navigate(-1)}>Back</button> */}
+          <button type="button" className="link-back" onClick={() => navigate(-1)}>Back</button>
 
           {!submitted ? (
             <>

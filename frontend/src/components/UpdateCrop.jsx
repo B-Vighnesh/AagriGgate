@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getToken, getFarmerId, getRole } from '../lib/auth';
-import { apiFetch } from '../lib/api';
+import Button from './common/Button';
+import Card from './common/Card';
+import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
+import { apiFetch, getApiBaseUrl } from '../lib/api';
+import { getToken, getFarmerId, getRole } from '../lib/auth';
 
 const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
 const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
@@ -14,189 +17,247 @@ export default function UpdateCrop() {
   const token = getToken();
   const role = getRole();
 
-  const [cropData, setCropData] = useState({ cropName: '', cropType: '', region: '', marketPrice: '', quantity: '', unit: 'kg', description: '' });
+  const [cropData, setCropData] = useState({
+    cropName: '',
+    cropType: '',
+    region: '',
+    marketPrice: '',
+    quantity: '',
+    unit: 'kg',
+    description: '',
+  });
   const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [existingImage, setExistingImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [existingImage, setExistingImage] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState({ message: '', type: 'info' });
 
-  const showToast = (msg, type = 'info') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 4000);
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast({ message: '', type: 'info' }), 3000);
   };
 
   useEffect(() => {
-    if (!role) { navigate('/login'); return; }
-    if (role === 'buyer') { navigate('/404'); return; }
+    if (!role) {
+      navigate('/login');
+      return;
+    }
 
-    Promise.all([
-      apiFetch(`/crops/crop/${cropId}`),
-      apiFetch(`/crops/viewUrl/${cropId}`),
-    ])
-      .then(async ([detailsRes, imgRes]) => {
-        if (detailsRes.ok) setCropData(await detailsRes.json());
-        else { showToast('Could not load crop data.', 'error'); navigate(-1); return; }
-        if (imgRes.ok) {
-          const blob = await imgRes.blob();
-          setExistingImage(URL.createObjectURL(blob));
+    if (role === 'buyer') {
+      navigate('/404');
+      return;
+    }
+
+    let mounted = true;
+    let existingObjectUrl = '';
+
+    const loadCrop = async () => {
+      setFetchLoading(true);
+      try {
+        const [detailsRes, imageRes] = await Promise.all([
+          apiFetch(`/crops/crop/${cropId}`),
+          apiFetch(`/crops/viewUrl/${cropId}`),
+        ]);
+
+        if (!detailsRes.ok) throw new Error('Could not load crop data.');
+
+        const details = await detailsRes.json();
+        if (mounted) {
+          setCropData({
+            cropName: details.cropName || '',
+            cropType: details.cropType || '',
+            region: details.region || '',
+            marketPrice: details.marketPrice ?? '',
+            quantity: details.quantity ?? '',
+            unit: details.unit || 'kg',
+            description: details.description || '',
+          });
         }
-      })
-      .catch(() => showToast('Server busy. Please try again.', 'error'))
-      .finally(() => setFetchLoading(false));
+
+        if (imageRes.ok) {
+          const blob = await imageRes.blob();
+          existingObjectUrl = URL.createObjectURL(blob);
+          if (mounted) setExistingImage(existingObjectUrl);
+        }
+      } catch (error) {
+        showToast(error.message || 'Server busy. Please try again.', 'error');
+        navigate(-1);
+      } finally {
+        if (mounted) setFetchLoading(false);
+      }
+    };
+
+    loadCrop();
+
+    return () => {
+      mounted = false;
+      if (existingObjectUrl) URL.revokeObjectURL(existingObjectUrl);
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
   }, [cropId]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCropData(prev => ({ ...prev, [name]: value }));
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setCropData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) { setImage(file); setImagePreview(URL.createObjectURL(file)); }
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (imagePreview) {
+      try { URL.revokeObjectURL(imagePreview); } catch { /* ignore */ }
+    }
+
+    const preview = URL.createObjectURL(file);
+    setImage(file);
+    setImagePreview(preview);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const clearNewImage = () => {
+    if (imagePreview) {
+      try { URL.revokeObjectURL(imagePreview); } catch { /* ignore */ }
+    }
+    setImage(null);
+    setImagePreview('');
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
 
-    const formData = new FormData();
-    const cropObj = {
-      cropID: parseInt(cropId),
+    const payload = {
+      cropID: Number(cropId),
       cropName: cropData.cropName,
       cropType: cropData.cropType,
       region: cropData.region,
-      marketPrice: parseFloat(cropData.marketPrice),
-      quantity: parseFloat(cropData.quantity),
+      marketPrice: Number(cropData.marketPrice),
+      quantity: Number(cropData.quantity),
       unit: cropData.unit,
       description: cropData.description,
-      farmer: { farmerId: parseInt(farmerId) },
+      farmer: { farmerId: Number(farmerId) },
     };
 
-    formData.append('crop', new Blob([JSON.stringify(cropObj)], { type: 'application/json' }));
+    const formData = new FormData();
+    formData.append('crop', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
     if (image) formData.append('imageFile', image);
 
     try {
-      const res = await fetch(`http://localhost:8080/crops/farmer/update/${cropId}`, {
-        method: 'PUT', headers: { Authorization: `Bearer ${token}` }, body: formData,
+      const response = await fetch(`${getApiBaseUrl()}/crops/farmer/update/${cropId}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
-      if (res.ok) {
-        showToast('Crop updated successfully! Redirecting…', 'success');
-        setTimeout(() => navigate(`/view-details/${cropId}`), 1500);
-      } else {
-        showToast('Failed to update crop. Try again.', 'error');
-      }
-    } catch {
-      showToast('Server busy. Please try again.', 'error');
+
+      if (!response.ok) throw new Error('Failed to update crop.');
+
+      showToast('Crop updated successfully.', 'success');
+      setTimeout(() => navigate(`/view-details/${cropId}`), 700);
+    } catch (error) {
+      showToast(error.message || 'Server busy. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  if (fetchLoading) return (
-    <div className="page-wrapper flex justify-center items-center min-h-[60vh]">
-      <span className="spinner" style={{ color: 'var(--color-primary)', width: '32px', height: '32px', borderWidth: '3px' }} />
-    </div>
-  );
+  if (fetchLoading) {
+    return (
+      <section className="page page--center">
+        <div className="ui-spinner ui-spinner--lg" />
+      </section>
+    );
+  }
 
   return (
-    <div className="page-wrapper max-w-2xl mx-auto">
+    <section className="page update-crop-page">
       <ValidateToken farmerId={farmerId} token={token} role={role} />
 
-      <div className="mb-6 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-sm font-medium" style={{ color: 'var(--color-primary)' }}>← Back</button>
-        <div>
-          <h1 className="section-title text-3xl">Update Crop</h1>
-          <p className="section-subtitle">Make changes and save.</p>
+      <div className="ag-container">
+        <div className="update-crop-head">
+          <button className="link-back" onClick={() => navigate(-1)}>Back</button>
+          <div>
+            <h1>Update Crop</h1>
+            <p>Make changes and save your listing.</p>
+          </div>
         </div>
-      </div>
 
-      <div className="card p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="form-group">
-              <label className="form-label">Crop Name *</label>
-              <input className="form-input" name="cropName" required value={cropData.cropName} onChange={handleChange} />
+        <Card className="update-crop-card">
+          <form className="update-crop-form" onSubmit={handleSubmit}>
+            <div className="update-crop-grid update-crop-grid--2">
+              <div className="update-crop-field">
+                <label htmlFor="cropName">Crop Name *</label>
+                <input id="cropName" name="cropName" required value={cropData.cropName} onChange={handleChange} />
+              </div>
+              <div className="update-crop-field">
+                <label htmlFor="cropType">Category *</label>
+                <select id="cropType" name="cropType" required value={cropData.cropType} onChange={handleChange}>
+                  <option value="">Select category</option>
+                  {CROP_TYPES.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">Category *</label>
-              <select className="form-select" name="cropType" required value={cropData.cropType} onChange={handleChange}>
-                <option value="">Select</option>
-                {CROP_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-          </div>
 
-          <div className="form-group">
-            <label className="form-label">Region</label>
-            <input className="form-input" name="region" value={cropData.region} onChange={handleChange} />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="form-group">
-              <label className="form-label">Market Price (₹) *</label>
-              <input className="form-input" type="number" min="0" step="0.01" name="marketPrice" required value={cropData.marketPrice} onChange={handleChange} />
+            <div className="update-crop-field">
+              <label htmlFor="region">Region</label>
+              <input id="region" name="region" value={cropData.region} onChange={handleChange} />
             </div>
-            <div className="form-group">
-              <label className="form-label">Quantity *</label>
-              <input className="form-input" type="number" min="0" name="quantity" required value={cropData.quantity} onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Unit *</label>
-              <select className="form-select" name="unit" required value={cropData.unit} onChange={handleChange}>
-                {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-              </select>
-            </div>
-          </div>
 
-          <div className="form-group">
-            <label className="form-label">Description</label>
-            <textarea className="form-input min-h-[80px] resize-none" name="description" value={cropData.description} onChange={handleChange} />
-          </div>
+            <div className="update-crop-grid update-crop-grid--3">
+              <div className="update-crop-field">
+                <label htmlFor="marketPrice">Market Price (Rs) *</label>
+                <input id="marketPrice" type="number" min="0" step="0.01" name="marketPrice" required value={cropData.marketPrice} onChange={handleChange} />
+              </div>
+              <div className="update-crop-field">
+                <label htmlFor="quantity">Quantity *</label>
+                <input id="quantity" type="number" min="0" step="0.01" name="quantity" required value={cropData.quantity} onChange={handleChange} />
+              </div>
+              <div className="update-crop-field">
+                <label htmlFor="unit">Unit *</label>
+                <select id="unit" name="unit" required value={cropData.unit} onChange={handleChange}>
+                  {UNITS.map((unit) => (
+                    <option key={unit} value={unit}>{unit}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-          {/* Image section */}
-          <div className="form-group">
-            <label className="form-label">Crop Photo</label>
-            <div className="flex gap-4 items-start flex-wrap">
-              {existingImage && !imagePreview && (
-                <div className="relative">
-                  <img src={existingImage} alt="Current" className="w-32 h-32 object-cover rounded-xl shadow" />
-                  <span className="absolute -bottom-1 left-0 right-0 text-center text-xs" style={{ color: 'var(--color-text-muted)' }}>Current</span>
+            <div className="update-crop-field">
+              <label htmlFor="description">Description</label>
+              <textarea id="description" name="description" rows="4" value={cropData.description} onChange={handleChange} />
+            </div>
+
+            <div className="update-crop-image-row">
+              {existingImage && !imagePreview ? (
+                <div className="update-crop-preview-wrap">
+                  <img src={existingImage} alt="Current crop" className="update-crop-preview" />
+                  <small>Current image</small>
                 </div>
-              )}
-              <label
-                className="flex flex-col items-center justify-center border-2 border-dashed rounded-xl w-32 h-32 cursor-pointer transition-all duration-200"
-                style={{ borderColor: 'var(--color-primary-light)', color: 'var(--color-text-muted)' }}
-              >
-                <span className="text-3xl">📷</span>
-                <span className="text-xs mt-1">Replace Photo</span>
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              ) : null}
+
+              <label className="update-crop-upload" htmlFor="cropImage">
+                <input id="cropImage" type="file" accept="image/*" onChange={handleImageChange} />
+                <span>Choose new photo</span>
               </label>
-              {imagePreview && (
-                <div className="relative">
-                  <img src={imagePreview} alt="New" className="w-32 h-32 object-cover rounded-xl shadow" />
-                  <button type="button"
-                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-xs flex items-center justify-center"
-                    style={{ background: '#ef4444', color: '#fff' }}
-                    onClick={() => { setImage(null); setImagePreview(null); }}
-                  >×</button>
-                </div>
-              )}
-            </div>
-          </div>
 
-          <button type="submit" className="btn-primary w-full py-3" disabled={loading}>
-            {loading ? <><span className="spinner" /> Saving…</> : '💾 Save Changes'}
-          </button>
-        </form>
+              {imagePreview ? (
+                <div className="update-crop-preview-wrap">
+                  <img src={imagePreview} alt="New crop" className="update-crop-preview" />
+                  <button type="button" className="update-crop-remove" onClick={clearNewImage}>Remove</button>
+                </div>
+              ) : null}
+            </div>
+
+            <Button type="submit" loading={loading} className="full-width">
+              {loading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </form>
+        </Card>
       </div>
 
-      {toast && (
-        <div className={`toast toast-${toast.type}`}>
-          {toast.type === 'success' ? '✅' : '❌'} {toast.msg}
-        </div>
-      )}
-    </div>
+      <Toast message={toast.message} type={toast.type} />
+    </section>
   );
 }
