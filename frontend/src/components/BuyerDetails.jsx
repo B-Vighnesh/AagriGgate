@@ -1,77 +1,87 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import Button from './common/Button';
+import Card from './common/Card';
 import { apiGet } from '../lib/api';
 
 const FIELDS = [
-  { key: 'username', label: 'Username', icon: '👤' },
-  { key: 'email', label: 'Email', icon: '📧' },
-  { key: 'phoneNo', label: 'Phone', icon: '📞' },
-  { key: 'dob', label: 'Date of Birth', icon: '🎂' },
-  { key: 'state', label: 'State', icon: '🏙️' },
-  { key: 'district', label: 'District', icon: '📍' },
+  { key: 'username', label: 'Username' },
+  { key: 'email', label: 'Email' },
+  { key: 'phoneNo', label: 'Phone' },
+  { key: 'dob', label: 'Date of Birth' },
+  { key: 'state', label: 'State' },
+  { key: 'district', label: 'District' },
 ];
 
 export default function BuyerDetails() {
   const { buyerId } = useParams();
   const navigate = useNavigate();
+
   const [buyer, setBuyer] = useState(null);
-  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    apiGet(`/users/getBuyer/${buyerId}`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(setBuyer)
-      .catch(() => setError(true));
+    (async () => {
+      try {
+        const response = await apiGet(`/users/getBuyer/${buyerId}`);
+        if (!response.ok) throw new Error('Could not load buyer details.');
+        const data = await response.json();
+        setBuyer(data);
+      } catch (err) {
+        setError(err.message || 'Failed to fetch buyer details.');
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [buyerId]);
 
-  if (error) return (
-    <div className="page-wrapper flex flex-col items-center justify-center min-h-[60vh] text-center">
-      <p className="text-4xl mb-3">❌</p>
-      <p className="font-semibold" style={{ color: 'var(--color-text)' }}>Could not load buyer details.</p>
-      <button className="btn-outline mt-4" onClick={() => navigate(-1)}>Go Back</button>
-    </div>
-  );
+  if (loading) {
+    return (
+      <section className="page page--center">
+        <div className="ui-spinner ui-spinner--lg" />
+      </section>
+    );
+  }
 
-  if (!buyer) return (
-    <div className="page-wrapper flex justify-center items-center min-h-[60vh]">
-      <span className="spinner" style={{ color: 'var(--color-primary)', width: '32px', height: '32px', borderWidth: '3px' }} />
-    </div>
-  );
+  if (error) {
+    return (
+      <section className="page page--center">
+        <Card className="narrow-card text-center">
+          <h3>Buyer Profile</h3>
+          <p className="error-text">{error}</p>
+          <Button variant="outline" onClick={() => navigate(-1)}>Go Back</Button>
+        </Card>
+      </section>
+    );
+  }
 
   return (
-    <div className="page-wrapper max-w-2xl mx-auto">
-      <div className="mb-6 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-sm font-medium" style={{ color: 'var(--color-primary)' }}>← Back</button>
-        <h1 className="section-title text-3xl">Buyer Profile</h1>
-      </div>
+    <section className="page buyer-profile-page">
+      <div className="ag-container">
+        <button className="link-back" onClick={() => navigate(-1)}>Back</button>
 
-      <div className="card p-6">
-        {/* Avatar header */}
-        <div className="flex flex-col items-center mb-6 pb-5" style={{ borderBottom: '1px solid var(--color-border)' }}>
-          <div
-            className="w-20 h-20 rounded-full flex items-center justify-center text-3xl mb-3"
-            style={{ background: 'linear-gradient(135deg, var(--color-primary-light), var(--color-primary))', color: '#fff' }}
-          >
-            🛒
-          </div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
-            {buyer.firstName} {buyer.lastName}
-          </h2>
-          <span className="badge badge-blue mt-1">Buyer</span>
-        </div>
-
-        {/* Detail rows */}
-        <div className="space-y-3">
-          {FIELDS.map(({ key, label, icon }) => buyer[key] && (
-            <div key={key} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
-              <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                {icon} {label}
-              </span>
-              <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{buyer[key]}</span>
+        <Card className="buyer-profile-card">
+          <div className="buyer-profile-head">
+            <div className="buyer-avatar">B</div>
+            <div>
+              <h1>{buyer?.firstName} {buyer?.lastName}</h1>
+              <p>Buyer Profile</p>
             </div>
-          ))}
-        </div>
+          </div>
+
+          <div className="buyer-profile-list">
+            {FIELDS.map((item) => (
+              buyer?.[item.key] ? (
+                <div key={item.key} className="buyer-profile-row">
+                  <span>{item.label}</span>
+                  <strong>{buyer[item.key]}</strong>
+                </div>
+              ) : null
+            ))}
+          </div>
+        </Card>
       </div>
-    </div>
+    </section>
   );
 }

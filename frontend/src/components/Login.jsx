@@ -76,12 +76,14 @@ export default function Login() {
 
         <div className="segmented">
           <button
+            type="button"
             className={userType === 'farmer' ? 'segmented__item segmented__item--active' : 'segmented__item'}
             onClick={() => setUserType('farmer')}
           >
             Farmer
           </button>
           <button
+            type="button"
             className={userType === 'buyer' ? 'segmented__item segmented__item--active' : 'segmented__item'}
             onClick={() => setUserType('buyer')}
           >
