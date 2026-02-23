@@ -109,8 +109,8 @@ export default function Account() {
           <h2>{userData?.firstName} {userData?.lastName}</h2>
           <p>@{userData?.username || 'user'}</p>
           <div className="account-actions">
-            <Link to="/update-account"><Button className="full-width">Edit Profile</Button></Link>
-            <Link to="/settings"><Button variant="outline" className="full-width">Settings</Button></Link>
+            <Link to="/update-account" className="ui-btn ui-btn--primary full-width text-center">Edit Profile</Link>
+            <Link to="/settings" className="ui-btn ui-btn--outline full-width text-center">Settings</Link>
             <Button variant="danger" className="full-width" onClick={onLogout}>Logout</Button>
           </div>
         </Card>

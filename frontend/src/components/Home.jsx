@@ -66,14 +66,14 @@ export default function Home() {
           </div>
         </div>
       </section>
-
+{/* 
       <section className="stats">
         <div className="container stats__grid">
           <div><strong>5,000+</strong><span>Farmers</span></div>
           <div><strong>12,000+</strong><span>Buyers</span></div>
           <div><strong>Rs 2Cr+</strong><span>Trade Volume</span></div>
         </div>
-      </section>
+      </section> */}
 
       <section className="container section">
         <h2 className="section-title">Why AagriGgate?</h2>
