@@ -1,268 +1,224 @@
-import React, { useState } from "react";
-import "../assets/ForgotPassword.css";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
-const ForgotPassword = () => {
+const STEPS = ['Find Account', 'Verify OTP', 'New Password'];
+
+const maskEmail = (email) => {
+  const [local, domain] = email.split('@');
+  return `${local.slice(0, 3)}***@${domain}`;
+};
+
+export default function ForgotPassword() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [retrievedEmail, setRetrievedEmail] = useState("");
-  const [maskedEmail, setMaskedEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [form, setForm] = useState({
-    newPassword: "",
-    confirmPassword: "",
-  });
+
   const [step, setStep] = useState(1);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [popupMessage, setPopupMessage] = useState("");
-  const [showPopup, setShowPopup] = useState(false);
-  const [passwordError, setPasswordError] = useState("");
+  const [email, setEmail] = useState('');
+  const [retrievedEmail, setRetrievedEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [form, setForm] = useState({ newPassword: '', confirmPassword: '' });
+  const [showPwd, setShowPwd] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [passwordError, setPasswordError] = useState('');
 
-  const [showPassword, setShowPassword] = useState(false);
-  const maskEmail = (email) => {
-    const [localPart, domain] = email.split("@");
-    if (localPart.length <= 3) {
-      return `${localPart[0]}***@${domain}`;
+  const showToast = (msg, type = 'info') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const validatePasswords = (pwd, conf) => {
+    if (pwd !== conf) { setPasswordError('Passwords do not match.'); return false; }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(pwd)) {
+      setPasswordError('Min 8 chars with uppercase, lowercase, number & special character.');
+      return false;
     }
-    return `${localPart.slice(0, 3)}***@${domain}`;
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    // Password Validation
-    if (name === "newPassword" || name === "confirmPassword") {
-      const password = name === "newPassword" ? value : form.newPassword;
-      const confirmPwd = name === "confirmPassword" ? value : form.confirmPassword;
-
-      setPasswordError(
-        password !== confirmPwd
-          ? "Passwords do not match."
-          : /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)
-          ? ""
-          : "Password must contain numbers, special character, upper and lower case."
-      );
-    }
-
-    // Update form state
-    setForm((prevForm) => ({
-      ...prevForm,
-      [name]: value,
-    }));
-  };
-
-  const handlePopup = (message) => {
-    setPopupMessage(message);
-    setShowPopup(true);
-  };
-
-  const closePopup = () => {
-    setShowPopup(false);
+    setPasswordError('');
+    return true;
   };
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/auth/reset-otp/${email}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const res = await fetch(`http://localhost:8080/auth/reset-otp/${email}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
       });
-
-      if (response.ok) {
-        const responseEmail = await response.text();
-        setRetrievedEmail(responseEmail);
-        setMaskedEmail(maskEmail(responseEmail));
-        setOtpSent(true);
+      if (res.ok) {
+        const found = await res.text();
+        setRetrievedEmail(found);
         setStep(2);
-        handlePopup("OTP sent to your registered email.");
+        showToast(`OTP sent to ${maskEmail(found)}`, 'success');
+      } else if (res.status === 500) {
+        showToast('Server busy. Try again later.', 'error');
+      } else {
+        showToast(`No account found for ${email}`, 'error');
       }
-     
-       else {
-        console.log(response.status);
-        if(response.status===500)
-        {
-          console.log(response.status);
-          handlePopup("Server busy please try later");
-          return
-        }
-        handlePopup(`Account not found with ${email}`);
-      }
-    } catch (error) {
-      handlePopup("An error occurred while sending the OTP.");
-    }
+    } catch { showToast('Network error. Please try again.', 'error'); }
+    finally { setLoading(false); }
   };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      const response = await fetch(
+      const res = await fetch(
         `http://localhost:8080/auth/verify-otp?email=${encodeURIComponent(retrievedEmail)}&otp=${otp}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+        { method: 'POST', headers: { 'Content-Type': 'application/json' } }
       );
-
-      if (response.ok) {
-        handlePopup("OTP verified successfully. You can now reset your password.");
-        setOtpVerified(true);
-        setStep(3);
-      } else {
-        handlePopup("Invalid OTP. Please try again.");
-      }
-    } catch (error) {
-      handlePopup("An error occurred during OTP verification.");
-    }
+      if (res.ok) { setStep(3); showToast('OTP verified!', 'success'); }
+      else showToast('Invalid OTP. Please try again.', 'error');
+    } catch { showToast('Network error.', 'error'); }
+    finally { setLoading(false); }
   };
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    if (form.newPassword !== form.confirmPassword) {
-      handlePopup("Passwords do not match. Please try again.");
-      return;
-    }
-
+    if (!validatePasswords(form.newPassword, form.confirmPassword)) return;
+    setLoading(true);
     try {
-      const response = await fetch("http://localhost:8080/users/resetpassword", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const res = await fetch('http://localhost:8080/users/resetpassword', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: retrievedEmail, newPassword: form.newPassword }),
       });
-
-      if (response.ok) {
-       setShowPopup("Password reset successful! Redirecting to login.");
-       handlePopup("Password reset successful! Redirecting to login.");
-       
-        setTimeout(() => navigate('/login'), 2000);
+      if (res.ok) {
+        showToast('Password reset! Redirecting to login…', 'success');
+        setTimeout(() => navigate('/login'), 1800);
       } else {
-        const error = await response.text();
-        handlePopup(`Error: ${error}`);
+        showToast('Failed to reset password.', 'error');
       }
-    } catch (error) {
-      handlePopup("An error occurred while resetting the password.");
-    }
+    } catch { showToast('Network error.', 'error'); }
+    finally { setLoading(false); }
   };
 
-  const goBack = () => {
-    if (step === 2) setStep(1);
-    else if (step === 3) setStep(2);
-    else navigate('/login')
-  };
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
   return (
-    <div className="forgot-password-container">
-      
-      {showPopup && (
-        <div className="approach-modal">
-          <div className="e-message">
-            {popupMessage}
-            <br />
-            <button onClick={closePopup} className="yes-button">
-              Ok
-            </button>
-          </div>
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-12"
+      style={{ background: 'linear-gradient(135deg, var(--color-bg) 0%, #d8f3dc 100%)' }}
+    >
+      <div className="card p-8 w-full max-w-md animate-fade-in-up">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-extrabold" style={{ color: 'var(--color-primary-dark)' }}>
+            Reset Your Password
+          </h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Step {step} of 3 — {STEPS[step - 1]}</p>
         </div>
-      )}
 
-      {step === 1 && (
-        <form onSubmit={handleSendOtp}>
-        <button onClick={goBack} className="back-button">
-          <i className="fas fa-arrow-left"></i>
-        </button>
-      
-          <h2>Forgot Password</h2>
-          
-          <label htmlFor="email">Enter your registered email/username:</label>
-          <input
-            type="text"
-            id="email"
-            name="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <div className="buttons">
-            <button type="submit">Send OTP</button>
-          </div>
-        </form>
-      )}
+        {/* Step indicator */}
+        <div className="flex items-center justify-center gap-0 mb-8">
+          {STEPS.map((_, i) => (
+            <React.Fragment key={i}>
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                style={{
+                  background: i + 1 <= step ? 'var(--color-primary)' : 'var(--color-border)',
+                  color: i + 1 <= step ? '#fff' : 'var(--color-text-muted)',
+                }}
+              >
+                {i + 1 < step ? '✓' : i + 1}
+              </div>
+              {i < STEPS.length - 1 && (
+                <div className="h-0.5 w-10" style={{ background: i + 1 < step ? 'var(--color-primary)' : 'var(--color-border)' }} />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
 
-      {otpSent && step === 2 && (
-        <form onSubmit={handleVerifyOtp}>
-              <button onClick={goBack} className="back-button">
-          <i className="fas fa-arrow-left"></i>
-        </button>
-          <h2>Verification</h2>
-          
-          <p>
-            OTP has been sent to your registered email: <strong>{maskedEmail}</strong>
-          </p>
-          <label htmlFor="otp">Enter OTP:</label>
-          <input
-            type="text"
-            id="otp"
-            name="otp"
-            required
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-          />
-          <div className="buttons">
-            <button type="submit">Verify OTP</button>
-          </div>
-        </form>
-      )}
-
-      {otpVerified && step === 3 && (
-        <form onSubmit={handleResetPassword}>
-              <button onClick={goBack} className="back-button">
-          <i className="fas fa-arrow-left"></i>
-        </button>
-          <h2>Change Password</h2>
-          <label htmlFor="newPassword">Enter new password:</label>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            id="newPassword"
-            name="newPassword"
-            required
-            value={form.newPassword}
-            onChange={handleChange}
-          />
-          <label htmlFor="confirmPassword">Confirm new password:</label>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            id="confirmPassword"
-            name="confirmPassword"
-            required
-            value={form.confirmPassword}
-            onChange={handleChange}
-          />
-          <p className="password-toggle">
-            <label htmlFor="showPassword">Show Password:</label>
+        {/* Step 1 — Email */}
+        {step === 1 && (
+          <form onSubmit={handleSendOtp} className="space-y-4">
+            <div className="form-group">
+              <label className="form-label">Registered Email / Username</label>
               <input
-                type="checkbox"
-                id="showPassword"
-                checked={showPassword}
-                onChange={togglePasswordVisibility}
+                className="form-input"
+                type="text" required
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@example.com"
               />
-             
+            </div>
+            <button type="submit" className="btn-primary w-full py-3" disabled={loading}>
+              {loading ? <><span className="spinner" /> Sending…</> : 'Send OTP'}
+            </button>
+          </form>
+        )}
+
+        {/* Step 2 — OTP */}
+        {step === 2 && (
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <p className="text-sm text-center" style={{ color: 'var(--color-text-muted)' }}>
+              OTP sent to <strong>{maskEmail(retrievedEmail)}</strong>
             </p>
-          {passwordError && <h5 className="error-message">{passwordError}</h5>}
-          <div className="buttons">
-            <button type="submit">Reset Password</button>
-          </div>
-        </form>
+            <div className="form-group">
+              <label className="form-label">Enter OTP</label>
+              <input
+                className="form-input text-center tracking-widest text-lg"
+                maxLength={6} required
+                value={otp}
+                onChange={e => setOtp(e.target.value)}
+                placeholder="••••••"
+              />
+            </div>
+            <button type="submit" className="btn-primary w-full py-3" disabled={loading}>
+              {loading ? <><span className="spinner" /> Verifying…</> : 'Verify OTP'}
+            </button>
+          </form>
+        )}
+
+        {/* Step 3 — New Password */}
+        {step === 3 && (
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div className="form-group">
+              <label className="form-label">New Password</label>
+              <div className="relative">
+                <input
+                  type={showPwd ? 'text' : 'password'}
+                  className="form-input pr-10"
+                  required
+                  value={form.newPassword}
+                  onChange={e => {
+                    const v = e.target.value;
+                    setForm(f => ({ ...f, newPassword: v }));
+                    validatePasswords(v, form.confirmPassword);
+                  }}
+                />
+                <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sm">
+                  {showPwd ? '🙈' : '👁️'}
+                </button>
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Confirm Password</label>
+              <input
+                type={showPwd ? 'text' : 'password'}
+                className="form-input"
+                required
+                value={form.confirmPassword}
+                onChange={e => {
+                  const v = e.target.value;
+                  setForm(f => ({ ...f, confirmPassword: v }));
+                  validatePasswords(form.newPassword, v);
+                }}
+              />
+              {passwordError && <p className="form-error">{passwordError}</p>}
+            </div>
+            <button type="submit" className="btn-primary w-full py-3" disabled={loading || !!passwordError}>
+              {loading ? <><span className="spinner" /> Resetting…</> : '🔐 Reset Password'}
+            </button>
+          </form>
+        )}
+
+        <p className="text-center text-sm mt-6" style={{ color: 'var(--color-text-muted)' }}>
+          Remembered it?{' '}
+          <Link to="/login" className="font-semibold" style={{ color: 'var(--color-primary)' }}>Login</Link>
+        </p>
+      </div>
+
+      {toast && (
+        <div className={`toast toast-${toast.type}`}>
+          {toast.type === 'success' ? '✅' : '❌'} {toast.msg}
+        </div>
       )}
     </div>
   );
-};
-
-export default ForgotPassword;
+}

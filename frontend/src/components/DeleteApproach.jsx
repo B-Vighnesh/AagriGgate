@@ -1,42 +1,36 @@
-import React from 'react';
-import '../assets/DeleteApproach.css';
+import React, { useState } from 'react';
+import { getToken } from '../lib/auth';
+import { apiFetch } from '../lib/api';
 
-const DeleteApproach = ({ approachId }) => {
+/**
+ * DeleteApproach — inline button component (no modal, no alert).
+ * Props:
+ *   approachId  — ID of the approach to delete
+ *   onDeleted   — callback called after successful deletion
+ */
+export default function DeleteApproach({ approachId, onDeleted }) {
+  const token = getToken();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleDelete = async () => {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      alert('You are not logged in!');
-      return;
-    }
-
+    if (!token) { setError('Not authenticated.'); return; }
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch(`http://localhost:8080/buyer/approach/delete/${approachId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        alert('Approach deleted successfully!');
-       // Redirect to the list of approaches after deletion
-      } else {
-        alert('Failed to delete approach. Please try again.');
-      }
-    } catch (error) {
-      alert('Error deleting approach.');
-    }
+      const res = await apiFetch(`/buyer/approach/delete/${approachId}`, { method: 'DELETE' });
+      if (res.ok) { if (onDeleted) onDeleted(approachId); }
+      else setError('Failed to delete. Try again.');
+    } catch { setError('Server busy.'); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div className="delete-container">
-      <h3>Are you sure you want to delete this approach?</h3>
-      <button onClick={handleDelete} className="delete-confirm-button">Yes, Delete</button>
-     
-    </div>
+    <span className="inline-flex flex-col items-start gap-1">
+      <button className="btn-danger btn-sm" onClick={handleDelete} disabled={loading}>
+        {loading ? <><span className="spinner" /> Deleting…</> : 'Withdraw'}
+      </button>
+      {error && <span className="text-xs" style={{ color: 'var(--color-error)' }}>{error}</span>}
+    </span>
   );
-};
-
-export default DeleteApproach;
+}

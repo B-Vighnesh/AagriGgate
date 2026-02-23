@@ -1,65 +1,75 @@
 import React, { useState } from 'react';
-import '../assets/ApproachFarmer.css';
+import { getToken, getFarmerId } from '../lib/auth';
 
-const ApproachFarmer = ({ cropId, farmerId, onClose }) => {
+export default function ApproachFarmer({ cropId, farmerId, onClose }) {
+  const token = getToken();
+  const currentUserId = getFarmerId();
+
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null); // State for success message
 
   const handleApproach = async () => {
-    const token = localStorage.getItem('token');
-    const currentUserId = localStorage.getItem('farmerId'); // Current user's ID
-
-    if (!token) {
-      setError('No token found. Please log in.');
-      return;
-    }
-
+    if (!token) { setError('You are not logged in. Please log in first.'); return; }
+    setLoading(true);
+    setError(null);
     try {
       const url = `http://localhost:8080/buyer/approach/create/${farmerId}/${cropId}/${currentUserId}`;
-      const response = await fetch(url, {
+      const res = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
-
-      if (response.ok) {
-        const message = await response.text();
-        setSuccessMessage('Approach request sent successfully!');
-        setError(null); // Clear error if success
-      } else {
-        const errorMessage = await response.text();
-        setError(errorMessage || 'Failed to send approach request.');
-        setSuccessMessage(null); // Clear success message if error
+      if (res.ok) setSuccess(true);
+      else {
+        const msg = await res.text();
+        setError(msg || 'Failed to send approach request. You may have already requested this crop.');
       }
-    } catch (err) {
-      console.error('Error:', err);
-      setError('An error occurred while sending the approach request.');
-      setSuccessMessage(null); // Clear success message on error
-    }
+    } catch { setError('Server busy. Please try again.'); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div className="approach-modal">
-      <div className="approach-modal-content">
-      {!successMessage&&!error && <> <h2>Confirm Approach Farmer</h2>
-        <p>Are you sure you want to approach the farmer for this crop?</p>
-        <div className="button-group">
-          <button onClick={handleApproach} className="yes-button">Yes, Approach</button>
-          <button onClick={onClose} className="cancel-button">Cancel</button>
-         
-        </div> </>
-        }
-        {successMessage && <div className="success-message">{successMessage}
-        <button onClick={onClose} className="yes-button">Ok</button>
-        </div>
-        }
-        {error && <div className="error-message">{error}
-        <button onClick={onClose} className="yes-button">Ok</button></div>}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: 'rgba(0,0,0,0.45)' }}
+    >
+      <div className="card p-8 w-full max-w-sm text-center animate-fade-in-up">
+        {!success && !error && (
+          <>
+            <div className="text-5xl mb-3">🤝</div>
+            <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--color-text)' }}>Approach Farmer</h2>
+            <p className="text-sm mb-5" style={{ color: 'var(--color-text-muted)' }}>
+              Are you sure you want to send an approach request to the farmer for this crop?
+            </p>
+            <div className="flex gap-3">
+              <button className="btn-primary flex-1 py-2.5" onClick={handleApproach} disabled={loading}>
+                {loading ? <><span className="spinner" /> Sending…</> : 'Yes, Approach'}
+              </button>
+              <button className="btn-outline flex-1 py-2.5" onClick={onClose}>Cancel</button>
+            </div>
+          </>
+        )}
+
+        {success && (
+          <>
+            <div className="text-5xl mb-3">✅</div>
+            <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--color-success)' }}>Request Sent!</h2>
+            <p className="text-sm mb-5" style={{ color: 'var(--color-text-muted)' }}>
+              Your approach request was sent successfully. The farmer will review it and get in touch.
+            </p>
+            <button className="btn-primary w-full" onClick={onClose}>Done</button>
+          </>
+        )}
+
+        {error && (
+          <>
+            <div className="text-5xl mb-3">⚠️</div>
+            <h2 className="text-base font-bold mb-2" style={{ color: 'var(--color-error)' }}>Request Failed</h2>
+            <p className="text-sm mb-5" style={{ color: 'var(--color-text-muted)' }}>{error}</p>
+            <button className="btn-outline w-full" onClick={onClose}>Close</button>
+          </>
+        )}
       </div>
     </div>
   );
-};
-
-export default ApproachFarmer;
+}

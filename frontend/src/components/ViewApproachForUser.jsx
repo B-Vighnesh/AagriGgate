@@ -1,210 +1,107 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../assets/ViewApproachForUser.css';
+import { getToken, getFarmerId, getRole } from '../lib/auth';
+import { apiGet, apiFetch } from '../lib/api';
 import ValidateToken from './ValidateToken';
 
-const ViewApproachForUser = () => {
-  const [approaches, setApproaches] = useState([]); // To store the fetched approaches
-  const [loading, setLoading] = useState(true); // To manage loading state
-  const [error, setError] = useState(null); // To store error messages
-  const navigate = useNavigate();
-  const userId = localStorage.getItem('farmerId'); // Assuming the user ID is saved in localStorage
-  const token = localStorage.getItem('token'); // Token for authorization
-  const [successMessage, setSuccessMessage] = useState(null);
-
-  const role = localStorage.getItem('role');
-  const farmerId = localStorage.getItem('farmerId');
-  const [filterStatus, setFilterStatus] = useState('All');
-  const [filteredApproaches, setFilteredApproaches] = useState([]);
-  // Fetching the approaches from the backend
-  const fetchApproaches = async () => {
-    if (!userId || !token) {
-      setError("You are not logged in.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:8080/buyer/approach/requests/user/${userId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.length === 0) {
-          setError("No approaches found.");
-        } else {
-          setApproaches(data);
-          // applyFilter('All')
-        }
-      } else {
-        setError("Session has been expired please login");
-        navigate('/account')
-      }
-    } catch (error) {
-      setError("Server Busy");
-      
-    } finally {
-      setLoading(false);
-    }
-   
-  };
-
-  // Deleting an approach
-  const handleDelete = async (approachId) => {
-    if (!token) {
-      setError("You are not logged in.");
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:8080/buyer/approach/delete/${approachId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        setApproaches(approaches.filter((approach) => approach.approachId !== approachId)); // Remove the deleted approach from the list
-         setSuccessMessage("Approach deleted successfully.");
-      } else {
-        setError("Session has been expired please login");
-        navigate('/account')
-      }
-    } catch (error) {
-     
-      setError("Server Busy");
-    }
-  };
-
-  // Fetch approaches when the component mounts
-  useEffect(() => {
-    fetchApproaches();
-    
-  }, []);
-  useEffect(() => {
-    const userRole = localStorage.getItem("role");
-    if (userRole ===null) {
-      navigate("/login"); 
-    }
-    else if(userRole==="farmer")
-    {
-      navigate("/404");
-    }
-    applyFilter(filterStatus, approaches);
-  }, [approaches, filterStatus]);
-  const handleViewDetails = (cropID) => {
-    navigate(`/view-details/${cropID}`);
-  };
-  const applyFilter = (status, data = approaches) => {
-    if (status === 'All') {
-      setFilteredApproaches(data);
-    } else {
-      const filtered = data.filter((approach) => approach.status.toLowerCase() === status.toLowerCase());
-      setFilteredApproaches(filtered);
-    }
-  };
-
-  const handleFilterChange = (event) => {
-    const status = event.target.value;
-    setFilterStatus(status);
-    applyFilter(status);
-  };
-  const onClose = () => {
-    setSuccessMessage(""); 
-  };
-  
-  // Loading and error states
-  if (loading) {
-    return <div>Loading approaches...</div>;
-  }
-
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
-
-  return (
-    <div className='container'>
-       <ValidateToken farmerId={farmerId} token={token} role={role} />
-      <h1 class="heading">
-      <div class="word">
-    <span>M</span>
-    <span>Y</span>
-    </div>
-    <div class="word">
-    <span>R</span>
-    <span>E</span>
-    <span>Q</span>
-    <span>U</span>
-    <span>E</span>
-    <span>S</span>
-    <span>T</span>
-    <span>S</span>
-    </div>
-</h1>
-
-      <div className="filter-container">
-        <label htmlFor="status-filter">Filter by Status: </label>
-        <select id="status-filter" value={filterStatus} onChange={handleFilterChange}>
-          <option value="All">All</option>
-          <option value="Pending">Pending</option>
-          <option value="Accepted">Accepted</option>
-          <option value="Rejected">Rejected</option>
-        </select>
-      </div>
-      {approaches.length === 0 ? (
-        <p>No approaches found for you.</p>
-      ) : (
-        <table >
-          <thead>
-            <tr>
-              <th>Crop Name</th>
-              <th>Farmer Name</th>
-              <th>View</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-          {filteredApproaches.map((approach) =>(
-              <tr key={approach.approachId}>
-                <td>{approach.cropName}</td>
-                <td>{approach.farmerName}</td>
-                <td>
-                  <button onClick={() => handleViewDetails(approach.cropId)} className="view-button">
-                    View Crop
-                  </button>
-                </td>
-                <td>{approach.status}</td>
-                <td>
-                  {approach.status.toLowerCase() === "pending" ? ( // Enable delete only if status is "pending"
-                    <button onClick={() => handleDelete(approach.approachId)} className="delete-button">
-                      Delete
-                    </button>
-                  ) : (
-                    <span>Action not allowed</span> // Show a message if the action is not allowed
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {successMessage && (
-        <div className="success-modal">
-          <div className="success-message">
-            <p>{successMessage}</p>
-            <button onClick={onClose} className="ok-button">Ok</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+const STATUS_COLORS = {
+  pending: 'badge-amber',
+  accepted: 'badge-green',
+  rejected: 'badge-red',
 };
 
-export default ViewApproachForUser;
+export default function ViewApproachForUser() {
+  const navigate = useNavigate();
+  const farmerId = getFarmerId();
+  const token = getToken();
+  const role = getRole();
+
+  const [approaches, setApproaches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filter, setFilter] = useState('All');
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type = 'info') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  useEffect(() => {
+    if (!role) { navigate('/login'); return; }
+    if (role === 'farmer') { navigate('/404'); return; }
+
+    apiGet(`/buyer/approach/requests/user/${farmerId}`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(setApproaches)
+      .catch(() => setError('No approaches found.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleDelete = async (approachId) => {
+    try {
+      const res = await apiFetch(`/buyer/approach/delete/${approachId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setApproaches(prev => prev.filter(a => a.approachId !== approachId));
+        showToast('Approach request withdrawn.', 'info');
+      } else { showToast('Failed to withdraw. Try again.', 'error'); }
+    } catch { showToast('Server busy.', 'error'); }
+  };
+
+  const filtered = useMemo(() =>
+    filter === 'All' ? approaches : approaches.filter(a => a.status?.toLowerCase() === filter.toLowerCase()),
+    [approaches, filter]
+  );
+
+  if (loading) return (
+    <div className="page-wrapper flex justify-center items-center min-h-[60vh]">
+      <span className="spinner" style={{ color: 'var(--color-primary)', width: '32px', height: '32px', borderWidth: '3px' }} />
+    </div>
+  );
+
+  return (
+    <div className="page-wrapper">
+      <ValidateToken farmerId={farmerId} token={token} role={role} />
+
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="section-title text-3xl">My Requests</h1>
+          <p className="section-subtitle">Track the status of your approach requests to farmers.</p>
+        </div>
+        <select className="form-select w-auto" value={filter} onChange={e => setFilter(e.target.value)}>
+          {['All', 'Pending', 'Accepted', 'Rejected'].map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+
+      {(error || filtered.length === 0) && (
+        <div className="card p-10 text-center">
+          <p className="text-4xl mb-3">{error ? '📭' : '🔍'}</p>
+          <p className="font-semibold" style={{ color: 'var(--color-text)' }}>
+            {error || `No ${filter !== 'All' ? filter.toLowerCase() + ' ' : ''}requests`}
+          </p>
+          {error && <button className="btn-primary mt-4" onClick={() => navigate('/view-all-crops')}>Browse Crops</button>}
+        </div>
+      )}
+
+      <div className="grid gap-4">
+        {filtered.map(a => (
+          <div key={a.approachId} className="card p-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>{a.cropName}</p>
+              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Farmer: <strong>{a.farmerName}</strong></p>
+            </div>
+            <span className={`badge ${STATUS_COLORS[a.status?.toLowerCase()] || 'badge-blue'}`}>{a.status}</span>
+            <div className="flex gap-2 flex-wrap">
+              <button className="btn-outline btn-sm" onClick={() => navigate(`/view-details/${a.cropId}`)}>View Crop</button>
+              {a.status?.toLowerCase() === 'pending' && (
+                <button className="btn-danger btn-sm" onClick={() => handleDelete(a.approachId)}>Withdraw</button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {toast && <div className={`toast toast-${toast.type}`}>{toast.type === 'success' ? '✅' : 'ℹ️'} {toast.msg}</div>}
+    </div>
+  );
+}

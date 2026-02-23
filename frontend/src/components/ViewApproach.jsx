@@ -1,214 +1,127 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../assets/ViewApproach.css';
+import { getToken, getFarmerId, getRole } from '../lib/auth';
+import { apiGet, apiFetch } from '../lib/api';
 import ValidateToken from './ValidateToken';
 
-const ViewApproach = () => {
-  const [farmerId, setFarmerId] = useState(null);
+const STATUS_COLORS = {
+  pending: 'badge-amber',
+  accepted: 'badge-green',
+  rejected: 'badge-red',
+};
+
+export default function ViewApproach() {
+  const navigate = useNavigate();
+  const farmerId = getFarmerId();
+  const token = getToken();
+  const role = getRole();
+
   const [approaches, setApproaches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filterStatus, setFilterStatus] = useState('All');
-  const [filteredApproaches, setFilteredApproaches] = useState([]);
-  const navigate = useNavigate();
+  const [filter, setFilter] = useState('All');
+  const [toast, setToast] = useState(null);
 
-  // Fetch token and farmerId once
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');
-  const storedFarmerId = localStorage.getItem('farmerId');
+  const showToast = (msg, type = 'info') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
 
-  // Fetch approaches by farmerId
-  const fetchApproachesByFarmerId = async () => {
-    if (!token) {
-      setError('You are not logged in!');
-      setLoading(false);
-      return;
-    }
-
-    if (!storedFarmerId) {
-      setError('Farmer ID is missing in localStorage!');
-      setLoading(false);
-      return;
-    }
-
-    setFarmerId(storedFarmerId);
-
+  const fetchApproaches = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:8080/seller/approach/requests/farmer/${storedFarmerId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setApproaches(data);
-      } else {
-        setError('No request has been found');
-      }
-    } catch (error) {
-      console.error('Error fetching approaches:', error);
-      setError('No request has been found');
-    } finally {
-      setLoading(false);
-    }
+      const res = await apiGet(`/seller/approach/requests/farmer/${farmerId}`);
+      if (res.ok) setApproaches(await res.json());
+      else setError('No requests found.');
+    } catch { setError('Server busy. Please refresh.'); }
+    finally { setLoading(false); }
   };
 
-  const handleViewBuyer = (buyerId) => {
-    navigate(`/view-buyer/${buyerId}`);
-  };
-
-  const handleViewDetails = (cropId) => {
-    navigate(`/view-details/${cropId}`);
-  };
+  useEffect(() => {
+    if (!role) { navigate('/login'); return; }
+    if (role === 'buyer') { navigate('/404'); return; }
+    fetchApproaches();
+  }, []);
 
   const handleAction = async (approachId, accept) => {
-    if (!token) {
-      setError('No token found. Please log in.');
-      return;
-    }
-
+    const endpoint = accept
+      ? `/seller/approach/accept/${approachId}`
+      : `/seller/approach/reject/${approachId}`;
     try {
-      const endpoint = accept
-        ? `http://localhost:8080/seller/approach/accept/${approachId}`
-        : `http://localhost:8080/seller/approach/reject/${approachId}`;
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        fetchApproachesByFarmerId();
-      } else {
-        const errorText = await response.text();
-      console.log(error)
-
-        setError('Action failed: ' + errorText);
-      }
-    } catch (error) {
-      console.error('Error occurred:', error);
-      console.log(error)
-      setError('An error occurred while processing your request.');
-    }
+      const res = await apiFetch(endpoint, { method: 'POST' });
+      if (res.ok) { showToast(accept ? 'Request accepted!' : 'Request rejected.', accept ? 'success' : 'info'); fetchApproaches(); }
+      else showToast('Action failed.', 'error');
+    } catch { showToast('Server busy.', 'error'); }
   };
 
-  useEffect(() => {
-    if (role === null) {
-      navigate("/login");
-    } else if (role === "buyer") {
-      navigate("/404");
-    }
-    fetchApproachesByFarmerId();
-  }, [role, navigate]);
+  const filtered = useMemo(() =>
+    filter === 'All' ? approaches : approaches.filter(a => a.status.toLowerCase() === filter.toLowerCase()),
+    [approaches, filter]
+  );
 
-  useEffect(() => {
-    applyFilter(filterStatus, approaches);
-  }, [approaches, filterStatus]);
-
-  const applyFilter = (status, data = approaches) => {
-    if (status === 'All') {
-      setFilteredApproaches(data);
-    } else {
-      const filtered = data.filter((approach) => approach.status.toLowerCase() === status.toLowerCase());
-      setFilteredApproaches(filtered);
-    }
-  };
-
-  const handleFilterChange = (event) => {
-    const status = event.target.value;
-    setFilterStatus(status);
-    applyFilter(status);
-  };
-
-  // Conditional rendering for loading and error
-  if (loading) {
-    return <div>Loading approaches...</div>;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
+  if (loading) return (
+    <div className="page-wrapper flex justify-center items-center min-h-[60vh]">
+      <span className="spinner" style={{ color: 'var(--color-primary)', width: '32px', height: '32px', borderWidth: '3px' }} />
+    </div>
+  );
 
   return (
-    <div className='container'>
+    <div className="page-wrapper">
       <ValidateToken farmerId={farmerId} token={token} role={role} />
-      <h1 className="heading">
-        <div className="word">
-          <span>B</span>
-          <span>U</span>
-          <span>Y</span>
-          <span>I</span>
-          <span>N</span>
-          <span>G</span>
-        </div>
-        <div className="word">
-          <span>P</span>
-          <span>R</span>
-          <span>O</span>
-          <span>P</span>
-          <span>O</span>
-          <span>S</span>
-          <span>A</span>
-          <span>L</span>
-          <span>S</span>
-        </div>
-      </h1>
 
-      <div className="filter-container">
-        <label htmlFor="status-filter">Filter by Status: </label>
-        <select id="status-filter" value={filterStatus} onChange={handleFilterChange}>
-          <option value="All">All</option>
-          <option value="Pending">Pending</option>
-          <option value="Accepted">Accepted</option>
-          <option value="Rejected">Rejected</option>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="section-title text-3xl">Buying Proposals</h1>
+          <p className="section-subtitle">Manage approach requests from buyers for your crops.</p>
+        </div>
+        <select
+          className="form-select w-auto"
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+        >
+          {['All', 'Pending', 'Accepted', 'Rejected'].map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
 
-      {filteredApproaches.length === 0 ? (
-        <p>No requests yet</p>
-      ) : (
-        <table border="1">
-          <thead>
-            <tr>
-              <th>Crop Name</th>
-              <th>Buyer Name</th>
-              <th>Status</th>
-              <th>Action</th>
-              <th>View</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredApproaches.map((approach) => (
-              <tr key={approach.approachId}>
-                <td onClick={() => handleViewDetails(approach.cropId)}>{approach.cropName}</td>
-                <td onClick={() => handleViewBuyer(approach.userId)}>{approach.userName}</td>
-                <td>{approach.status}</td>
-                {approach.status.toLowerCase() === 'pending' ? (
-                  <td>
-                    <button onClick={() => handleAction(approach.approachId, true)} className="accept-button">Accept</button>
-                    <button onClick={() => handleAction(approach.approachId, false)} className="reject-button">Reject</button>
-                  </td>
-                ) : (
-                  <td>Action completed</td>
-                )}
-                <td>
-                  <button onClick={() => handleViewDetails(approach.cropId)} className="view-button">View Crop</button>
-                  <button onClick={() => handleViewBuyer(approach.userId)} className="view-buyer-button">View Buyer</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {error && (
+        <div className="card p-10 text-center">
+          <p className="text-4xl mb-3">📬</p>
+          <p className="font-semibold" style={{ color: 'var(--color-text)' }}>{error}</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>When buyers show interest in your crops, requests will appear here.</p>
+        </div>
       )}
+
+      {!error && filtered.length === 0 && (
+        <div className="card p-8 text-center">
+          <p className="text-4xl mb-3">🔍</p>
+          <p className="font-semibold" style={{ color: 'var(--color-text)' }}>No {filter !== 'All' ? filter.toLowerCase() : ''} requests</p>
+        </div>
+      )}
+
+      <div className="grid gap-4">
+        {filtered.map(a => (
+          <div key={a.approachId} className="card p-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>{a.cropName}</p>
+              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Buyer: <strong>{a.userName}</strong></p>
+            </div>
+            <span className={`badge ${STATUS_COLORS[a.status?.toLowerCase()] || 'badge-blue'}`}>
+              {a.status}
+            </span>
+            <div className="flex gap-2 flex-wrap">
+              <button className="btn-outline btn-sm" onClick={() => navigate(`/view-details/${a.cropId}`)}>View Crop</button>
+              <button className="btn-ghost btn-sm" onClick={() => navigate(`/view-buyer/${a.userId}`)}>View Buyer</button>
+              {a.status?.toLowerCase() === 'pending' && (
+                <>
+                  <button className="btn-primary btn-sm" onClick={() => handleAction(a.approachId, true)}>✓ Accept</button>
+                  <button className="btn-danger btn-sm" onClick={() => handleAction(a.approachId, false)}>✕ Reject</button>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {toast && <div className={`toast toast-${toast.type}`}>{toast.type === 'success' ? '✅' : 'ℹ️'} {toast.msg}</div>}
     </div>
   );
-};
-
-export default ViewApproach;
+}
