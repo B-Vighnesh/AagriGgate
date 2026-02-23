@@ -5,7 +5,7 @@ import Card from './common/Card';
 import ValidateToken from './ValidateToken';
 import DeleteCrop from './DeleteCrop';
 import ApproachFarmer from './ApproachFarmer';
-import { apiFetch } from '../lib/api';
+import { getApiBaseUrl } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect width="360" height="220" fill="%23d8f3dc"/><text x="50%" y="55%" text-anchor="middle" font-size="28" fill="%231f6f54">Crop</text></svg>';
@@ -37,6 +37,16 @@ export default function ViewDetails() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showApproachModal, setShowApproachModal] = useState(false);
 
+  const safeFetch = (path, options = {}) => {
+    return fetch(`${getApiBaseUrl()}${path}`, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(options.headers || {}),
+      },
+    });
+  };
+
   useEffect(() => {
     if (!token) {
       navigate('/login');
@@ -47,8 +57,8 @@ export default function ViewDetails() {
     (async () => {
       try {
         const [detailRes, imgRes] = await Promise.all([
-          apiFetch(`/crops/crop/${cropId}`, { method: 'GET' }),
-          apiFetch(`/crops/viewUrl/${cropId}`, { method: 'GET' }),
+          safeFetch(`/crops/crop/${cropId}`, { method: 'GET' }),
+          safeFetch(`/crops/viewUrl/${cropId}`, { method: 'GET' }),
         ]);
 
         if (!detailRes.ok) throw new Error('This crop is not available anymore.');
@@ -62,7 +72,7 @@ export default function ViewDetails() {
         }
 
         if (role === 'farmer') {
-          const reqRes = await apiFetch(`/seller/approach/requests/farmer/${currentUserId}/${cropId}`, { method: 'GET' });
+          const reqRes = await safeFetch(`/seller/approach/requests/farmer/${currentUserId}/${cropId}`, { method: 'GET' });
           if (reqRes.ok) {
             const reqData = await reqRes.json();
             if (mounted) setRequests(Array.isArray(reqData) ? reqData.length : 0);
@@ -70,7 +80,7 @@ export default function ViewDetails() {
         }
 
         if (role === 'buyer') {
-          const statusRes = await apiFetch(`/buyer/approach/requests/user/${currentUserId}/${cropId}`, { method: 'GET' });
+          const statusRes = await safeFetch(`/buyer/approach/requests/user/${currentUserId}/${cropId}`, { method: 'GET' });
           if (statusRes.ok) {
             const status = await statusRes.json();
             if (!mounted) return;
