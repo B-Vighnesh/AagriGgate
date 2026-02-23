@@ -1332,6 +1332,173 @@ a {
   color: var(--color-muted);
 }
 
+/* View All Crops (Buyer) */
+.view-all-page {
+  background: #eef7f1;
+}
+
+.view-all-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.view-all-requests-btn {
+  white-space: nowrap;
+}
+
+.view-all-filter-card {
+  margin-bottom: 12px;
+}
+
+.view-all-search-row {
+  margin-bottom: 10px;
+}
+
+.view-all-input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.92rem;
+  background: #fff;
+}
+
+.view-all-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.view-all-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--color-muted);
+  padding: 26px 0;
+}
+
+.view-all-count {
+  margin: 0 0 10px;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.view-all-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.view-all-card {
+  padding: 0;
+  overflow: hidden;
+  display: grid;
+}
+
+.view-all-card__image-wrap {
+  position: relative;
+  background: #f1f7f4;
+}
+
+.view-all-card__image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+.view-all-card__badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: #daf2e8;
+  color: #247757;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.view-all-card__body {
+  padding: 12px;
+  display: grid;
+  gap: 7px;
+}
+
+.view-all-card__body h3 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 1rem;
+}
+
+.view-all-card__meta {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.84rem;
+}
+
+.view-all-card__price-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.view-all-card__price {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 1.14rem;
+  font-weight: 800;
+}
+
+.view-all-card__unit,
+.view-all-card__qty {
+  margin: 2px 0 0;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.view-all-card__cta {
+  width: 100%;
+}
+
+.view-all-empty {
+  text-align: center;
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 20px 16px;
+}
+
+.view-all-empty__icon {
+  margin: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e5f2ec;
+  color: var(--color-primary-dark);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+}
+
+.view-all-empty__title {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+.view-all-empty__desc {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
 /* View Approach */
 .view-approach-page {
   background: #eef7f1;
@@ -1422,6 +1589,109 @@ a {
   text-align: center;
   color: var(--color-muted);
   margin-bottom: 10px;
+}
+
+/* Buyer Requests */
+.user-requests-page {
+  background: #eef7f1;
+}
+
+.user-requests-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.user-requests-head h1 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: clamp(1.6rem, 4.5vw, 2.1rem);
+}
+
+.user-requests-head p {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+}
+
+.user-requests-head select {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.user-requests-empty {
+  text-align: center;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  margin-bottom: 12px;
+}
+
+.user-requests-empty h3 {
+  margin: 0;
+  color: var(--color-primary-dark);
+}
+
+.user-requests-empty p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.user-requests-list {
+  display: grid;
+  gap: 10px;
+}
+
+.user-requests-card {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.user-requests-card__main h3 {
+  margin: 0;
+  color: var(--color-primary-dark);
+}
+
+.user-requests-card__main p {
+  margin: 5px 0 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.user-requests-status {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.user-requests-status--pending {
+  background: #fff3d9;
+  color: #9b6a08;
+}
+
+.user-requests-status--accepted {
+  background: #daf2e8;
+  color: #247757;
+}
+
+.user-requests-status--rejected {
+  background: #ffe3e3;
+  color: #9f2b2b;
+}
+
+.user-requests-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 /* Update Account */
@@ -1892,6 +2162,39 @@ a {
   font-size: 0.9rem;
 }
 
+/* Approach modal */
+.approach-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.48);
+  padding: 14px;
+}
+
+.approach-modal__card {
+  width: min(520px, 96%);
+  text-align: center;
+}
+
+.approach-modal__card h2 {
+  margin: 0;
+  color: var(--color-primary-dark);
+}
+
+.approach-modal__card p {
+  margin: 10px 0 0;
+  color: var(--color-muted);
+}
+
+.approach-modal__actions {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -1948,6 +2251,14 @@ a {
   }
 
   .view-crop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .view-all-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .view-all-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -2080,6 +2391,21 @@ a {
     grid-template-columns: 1fr;
   }
 
+  .view-all-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .view-all-filter-grid,
+  .view-all-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .view-all-card__price-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .view-approach-head {
     flex-direction: column;
     align-items: flex-start;
@@ -2094,8 +2420,26 @@ a {
     width: 100%;
   }
 
+  .user-requests-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .user-requests-card {
+    grid-template-columns: 1fr;
+  }
+
+  .user-requests-actions {
+    justify-content: flex-start;
+  }
+
+  .user-requests-actions .ui-btn {
+    width: 100%;
+  }
+
   .confirm-actions,
-  .logout-actions {
+  .logout-actions,
+  .approach-modal__actions {
     grid-template-columns: 1fr;
   }
 
