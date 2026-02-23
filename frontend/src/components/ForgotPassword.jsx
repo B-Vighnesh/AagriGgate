@@ -87,7 +87,7 @@ export default function ForgotPassword() {
     if (!validatePassword(newPassword, confirmPassword)) return;
     setLoading(true);
     try {
-      const response = await fetch(`${getApiBaseUrl()}/users/resetpassword`, {
+      const response = await fetch(`${getApiBaseUrl()}/farmers/resetpassword`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: retrievedEmail, newPassword }),

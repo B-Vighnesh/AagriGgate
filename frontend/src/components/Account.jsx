@@ -34,8 +34,8 @@ export default function Account() {
     }
 
     const endpoint = role === 'buyer'
-      ? `/buyer/getBuyer/${farmerId}`
-      : `/users/getFarmer/${farmerId}`;
+      ? `/buyers/${farmerId}`
+      : `/farmers/${farmerId}`;
 
     let mounted = true;
     (async () => {

@@ -40,8 +40,8 @@ export default function UpdateAccount() {
     }
 
     const endpoint = role === 'buyer'
-      ? `/buyer/getBuyer/${farmerId}`
-      : `/users/getFarmer/${farmerId}`;
+      ? `/buyers/${farmerId}`
+      : `/farmers/${farmerId}`;
 
     (async () => {
       try {
@@ -114,8 +114,8 @@ export default function UpdateAccount() {
 
     setSaving(true);
     const endpoint = role === 'buyer'
-      ? `/buyer/update/${farmerId}`
-      : `/users/update/${farmerId}`;
+      ? `/buyers/${farmerId}`
+      : `/farmers/${farmerId}`;
 
     try {
       const response = await apiFetch(endpoint, {

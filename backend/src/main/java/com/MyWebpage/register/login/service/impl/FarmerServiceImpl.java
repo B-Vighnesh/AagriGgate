@@ -164,16 +164,32 @@ public class FarmerServiceImpl implements FarmerService {
 
     @Override
     @Transactional
-    public Farmer update(Farmer farmer) {
-        Farmer existingFarmer = farmerRepo.findByFarmerId(farmer.getFarmerId());
-        if (existingFarmer == null) {
-            return new Farmer();
+    public Farmer update(Farmer farmer, String emailFromJwt) {
+
+        Farmer existingFarmer =
+                farmerRepo.findByEmail(emailFromJwt)
+                        .orElseThrow(() ->
+                                new RuntimeException("Farmer not found"));
+
+        if (farmer.getFirstName() != null) {
+            existingFarmer.setFirstName(farmer.getFirstName());
         }
-        if (farmer.getPassword() != null && farmer.getPassword().length() <= 10) {
-            farmer.setPassword(bCryptPasswordEncoder.encode(farmer.getPassword()));
+
+        if (farmer.getLastName() != null) {
+            existingFarmer.setLastName(farmer.getLastName());
         }
-        logger.info("Farmer updated: {}", farmer.getFarmerId());
-        return farmerRepo.save(farmer);
+
+        if (farmer.getPhoneNo() != null) {
+            existingFarmer.setPhoneNo(farmer.getPhoneNo());
+        }
+
+        if (farmer.getState() != null) {
+            existingFarmer.setState(farmer.getState());
+        }
+
+        logger.info("Farmer profile updated: {}", existingFarmer.getFarmerId());
+
+        return farmerRepo.save(existingFarmer);
     }
 
     @Override

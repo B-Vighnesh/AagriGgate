@@ -60,7 +60,7 @@ export default function Settings() {
     if (passwordError) return;
     setLoading(true);
     try {
-      const endpoint = role === 'buyer' ? '/buyer/change-password' : '/users/change-password';
+      const endpoint = role === 'buyer' ? '/buyers/change-password' : '/farmers/change-password';
       const response = await apiFetch(endpoint, {
         method: 'POST',
         body: JSON.stringify({ farmerId, currentPassword, newPassword }),
@@ -86,7 +86,7 @@ export default function Settings() {
   const deleteAccount = async () => {
     setDeleteLoading(true);
     try {
-      const endpoint = role === 'buyer' ? '/buyer/delete' : '/users/delete';
+      const endpoint = role === 'buyer' ? '/buyers' : '/farmers';
       const response = await apiFetch(endpoint, {
         method: 'DELETE',
         body: JSON.stringify({ farmerId, currentPassword: deletePassword }),

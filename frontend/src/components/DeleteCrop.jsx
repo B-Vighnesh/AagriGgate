@@ -21,7 +21,7 @@ export default function DeleteCrop({ cropId, onClose }) {
     setError('');
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/crops/farmer/delete1/${cropId}`, {
+      const response = await fetch(`${getApiBaseUrl()}/crops/legacy/${cropId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
