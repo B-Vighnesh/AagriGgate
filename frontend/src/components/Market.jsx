@@ -5,7 +5,7 @@ import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
-import { apiFetch, apiPost } from '../lib/api';
+import { deleteSavedMarketData, getMarketPrice, getSavedMarketData, saveMarketData } from '../api/marketApi';
 import commodities from './commodities';
 import statesAndDistricts from './statesAndDistricts';
 
@@ -98,7 +98,6 @@ export default function Market() {
   const [maxPrice, setMaxPrice] = useState('');
 
   const autoFetchTimerRef = useRef(null);
-  const abortRef = useRef(null);
 
   const districts = useMemo(() => statesAndDistricts[state] || [], [state]);
   const savedDistricts = useMemo(() => statesAndDistricts[filterState] || [], [filterState]);
@@ -139,13 +138,9 @@ export default function Market() {
 
   const fetchSavedData = useCallback(async () => {
     try {
-      const res = await apiFetch('/api/saved-market-data/getAll', {
-        method: 'GET',
-        headers: { 'X-Farmer-Id': farmerId },
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      setSavedData(Array.isArray(data) ? data : []);
+      const pageData = await getSavedMarketData({ farmerId, page: 0, size: 500 });
+      const content = pageData?.content || [];
+      setSavedData(Array.isArray(content) ? content : []);
     } catch {
       // ignore saved fetch errors silently
     }
@@ -157,25 +152,22 @@ export default function Market() {
       return;
     }
 
-    if (abortRef.current) abortRef.current.abort();
-    abortRef.current = new AbortController();
-
     setLoading(true);
     setError('');
 
-    const apiKey = import.meta.env.VITE_DATA_GOV_API_KEY || '579b464db66ec23bdd000001602edb9ef1a64cd961329419d730f705';
     const queryDate = toGovDate(arrivalDate);
-    const url = `https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24?api-key=${apiKey}&format=json&offset=0&limit=1000&filters[State]=${encodeURIComponent(state)}&filters[District]=${encodeURIComponent(district)}&filters[Commodity]=${encodeURIComponent(commodity)}&filters[Arrival_Date]=${encodeURIComponent(queryDate)}`;
 
     try {
-      const res = await fetch(url, { signal: abortRef.current.signal });
-      if (!res.ok) throw new Error('fetch_failed');
-      const data = await res.json();
-      const records = data?.records || [];
+      const response = await getMarketPrice({
+        crop: commodity,
+        state,
+        district,
+        arrivalDate: queryDate,
+      });
+      const records = response?.data?.records || [];
       setMarketData(records);
       if (manual) showToast(`Loaded ${records.length} records.`, 'success');
     } catch (err) {
-      if (err?.name === 'AbortError') return;
       setMarketData([]);
       setError('Unable to fetch market data right now. Please try again.');
       if (manual) showToast('Unable to fetch market prices.', 'error');
@@ -212,7 +204,6 @@ export default function Market() {
 
   useEffect(() => {
     return () => {
-      if (abortRef.current) abortRef.current.abort();
       clearTimeout(autoFetchTimerRef.current);
     };
   }, []);
@@ -225,7 +216,7 @@ export default function Market() {
   const handleSave = async (item) => {
     try {
       const body = { ...item, farmerId };
-      const res = await apiPost('/api/saved-market-data/save', body);
+      const res = await saveMarketData(body);
       if (!res.ok) {
         showToast('Unable to save this record.', 'error');
         return;
@@ -239,10 +230,7 @@ export default function Market() {
 
   const handleDelete = async (id) => {
     try {
-      const res = await apiFetch('/api/saved-market-data/delete', {
-        method: 'DELETE',
-        headers: { 'X-Id': id },
-      });
+      const res = await deleteSavedMarketData(id);
       if (!res.ok) {
         showToast('Unable to delete saved item.', 'error');
         return;

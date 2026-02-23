@@ -5,6 +5,7 @@ import com.MyWebpage.register.login.model.Admin;
 import com.MyWebpage.register.login.model.Enquiry;
 import com.MyWebpage.register.login.service.AdminService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class AdminController {
 
-    private static final String ADMIN_USERNAME = "Vighnesh";
-    private static final String ADMIN_PASSWORD = "1234";
+    @Value("${admin.username}")
+    private String adminUsername;
+
+    @Value("${admin.password}")
+    private String adminPassword;
 
     private final AdminService adminService;
 
@@ -38,7 +42,7 @@ public class AdminController {
             @RequestParam String password,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        if (ADMIN_USERNAME.equals(username) && ADMIN_PASSWORD.equals(password)) {
+        if (adminUsername.equals(username) && adminPassword.equals(password)) {
             return ResponseEntity.ok(adminService.getAllEnquiries(page, size));
         }
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -46,7 +50,7 @@ public class AdminController {
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody Admin admin) {
-        if (ADMIN_USERNAME.equals(admin.getUsername()) && ADMIN_PASSWORD.equals(admin.getPassword())) {
+        if (adminUsername.equals(admin.getUsername()) && adminPassword.equals(admin.getPassword())) {
             return ResponseEntity.ok("Login successful");
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");

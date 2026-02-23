@@ -5,7 +5,7 @@ import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
-import { getApiBaseUrl } from '../lib/api';
+import { addCrop } from '../api/cropApi';
 
 const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
 const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
@@ -60,17 +60,8 @@ export default function AddCrop() {
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         try {
-          const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${coords.latitude}+${coords.longitude}&key=4138beff07ea4a259f0c2ff71ba19378`);
-          const data = await response.json();
-          const components = data?.results?.[0]?.components;
-          if (components) {
-            const locationText = [
-              components.village || components.hamlet || components.locality,
-              components.district || components.county,
-              components.state,
-            ].filter(Boolean).join(', ');
-            setCropData((prev) => ({ ...prev, region: locationText }));
-          }
+          const locationText = `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;
+          setCropData((prev) => ({ ...prev, region: locationText }));
         } catch {
           // keep silent for geo failures
         } finally {
@@ -114,11 +105,7 @@ export default function AddCrop() {
     if (image) formData.append('imageFile', image);
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/crops/farmer/addCrop`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const response = await addCrop(formData);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

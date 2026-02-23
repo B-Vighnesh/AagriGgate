@@ -3,16 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import ValidateToken from './ValidateToken';
-import { apiGet } from '../lib/api';
-import { getFarmerId, getRole, getToken } from '../lib/auth';
+import { getRole, getToken } from '../lib/auth';
+import { getWeather } from '../api/weatherApi';
 
 function getAlert(weather) {
   if (!weather) return null;
-  const current = weather.current;
-  if (current.temp_c > 35) return { type: 'error', msg: 'Heat alert: temperature above 35C.' };
-  if (current.wind_kph > 80) return { type: 'error', msg: 'Strong winds detected. Stay cautious.' };
-  if (current.precip_mm > 30) return { type: 'warning', msg: 'Heavy rainfall expected.' };
-  if (current.uv > 8) return { type: 'warning', msg: 'High UV index. Avoid direct sun in peak hours.' };
+  const current = weather.current || {};
+  const temperature = Number(current.temperature_2m);
+  const wind = Number(current.wind_speed_10m);
+  if (!Number.isNaN(temperature) && temperature > 35) return { type: 'error', msg: 'Heat alert: temperature above 35C.' };
+  if (!Number.isNaN(wind) && wind > 50) return { type: 'warning', msg: 'Strong winds detected. Stay cautious.' };
   return null;
 }
 
@@ -27,29 +27,23 @@ function Metric({ label, value }) {
 
 export default function Weather() {
   const navigate = useNavigate();
-  const farmerId = getFarmerId();
   const role = getRole();
   const token = getToken();
 
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [query, setQuery] = useState('');
-
-  const weatherApiKey = import.meta.env.VITE_WEATHER_API_KEY || '75f97057caa641fa99c73509242910';
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
 
   const alert = useMemo(() => getAlert(weather), [weather]);
 
-  const fetchByQuery = async (q) => {
+  const fetchByCoordinates = async (lat, lon) => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch(`https://api.weatherapi.com/v1/current.json?key=${weatherApiKey}&q=${encodeURIComponent(q)}&aqi=no`);
-      const data = await response.json();
-      if (!response.ok || data?.error) {
-        throw new Error(data?.error?.message || 'Weather not found for this location.');
-      }
-      setWeather(data);
+      const payload = await getWeather(lat, lon);
+      setWeather(payload?.data || null);
     } catch (err) {
       setWeather(null);
       setError(err.message || 'Unable to fetch weather details.');
@@ -59,24 +53,23 @@ export default function Weather() {
   };
 
   const fetchMyLocationWeather = async () => {
-    if (!token || !farmerId) {
+    if (!token) {
       navigate('/login');
       return;
     }
-    setLoading(true);
-    setError('');
-    try {
-      const response = await apiGet(`/users/getFarmer/${farmerId}`);
-      if (!response.ok) throw new Error('Could not load your profile location.');
-      const profile = await response.json();
-      const search = `${profile?.district || ''},${profile?.state || ''}`.trim();
-      if (!search || search === ',') throw new Error('Profile location is missing.');
-      await fetchByQuery(search);
-    } catch (err) {
-      setWeather(null);
-      setError(err.message || 'Unable to load weather for your profile location.');
-      setLoading(false);
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser.');
+      return;
     }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setLatitude(String(coords.latitude));
+        setLongitude(String(coords.longitude));
+        fetchByCoordinates(coords.latitude, coords.longitude);
+      },
+      () => setError('Unable to read your location.'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   useEffect(() => {
@@ -93,8 +86,8 @@ export default function Weather() {
 
   const onSearchSubmit = (event) => {
     event.preventDefault();
-    if (!query.trim()) return;
-    fetchByQuery(query.trim());
+    if (!latitude.trim() || !longitude.trim()) return;
+    fetchByCoordinates(latitude.trim(), longitude.trim());
   };
 
   return (
@@ -103,16 +96,24 @@ export default function Weather() {
       <div className="ag-container">
         <header className="weather-header">
           <h1>Weather</h1>
-          <p>Real-time weather for your farm location or any city search.</p>
+          <p>Weather from backend API for your current location or coordinates.</p>
         </header>
 
         <Card className="weather-search-card">
           <form className="weather-search-form" onSubmit={onSearchSubmit}>
             <input
-              type="text"
-              value={query}
-              placeholder="Search city (e.g. Bengaluru)"
-              onChange={(event) => setQuery(event.target.value)}
+              type="number"
+              step="any"
+              value={latitude}
+              placeholder="Latitude"
+              onChange={(event) => setLatitude(event.target.value)}
+            />
+            <input
+              type="number"
+              step="any"
+              value={longitude}
+              placeholder="Longitude"
+              onChange={(event) => setLongitude(event.target.value)}
             />
             <Button type="submit">Search</Button>
             <Button type="button" variant="outline" onClick={fetchMyLocationWeather}>My Location</Button>
@@ -140,28 +141,21 @@ export default function Weather() {
           <div className="weather-layout">
             <Card className="weather-summary">
               <div className="weather-summary__main">
-                <img src={`https:${weather.current.condition.icon}`} alt={weather.current.condition.text} />
                 <div>
-                  <h2>{weather.location.name}, {weather.location.region}</h2>
-                  <p>{weather.location.country}</p>
-                  <p>{weather.current.condition.text}</p>
+                  <h2>{weather.latitude}, {weather.longitude}</h2>
+                  <p>Source: Open-Meteo (via backend)</p>
                 </div>
               </div>
               <div className="weather-temp">
-                <strong>{weather.current.temp_c}C</strong>
-                <span>Feels like {weather.current.feelslike_c}C</span>
+                <strong>{weather?.current?.temperature_2m ?? '-'} C</strong>
+                <span>Current weather snapshot</span>
               </div>
             </Card>
 
             <div className="weather-metrics-grid">
-              <Metric label="Humidity" value={`${weather.current.humidity}%`} />
-              <Metric label="Wind" value={`${weather.current.wind_kph} kph`} />
-              <Metric label="Pressure" value={`${weather.current.pressure_mb} mb`} />
-              <Metric label="Visibility" value={`${weather.current.vis_km} km`} />
-              <Metric label="Precipitation" value={`${weather.current.precip_mm} mm`} />
-              <Metric label="UV Index" value={weather.current.uv} />
-              <Metric label="Cloud" value={`${weather.current.cloud}%`} />
-              <Metric label="Gust" value={`${weather.current.gust_kph} kph`} />
+              <Metric label="Humidity" value={`${weather?.current?.relative_humidity_2m ?? '-'}%`} />
+              <Metric label="Wind" value={`${weather?.current?.wind_speed_10m ?? '-'} km/h`} />
+              <Metric label="Time" value={weather?.current?.time || '-'} />
             </div>
           </div>
         )}
