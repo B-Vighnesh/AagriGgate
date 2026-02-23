@@ -1,158 +1,172 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../assets/Login.css';
+import { useNavigate, Link } from 'react-router-dom';
+import { apiPost } from '../lib/api';
+import { setAuth, isLoggedIn, clearAuth } from '../lib/auth';
 
-const Login = () => {
-
-
+export default function Login() {
   const navigate = useNavigate();
+  const [userType, setUserType] = useState('farmer');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [userType, setUserType] = useState('farmer');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [popupMessage, setPopupMessage] = useState(null);
+  const [toast, setToast] = useState(null); // { msg, type }
+  const [alreadyIn, setAlreadyIn] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsLoggedIn(true);
-    }
-  }, []);
+  useEffect(() => { setAlreadyIn(isLoggedIn()); }, []);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const showToast = (msg, type = 'info') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleLogout = () => { clearAuth(); navigate('/logout'); };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
-
-    const loginData = { username, password };
-
     try {
-      const endpoint =
-        userType === 'buyer'
-          ? 'http://localhost:8080/buyer/login'
-          : 'http://localhost:8080/users/login';
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginData),
-      });
-
+      const path = userType === 'buyer' ? '/buyer/login' : '/users/login';
+      const response = await apiPost(path, { username, password });
       if (response.ok) {
         const data = await response.json();
-        const { token, farmer } = data;
-        localStorage.setItem('role', userType);
-        localStorage.setItem('token', token);
-        localStorage.setItem('farmerId', farmer?.farmerId || '');
-        setPopupMessage('Login successful!');
-        setTimeout(() => navigate('/account'), 2000);
+        setAuth({ token: data.token, role: userType, farmerId: data.farmer?.farmerId || '' });
+        showToast('Login successful! Redirecting…', 'success');
+        setTimeout(() => navigate('/account'), 1500);
       } else {
-        setPopupMessage('Invalid credentials. Please try again.');
+        showToast('Invalid credentials. Please try again.', 'error');
       }
-    } catch (error) {
-      setPopupMessage('Server is busy. Please try again later.');
+    } catch {
+      showToast('Server is busy. Please try again later.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('farmerId');
-    navigate('/logout');
-  };
-
-  const closePopup = () => {
-    setPopupMessage(null);
-  };
-
-  if (isLoggedIn) {
+  /* Already logged-in guard */
+  if (alreadyIn) {
     return (
-      <div className="register-container">
-        <p>You are already logged in. Please log out before attempting to log in.</p>
-        <button onClick={handleLogout} className="logout-button">
-          Logout
-        </button>
+      <div className="page-wrapper flex items-center justify-center min-h-[60vh]">
+        <div className="card p-8 text-center max-w-sm w-full">
+          <div className="text-4xl mb-4">👋</div>
+          <h2 className="font-bold text-lg mb-2" style={{ color: 'var(--color-text)' }}>Already Logged In</h2>
+          <p className="text-sm mb-5" style={{ color: 'var(--color-text-muted)' }}>
+            Please log out before accessing this page.
+          </p>
+          <button className="btn-danger w-full" onClick={handleLogout}>Logout</button>
+        </div>
       </div>
     );
-   
   }
 
   return (
-    <div className="login-main-container">
-       <h1 className="heading">
-  <span>L</span>
-  <span>O</span>
-  <span>G</span>
-  <span>I</span>
-  <span>N</span>
-</h1><div className="login-container">
-      <form onSubmit={handleSubmit}>    
-        <label htmlFor="userType">I am a:</label>
-        <select
-          id="userType"
-          name="userType"
-          value={userType}
-          onChange={(e) => setUserType(e.target.value)}
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-12"
+      style={{ background: 'linear-gradient(135deg, var(--color-bg) 0%, #d8f3dc 100%)' }}
+    >
+      <div className="card p-8 w-full max-w-md animate-fade-in-up">
+        {/* Header */}
+        <div className="text-center mb-7">
+          <h1 className="text-3xl font-extrabold mb-1" style={{ color: 'var(--color-primary-dark)' }}>
+            Welcome back 👋
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            Sign in to your AgriGate account
+          </p>
+        </div>
+
+        {/* Role Toggle */}
+        <div
+          className="flex gap-1 p-1 rounded-xl mb-6"
+          style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}
         >
-          <option value="farmer">Farmer</option>
-          <option value="buyer">Buyer</option>
-        </select>
+          {['farmer', 'buyer'].map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setUserType(t)}
+              className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
+              style={{
+                background: userType === t ? 'var(--color-primary)' : 'transparent',
+                color: userType === t ? '#fff' : 'var(--color-text-muted)',
+                boxShadow: userType === t ? 'var(--shadow-sm)' : 'none',
+              }}
+            >
+              {t === 'farmer' ? '🌾 Farmer' : '🛒 Buyer'}
+            </button>
+          ))}
+        </div>
 
-        <label htmlFor="username">Username or Email:</label>
-        <input
-          type="text"
-          id="username"
-          name="username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-
-        <label htmlFor="password">Password:</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-
-        <br />
-        <button type="submit" id="login" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-      </form>
-
-      <button
-        id="forgot-password"
-        onClick={() => navigate('/forgot-password')}
-        className="forgot-password-link"
-      >
-        Forgot Password?
-      </button>
-
-      <button
-        id="reg"
-        onClick={() => navigate('/register')}
-        className="register-link"
-      >
-        New user? Register here
-      </button>
-      </div>
-      {popupMessage && (
-        <div className="popup-overlay" onClick={closePopup}>
-          <div className="popup">
-            <p>{popupMessage}</p>
-            {/* <button className="popup-close" onClick={closePopup}>
-              Close
-            </button> */}
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="form-group">
+            <label className="form-label">Username or Email</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Enter your username or email"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
           </div>
+
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <div className="relative">
+              <input
+                type={showPwd ? 'text' : 'password'}
+                className="form-input pr-12"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPwd(!showPwd)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                {showPwd ? '🙈' : '👁️'}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Link
+              to="/forgot-password"
+              className="text-xs font-medium"
+              style={{ color: 'var(--color-primary)' }}
+            >
+              Forgot password?
+            </Link>
+          </div>
+
+          <button
+            type="submit"
+            className="btn-primary w-full py-3"
+            disabled={loading}
+          >
+            {loading ? <><span className="spinner" /> Signing in…</> : 'Sign In'}
+          </button>
+        </form>
+
+        <p className="text-center text-sm mt-5" style={{ color: 'var(--color-text-muted)' }}>
+          Don't have an account?{' '}
+          <Link to="/register" className="font-semibold" style={{ color: 'var(--color-primary)' }}>
+            Register here
+          </Link>
+        </p>
+      </div>
+
+      {/* Toast */}
+      {toast && (
+        <div className={`toast toast-${toast.type}`}>
+          {toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : 'ℹ️'}
+          {toast.msg}
         </div>
       )}
     </div>
   );
-};
-
-export default Login;
+}

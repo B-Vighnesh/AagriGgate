@@ -1,251 +1,203 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import '../assets/ViewDetails.css';
+import { apiGet, apiFetch } from '../lib/api';
+import { getToken, getFarmerId, getRole } from '../lib/auth';
 import DeleteCrop from './DeleteCrop';
-
 import ApproachFarmer from './ApproachFarmer';
 
-const ViewDetails = () => {
+const LEAF_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23d8f3dc" width="100" height="100"/><text y="60" x="50" text-anchor="middle" font-size="40">🌾</text></svg>';
+
+function DetailRow({ label, value }) {
+  if (!value && value !== 0) return null;
+  return (
+    <div className="flex gap-3 py-2.5" style={{ borderBottom: '1px solid var(--color-border)' }}>
+      <span className="text-xs font-semibold w-32 shrink-0 pt-0.5" style={{ color: 'var(--color-text-muted)' }}>{label}</span>
+      <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{value}</span>
+    </div>
+  );
+}
+
+export default function ViewDetails() {
   const { cropId } = useParams();
+  const navigate = useNavigate();
+  const role = getRole();
+  const currentUserId = getFarmerId();
+
   const [cropDetails, setCropDetails] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [requests, setRequests] = useState(null);
   const [approachStatus, setApproachStatus] = useState(null);
-  const [showDeleteComponent, setShowDeleteComponent] = useState(false); // State to manage DeleteCrop visibility
-  const navigate = useNavigate();
-  const role = localStorage.getItem('role');
-  const currentUserId = localStorage.getItem('farmerId'); // Get the role from localStorage
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // Manage modal visibility
-  const [showApproachModal, setShowApproachModal] = useState(false); 
-  const [showAccept, setShowAccept] = useState(false); 
-  const [requests,setRequests]=useState(false)
-
-  const handleUpdateClick = () => {
-    navigate(`/update-crop/${cropId}`);
-  };
-
-  const handleDeleteClick = () => {
-    setShowDeleteComponent(true); // Show DeleteCrop component
-  };
-
-  const handleApproachFarmerClick = () => {
-    const currentUserId = localStorage.getItem('farmerId'); // Get the current user ID from localStorage
-
-    if (cropDetails && cropDetails.farmer) {
-      const farmerId = cropDetails.farmer.farmerId;
-
-      navigate('/approach-farmer', {
-        state: {
-          cropID: cropId,
-          farmerId: farmerId,
-          userId: currentUserId,
-        },
-      });
-    } else {
-      alert('Farmer details are not available.');
-    }
-  };
-
-  const handleViewApproachedClick = () => {
-    if (cropDetails && cropDetails.farmer) {
-      const farmerId = cropDetails.farmer.farmerId;
-      navigate(`/view-approaches/farmer/${farmerId}/crop/${cropId}`);
-    } else {
-      alert('Farmer details are not available.');
-    }
-  };
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showApproachModal, setShowApproachModal] = useState(false);
+  const [infoAlert, setInfoAlert] = useState(null);
 
   useEffect(() => {
-    const fetchCropDetails = async () => {
-      const token = localStorage.getItem('token');
+    const token = getToken();
+    if (!token) { navigate('/login'); return; }
 
-      if (!token) {
-        setError('No token found. Please log in.');
-        return;
-      }
+    Promise.all([
+      // Crop details
+      apiFetch(`/crops/crop/${cropId}`, { method: 'GET' }),
+      // Crop image
+      apiFetch(`/crops/viewUrl/${cropId}`, { method: 'GET' }),
+    ])
+      .then(async ([detailsRes, imgRes]) => {
+        if (!detailsRes.ok) {
+          setError('This crop has been removed by the farmer.');
+          setTimeout(() => navigate(-1), 1200);
+          return;
+        }
+        const details = await detailsRes.json();
+        setCropDetails(details);
 
-      try {
-        const response = await fetch(`http://localhost:8080/crops/crop/${cropId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+        if (imgRes.ok) {
+          const blob = await imgRes.blob();
+          setImageUrl(URL.createObjectURL(blob));
+        }
 
-        if (response.ok) {
-          const data = await response.json();
-         
-          setCropDetails(data);
-        
-          
-        } else { setError('This Crop has been deleted by Farmer');
-          setTimeout(() => {
-           navigate(-1); // Redirect to account page
-         }, 500)
-       }
-       const farmerId=localStorage.getItem('farmerId');;
-       fetch(`http://localhost:8080/seller/approach/requests/farmer/${farmerId}/${cropId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`, // Include the token in the request header
-        },
+        // Fetch requests count (farmer view)
+        if (role === 'farmer') {
+          apiFetch(`/seller/approach/requests/farmer/${currentUserId}/${cropId}`, { method: 'GET' })
+            .then(r => r.ok ? r.json() : [])
+            .then(data => setRequests(Array.isArray(data) ? data.length : 0))
+            .catch(() => setRequests(0));
+        }
+
+        // Fetch approach status (buyer view)
+        if (role === 'buyer') {
+          apiFetch(`/buyer/approach/requests/user/${currentUserId}/${cropId}`, { method: 'GET' })
+            .then(r => r.ok ? r.json() : null)
+            .then(status => {
+              setApproachStatus(status);
+              if (status === true) setInfoAlert('Farmer accepted your request! Check your email for next steps.');
+              if (status === false) setInfoAlert('You already made a request for this crop. It is pending review.');
+            })
+            .catch(() => { });
+        }
       })
-        .then((response) => {
-          if (response.ok) {
-            return response.json(); // Parse JSON if response is OK
-          } else if (response.status === 401) {
-            throw new Error("Unauthorized access. Please log in again.");
-          } else {
-            throw new Error(`Error: ${response.statusText}`);
-          }
-        })
-        .then((data) => {
-          const requests = Array.isArray(data) ? data.length : 0; // Determine the number of requests
-          setRequests(requests); // Update state directly
-        })
-        .catch((error) => {
-          console.error("Error fetching approach requests:", error.message);
-          setRequests(0); // Set state to 0 in case of error
-        });
-        const imageResponse = await fetch(`http://localhost:8080/crops/viewUrl/${cropId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (imageResponse.ok) {
-          const blob = await imageResponse.blob();
-          const imageUrl = URL.createObjectURL(blob);
-          setImageUrl(imageUrl);
-        }
-
-        const userId = localStorage.getItem('farmerId');
-        const statusResponse = await fetch(`http://localhost:8080/buyer/approach/requests/user/${userId}/${cropId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (statusResponse.ok) {
-          const statusData = await statusResponse.json();
-          setApproachStatus(statusData);
-        }
-        
-      } catch (error) {
-        console.log(error)
-        setError('This Crop has been deleted by Farmer');
-         setTimeout(() => {
-          navigate(-1); // Redirect to account page
-        }, 500)
-      }
-    };
-
-    fetchCropDetails();
+      .catch(() => {
+        setError('Failed to load crop details. Please try again.');
+      })
+      .finally(() => setLoading(false));
   }, [cropId]);
 
-  useEffect(() => {
-    if (approachStatus === true) {
-      setShowAccept('Please check your email for further process.');
-    
-    } else if (approachStatus === false) {
-     setShowAccept('You have already made an approach or it is still pending.');
-    }
-  }, [approachStatus]);
-const onClose = () => {
-  setShowAccept('');
-}
-
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
-
-  if (!cropDetails) {
-    return <div>Loading crop details...</div>;
-  }
-
-  return (
-    <div className="full-page-container">
-      <button onClick={() => navigate(-1)} className="back-button">
-        <i className="fas fa-arrow-left"></i>
-      </button>
-      <h1 className="heading">
-        
-  <div class="word">
-        <span>C</span>
-        <span>R</span>
-        <span>O</span>
-        <span>P</span>
-        </div>
-        <div class="word">
-        <span>D</span>
-        <span>E</span>
-        <span>T</span>
-        <span>A</span>
-        <span>I</span>
-        <span>L</span>
-        <span>S</span>
-        </div>
-      </h1>
-
-      {imageUrl && <img src={imageUrl} alt={cropDetails.cropName} className="full-page-image" />}
-
-      <div className="full-page-details">
-        <h3>{cropDetails.cropName}</h3>
-        <p><strong>Type:</strong> {cropDetails.cropType}</p>
-        <p><strong>Region:</strong> {cropDetails.region}</p>
-        <p><strong>Market Price:</strong> {cropDetails.marketPrice.toFixed(2)}</p>
-        <p><strong>Quantity:</strong> {cropDetails.quantity} kg</p>
-        <p><strong>Farmer:</strong> {cropDetails.farmer?.firstName} {cropDetails.farmer?.lastName}</p>
-        <p><strong>Description:</strong> {cropDetails.description}</p>
-        <p><strong>Added Date:</strong> {cropDetails.postDate}</p>
-        {role === 'buyer' ? (
-         <button 
-         onClick={() => setShowApproachModal(true)} 
-         className="action-button approach-button">
-         Approach Farmer
-       </button>
-     
-        ) : (
-          <><p><strong>Total Requests for this crop:</strong>{requests}</p>
-          <div className="button-group">
-            
-            <button onClick={handleUpdateClick} className="action-button">Update Crop</button>
-            <button onClick={handleViewApproachedClick} className="action-button view-approached-button">View Approached</button>
-            <button onClick={() => setShowDeleteModal(true)} className="action-button delete-button">Delete Crop</button>
-          </div></>
-        )}
-     {showDeleteModal && (
-          <DeleteCrop 
-            cropId={cropId} 
-            onClose={() => setShowDeleteModal(false)} // Close the modal when "Cancel" is clicked
-          />
-        )}
-          {showApproachModal && (
-         <ApproachFarmer 
-           cropId={cropId} 
-           farmerId={cropDetails.farmer?.farmerId}
-           userId={ currentUserId}
-           onClose={() => setShowApproachModal(false)} 
-         />
-       )}
-       {showAccept && (
-  <div className="accept-popup">
-    <div className="accept-content">
-      <h3>Farmer Accepted</h3>
-      <p>Farmer already accepted your request for this crop. Please check your email for further process.</p>
-      <div className="popup-buttons">
-        <button onClick={onClose} className="ok-button">Ok</button>
-      </div>
-    </div>
-  </div>
-)}
-
- </div>
+  if (loading) return (
+    <div className="page-wrapper flex justify-center items-center min-h-[60vh]">
+      <span className="spinner" style={{ color: 'var(--color-primary)', width: '32px', height: '32px', borderWidth: '3px' }} />
     </div>
   );
-};
 
-export default ViewDetails;
+  if (error) return (
+    <div className="page-wrapper text-center py-16">
+      <p className="text-3xl mb-3">⚠️</p>
+      <p style={{ color: 'var(--color-error)' }}>{error}</p>
+    </div>
+  );
+
+  if (!cropDetails) return null;
+
+  const isFarmerOwner = role === 'farmer' && cropDetails.farmer?.farmerId === currentUserId;
+
+  return (
+    <div className="page-wrapper max-w-5xl mx-auto">
+      <button
+        className="flex items-center gap-2 text-sm mb-5 font-medium"
+        style={{ color: 'var(--color-primary)' }}
+        onClick={() => navigate(-1)}
+      >
+        ← Back
+      </button>
+
+      {/* Info Alert (approach status) */}
+      {infoAlert && (
+        <div
+          className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl mb-5 text-sm font-medium"
+          style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}
+        >
+          <span>ℹ️ {infoAlert}</span>
+          <button onClick={() => setInfoAlert(null)} className="text-lg leading-none opacity-60 hover:opacity-100">×</button>
+        </div>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Image */}
+        <div className="card overflow-hidden h-72 md:h-auto">
+          <img
+            src={imageUrl || LEAF_PLACEHOLDER}
+            alt={cropDetails.cropName}
+            className="w-full h-full object-cover"
+            onError={e => { e.currentTarget.src = LEAF_PLACEHOLDER; }}
+          />
+        </div>
+
+        {/* Details */}
+        <div className="card p-6 flex flex-col">
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h1 className="text-2xl font-extrabold" style={{ color: 'var(--color-primary-dark)' }}>
+              {cropDetails.cropName}
+            </h1>
+            <span className="badge badge-green">{cropDetails.cropType}</span>
+          </div>
+
+          <div className="flex-1">
+            <DetailRow label="Farmer" value={`${cropDetails.farmer?.firstName || ''} ${cropDetails.farmer?.lastName || ''}`} />
+            <DetailRow label="Region" value={cropDetails.region} />
+            <DetailRow label="Description" value={cropDetails.description} />
+            <DetailRow label="Quantity" value={`${cropDetails.quantity} ${cropDetails.unit}`} />
+            <DetailRow label="Added" value={cropDetails.postDate} />
+            {isFarmerOwner && requests !== null && (
+              <DetailRow label="Requests" value={`${requests} buyer request${requests !== 1 ? 's' : ''}`} />
+            )}
+          </div>
+
+          {/* Price */}
+          <div className="mt-4 py-3 px-4 rounded-xl" style={{ background: 'var(--color-bg)' }}>
+            <p className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>Market Price</p>
+            <p className="text-3xl font-extrabold" style={{ color: 'var(--color-primary)' }}>
+              ₹{cropDetails.marketPrice?.toFixed(2)}
+              <span className="text-base font-medium ml-1" style={{ color: 'var(--color-text-muted)' }}>/ {cropDetails.unit}</span>
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="mt-4 flex flex-col gap-2">
+            {role === 'buyer' && approachStatus !== true && (
+              <button className="btn-primary py-3" onClick={() => setShowApproachModal(true)}>
+                🤝 Approach Farmer
+              </button>
+            )}
+
+            {isFarmerOwner && (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  <button className="btn-outline" onClick={() => navigate(`/update-crop/${cropId}`)}>✏️ Edit Crop</button>
+                  <button className="btn-outline" onClick={() => navigate(`/view-approaches/farmer/${cropDetails.farmer?.farmerId}/crop/${cropId}`)}>
+                    📨 View Requests
+                  </button>
+                </div>
+                <button className="btn-danger" onClick={() => setShowDeleteModal(true)}>🗑 Delete Crop</button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <DeleteCrop cropId={cropId} onClose={() => setShowDeleteModal(false)} />
+      )}
+
+      {/* Approach Modal */}
+      {showApproachModal && (
+        <ApproachFarmer
+          cropId={cropId}
+          farmerId={cropDetails.farmer?.farmerId}
+          userId={currentUserId}
+          onClose={() => setShowApproachModal(false)}
+        />
+      )}
+    </div>
+  );
+}

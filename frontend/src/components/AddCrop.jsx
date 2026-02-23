@@ -1,119 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../assets/AddCrop.css';
+import { useNavigate, Link } from 'react-router-dom';
+import { getToken, getFarmerId, getRole } from '../lib/auth';
 import ValidateToken from './ValidateToken';
 
-const AddCrop = () => {
+const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
+const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
+
+export default function AddCrop() {
   const navigate = useNavigate();
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(null); 
-  
+  const farmerId = getFarmerId();
+  const token = getToken();
+  const role = getRole();
+
   const [cropData, setCropData] = useState({
-    cropName: '',
-    cropType: '',
-    region: '', // Initially empty, will be set based on location
-    marketPrice: '',
-    quantity: '',
-    unit: 'kg', // Default unit
-    description: '',
+    cropName: '', cropType: '', region: '', marketPrice: '', quantity: '', unit: 'kg', description: '',
   });
-  
-  const farmerId=localStorage.getItem('farmerId')
-
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');
   const [image, setImage] = useState(null);
-  const apikey="4138beff07ea4a259f0c2ff71ba19378";
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const farmerId = localStorage.getItem('farmerId');
-    if (!token || !farmerId) {
-      navigate('/login'); // Redirect to login if not authenticated
-    }
-    const userRole = localStorage.getItem("role");
-    if (userRole ===null) {
-      navigate("/login"); 
-    }
-    else if(userRole==="buyer")
-    {
-      navigate("/404");
-    }
-    // Automatically set region based on user's location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          fetchRegionFromCoordinates(latitude, longitude);
-        },
-        (error) => {
-          console.error('Error fetching location:', error);
-          setError('Unable to retrieve your location. Please enter your region manually.');
-        }
-      );
-    } else {
-      setError('Geolocation is not supported by this browser.');
-    }
-  }, [navigate]);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [locating, setLocating] = useState(false);
 
-  const fetchRegionFromCoordinates = async (latitude, longitude) => {
-    try {
-      const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${apikey}`);
-  
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-  
-      const data = await response.json();
-      console.log(data); // Log the entire response for debugging
-  
-      if (data.results && data.results.length > 0) {
-        const components = data.results[0].components;
-  
-        // Safely get village, district, and state with fallback
-        const village = components.village || components.hamlet || components.locality || '';
-        const district = components.district || components.suburb || components.county || ''; // Add 'county' as fallback
-        const state = components.state || components.province || components.region || ''; // Add 'region' as fallback
-  
-        // Combine the region details and remove any empty strings
-        const regionParts = [village, district, state].filter(part => part.trim() !== ''); // Filter out empty parts
-        const formattedRegion = regionParts.join(', '); // Join with commas
-  
-        console.log(`Formatted Region: ${formattedRegion}`); // Log the formatted region
-  
-        // Set the crop data with the retrieved region details
-        setCropData((prevData) => ({
-          ...prevData,
-          region: formattedRegion // Set the formatted region directly
-        }));
-      } else {
-        setError('No results found for the provided coordinates.');
-      }
-    } catch (error) {
-      console.error('Error fetching region data:', error);
-      setError('Unable to fetch region data. Please enter your region manually.');
-    }
+  const showToast = (msg, type = 'info') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4000);
   };
-  
+
+  useEffect(() => {
+    if (!token || !farmerId) { navigate('/login'); return; }
+    if (role === 'buyer') { navigate('/404'); return; }
+    autoFillRegion();
+  }, []);
+
+  const autoFillRegion = () => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      try {
+        const res = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${coords.latitude}+${coords.longitude}&key=4138beff07ea4a259f0c2ff71ba19378`);
+        const data = await res.json();
+        if (data.results?.length) {
+          const c = data.results[0].components;
+          const parts = [c.village || c.hamlet || c.locality, c.district || c.county, c.state].filter(Boolean);
+          setCropData(prev => ({ ...prev, region: parts.join(', ') }));
+        }
+      } catch { /* silently skip geo-fill */ }
+      setLocating(false);
+    }, () => setLocating(false));
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCropData({
-      ...cropData,
-      [name]: value,
-    });
+    setCropData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e) => {
-    setImage(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const farmerId = localStorage.getItem('farmerId');
 
     const formData = new FormData();
-    const cropObject = {
+    const cropObj = {
       cropName: cropData.cropName,
       cropType: cropData.cropType,
       region: cropData.region,
@@ -124,122 +78,130 @@ const AddCrop = () => {
       farmer: { farmerId: parseInt(farmerId) },
     };
 
-    formData.append('crop', new Blob([JSON.stringify(cropObject)], { type: 'application/json' }));
-    if (image) {
-      formData.append('imageFile', image);
-    }
-
-    const token = localStorage.getItem('token');
+    formData.append('crop', new Blob([JSON.stringify(cropObj)], { type: 'application/json' }));
+    if (image) formData.append('imageFile', image);
 
     try {
-      const response = await fetch('http://localhost:8080/crops/farmer/addCrop', {
+      const res = await fetch('http://localhost:8080/crops/farmer/addCrop', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
-      if (response.ok) {
-        setSuccessMessage('Crop added successfully!');
-        setCropData({ cropName: '', cropType: '', region: '', marketPrice: '', quantity: '', unit: 'kg', description: '' });
-        setImage(null);
+      if (res.ok) {
+        showToast('Crop added successfully! Redirecting…', 'success');
+        setTimeout(() => navigate('/view-crop'), 1500);
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to add crop');
+        const err = await res.json().catch(() => ({}));
+        showToast(err.message || 'Failed to add crop.', 'error');
       }
-    } catch (error) {
-      setError('Error occurred while adding crop');
-      window.location.reload();
+    } catch {
+      showToast('Server busy. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleView = () => {
-    navigate('/view-crop');
-  };
-  const handleViewCrop = () => {
-    navigate('/view-crop');
-  };
   return (
-    <div className="add-crop-container"><ValidateToken farmerId={farmerId} token={token} role={role} />
-      <h1 className="heading">
-      <div class="word">
-  <span>A</span>
-  <span>D</span>
-  <span>D</span>
-  </div>
-  <div class="word">
-  <span>C</span>
-  <span>R</span>
-  <span>O</span>
-  <span>P</span>
-  </div>
-</h1>
+    <div className="page-wrapper max-w-2xl mx-auto">
+      <ValidateToken farmerId={farmerId} token={token} role={role} />
 
-      {/* <button className="go-back-button" onClick={handleGoBack}><i className="fas fa-arrow-left"></i></button>
-      <h2>Add Crop</h2> */}
-      {/* <button className="add-crop-button" onClick={handleViewCrop}> View Crop</button> */}
-      {error && <div className="error-message">{error}</div>}
-      <form onSubmit={handleSubmit} className="add-crop-form">
-        <label htmlFor="cropName">Crop Name:</label>
-        <input type="text" id="cropName" name="cropName" value={cropData.cropName} required onChange={handleChange} />
+      <div className="mb-6 flex items-center gap-4">
+        <button onClick={() => navigate(-1)} className="text-sm font-medium" style={{ color: 'var(--color-primary)' }}>← Back</button>
+        <div>
+          <h1 className="section-title text-3xl">Add New Crop</h1>
+          <p className="section-subtitle">List your produce for buyers to discover.</p>
+        </div>
+      </div>
 
-        <label htmlFor="cropType">Crop Category:</label>
-        <input type="text" id="cropType" name="cropType" value={cropData.cropType} required onChange={handleChange} />
-
-        <label htmlFor="region">Region:</label>
-        <input type="text" id="region" name="region" value={cropData.region} readOnly /> {/* Make the field read-only since it's auto-filled */}
-
-        <label htmlFor="marketPrice">Market Price:</label>
-        <input type="number" id="marketPrice" name="marketPrice" value={cropData.marketPrice} required onChange={handleChange} />
-
-        <label htmlFor="quantity">Quantity:</label>
-        <input type="number" id="quantity" name="quantity" value={cropData.quantity} required onChange={handleChange} />
-
-        <label htmlFor="unit">Unit:</label>
-        <select id="unit" name="unit" value={cropData.unit} onChange={handleChange} required>
-          <option value="kg">kg</option>
-          <option value="ltr">litre</option>
-          <option value="g">gram</option>
-          <option value="piece">piece</option>
-        </select>
-
-        <label htmlFor="description">Description:</label>
-        <textarea id="description" name="description" value={cropData.description} required onChange={handleChange} />
-
-        <label htmlFor="image">Capture an image or upload one:</label>
-        <input 
-  type="file" 
-  id="image" 
-  accept="image/*" 
-  capture="environment" 
-  required 
-  onChange={handleImageChange} 
-/>
-{image && (
-  <div className="image-preview">
-    <img src={URL.createObjectURL(image)} alt="Crop Preview" />
-  </div>
-)}
-
-
-        <button type="submit" className="submit-button" disabled={loading}>
-          {loading ? 'Adding Crop...' : 'Add Crop'}
-        </button>
-      </form>
-      {successMessage && (
-          <div className="success-modal">
-            <div className="success-message">
-              <p>{successMessage}</p>
-              <button onClick={handleView} className="ok-button">Ok</button>
+      <div className="card p-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-group">
+              <label className="form-label">Crop Name *</label>
+              <input className="form-input" name="cropName" required value={cropData.cropName} onChange={handleChange} placeholder="e.g. Tomato" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Category *</label>
+              <select className="form-select" name="cropType" required value={cropData.cropType} onChange={handleChange}>
+                <option value="">Select Category</option>
+                {CROP_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
             </div>
           </div>
-        )}
-        {error && <div className="error-message">{error}</div>}
+
+          <div className="form-group">
+            <label className="form-label flex items-center gap-2">
+              Region
+              {locating && <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>📍 Detecting…</span>}
+            </label>
+            <input className="form-input" name="region" value={cropData.region} onChange={handleChange} placeholder="Auto-filled from GPS or type manually" />
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="form-group">
+              <label className="form-label">Market Price (₹) *</label>
+              <input className="form-input" type="number" min="0" step="0.01" name="marketPrice" required value={cropData.marketPrice} onChange={handleChange} placeholder="0.00" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Quantity *</label>
+              <input className="form-input" type="number" min="0" name="quantity" required value={cropData.quantity} onChange={handleChange} placeholder="0" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Unit *</label>
+              <select className="form-select" name="unit" required value={cropData.unit} onChange={handleChange}>
+                {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Description *</label>
+            <textarea className="form-input min-h-[80px] resize-none" name="description" required value={cropData.description} onChange={handleChange} placeholder="Quality, freshness, harvesting method…" />
+          </div>
+
+          {/* Image Upload */}
+          <div className="form-group">
+            <label className="form-label">Crop Photo *</label>
+            <div className="flex gap-4 items-start">
+              <label
+                className="flex flex-col items-center justify-center border-2 border-dashed rounded-xl w-32 h-32 cursor-pointer transition-all duration-200"
+                style={{ borderColor: 'var(--color-primary-light)', color: 'var(--color-text-muted)' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-primary-light)'}
+              >
+                <span className="text-3xl">📷</span>
+                <span className="text-xs mt-1">Upload / Camera</span>
+                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageChange} required={!image} />
+              </label>
+              {imagePreview && (
+                <div className="relative">
+                  <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-xl shadow" />
+                  <button
+                    type="button"
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-xs flex items-center justify-center"
+                    style={{ background: '#ef4444', color: '#fff' }}
+                    onClick={() => { setImage(null); setImagePreview(null); }}
+                  >×</button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button type="submit" className="btn-primary flex-1 py-3" disabled={loading}>
+              {loading ? <><span className="spinner" /> Adding…</> : '+ Add Crop'}
+            </button>
+            <Link to="/view-crop" className="btn-outline flex-1 py-3 text-center">View My Crops</Link>
+          </div>
+        </form>
+      </div>
+
+      {toast && (
+        <div className={`toast toast-${toast.type}`}>
+          {toast.type === 'success' ? '✅' : '❌'} {toast.msg}
+        </div>
+      )}
     </div>
   );
-};
-
-export default AddCrop;
+}

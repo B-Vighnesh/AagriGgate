@@ -1,437 +1,314 @@
 import React, { useState, useEffect } from 'react';
-import '../assets/Register.css';
-import { useNavigate } from 'react-router-dom';
-import Modal from './Modal'; // Import the Modal component
+import { useNavigate, Link } from 'react-router-dom';
+import { apiPost, apiGet } from '../lib/api';
+import { isLoggedIn } from '../lib/auth';
 import statesWithDistricts from './StatesWithDistricts';
 
-const Register = () => {
+const STEPS = ['Verify Email', 'Your Details', 'Set Password'];
+
+function StepIndicator({ current }) {
+  return (
+    <div className="flex items-center justify-center gap-0 mb-8">
+      {STEPS.map((label, i) => (
+        <React.Fragment key={label}>
+          <div className="flex flex-col items-center">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200"
+              style={{
+                background: i <= current ? 'var(--color-primary)' : 'var(--color-border)',
+                color: i <= current ? '#fff' : 'var(--color-text-muted)',
+              }}
+            >
+              {i < current ? '✓' : i + 1}
+            </div>
+            <span className="text-xs mt-1 font-medium hidden sm:block"
+              style={{ color: i <= current ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
+              {label}
+            </span>
+          </div>
+          {i < STEPS.length - 1 && (
+            <div className="h-0.5 w-10 sm:w-16 mx-1 mt-[-18px] sm:mt-[-18px] transition-all duration-300"
+              style={{ background: i < current ? 'var(--color-primary)' : 'var(--color-border)' }} />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+export default function Register() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);   // 0 = verify email, 1 = details, 2 = password
   const [userType, setUserType] = useState('');
-  const [userTypeError, setUserTypeError] = useState('');
-  const [form, setForm] = useState({
-    email: '',
-    firstName: '',
-    lastName: '',
-    phoneNo: '',
-    dob: '',
-    state: '',
-    district: '',
-    aadharNo: '',
-    password: ''
-  });
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [emailError, setEmailError] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [aadharError, setAadharError] = useState('');
-  const [phoneError, setPhoneError] = useState('');
-  const [firstNameError, setFirstNameError] = useState('');
-  const [dobError, setDobError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [form, setForm] = useState({
+    email: '', firstName: '', lastName: '', phoneNo: '', dob: '', state: '', district: '', aadharNo: '', password: '',
+  });
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const [showPassword, setShowPassword] = useState(false);
+  useEffect(() => { if (isLoggedIn()) navigate('/account'); }, []);
 
-  // Modal state
-  const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
-
-  useEffect(() => {
-    const farmerId = localStorage.getItem('farmerId');
-    if (farmerId) {
-      setIsLoggedIn(true);
-    }
-  }, []);
-
-  const toggleModal = (title, message) => {
-    setModal({ isOpen: true, title, message });
+  const showToast = (msg, type = 'info') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4000);
   };
 
-  const closeModal = () => {
-    setModal({ isOpen: false, title: '', message: '' });
-  };
+  const setErr = (key, val) => setErrors(prev => ({ ...prev, [key]: val }));
+  const clearErr = (key) => setErrors(prev => { const c = { ...prev }; delete c[key]; return c; });
 
   const handleChange = async (e) => {
     const { name, value } = e.target;
-    setForm({
-      ...form,
-      [name]: value
-    });
-
-    if (name === 'aadharNo') {
-      setAadharError(/^\d{12}$/.test(value) ? '' : 'Aadhaar number must be 12 digits.');
-    }
-    if (name === 'phoneNo') {
-      // Check if the phone number is 10 digits
-      if (!/^\d{10}$/.test(value)) {
-        setPhoneError('Phone number must be exactly 10 digits.');
-      } 
-      // Check if the phone number starts with 6, 7, 8, or 9
-      else if (!/^[6-9]/.test(value)) {
-        setPhoneError('Phone number must start with 6, 7, 8, or 9.');
-      } 
-      // Clear error if both conditions are met
-      else {
-        setPhoneError('');
-      }
-    }
-    
-    
-
-    if (name === 'dob') {
-      const selectedDate = new Date(value);
-      const today = new Date();
-      const age = today.getFullYear() - selectedDate.getFullYear();
-      const isUnderage =
-        age < 18 || (age === 18 && today.getMonth() < selectedDate.getMonth()) ||
-        (age === 18 && today.getMonth() === selectedDate.getMonth() && today.getDate() < selectedDate.getDate());
-
-      setDobError(isUnderage ? 'You must be at least 18 years old to register.' : '');
-    }
+    setForm(prev => ({ ...prev, [name]: value }));
 
     if (name === 'email') {
       try {
-        const response = await fetch(`http://localhost:8080/users/findEmail/${value}`);
-        const emailExists = response.ok ? await response.json() : false;
-        setEmailError(emailExists ? 'This email is already in use.' : '');
-      } catch {
-        setEmailError('An error occurred while checking the email.');
-      }
+        const res = await apiGet(`/users/findEmail/${value}`);
+        const exists = res.ok ? await res.json() : false;
+        exists ? setErr('email', 'This email is already in use.') : clearErr('email');
+      } catch { clearErr('email'); }
     }
-
-    if (name === 'password' || name === 'confirmPassword') {
-      const password = name === 'password' ? value : form.password;
-      const confirmPwd = name === 'confirmPassword' ? value : confirmPassword;
-      setPasswordError(
-        password !== confirmPwd
-          ? 'Passwords do not match.'
-          : /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)
-          ? ''
-          : 'Password must contain numbers, a special character, and upper and lower case.'
-      );
-      if (name === 'password') setForm({ ...form, password: value });
-      if (name === 'confirmPassword') setConfirmPassword(value);
+    if (name === 'phoneNo') {
+      /^\d{10}$/.test(value) && /^[6-9]/.test(value) ? clearErr('phoneNo') : setErr('phoneNo', 'Enter a valid 10-digit phone starting with 6-9.');
     }
-
+    if (name === 'aadharNo') {
+      /^\d{12}$/.test(value) ? clearErr('aadharNo') : setErr('aadharNo', 'Aadhaar must be exactly 12 digits.');
+    }
+    if (name === 'dob') {
+      const age = new Date().getFullYear() - new Date(value).getFullYear();
+      age < 18 ? setErr('dob', 'You must be at least 18 years old.') : clearErr('dob');
+    }
     if (name === 'firstName') {
-      const isValidName = /^[a-zA-Z\s]+$/.test(value); // Checks for letters and spaces only
-      setFirstNameError(
-        value.length < 2
-          ? 'First name must be greater than 2 characters.'
-          : !isValidName
-          ? 'First name must contain only letters.'
-          : ''
-      );
+      /^[a-zA-Z\s]{2,}$/.test(value) ? clearErr('firstName') : setErr('firstName', 'Min 2 letters, alphabets only.');
     }
-    
+  };
+
+  const validatePasswords = () => {
+    if (form.password !== confirmPassword) { setErr('password', 'Passwords do not match.'); return false; }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(form.password)) {
+      setErr('password', 'Min 8 chars with uppercase, lowercase, number and special char.');
+      return false;
+    }
+    clearErr('password');
+    return true;
   };
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
-    if (!userType) {
-      setUserTypeError('Please select a user type.');
-      return;
-    }
+    if (!userType) { showToast('Please select Farmer or Buyer first.', 'error'); return; }
+    if (Object.keys(errors).length) { showToast('Please fix the errors before continuing.', 'error'); return; }
+    setLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/auth/send-otp/${form.email}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      if (response.ok) {
-        setOtpSent(true);
-        toggleModal('Success', 'OTP sent to your email.');
-      } else {
-        toggleModal('Error', `Email not found`);
-      }
-    } catch {
-      toggleModal('Error', `Email not found`);
-    }
+      const res = await apiPost(`/auth/send-otp/${form.email}`, {});
+      if (res.ok) { setOtpSent(true); showToast('OTP sent to your email!', 'success'); }
+      else showToast('Could not send OTP. Check your email address.', 'error');
+    } catch { showToast('Server busy. Try again later.', 'error'); }
+    finally { setLoading(false); }
   };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      const response = await fetch(
-        `http://localhost:8080/auth/verify-otp?email=${encodeURIComponent(form.email)}&otp=${otp}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' } }
-      );
+      const res = await apiPost(`/auth/verify-otp?email=${encodeURIComponent(form.email)}&otp=${otp}`, {});
+      if (res.ok) { showToast('Email verified!', 'success'); setStep(1); }
+      else showToast('Invalid OTP. Please try again.', 'error');
+    } catch { showToast('Server busy. Try again.', 'error'); }
+    finally { setLoading(false); }
+  };
 
-      if (response.ok) {
-        toggleModal('Success', 'OTP verified successfully.');
-        setOtpVerified(true);
-        setStep(2);
-      } else {
-        toggleModal('Error', 'Invalid OTP. Please try again.');
-      }
-    } catch {
-      toggleModal('Error', 'An error occurred during OTP verification.');
-    }
-  };
-  const handleStateChange = (e) => {
-    const selectedState = e.target.value;
-    setForm({ ...form, state: selectedState, district: '' });
-  };
-  const handleOtpChange = (e) => {
-    setOtp(e.target.value);
-  };
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (passwordError || !form.password || !confirmPassword) {
-      toggleModal('Error', 'Ensure the passwords match before registering.');
-      return;
-    }
-
+    if (!validatePasswords()) return;
+    setLoading(true);
     try {
-      const endpoint = userType === 'buyer'
-        ? 'http://localhost:8080/buyer/register'
-        : 'http://localhost:8080/users/register';
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-
-      if (response.ok) {
-        toggleModal('Success', 'Registration successful!');
-    
-        setTimeout(() =>     navigate('/login'), 1000);
-      } else {
-        toggleModal('Server Busy.');
-      }
-    } catch {
-      toggleModal('Server Busy.');
-    }
+      const endpoint = userType === 'buyer' ? '/buyer/register' : '/users/register';
+      const res = await apiPost(endpoint, form);
+      if (res.ok) { showToast('Registration successful! Redirecting to login…', 'success'); setTimeout(() => navigate('/login'), 1500); }
+      else showToast('Registration failed. Server busy.', 'error');
+    } catch { showToast('Server busy. Try again.', 'error'); }
+    finally { setLoading(false); }
   };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  if (isLoggedIn) {
-    return (
-      <div>
-        <p>You are already logged in.</p>
-        <button onClick={() => navigate('/logout')}>Logout</button>
-      </div>
-    );
-  }
 
   return (
-    <div className="register-page">
-      <Modal
-        isOpen={modal.isOpen}
-        title={modal.title}
-        message={modal.message}
-        onClose={closeModal}
-      /> <h1 className="heading">
-  <span>R</span>
-  <span>E</span>
-  <span>G</span>
-  <span>I</span>
-  <span>S</span>
-  <span>T</span>
-  <span>E</span>
-  <span>R</span>
-</h1>
-      {step === 1 && (
-        <form onSubmit={handleSendOtp}>
-          <div className='user-type'><label>
-           <strong>User Type:</strong> <br></br>
-            <label>
-    <input
-      type="radio"
-      name="userType"
-      value="farmer"
-      checked={userType === 'farmer'}
-      onChange={(e) => {
-        setUserType(e.target.value);
-        setUserTypeError(''); // Clear error when selected
-      }}
-    />
-    Farmer
-  </label>
-  <label>
-    <input
-      type="radio"
-      name="userType"
-      value="buyer"
-      checked={userType === 'buyer'}
-      onChange={(e) => {
-        setUserType(e.target.value);
-        setUserTypeError(''); // Clear error when selected
-      }}
-    />
-    Buyer
-  </label>
-  </label>
-  </div>
- {/* Show error if it exists */}
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-12"
+      style={{ background: 'linear-gradient(135deg, var(--color-bg) 0%, #d8f3dc 100%)' }}
+    >
+      <div className="card p-8 w-full max-w-lg animate-fade-in-up">
+        <div className="text-center mb-2">
+          <h1 className="text-3xl font-extrabold" style={{ color: 'var(--color-primary-dark)' }}>Create Account</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Join thousands of farmers and buyers</p>
+        </div>
 
+        <StepIndicator current={step} />
 
-          {userTypeError && <p className="error-message">{userTypeError}</p>}
-
-          <label htmlFor="firstName">First Name:</label>
-          <input
-            type="text"
-            id="firstName"
-            name="firstName"
-            required
-            onChange={handleChange}
-          />
-          {firstNameError && <p className="error-message">{firstNameError}</p>}
-
-          <label htmlFor="lastName">Last Name:</label>
-          <input
-            type="text"
-            id="lastName"
-            name="lastName"
-            
-            onChange={handleChange}
-          />
-
-          <label htmlFor="phoneNo">Phone No:</label>
-          <input
-            type="tel"
-            id="phoneNo"
-            name="phoneNo"
-            required
-            onChange={handleChange}
-          />
-          
-{phoneError && <p className="error-message">{phoneError}</p>}
-
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            required
-            value={form.email}
-            onChange={handleChange}
-          />
-          {emailError && <p className="error-message">{emailError}</p>}
-
-          <label htmlFor="dob">Date of Birth:</label>
-          <input
-            type="date"
-            id="dob"
-            name="dob"
-            required
-            onChange={handleChange}
-          />
-{dobError && <p className="error-message">{dobError}</p>}
-          <label htmlFor="state">State:</label>
-          <select id="state" name="state" required onChange={handleStateChange}>
-            <option value="">Select State</option>
-            {Object.keys(statesWithDistricts).map((state) => (
-              <option key={state} value={state}>
-                {state}
-              </option>
-            ))}
-          </select>
-
-          <label htmlFor="district">District:</label>
-          <select id="district" name="district" required onChange={handleChange} value={form.district}>
-            <option value="">Select District</option>
-            {form.state && statesWithDistricts[form.state].map((district) => (
-              <option key={district} value={district}>
-                {district}
-              </option>
-            ))}
-          </select>
-
-          <label htmlFor="aadharNo">Aadhar No:</label>
-          <input
-            type="text"
-            id="aadharNo"
-            name="aadharNo"
-            required
-            onChange={handleChange}
-          />
-{aadharError && <p className="error-message">{aadharError}</p>}
-<label htmlFor="password">Password:</label>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            id="password"
-            name="password"
-            required
-            onChange={handleChange}
-            value={form.password}
-          />
-
-          <label htmlFor="confirmPassword">Confirm Password:</label>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            id="confirmPassword"
-            name="confirmPassword"
-            required
-            onChange={(e) => handleChange(e)}
-            value={confirmPassword}
-          />
-            <p className="password-toggle">
-            <label htmlFor="showPassword">Show Password:</label>
-              <input
-                type="checkbox"
-                id="showPassword"
-                checked={showPassword}
-                onChange={togglePasswordVisibility}
-              />
-             
-            </p>
-          {passwordError && <p className="error-message">{passwordError}</p>}
-
-<button
-  type="submit"
-  disabled={
-    !!emailError || !!passwordError || !!aadharError || !!phoneError || !!userTypeError ||!!dobError
-  }
->
-  Send OTP
-</button>
-
-          {/* OTP Verification Fields */}
-          {otpSent && (
-            <div>
-              <label htmlFor="otp">Enter OTP:</label>
-              <input
-                type="text"
-                id="otp"
-                name="otp"
-                required
-                value={otp}
-                onChange={handleOtpChange}
-              />
-              <button onClick={handleVerifyOtp}>Verify OTP</button>
+        {/* ── Step 0: Verify Email ── */}
+        {step === 0 && (
+          <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="space-y-4">
+            {/* User Type */}
+            <div
+              className="flex gap-1 p-1 rounded-xl mb-2"
+              style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}
+            >
+              {['farmer', 'buyer'].map(t => (
+                <button
+                  key={t} type="button" onClick={() => setUserType(t)}
+                  className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
+                  style={{
+                    background: userType === t ? 'var(--color-primary)' : 'transparent',
+                    color: userType === t ? '#fff' : 'var(--color-text-muted)',
+                  }}
+                >
+                  {t === 'farmer' ? '🌾 Farmer' : '🛒 Buyer'}
+                </button>
+              ))}
             </div>
-          )}
-        </form>
-      )}
 
-      {/* Step 2 Registration Form */}
-      {step === 2 && otpVerified && (
-        <form onSubmit={handleRegister}>
-          <h3>Complete Registration</h3>
-          <button type="submit">Register</button>
-        </form>
-      )}
-      <div className='temp-button'>
-<button
-        id="forgot-password"
-        onClick={() => navigate('/forgot-password')}
-        className="forgot-password-link"
-      >
-        Forgot Password?
-      </button>
+            <div className="form-group">
+              <label className="form-label">First Name</label>
+              <input className="form-input" name="firstName" required onChange={handleChange} placeholder="John" />
+              {errors.firstName && <p className="form-error">{errors.firstName}</p>}
+            </div>
 
-      <button id="log" onClick={() => navigate('/login')} className="login-link">
-        Existing user? Login here
-      </button>
+            <div className="form-group">
+              <label className="form-label">Last Name</label>
+              <input className="form-input" name="lastName" onChange={handleChange} placeholder="Doe" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="form-group">
+                <label className="form-label">Phone</label>
+                <input className="form-input" type="tel" name="phoneNo" required onChange={handleChange} placeholder="9876543210" />
+                {errors.phoneNo && <p className="form-error">{errors.phoneNo}</p>}
+              </div>
+              <div className="form-group">
+                <label className="form-label">Date of Birth</label>
+                <input className="form-input" type="date" name="dob" required onChange={handleChange} />
+                {errors.dob && <p className="form-error">{errors.dob}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="form-group">
+                <label className="form-label">State</label>
+                <select className="form-select" name="state" required onChange={(e) =>
+                  setForm(prev => ({ ...prev, state: e.target.value, district: '' }))}>
+                  <option value="">Select State</option>
+                  {Object.keys(statesWithDistricts).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">District</label>
+                <select className="form-select" name="district" required value={form.district}
+                  onChange={handleChange} disabled={!form.state}>
+                  <option value="">Select District</option>
+                  {form.state && statesWithDistricts[form.state]?.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Aadhaar Number</label>
+              <input className="form-input" name="aadharNo" required onChange={handleChange} placeholder="123456789012" maxLength={12} />
+              {errors.aadharNo && <p className="form-error">{errors.aadharNo}</p>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input className="form-input" type="email" name="email" required value={form.email} onChange={handleChange} placeholder="you@example.com" />
+              {errors.email && <p className="form-error">{errors.email}</p>}
+            </div>
+
+            {!otpSent ? (
+              <button type="submit" className="btn-primary w-full py-3" disabled={loading || !!Object.keys(errors).length}>
+                {loading ? <><span className="spinner" /> Sending…</> : 'Send OTP'}
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <div className="form-group">
+                  <label className="form-label">Enter OTP</label>
+                  <input className="form-input text-center tracking-widest text-lg" name="otp" maxLength={6}
+                    value={otp} onChange={e => setOtp(e.target.value)} placeholder="• • • • • •" />
+                </div>
+                <button type="submit" className="btn-primary w-full py-3" disabled={loading}>
+                  {loading ? <><span className="spinner" /> Verifying…</> : 'Verify OTP'}
+                </button>
+              </div>
+            )}
+          </form>
+        )}
+
+        {/* ── Step 1 → 2: Details → Password → Register ── */}
+        {step === 1 && (
+          <form onSubmit={() => setStep(2)} className="space-y-4">
+            <p className="text-sm text-center mb-1" style={{ color: 'var(--color-text-muted)' }}>
+              ✅ Email verified! Now set your password.
+            </p>
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <div className="relative">
+                <input
+                  type={showPwd ? 'text' : 'password'}
+                  className="form-input pr-12"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Min 8 chars, upper+lower+number+symbol"
+                  required
+                />
+                <button type="button" onClick={() => setShowPwd(!showPwd)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {showPwd ? '🙈' : '👁️'}
+                </button>
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Confirm Password</label>
+              <input
+                type={showPwd ? 'text' : 'password'}
+                className="form-input"
+                value={confirmPassword}
+                onChange={e => { setConfirmPassword(e.target.value); clearErr('password'); }}
+                required
+              />
+              {errors.password && <p className="form-error">{errors.password}</p>}
+            </div>
+            <button type="button" className="btn-primary w-full py-3" onClick={() => { if (validatePasswords()) setStep(2); }}>
+              Continue
+            </button>
+          </form>
+        )}
+
+        {step === 2 && (
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div className="card p-4 text-sm" style={{ background: 'var(--color-bg)' }}>
+              <p><span className="font-semibold">Role:</span> <span className="badge badge-green">{userType}</span></p>
+              <p className="mt-1"><span className="font-semibold">Name:</span> {form.firstName} {form.lastName}</p>
+              <p className="mt-1"><span className="font-semibold">Email:</span> {form.email}</p>
+              <p className="mt-1"><span className="font-semibold">State:</span> {form.state}, {form.district}</p>
+            </div>
+            <button type="submit" className="btn-primary w-full py-3" disabled={loading}>
+              {loading ? <><span className="spinner" /> Registering…</> : '🚀 Complete Registration'}
+            </button>
+          </form>
+        )}
+
+        <p className="text-center text-sm mt-5" style={{ color: 'var(--color-text-muted)' }}>
+          Already have an account?{' '}
+          <Link to="/login" className="font-semibold" style={{ color: 'var(--color-primary)' }}>Sign in</Link>
+        </p>
       </div>
+
+      {toast && (
+        <div className={`toast toast-${toast.type}`}>
+          {toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : 'ℹ️'} {toast.msg}
+        </div>
+      )}
     </div>
   );
-};
-
-export default Register; 
+}
