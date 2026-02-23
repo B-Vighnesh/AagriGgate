@@ -1,108 +1,32 @@
 package com.MyWebpage.register.login.service;
 
+import com.MyWebpage.register.login.dto.CropRequestDTO;
+import com.MyWebpage.register.login.dto.CropResponseDTO;
 import com.MyWebpage.register.login.model.Crop;
-import com.MyWebpage.register.login.model.Farmer;
-import com.MyWebpage.register.login.repositor.CropRepo;
-import com.MyWebpage.register.login.repositor.FarmerRepo;
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 
-@Service
-public class CropService {
+public interface CropService {
+    // v1 methods (legacy contract retained)
+    Crop addCropV1(Crop crop, MultipartFile imageFile) throws IOException;
+    Crop updateCropV1(Long cropId, Crop crop, MultipartFile imageFile) throws IOException;
+    List<Crop> getAllCropsV1();
+    List<Crop> getCropsByFarmerIdV1(Long farmerId);
+    Crop getCropByCropIdV1(Long cropId);
+    void deleteCropByIdV1(Long cropId);
+    void deleteCropByFarmerIdV1(Long farmerId);
+    List<Crop> getCropsByNameV1(String cropName);
 
-    @Autowired
-    private CropRepo cropRepo;
-    @Autowired
-    private FarmerRepo farmerRepo;
-
-
-//    public Crop addCrop(Crop crop) {
-//
-//        Farmer farmer = farmerRepo.findByFarmerId(crop.getFarmer().getFarmerId());
-//        Farmer currentFarmer = new Farmer();
-//        currentFarmer.setFarmerId(farmer.getFarmerId());
-//        crop.setFarmer(currentFarmer);
-//
-//        System.out.println(crop);
-//        System.out.println("service");
-//        return cropRepo.save(crop);
-//    }
-
-
-    public List<Crop> getAllCrops() {
-
-
-        return cropRepo.findAll();
-    }
-
-
-    public List<Crop> getCropsByFarmerId(Long farmerId) {
-
-        return cropRepo.findByFarmerId(farmerId);
-    }
-
-    public Crop getCropByCropId(Long cropId) {
-
-        return cropRepo.findById(cropId).orElse(new Crop());
-    }
-
-
-    public void deleteCropById(Long cropId) {
-        cropRepo.deleteById(cropId);
-    }
-
-
-    public List<Crop> getCropsByName(String cropName) {
-        return cropRepo.findByCropName(cropName);
-    }
-
-    public void deleteCropByFarmerId(Long farmerId) {
-        cropRepo.deleteByFarmerId(farmerId);
-    }
-
-    public Crop addCrop(Crop crop, MultipartFile imageFile) throws IOException {
-
-        Farmer farmer = farmerRepo.findByFarmerId(crop.getFarmer().getFarmerId());
-        if (farmer == null) {
-            throw new EntityNotFoundException("Farmer not found with ID: " + crop.getFarmer().getFarmerId());
-        }
-
-        crop.setFarmer(farmer);
-        crop.setPostDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
-        if (imageFile != null && !imageFile.isEmpty()) {
-            crop.setImageName(imageFile.getOriginalFilename());
-            crop.setImageType(imageFile.getContentType());
-            crop.setImageData(imageFile.getBytes());
-        } else {
-
-        }
-
-        return cropRepo.save(crop);
-    }
-
-
-    public Crop updateCrop(Crop crop, MultipartFile imageFile) throws IOException {
-        if (imageFile != null && !imageFile.isEmpty()) {
-
-            crop.setImageName(imageFile.getOriginalFilename());
-            crop.setImageType(imageFile.getContentType());
-            crop.setImageData(imageFile.getBytes());
-        } else {
-
-            Crop existingCrop = cropRepo.findById(crop.getCropID()).orElse(new Crop());
-            crop.setImageName(existingCrop.getImageName());
-            crop.setImageType(existingCrop.getImageType());
-            crop.setImageData(existingCrop.getImageData());
-        }
-        return cropRepo.save(crop);
-    }
-
+    // v2 methods (industry-standard DTO contract)
+    CropResponseDTO addCropV2(CropRequestDTO cropRequestDTO, MultipartFile imageFile) throws IOException;
+    CropResponseDTO updateCropV2(Long cropId, CropRequestDTO cropRequestDTO, MultipartFile imageFile) throws IOException;
+    List<CropResponseDTO> getAllCropsV2();
+    List<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId);
+    CropResponseDTO getCropByCropIdV2(Long cropId);
+    void deleteCropByIdV2(Long cropId);
+    void deleteCropByFarmerIdV2(Long farmerId);
+    Page<CropResponseDTO> searchCropsV2(String keyword, int page, int size);
 }
