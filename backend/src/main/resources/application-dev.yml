@@ -2,24 +2,27 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/app}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+    database-platform: org.hibernate.dialect.MySQLDialect
     properties:
       hibernate:
         format_sql: true
     hibernate:
       ddl-auto: update
+
   security:
     user:
-      name: ${APP_SECURITY_USER:user}
-      password: ${APP_SECURITY_PASSWORD:password}
+      name: ${APP_SECURITY_USER:vighnesh}
+      password: ${APP_SECURITY_PASSWORD:v123}
+
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${EMAIL_USERNAME}
-    password: ${EMAIL_PASSWORD}
+    username: ${EMAIL_USERNAME:webappfarmer@gmail.com}
+    password: ${EMAIL_PASSWORD:gycx zlja btlp huke}
     properties:
       mail:
         smtp:
@@ -28,13 +31,19 @@ spring:
             enable: true
 
 jwt:
-  secret: ${JWT_SECRET}
+  # your project currently generates dynamic secret,
+  # but this is proper fixed fallback
+  secret: ${JWT_SECRET:YWFncmlnZ2F0ZS1zZWN1cmUtand0LXNlY3JldC1rZXktMjAyNi1mZWItMjM=}
 
 weather:
   api:
-    url: ${WEATHER_API_URL}
+    url: ${WEATHER_API_URL:https://api.open-meteo.com/v1/forecast}
 
 market:
   api:
-    url: ${MARKET_API_URL}
-    key: ${MARKET_API_KEY}
+    url: ${MARKET_API_URL:https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24}
+    key: ${MARKET_API_KEY:}   # your project currently does not use API key
+
+admin:
+  username: ${ADMIN_USERNAME:admin}
+  password: ${ADMIN_PASSWORD:admin123}

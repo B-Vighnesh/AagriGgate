@@ -9,7 +9,7 @@ import { isLoggedIn, setAuth } from '../lib/auth';
 export default function Login() {
   const navigate = useNavigate();
   const [userType, setUserType] = useState('farmer');
-  const [username, setUsername] = useState('');
+  const [principal, setPrincipal] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
@@ -32,10 +32,10 @@ export default function Login() {
     event.preventDefault();
     setLoading(true);
     try {
-      const path = userType === 'buyer' ? '/buyer/login' : '/users/login';
+      const path = userType === 'buyer' ? '/buyers/login' : '/farmers/login';
       const data = await requestJson(path, {
         method: 'POST',
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ principal, password }),
       });
 
       setAuth({
@@ -47,7 +47,7 @@ export default function Login() {
       setTimeout(() => navigate('/account'), 700);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        showToast('Invalid username or password.', 'error');
+        showToast('Invalid principal or password.', 'error');
       } else {
         showToast(error.message || 'Unable to login. Try again.', 'error');
       }
@@ -92,11 +92,11 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="form">
-          <label htmlFor="username">Username</label>
+          <label htmlFor="principal">Username</label>
           <input
-            id="username"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
+            id="principal"
+            value={principal}
+            onChange={(event) => setPrincipal(event.target.value)}
             required
           />
 
