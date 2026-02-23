@@ -544,6 +544,8 @@ a {
   cursor: pointer;
   font-weight: 700;
   text-align: center;
+  color: var(--color-primary-dark);
+  margin-top:0;
 }
 
 .segmented__item--active {

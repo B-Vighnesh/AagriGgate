@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
 import { apiGet, apiFetch } from '../lib/api';
 import ValidateToken from './ValidateToken';
+import Button from './common/Button';
+import Card from './common/Card';
+import Toast from './common/Toast';
 
-const STATUS_COLORS = {
-  pending: 'badge-amber',
-  accepted: 'badge-green',
-  rejected: 'badge-red',
+const STATUS_CLASS = {
+  pending: 'user-requests-status--pending',
+  accepted: 'user-requests-status--accepted',
+  rejected: 'user-requests-status--rejected',
 };
 
 export default function ViewApproachForUser() {
@@ -18,90 +21,127 @@ export default function ViewApproachForUser() {
 
   const [approaches, setApproaches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
   const [filter, setFilter] = useState('All');
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState({ message: '', type: 'info' });
 
-  const showToast = (msg, type = 'info') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast({ message: '', type: 'info' }), 3000);
   };
 
   useEffect(() => {
-    if (!role) { navigate('/login'); return; }
-    if (role === 'farmer') { navigate('/404'); return; }
+    if (!role) {
+      navigate('/login');
+      return;
+    }
 
-    apiGet(`/buyer/approach/requests/user/${farmerId}`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(setApproaches)
-      .catch(() => setError('No approaches found.'))
-      .finally(() => setLoading(false));
+    if (role === 'farmer') {
+      navigate('/404');
+      return;
+    }
+
+    const loadApproaches = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await apiGet(`/buyer/approach/requests/user/${farmerId}`);
+        if (!response.ok) throw new Error('Unable to load requests.');
+        const data = await response.json();
+        setApproaches(Array.isArray(data) ? data : []);
+      } catch (loadError) {
+        setError(loadError.message || 'Unable to load requests.');
+        setApproaches([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadApproaches();
   }, []);
 
-  const handleDelete = async (approachId) => {
+  const handleWithdraw = async (approachId) => {
     try {
-      const res = await apiFetch(`/buyer/approach/delete/${approachId}`, { method: 'DELETE' });
-      if (res.ok) {
-        setApproaches(prev => prev.filter(a => a.approachId !== approachId));
-        showToast('Approach request withdrawn.', 'info');
-      } else { showToast('Failed to withdraw. Try again.', 'error'); }
-    } catch { showToast('Server busy.', 'error'); }
+      const response = await apiFetch(`/buyer/approach/delete/${approachId}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to withdraw request.');
+      setApproaches((prev) => prev.filter((item) => item.approachId !== approachId));
+      showToast('Request withdrawn.', 'success');
+    } catch (requestError) {
+      showToast(requestError.message || 'Server busy. Please try again.', 'error');
+    }
   };
 
-  const filtered = useMemo(() =>
-    filter === 'All' ? approaches : approaches.filter(a => a.status?.toLowerCase() === filter.toLowerCase()),
-    [approaches, filter]
-  );
+  const filteredApproaches = useMemo(() => {
+    if (filter === 'All') return approaches;
+    return approaches.filter((item) => (item.status || '').toLowerCase() === filter.toLowerCase());
+  }, [approaches, filter]);
 
-  if (loading) return (
-    <div className="page-wrapper flex justify-center items-center min-h-[60vh]">
-      <span className="spinner" style={{ color: 'var(--color-primary)', width: '32px', height: '32px', borderWidth: '3px' }} />
-    </div>
-  );
+  if (loading) {
+    return (
+      <section className="page page--center">
+        <div className="ui-spinner ui-spinner--lg" />
+      </section>
+    );
+  }
 
   return (
-    <div className="page-wrapper">
+    <section className="page user-requests-page">
       <ValidateToken farmerId={farmerId} token={token} role={role} />
 
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="section-title text-3xl">My Requests</h1>
-          <p className="section-subtitle">Track the status of your approach requests to farmers.</p>
-        </div>
-        <select className="form-select w-auto" value={filter} onChange={e => setFilter(e.target.value)}>
-          {['All', 'Pending', 'Accepted', 'Rejected'].map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-      </div>
-
-      {(error || filtered.length === 0) && (
-        <div className="card p-10 text-center">
-          <p className="text-4xl mb-3">{error ? '📭' : '🔍'}</p>
-          <p className="font-semibold" style={{ color: 'var(--color-text)' }}>
-            {error || `No ${filter !== 'All' ? filter.toLowerCase() + ' ' : ''}requests`}
-          </p>
-          {error && <button className="btn-primary mt-4" onClick={() => navigate('/view-all-crops')}>Browse Crops</button>}
-        </div>
-      )}
-
-      <div className="grid gap-4">
-        {filtered.map(a => (
-          <div key={a.approachId} className="card p-4 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>{a.cropName}</p>
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Farmer: <strong>{a.farmerName}</strong></p>
-            </div>
-            <span className={`badge ${STATUS_COLORS[a.status?.toLowerCase()] || 'badge-blue'}`}>{a.status}</span>
-            <div className="flex gap-2 flex-wrap">
-              <button className="btn-outline btn-sm" onClick={() => navigate(`/view-details/${a.cropId}`)}>View Crop</button>
-              {a.status?.toLowerCase() === 'pending' && (
-                <button className="btn-danger btn-sm" onClick={() => handleDelete(a.approachId)}>Withdraw</button>
-              )}
-            </div>
+      <div className="ag-container">
+        <div className="user-requests-head">
+          <div>
+            <h1>My Requests</h1>
+            <p>Track the status of your approach requests to farmers.</p>
           </div>
-        ))}
+
+          <select value={filter} onChange={(event) => setFilter(event.target.value)}>
+            <option value="All">All</option>
+            <option value="Pending">Pending</option>
+            <option value="Accepted">Accepted</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+
+        {(error || filteredApproaches.length === 0) && (
+          <Card className="user-requests-empty">
+            <h3>{error || `No ${filter !== 'All' ? filter.toLowerCase() : ''} requests`}</h3>
+            <p>{error ? 'Try again or browse crops to send a new request.' : 'Requests appear here after you approach a farmer.'}</p>
+            <Button onClick={() => navigate('/view-all-crops')}>Browse Crops</Button>
+          </Card>
+        )}
+
+        {!error && filteredApproaches.length > 0 && (
+          <div className="user-requests-list">
+            {filteredApproaches.map((item) => (
+              <Card key={item.approachId} className="user-requests-card">
+                <div className="user-requests-card__main">
+                  <h3>{item.cropName}</h3>
+                  <p>Farmer: <strong>{item.farmerName}</strong></p>
+                </div>
+
+                <span className={`user-requests-status ${STATUS_CLASS[(item.status || '').toLowerCase()] || ''}`}>
+                  {item.status || 'Pending'}
+                </span>
+
+                <div className="user-requests-actions">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${item.cropId}`)}>
+                    View Crop
+                  </Button>
+
+                  {(item.status || '').toLowerCase() === 'pending' && (
+                    <Button variant="danger" size="sm" onClick={() => handleWithdraw(item.approachId)}>
+                      Withdraw
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
-      {toast && <div className={`toast toast-${toast.type}`}>{toast.type === 'success' ? '✅' : 'ℹ️'} {toast.msg}</div>}
-    </div>
+      <Toast message={toast.message} type={toast.type} />
+    </section>
   );
 }
