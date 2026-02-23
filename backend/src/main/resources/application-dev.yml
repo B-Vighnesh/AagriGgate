@@ -47,12 +47,8 @@ market:
 
 location:
   api:
-    url: ${MARKET_API_URL:https://api.opencagedata.com/geocode/v1/json}
-    key: ${MARKET_API_KEY:4138beff07ea4a259f0c2ff71ba19378}
-#  const res = await fetch(
-#    `https://api.opencagedata.com/geocode/v1/json?q=${coords.latitude}+${coords.longitude}&key=4138beff07ea4a259f0c2ff71ba19378`
-#    );
+    url: ${LOCATION_API_URL:https://api.opencagedata.com/geocode/v1/json}
+    key: ${LOCATION_KEY:4138beff07ea4a259f0c2ff71ba19378}
 admin:
   username: ${ADMIN_USERNAME:admin}
   password: ${ADMIN_PASSWORD:admin123}
-#

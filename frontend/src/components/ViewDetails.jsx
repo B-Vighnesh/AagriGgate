@@ -60,6 +60,7 @@ export default function ViewDetails() {
 
         if (!detailRes.ok) throw new Error('This crop is not available anymore.');
         const detailData = await detailRes.json();
+        console.log(detailData);
         if (!mounted) return;
         setCropDetails(detailData);
 

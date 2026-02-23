@@ -19,7 +19,9 @@ export default function AddCrop() {
   const [cropData, setCropData] = useState({
     cropName: '',
     cropType: '',
-    region: '',
+    city: '',
+    district: '',
+    state: '',
     marketPrice: '',
     quantity: '',
     unit: 'kg',
@@ -28,7 +30,6 @@ export default function AddCrop() {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [loading, setLoading] = useState(false);
-  const [locating, setLocating] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
 
   const showToast = (message, type = 'info') => {
@@ -45,7 +46,6 @@ export default function AddCrop() {
       navigate('/404');
       return;
     }
-    autoFillRegion();
   }, []);
 
   useEffect(() => {
@@ -53,24 +53,6 @@ export default function AddCrop() {
       if (imagePreview) URL.revokeObjectURL(imagePreview);
     };
   }, [imagePreview]);
-
-  const autoFillRegion = () => {
-    if (!navigator.geolocation) return;
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
-        try {
-          const locationText = `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;
-          setCropData((prev) => ({ ...prev, region: locationText }));
-        } catch {
-          // keep silent for geo failures
-        } finally {
-          setLocating(false);
-        }
-      },
-      () => setLocating(false)
-    );
-  };
 
   const onFieldChange = (event) => {
     const { name, value } = event.target;
@@ -89,11 +71,22 @@ export default function AddCrop() {
     event.preventDefault();
     setLoading(true);
 
+    const region = [cropData.city, cropData.district, cropData.state]
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .join(', ');
+
+    if (!region) {
+      showToast('Please enter city, district, and state.', 'error');
+      setLoading(false);
+      return;
+    }
+
     const formData = new FormData();
     const payload = {
       cropName: cropData.cropName.trim(),
       cropType: cropData.cropType,
-      region: cropData.region.trim(),
+      region,
       marketPrice: Number(cropData.marketPrice),
       quantity: Number(cropData.quantity),
       unit: cropData.unit,
@@ -151,18 +144,40 @@ export default function AddCrop() {
               </div>
             </div>
 
-            <div className="add-crop-field">
-              <label htmlFor="region">
-                Region
-                {locating ? <span className="muted-inline">Detecting location...</span> : null}
-              </label>
-              <input
-                id="region"
-                name="region"
-                value={cropData.region}
-                onChange={onFieldChange}
-                placeholder="Auto-filled from GPS or type manually"
-              />
+            <div className="add-crop-grid add-crop-grid--3">
+              <div className="add-crop-field">
+                <label htmlFor="city">City *</label>
+                <input
+                  id="city"
+                  name="city"
+                  value={cropData.city}
+                  onChange={onFieldChange}
+                  placeholder="e.g. Mysuru"
+                  required
+                />
+              </div>
+              <div className="add-crop-field">
+                <label htmlFor="district">District *</label>
+                <input
+                  id="district"
+                  name="district"
+                  value={cropData.district}
+                  onChange={onFieldChange}
+                  placeholder="e.g. Mysore"
+                  required
+                />
+              </div>
+              <div className="add-crop-field">
+                <label htmlFor="state">State *</label>
+                <input
+                  id="state"
+                  name="state"
+                  value={cropData.state}
+                  onChange={onFieldChange}
+                  placeholder="e.g. Karnataka"
+                  required
+                />
+              </div>
             </div>
 
             <div className="add-crop-grid add-crop-grid--3">
