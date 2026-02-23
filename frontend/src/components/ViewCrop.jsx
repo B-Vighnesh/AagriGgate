@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Card from './common/Card';
 import ValidateToken from './ValidateToken';
-import { apiGet } from '../lib/api';
+import { apiGet, apiFetch } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180"><rect width="320" height="180" fill="%23d8f3dc"/><text x="50%" y="54%" text-anchor="middle" font-size="26" fill="%231f6f54">No Image</text></svg>';
@@ -14,6 +14,7 @@ export default function ViewCrop() {
   const role = getRole();
 
   const [crops, setCrops] = useState([]);
+  const [images, setImages] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
@@ -36,6 +37,18 @@ export default function ViewCrop() {
         const data = await response.json();
         if (!mounted) return;
         setCrops(Array.isArray(data) ? data : []);
+
+        data.forEach(async (crop) => {
+          try {
+            const imgRes = await apiFetch(`/crops/legacy/${crop.cropID}/image`, { method: 'GET' });
+            if (!imgRes.ok) return;
+            const blob = await imgRes.blob();
+            if (!mounted) return;
+            setImages((prev) => ({ ...prev, [crop.cropID]: URL.createObjectURL(blob) }));
+          } catch {
+            // keep placeholder image on failures
+          }
+        });
       } catch (err) {
         if (mounted) setError(err.message || 'Server busy. Try again.');
       } finally {
@@ -45,6 +58,9 @@ export default function ViewCrop() {
 
     return () => {
       mounted = false;
+      Object.values(images).forEach((url) => {
+        try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+      });
     };
   }, []);
 
@@ -109,7 +125,7 @@ export default function ViewCrop() {
               <Card key={crop.cropID} className="view-crop-card" onClick={() => navigate(`/view-details/${crop.cropID}`)}>
                 <div className="view-crop-card__image-wrap">
                   <img
-                    src={PLACEHOLDER}
+                    src={images[crop.cropID] || PLACEHOLDER}
                     alt={crop.cropName}
                     onError={(event) => { event.currentTarget.src = PLACEHOLDER; }}
                   />

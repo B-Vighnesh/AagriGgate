@@ -69,6 +69,23 @@ public class CropController {
         return ResponseEntity.ok(cropService.getCropByCropIdV1(cropId));
     }
 
+    @GetMapping("/legacy/{cropId}/image")
+    public ResponseEntity<byte[]> getCropImageByCropIdV1(@PathVariable Long cropId) {
+        Crop crop = cropService.getCropByCropIdV1(cropId);
+        if (crop == null || crop.getImageData() == null || crop.getImageData().length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+
+        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        if (crop.getImageType() != null && !crop.getImageType().isBlank()) {
+            mediaType = MediaType.parseMediaType(crop.getImageType());
+        }
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .body(crop.getImageData());
+    }
+
     @DeleteMapping("/legacy/{cropId}")
     public ResponseEntity<String> deleteCropByIdV1(@PathVariable Long cropId) {
         cropService.deleteCropByIdV1(cropId);

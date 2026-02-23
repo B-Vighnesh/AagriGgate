@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { apiGet } from '../lib/api';
+import { apiGet, apiFetch } from '../lib/api';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
 import ValidateToken from './ValidateToken';
 import Button from './common/Button';
@@ -50,6 +50,7 @@ export default function ViewAllCrop() {
   const role = getRole();
 
   const [crops, setCrops] = useState([]);
+  const [imageUrls, setImageUrls] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,6 +73,18 @@ export default function ViewAllCrop() {
         const cropList = Array.isArray(data?.content) ? data.content : [];
         if (!mounted) return;
         setCrops(cropList);
+
+        cropList.forEach(async (crop) => {
+          try {
+            const imageResponse = await apiFetch(`/crops/legacy/${crop.cropID}/image`);
+            if (!imageResponse.ok) return;
+            const blob = await imageResponse.blob();
+            if (!mounted) return;
+            setImageUrls((prev) => ({ ...prev, [crop.cropID]: URL.createObjectURL(blob) }));
+          } catch {
+            // keep placeholder image on failures
+          }
+        });
       } catch (loadError) {
         if (mounted) setError(loadError.message || 'Failed to load crops.');
       } finally {
@@ -83,6 +96,9 @@ export default function ViewAllCrop() {
 
     return () => {
       mounted = false;
+      Object.values(imageUrls).forEach((url) => {
+        try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+      });
     };
   }, []);
 
@@ -191,7 +207,7 @@ export default function ViewAllCrop() {
               <CropCard
                 key={crop.cropID}
                 crop={crop}
-                imageUrl={null}
+                imageUrl={imageUrls[crop.cropID]}
                 onViewDetails={(id) => navigate(`/view-details/${id}`)}
               />
             ))}
