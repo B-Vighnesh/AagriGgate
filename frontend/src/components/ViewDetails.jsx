@@ -64,12 +64,18 @@ export default function ViewDetails() {
     (async () => {
       try {
         const detailRes = await safeFetch(`/crops/legacy/${cropId}`, { method: 'GET' });
+        const imgRes = await safeFetch(`/crops/legacy/${cropId}/image`, { method: 'GET' });
 
         if (!detailRes.ok) throw new Error('This crop is not available anymore.');
         const detailData = await parseJsonIfPresent(detailRes);
         if (!detailData) throw new Error('This crop is not available anymore.');
         if (!mounted) return;
         setCropDetails(detailData);
+
+        if (imgRes.ok) {
+          const blob = await imgRes.blob();
+          if (mounted) setImageUrl(URL.createObjectURL(blob));
+        }
 
         if (role === 'farmer') {
           const reqRes = await safeFetch(`/seller/approach/requests/farmer/${currentUserId}/${cropId}`, { method: 'GET' });

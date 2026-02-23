@@ -55,7 +55,10 @@ export default function UpdateCrop() {
     const loadCrop = async () => {
       setFetchLoading(true);
       try {
-        const detailsRes = await apiFetch(`/crops/legacy/${cropId}`);
+        const [detailsRes, imageRes] = await Promise.all([
+          apiFetch(`/crops/legacy/${cropId}`),
+          apiFetch(`/crops/legacy/${cropId}/image`),
+        ]);
 
         if (!detailsRes.ok) throw new Error('Could not load crop data.');
 
@@ -72,7 +75,11 @@ export default function UpdateCrop() {
           });
         }
 
-        setExistingImage('');
+        if (imageRes.ok) {
+          const blob = await imageRes.blob();
+          existingObjectUrl = URL.createObjectURL(blob);
+          if (mounted) setExistingImage(existingObjectUrl);
+        }
       } catch (error) {
         showToast(error.message || 'Server busy. Please try again.', 'error');
         navigate(-1);
