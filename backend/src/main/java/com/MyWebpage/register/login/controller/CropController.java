@@ -51,6 +51,7 @@ public class CropController {
         return ResponseEntity.ok(cropService.updateCropV1(cropId, crop, imageFile));
     }
 
+    // Legacy V1 endpoints kept for backward compatibility with older clients.
     @GetMapping("/legacy")
     public ResponseEntity<Page<Crop>> getAllCropsV1(
             @RequestParam(defaultValue = "0") int page,

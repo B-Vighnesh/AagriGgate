@@ -16,8 +16,8 @@ spring:
   mail:
     host: ${MAIL_HOST}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -25,9 +25,17 @@ spring:
           starttls:
             enable: true
 
-external:
-  weather:
-    base-url: ${WEATHER_BASE_URL}
+jwt:
+  secret: ${JWT_SECRET}
+
+weather:
+  api:
+    url: ${WEATHER_API_URL}
+
+market:
+  api:
+    url: ${MARKET_API_URL}
+    key: ${MARKET_API_KEY}
 
 logging:
   level:
