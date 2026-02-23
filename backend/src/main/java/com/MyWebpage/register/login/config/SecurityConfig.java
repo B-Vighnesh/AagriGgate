@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.security;
+package com.MyWebpage.register.login.config;
 
 import com.MyWebpage.register.login.JWT.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
