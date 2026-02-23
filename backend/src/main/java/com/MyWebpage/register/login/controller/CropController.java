@@ -1,157 +1,129 @@
 package com.MyWebpage.register.login.controller;
 
+import com.MyWebpage.register.login.dto.CropRequestDTO;
+import com.MyWebpage.register.login.dto.CropResponseDTO;
 import com.MyWebpage.register.login.model.Crop;
-import com.MyWebpage.register.login.model.Farmer;
-import com.MyWebpage.register.login.repositor.CropRepo;
+import com.MyWebpage.register.login.response.ApiResponse;
 import com.MyWebpage.register.login.service.CropService;
-import org.apache.coyote.Response;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.List;
 
 @RestController
 @RequestMapping("/crops")
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
-
 public class CropController {
 
-    @Autowired
-    private CropService cropService;
+    private final CropService cropService;
 
-@PostMapping("/farmer/addCrop")
-public ResponseEntity<Crop> addCrop(
-        @RequestPart Crop crop,
-        @RequestPart(required = false) MultipartFile imageFile) {
-
-    try {
-        System.out.println("Received crop data: " + crop);
-
-        Crop addedCrop = cropService.addCrop(crop, imageFile);
-        return new ResponseEntity<>(addedCrop, HttpStatus.CREATED);
-    } catch (Exception e) {
-        e.printStackTrace();
-        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+    public CropController(CropService cropService) {
+        this.cropService = cropService;
     }
-}
-    @PutMapping("/farmer/update/{cropId}")
-    public ResponseEntity<Crop> updateCrop(
+
+    // -------------------- v1 endpoints (legacy retained) --------------------
+    @PostMapping(value = {"/farmer/addCrop", "/v1/farmer/addCrop"}, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Crop> addCropV1(
+            @RequestPart("crop") Crop crop,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
+        return ResponseEntity.status(HttpStatus.CREATED).body(cropService.addCropV1(crop, imageFile));
+    }
+
+    @PutMapping(value = {"/farmer/update/{cropId}", "/v1/farmer/update/{cropId}"}, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Crop> updateCropV1(
             @PathVariable Long cropId,
-            @RequestPart Crop crop,
-            @RequestPart(required = false) MultipartFile imageFile) {
-
-        try {
-            System.out.println(cropId);
-            crop.setCropID(cropId);
-            System.out.println("Received crop data: " + crop);
-
-            Crop addedCrop = cropService.updateCrop(crop, imageFile);
-            return new ResponseEntity<>(addedCrop, HttpStatus.CREATED);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+            @RequestPart("crop") Crop crop,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
+        return ResponseEntity.ok(cropService.updateCropV1(cropId, crop, imageFile));
     }
 
-@Autowired
-CropRepo cropRepository;
-
-    @GetMapping("/viewUrl/{productId}")
-    public ResponseEntity<byte[]> viewImage(@PathVariable Long productId) {
-        Crop crop=cropService.getCropByCropId(productId);
-        byte[] imageFile=crop.getImageData();
-        return ResponseEntity.ok()
-                .contentType(MediaType.valueOf(crop.getImageType()))
-                .body(imageFile);
+    @GetMapping({"/viewCrop", "/v1/viewCrop"})
+    public ResponseEntity<List<Crop>> getAllCropsV1() {
+        return ResponseEntity.ok(cropService.getAllCropsV1());
     }
 
-    @GetMapping("/viewCrop")
-    public ResponseEntity<List<Crop>> getAllCrops() {
-
-        try {
-            List<Crop> crops = cropService.getAllCrops();
-            for(Crop crop:crops)
-            {
-                crop.getFarmer().setAadharNo(null);
-                crop.getFarmer().setEmail(null);
-                crop.getFarmer().setPhoneNo(null);
-            }
-            return ResponseEntity.ok(crops);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    @GetMapping("/farmer/viewCrop/{farmerId}")
-    public ResponseEntity<List<Crop>> getCropsByFarmerId(@PathVariable Long farmerId) {
-        try {
-            List<Crop> crops = cropService.getCropsByFarmerId(farmerId);
-                for(Crop crop:crops)
-                {
-                    crop.getFarmer().setAadharNo(null);
-                    crop.getFarmer().setEmail(null);
-                    crop.getFarmer().setPhoneNo(null);
-                }
-            return new ResponseEntity<>(crops, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @GetMapping({"/farmer/viewCrop/{farmerId}", "/v1/farmer/viewCrop/{farmerId}"})
+    public ResponseEntity<List<Crop>> getCropsByFarmerIdV1(@PathVariable Long farmerId) {
+        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId));
     }
 
-    @GetMapping("/crop/{cropId}")
-    public ResponseEntity<Crop> getCropByCropId(@PathVariable Long cropId) {
-        try {
-            Crop crop = cropService.getCropByCropId(cropId);
-            if(crop.getCropID()==null)
-            {
-                return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            crop.getFarmer().setAadharNo(null);
-            crop.getFarmer().setEmail(null);
-            crop.getFarmer().setPhoneNo(null);
-            return new ResponseEntity<>(crop, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @GetMapping({"/crop/{cropId}", "/v1/crop/{cropId}"})
+    public ResponseEntity<Crop> getCropByCropIdV1(@PathVariable Long cropId) {
+        return ResponseEntity.ok(cropService.getCropByCropIdV1(cropId));
     }
 
-    @DeleteMapping("/farmer/delete1/{cropId}")
-    public ResponseEntity<String> deleteCropById(@PathVariable Long cropId) {
-        try {
-            cropService.deleteCropById(cropId);
-            return new ResponseEntity<>("Crop deleted successfully", HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("An error occurred during deletion", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @DeleteMapping({"/farmer/delete1/{cropId}", "/v1/farmer/delete1/{cropId}"})
+    public ResponseEntity<String> deleteCropByIdV1(@PathVariable Long cropId) {
+        cropService.deleteCropByIdV1(cropId);
+        return ResponseEntity.ok("Crop deleted successfully");
     }
 
-    @DeleteMapping("/farmer/delete2/{farmerId}")
-    public ResponseEntity<String> deleteCropByFarmerId(@PathVariable Long farmerId) {
-        try {
-            cropService.deleteCropByFarmerId(farmerId);
-            return new ResponseEntity<>("Crops deleted successfully for farmerId: " + farmerId, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("An error occurred during deletion", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @DeleteMapping({"/farmer/delete2/{farmerId}", "/v1/farmer/delete2/{farmerId}"})
+    public ResponseEntity<String> deleteCropByFarmerIdV1(@PathVariable Long farmerId) {
+        cropService.deleteCropByFarmerIdV1(farmerId);
+        return ResponseEntity.ok("Crops deleted successfully for farmerId: " + farmerId);
     }
 
-    @GetMapping("/crops/{cropName}")
-    public ResponseEntity<List<Crop>> getCropsByName(@PathVariable String cropName) {
-        try {
-            List<Crop> crops = cropService.getCropsByName(cropName);
-            for(Crop crop:crops)
-            {
-                crop.getFarmer().setAadharNo(null);
-                crop.getFarmer().setEmail(null);
-                crop.getFarmer().setPhoneNo(null);
-            }
-            return new ResponseEntity<>(crops, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @GetMapping("/v1/crops/{cropName}")
+    public ResponseEntity<List<Crop>> getCropsByNameV1(@PathVariable String cropName) {
+        return ResponseEntity.ok(cropService.getCropsByNameV1(cropName));
+    }
+
+    // -------------------- v2 endpoints (industry-standard) --------------------
+    @PostMapping(value = "/v2/farmer/addCrop", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<CropResponseDTO>> addCropV2(
+            @Valid @RequestPart("crop") CropRequestDTO crop,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Crop added", cropService.addCropV2(crop, imageFile)));
+    }
+
+    @PutMapping(value = "/v2/farmer/update/{cropId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<CropResponseDTO>> updateCropV2(
+            @PathVariable Long cropId,
+            @Valid @RequestPart("crop") CropRequestDTO crop,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
+        return ResponseEntity.ok(ApiResponse.success("Crop updated", cropService.updateCropV2(cropId, crop, imageFile)));
+    }
+
+    @GetMapping("/v2/viewCrop")
+    public ResponseEntity<ApiResponse<List<CropResponseDTO>>> getAllCropsV2() {
+        return ResponseEntity.ok(ApiResponse.success("Crops fetched", cropService.getAllCropsV2()));
+    }
+
+    @GetMapping("/v2/farmer/viewCrop/{farmerId}")
+    public ResponseEntity<ApiResponse<List<CropResponseDTO>>> getCropsByFarmerIdV2(@PathVariable Long farmerId) {
+        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId)));
+    }
+
+    @GetMapping("/v2/crop/{cropId}")
+    public ResponseEntity<ApiResponse<CropResponseDTO>> getCropByCropIdV2(@PathVariable Long cropId) {
+        return ResponseEntity.ok(ApiResponse.success("Crop fetched", cropService.getCropByCropIdV2(cropId)));
+    }
+
+    @DeleteMapping("/v2/farmer/delete1/{cropId}")
+    public ResponseEntity<ApiResponse<String>> deleteCropByIdV2(@PathVariable Long cropId) {
+        cropService.deleteCropByIdV2(cropId);
+        return ResponseEntity.ok(ApiResponse.success("Crop deleted successfully", "OK"));
+    }
+
+    @DeleteMapping("/v2/farmer/delete2/{farmerId}")
+    public ResponseEntity<ApiResponse<String>> deleteCropByFarmerIdV2(@PathVariable Long farmerId) {
+        cropService.deleteCropByFarmerIdV2(farmerId);
+        return ResponseEntity.ok(ApiResponse.success("Farmer crops deleted successfully", "OK"));
+    }
+
+    @GetMapping("/v2/search")
+    public ResponseEntity<ApiResponse<Page<CropResponseDTO>>> searchCropsV2(
+            @RequestParam(defaultValue = "") String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.success("Crop search result", cropService.searchCropsV2(keyword, page, size)));
     }
 }
