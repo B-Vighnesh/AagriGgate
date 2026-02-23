@@ -6,7 +6,7 @@ export default function Footer() {
 
   return (
     <footer className="site-footer">
-      <div className="container footer-grid">
+      <div className="ag-container footer-grid">
         <div>
           <h3>AagriGgate</h3>
           <p>Connecting farmers directly with buyers for fair and transparent trade.</p>

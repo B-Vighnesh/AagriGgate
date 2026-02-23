@@ -49,7 +49,7 @@ a {
   flex: 1;
 }
 
-.container {
+.ag-container {
   width: min(1120px, 92%);
   margin: 0 auto;
 }
@@ -87,13 +87,12 @@ a {
 }
 
 .site-header__inner {
-  width: min(1120px, 92%);
-  margin: 0 auto;
   min-height: 66px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  position: relative;
 }
 
 .brand {
@@ -174,6 +173,7 @@ a {
   margin: 14px 0 10px;
   font-size: clamp(2rem, 5vw, 3.4rem);
   line-height: 1.12;
+  color: #ffffff;
 }
 
 .hero__title span {
@@ -183,6 +183,7 @@ a {
 .hero__subtitle {
   max-width: 700px;
   font-size: 1rem;
+  color: #eef9f3;
 }
 
 .hero__actions {
@@ -290,17 +291,31 @@ a {
 .faq-card__button {
   width: 100%;
   border: 0;
-  background: transparent;
+  background: #ffffff;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
+  color: var(--color-primary-dark);
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.faq-card__question {
+  color: var(--color-primary-dark);
+}
+
+.faq-card__toggle {
+  color: var(--color-primary);
+  font-size: 1.2rem;
+  line-height: 1;
 }
 
 .faq-card__answer {
-  margin: 10px 0 0;
+  margin: 0;
+  padding: 0 16px 14px;
   color: var(--color-muted);
 }
 
@@ -627,6 +642,470 @@ a {
   width: min(420px, 94%);
 }
 
+/* Market */
+.market-page {
+  background: #eef7f1;
+}
+
+.market-header {
+  margin-bottom: 16px;
+}
+
+.market-header h1 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: clamp(1.6rem, 4.5vw, 2.2rem);
+}
+
+.market-header p {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+}
+
+.market-filter-card {
+  margin-bottom: 16px;
+}
+
+.market-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.market-filter-grid--saved {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.market-field {
+  display: grid;
+  gap: 6px;
+}
+
+.market-field label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.market-field select,
+.market-field input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  font-size: 0.92rem;
+}
+
+.market-field select:disabled,
+.market-field input:disabled {
+  background: #f4f6f5;
+  color: #7b8a84;
+}
+
+.market-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.market-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.market-stat {
+  border-left: 6px solid var(--color-primary);
+}
+
+.market-stat--success {
+  border-left-color: #2f9b6e;
+}
+
+.market-stat--warning {
+  border-left-color: #cc8a2e;
+}
+
+.market-stat__title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.market-stat h3 {
+  margin: 8px 0 0;
+  color: var(--color-primary-dark);
+  font-size: 1.45rem;
+}
+
+.market-stat__desc {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 0.84rem;
+}
+
+.market-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--color-muted);
+  padding: 32px 0;
+}
+
+.market-error {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #a12a2a;
+  background: #ffefef;
+  border: 1px solid #f2c6c6;
+}
+
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.market-price-card {
+  display: grid;
+  gap: 10px;
+}
+
+.market-price-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.market-price-card__head h3 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 1rem;
+}
+
+.market-chip {
+  background: #daf2e8;
+  color: #247757;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.market-price-card__meta {
+  display: grid;
+  gap: 4px;
+}
+
+.market-price-card__meta p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.market-price-card__meta strong {
+  color: var(--color-text);
+}
+
+.market-price-card__prices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.price-low,
+.price-mid,
+.price-high {
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.price-low {
+  background: #e8f9ef;
+  color: #1d7b53;
+}
+
+.price-mid {
+  background: #eaf2ff;
+  color: #355fad;
+}
+
+.price-high {
+  background: #fff4e6;
+  color: #9b5e1d;
+}
+
+.market-empty {
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.market-saved {
+  margin-top: 12px;
+}
+
+.market-saved__head h2 {
+  margin: 0 0 10px;
+  color: var(--color-primary-dark);
+}
+
+/* Weather */
+.weather-page {
+  background: #eef7f1;
+}
+
+.weather-header {
+  margin-bottom: 16px;
+}
+
+.weather-header h1 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: clamp(1.6rem, 4.5vw, 2.2rem);
+}
+
+.weather-header p {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+}
+
+.weather-search-card {
+  margin-bottom: 14px;
+}
+
+.weather-search-form {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+}
+
+.weather-search-form input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.92rem;
+}
+
+.weather-alert {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.weather-alert--error {
+  color: #8e2020;
+  background: #ffeaea;
+  border: 1px solid #f3bcbc;
+}
+
+.weather-alert--warning {
+  color: #7a530d;
+  background: #fff6e8;
+  border: 1px solid #f2d8a8;
+}
+
+.weather-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--color-muted);
+  padding: 24px 0;
+}
+
+.weather-error {
+  color: #a12a2a;
+  background: #ffefef;
+  border-color: #f2c6c6;
+}
+
+.weather-layout {
+  display: grid;
+  gap: 12px;
+}
+
+.weather-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+}
+
+.weather-summary__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.weather-summary__main img {
+  width: 68px;
+  height: 68px;
+}
+
+.weather-summary__main h2 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 1.25rem;
+}
+
+.weather-summary__main p {
+  margin: 3px 0 0;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+}
+
+.weather-temp {
+  text-align: right;
+}
+
+.weather-temp strong {
+  font-size: 2.1rem;
+  color: var(--color-primary);
+  line-height: 1;
+  display: block;
+}
+
+.weather-temp span {
+  color: var(--color-muted);
+  font-size: 0.86rem;
+}
+
+.weather-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.weather-metric {
+  padding: 14px;
+}
+
+.weather-metric__label {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.weather-metric h4 {
+  margin: 7px 0 0;
+  color: var(--color-primary-dark);
+  font-size: 1.02rem;
+}
+
+/* Contact */
+.contact-page {
+  background: #eef7f1;
+}
+
+.contact-header {
+  margin-bottom: 16px;
+}
+
+.contact-header h1 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: clamp(1.6rem, 4.5vw, 2.2rem);
+}
+
+.contact-header p {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 12px;
+}
+
+.contact-info-card h2 {
+  margin: 0 0 12px;
+  color: var(--color-primary-dark);
+}
+
+.contact-info-list {
+  display: grid;
+  gap: 12px;
+}
+
+.contact-info-item__title {
+  margin: 0 0 3px;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.contact-info-item a,
+.contact-info-item span {
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.contact-note {
+  margin: 14px 0 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.contact-note a {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.contact-form {
+  display: grid;
+  gap: 9px;
+}
+
+.contact-form label {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  font-size: 0.88rem;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.92rem;
+  resize: vertical;
+}
+
+.contact-success {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.contact-success h3 {
+  margin: 0;
+  color: var(--color-primary-dark);
+}
+
+.contact-success p {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -653,6 +1132,37 @@ a {
   .footer-grid {
     grid-template-columns: 1fr;
   }
+
+  .market-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .market-filter-grid--saved {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .market-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .market-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .weather-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 980px) {
+  .site-nav__link {
+    font-size: 0.9rem;
+    padding: 8px 10px;
+  }
 }
 
 @media (max-width: 760px) {
@@ -664,17 +1174,31 @@ a {
     position: absolute;
     left: 0;
     right: 0;
-    top: 66px;
+    top: 64px;
     background: #fff;
     border-bottom: 1px solid var(--color-border);
     display: none;
     flex-direction: column;
     align-items: stretch;
-    padding: 10px 4%;
+    padding: 10px 14px 14px;
+    box-shadow: var(--shadow-sm);
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
   }
 
   .site-nav--open {
     display: flex;
+  }
+
+  .site-nav__link {
+    width: 100%;
+    display: block;
+    border: 1px solid transparent;
+    margin-top: 2px;
+  }
+
+  .brand__text {
+    font-size: 1rem;
   }
 
   .stats__grid {
@@ -686,6 +1210,37 @@ a {
   }
 
   .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .market-filter-grid,
+  .market-filter-grid--saved,
+  .market-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .market-actions .ui-btn {
+    width: 100%;
+  }
+
+  .weather-search-form {
+    grid-template-columns: 1fr;
+  }
+
+  .weather-search-form .ui-btn {
+    width: 100%;
+  }
+
+  .weather-summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .weather-temp {
+    text-align: left;
+  }
+
+  .weather-metrics-grid {
     grid-template-columns: 1fr;
   }
 }

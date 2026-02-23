@@ -103,7 +103,7 @@ export default function Account() {
   return (
     <section className="page account-page">
       <ValidateToken token={token} />
-      <div className="container account-grid">
+      <div className="ag-container account-grid">
         <Card className="account-profile-card">
           <img src={isFarmer ? farmerIcon : buyerIcon} alt="Profile" className="account-avatar" />
           <h2>{userData?.firstName} {userData?.lastName}</h2>

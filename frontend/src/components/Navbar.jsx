@@ -48,7 +48,7 @@ export default function Navbar() {
 
   return (
     <header className="site-header">
-      <div className="site-header__inner">
+      <div className="site-header__inner ag-container">
         <Link className="brand" to="/" onClick={() => setMobileOpen(false)}>
           <img src={agrigateIcon} alt="AagriGgate logo" className="brand__logo" />
           <span className="brand__text">AagriGgate</span>
@@ -58,6 +58,7 @@ export default function Navbar() {
           type="button"
           className="nav-toggle"
           aria-label="Toggle navigation"
+          aria-expanded={mobileOpen}
           onClick={() => setMobileOpen((prev) => !prev)}
         >
           <span />
