@@ -5,17 +5,17 @@ import { getFarmerId, getToken, getRole } from '../lib/auth';
 
 const FEATURES = [
   {
-    icon: '🌾',
+    icon: '\u{1F33E}',
     title: 'Direct Market Access',
-    desc: 'Farmers list crops and set their own prices. Buyers browse, compare, and contact farmers directly — no middlemen.',
+    desc: 'Farmers list crops and set their own prices. Buyers browse, compare, and contact farmers directly - no middlemen.',
   },
   {
-    icon: '☀️',
+    icon: '\u2600\uFE0F',
     title: 'Real-Time Weather',
     desc: 'Get hyper-local weather data to make informed decisions on planting, harvesting, and protecting your crops.',
   },
   {
-    icon: '📊',
+    icon: '\u{1F4CA}',
     title: 'Market Insights',
     desc: 'Stay updated on market trends, average prices, and demand to price competitively and grow strategically.',
   },
@@ -25,12 +25,12 @@ const STEPS = [
   { n: '01', title: 'Register', desc: 'Create your account as a farmer or buyer in minutes.' },
   { n: '02', title: 'List or Browse', desc: 'Farmers add crop listings; buyers browse the live marketplace.' },
   { n: '03', title: 'Connect Directly', desc: 'Negotiate and transact transparently with no fees.' },
-  { n: '04', title: 'Grow Together', desc: 'Access weather data & market insights to make smarter decisions.' },
+  { n: '04', title: 'Grow Together', desc: 'Access weather data and market insights to make smarter decisions.' },
 ];
 
 const FAQS = [
   { q: 'How do I register?', a: 'Click "Register" in the top navbar, choose your role (Farmer or Buyer), and follow the steps.' },
-  { q: 'Is the platform free?', a: 'Yes — AgriGate is completely free for both farmers and buyers, forever.' },
+  { q: 'Is the platform free?', a: 'Yes - AgriGate is completely free for both farmers and buyers, forever.' },
   { q: 'How do I contact support?', a: 'Reach us via the Contact Us page or email webappfarmer@gmail.com.' },
   { q: 'Is my data safe?', a: 'We never sell your data. Personal details are used solely to provide our service.' },
 ];
@@ -46,7 +46,6 @@ export default function Home() {
     <div>
       <ValidateToken farmerId={farmerId} token={token} role={role} />
 
-      {/* ── Hero ── */}
       <section
         className="relative overflow-hidden"
         style={{
@@ -54,7 +53,6 @@ export default function Home() {
           minHeight: '520px',
         }}
       >
-        {/* Decorative blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div style={{
             position: 'absolute', top: '-80px', right: '-80px',
@@ -73,7 +71,7 @@ export default function Home() {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6"
             style={{ background: 'rgba(244,162,97,0.25)', color: 'var(--color-accent-light)' }}
           >
-            🌱 India's Farmer-First Marketplace
+            {'\u{1F331}'} India&apos;s Farmer-First Marketplace
           </span>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-5">
             Farm to Table,<br />
@@ -105,13 +103,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Stats Bar ── */}
       <div style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)' }}>
         <div className="max-w-5xl mx-auto px-6 py-5 grid grid-cols-3 gap-4 text-center">
           {[
             { value: '5,000+', label: 'Farmers' },
             { value: '12,000+', label: 'Buyers' },
-            { value: '₹2Cr+', label: 'Trade Volume' },
+            { value: 'Rs 2Cr+', label: 'Trade Volume' },
           ].map(({ value, label }) => (
             <div key={label}>
               <p className="text-2xl font-bold" style={{ color: 'var(--color-primary)' }}>{value}</p>
@@ -121,7 +118,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Features ── */}
       <section className="max-w-5xl mx-auto px-6 py-16">
         <div className="text-center mb-10">
           <h2 className="section-title">Why AgriGate?</h2>
@@ -143,7 +139,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── How It Works ── */}
       <section id="htw" style={{ background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
         <div className="max-w-5xl mx-auto px-6 py-16">
           <div className="text-center mb-10">
@@ -167,7 +162,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── FAQ ── */}
       <section id="faq" className="max-w-3xl mx-auto px-6 py-16">
         <div className="text-center mb-10">
           <h2 className="section-title">Frequently Asked Questions</h2>
@@ -198,7 +192,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Terms & Privacy ── */}
       <section
         id="ts"
         style={{ background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)' }}
@@ -213,13 +206,12 @@ export default function Home() {
           <div id="pp">
             <h2 className="section-title text-lg">Privacy Policy</h2>
             <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              Your privacy matters. We collect only the data needed to run the platform — your name, contact info, and usage data. We never sell your information. Data is shared only where necessary to provide the service.
+              Your privacy matters. We collect only the data needed to run the platform - your name, contact info, and usage data. We never sell your information. Data is shared only where necessary to provide the service.
             </p>
           </div>
         </div>
       </section>
 
-      {/* ── CTA ── */}
       {!farmerId && (
         <section
           id="cs"
@@ -228,7 +220,7 @@ export default function Home() {
         >
           <h2 className="text-3xl font-extrabold text-white mb-3">Join 5,000+ Farmers Today</h2>
           <p className="text-green-200 text-sm mb-6 max-w-xl mx-auto">
-            Be part of the AgriGate community. Sign up free and start trading directly — no middlemen, no fees.
+            Be part of the AgriGate community. Sign up free and start trading directly - no middlemen, no fees.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <button className="btn-accent btn-lg" onClick={() => navigate('/register')}>
