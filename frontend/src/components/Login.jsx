@@ -3,8 +3,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
-import { requestJson, ApiError } from '../lib/api';
-import { isLoggedIn, setAuth } from '../lib/auth';
+import { requestJson, ApiError, apiGet } from '../lib/api';
+import { isLoggedIn, setAuth, clearAuth, hasCompleteSession } from '../lib/auth';
+
+function normalizeRole(role) {
+  if (!role) return '';
+  const upper = String(role).toUpperCase();
+  if (upper === 'SELLER') return 'farmer';
+  if (upper === 'BUYER') return 'buyer';
+  return String(role).toLowerCase();
+}
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,9 +22,39 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [alreadyIn, setAlreadyIn] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
-    setAlreadyIn(isLoggedIn());
+    const validateExistingSession = async () => {
+      if (!isLoggedIn()) {
+        setAlreadyIn(false);
+        setCheckingSession(false);
+        return;
+      }
+      if (!hasCompleteSession()) {
+        clearAuth();
+        setAlreadyIn(false);
+        setCheckingSession(false);
+        return;
+      }
+
+      try {
+        const response = await apiGet('/auth/isTokenValid');
+        if (response.ok) {
+          setAlreadyIn(true);
+        } else {
+          clearAuth();
+          setAlreadyIn(false);
+        }
+      } catch {
+        // When server is down, keep existing login guard behavior.
+        setAlreadyIn(true);
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+
+    validateExistingSession();
   }, []);
 
   const showToast = (message, type = 'info') => {
@@ -37,11 +75,13 @@ export default function Login() {
         method: 'POST',
         body: JSON.stringify({ principal, password }),
       });
+      const normalizedRole = normalizeRole(data?.role);
+      const farmerId = data?.farmerId ? String(data.farmerId) : '';
 
       setAuth({
         token: data?.token,
-        role: userType,
-        farmerId: data?.farmer?.farmerId || '',
+        role: normalizedRole || userType,
+        farmerId,
       });
       showToast('Login successful.', 'success');
       setTimeout(() => navigate('/account'), 700);
@@ -55,6 +95,17 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  if (checkingSession) {
+    return (
+      <section className="page page--center">
+        <Card className="auth-card">
+          <h2>Checking Session</h2>
+          <p>Validating your current login state...</p>
+        </Card>
+      </section>
+    );
+  }
 
   if (alreadyIn) {
     return (

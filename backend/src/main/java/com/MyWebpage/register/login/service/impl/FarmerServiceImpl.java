@@ -97,6 +97,7 @@ public class FarmerServiceImpl implements FarmerService {
                 AuthResponseDTO responseDTO = new AuthResponseDTO();
                 responseDTO.setToken(token);
                 responseDTO.setRole(verifiedFarmer.getRole());
+                responseDTO.setFarmerId(verifiedFarmer.getFarmerId());
                 logger.info("Authentication successful for principal: {}", principal);
                 return responseDTO;
             }
