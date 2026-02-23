@@ -1417,6 +1417,270 @@ a {
   margin-bottom: 10px;
 }
 
+/* Update Account */
+.update-account-page {
+  background: #eef7f1;
+}
+
+.update-account-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.update-account-head h1 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: clamp(1.6rem, 4.5vw, 2.1rem);
+}
+
+.update-account-head p {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+}
+
+.update-account-card {
+  max-width: 860px;
+}
+
+.update-account-form {
+  display: grid;
+  gap: 12px;
+}
+
+.update-account-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.update-account-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.update-account-field {
+  display: grid;
+  gap: 6px;
+}
+
+.update-account-field label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.update-account-field input,
+.update-account-field select {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  font-size: 0.92rem;
+}
+
+.update-account-field small {
+  color: var(--color-error);
+  font-size: 0.8rem;
+}
+
+/* Settings */
+.settings-page {
+  background: #eef7f1;
+}
+
+.settings-head {
+  margin-bottom: 12px;
+}
+
+.settings-head h1 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: clamp(1.6rem, 4.5vw, 2.1rem);
+}
+
+.settings-head p {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 12px;
+}
+
+.settings-card h2 {
+  margin: 0 0 12px;
+  color: var(--color-primary-dark);
+}
+
+.settings-card p {
+  margin: 0 0 12px;
+  color: var(--color-muted);
+}
+
+.settings-form {
+  display: grid;
+  gap: 9px;
+}
+
+.settings-form label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.settings-form input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  font-size: 0.92rem;
+}
+
+.settings-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.settings-checkbox input {
+  width: 16px;
+  height: 16px;
+}
+
+.settings-error {
+  color: var(--color-error);
+  font-size: 0.8rem;
+}
+
+.danger-card {
+  border-color: #f5bdbd;
+}
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: grid;
+  place-items: center;
+  z-index: 200;
+}
+
+.confirm-card {
+  width: min(440px, 94%);
+}
+
+.confirm-card h3 {
+  margin: 0 0 8px;
+  color: #a12a2a;
+}
+
+.confirm-card p {
+  margin: 0 0 10px;
+  color: var(--color-muted);
+}
+
+.confirm-card input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.92rem;
+  margin-bottom: 10px;
+}
+
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Enquiry */
+.enquiry-page {
+  background: radial-gradient(circle at top left, #f7fff9, #e8f4ee);
+}
+
+.enquiry-card {
+  width: min(760px, 96%);
+}
+
+.enquiry-card h1 {
+  margin: 4px 0 6px;
+  color: var(--color-primary-dark);
+  font-size: clamp(1.5rem, 4.5vw, 2rem);
+}
+
+.enquiry-card p {
+  margin: 0 0 12px;
+  color: var(--color-muted);
+}
+
+.enquiry-form {
+  display: grid;
+  gap: 10px;
+}
+
+.enquiry-form label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.enquiry-form textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.92rem;
+  resize: vertical;
+}
+
+.enquiry-success {
+  text-align: center;
+  padding: 14px 0;
+}
+
+.enquiry-success h2 {
+  margin: 0;
+  color: var(--color-primary-dark);
+}
+
+.enquiry-success p {
+  margin: 8px 0 14px;
+}
+
+/* Logout */
+.logout-page {
+  background: radial-gradient(circle at top left, #f7fff9, #e8f4ee);
+}
+
+.logout-card {
+  width: min(520px, 94%);
+  text-align: center;
+}
+
+.logout-card h2 {
+  margin: 0;
+  color: var(--color-primary-dark);
+}
+
+.logout-card p {
+  margin: 8px 0 14px;
+  color: var(--color-muted);
+}
+
+.logout-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -1474,6 +1738,14 @@ a {
 
   .view-crop-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .update-account-grid--2 {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1593,5 +1865,10 @@ a {
 
   .approach-actions .ui-btn {
     width: 100%;
+  }
+
+  .confirm-actions,
+  .logout-actions {
+    grid-template-columns: 1fr;
   }
 }
