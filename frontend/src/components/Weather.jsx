@@ -4,13 +4,13 @@ import Button from './common/Button';
 import Card from './common/Card';
 import ValidateToken from './ValidateToken';
 import { getRole, getToken } from '../lib/auth';
-import { getWeather } from '../api/weatherApi';
+import { getWeatherByCity, getWeatherForMe } from '../api/weatherApi';
 
 function getAlert(weather) {
   if (!weather) return null;
   const current = weather.current || {};
-  const temperature = Number(current.temperature_2m);
-  const wind = Number(current.wind_speed_10m);
+  const temperature = Number(current.temp_c);
+  const wind = Number(current.wind_kph);
   if (!Number.isNaN(temperature) && temperature > 35) return { type: 'error', msg: 'Heat alert: temperature above 35C.' };
   if (!Number.isNaN(wind) && wind > 50) return { type: 'warning', msg: 'Strong winds detected. Stay cautious.' };
   return null;
@@ -33,16 +33,15 @@ export default function Weather() {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
+  const [city, setCity] = useState('');
 
   const alert = useMemo(() => getAlert(weather), [weather]);
 
-  const fetchByCoordinates = async (lat, lon) => {
+  const fetchByCity = async (queryCity) => {
     setLoading(true);
     setError('');
     try {
-      const payload = await getWeather(lat, lon);
+      const payload = await getWeatherByCity(queryCity);
       setWeather(payload?.data || null);
     } catch (err) {
       setWeather(null);
@@ -57,19 +56,21 @@ export default function Weather() {
       navigate('/login');
       return;
     }
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser.');
-      return;
+    setLoading(true);
+    setError('');
+    try {
+      const payload = await getWeatherForMe();
+      setWeather(payload?.data || null);
+      const profileCity = payload?.data?.location?.name || '';
+      if (profileCity) {
+        setCity(profileCity);
+      }
+    } catch (err) {
+      setWeather(null);
+      setError(err.message || 'Unable to fetch weather details.');
+    } finally {
+      setLoading(false);
     }
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setLatitude(String(coords.latitude));
-        setLongitude(String(coords.longitude));
-        fetchByCoordinates(coords.latitude, coords.longitude);
-      },
-      () => setError('Unable to read your location.'),
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
   };
 
   useEffect(() => {
@@ -86,8 +87,8 @@ export default function Weather() {
 
   const onSearchSubmit = (event) => {
     event.preventDefault();
-    if (!latitude.trim() || !longitude.trim()) return;
-    fetchByCoordinates(latitude.trim(), longitude.trim());
+    if (!city.trim()) return;
+    fetchByCity(city.trim());
   };
 
   return (
@@ -96,27 +97,19 @@ export default function Weather() {
       <div className="ag-container">
         <header className="weather-header">
           <h1>Weather</h1>
-          <p>Weather from backend API for your current location or coordinates.</p>
+          <p>Weather from backend API using your profile city or searched city.</p>
         </header>
 
         <Card className="weather-search-card">
           <form className="weather-search-form" onSubmit={onSearchSubmit}>
             <input
-              type="number"
-              step="any"
-              value={latitude}
-              placeholder="Latitude"
-              onChange={(event) => setLatitude(event.target.value)}
-            />
-            <input
-              type="number"
-              step="any"
-              value={longitude}
-              placeholder="Longitude"
-              onChange={(event) => setLongitude(event.target.value)}
+              type="text"
+              value={city}
+              placeholder="City (e.g. Delhi)"
+              onChange={(event) => setCity(event.target.value)}
             />
             <Button type="submit">Search</Button>
-            <Button type="button" variant="outline" onClick={fetchMyLocationWeather}>My Location</Button>
+            <Button type="button" variant="outline" onClick={fetchMyLocationWeather}>My Profile City</Button>
           </form>
         </Card>
 
@@ -141,21 +134,28 @@ export default function Weather() {
           <div className="weather-layout">
             <Card className="weather-summary">
               <div className="weather-summary__main">
+                {weather?.current?.condition?.icon ? (
+                  <img src={`https:${weather.current.condition.icon}`} alt={weather?.current?.condition?.text || 'Weather icon'} />
+                ) : null}
                 <div>
-                  <h2>{weather.latitude}, {weather.longitude}</h2>
-                  <p>Source: Open-Meteo (via backend)</p>
+                  <h2>{weather?.location?.name || '-'}, {weather?.location?.region || '-'}</h2>
+                  <p>{weather?.location?.country || '-'}</p>
+                  <p>{weather?.current?.condition?.text || '-'}</p>
                 </div>
               </div>
               <div className="weather-temp">
-                <strong>{weather?.current?.temperature_2m ?? '-'} C</strong>
-                <span>Current weather snapshot</span>
+                <strong>{weather?.current?.temp_c ?? '-'} C</strong>
+                <span>Feels like {weather?.current?.feelslike_c ?? '-'} C</span>
               </div>
             </Card>
 
             <div className="weather-metrics-grid">
-              <Metric label="Humidity" value={`${weather?.current?.relative_humidity_2m ?? '-'}%`} />
-              <Metric label="Wind" value={`${weather?.current?.wind_speed_10m ?? '-'} km/h`} />
-              <Metric label="Time" value={weather?.current?.time || '-'} />
+              <Metric label="Humidity" value={`${weather?.current?.humidity ?? '-'}%`} />
+              <Metric label="Wind" value={`${weather?.current?.wind_kph ?? '-'} km/h`} />
+              <Metric label="Pressure" value={`${weather?.current?.pressure_mb ?? '-'} mb`} />
+              <Metric label="Visibility" value={`${weather?.current?.vis_km ?? '-'} km`} />
+              <Metric label="UV Index" value={weather?.current?.uv ?? '-'} />
+              <Metric label="Cloud" value={`${weather?.current?.cloud ?? '-'}%`} />
             </div>
           </div>
         )}

@@ -9,6 +9,7 @@ jwt:
 weather:
   api:
     url: ${WEATHER_API_URL}
+    key: ${WEATHER_API_KEY}
 
 market:
   api:

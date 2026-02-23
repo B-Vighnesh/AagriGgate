@@ -37,7 +37,8 @@ jwt:
 
 weather:
   api:
-    url: ${WEATHER_API_URL:https://api.open-meteo.com/v1/forecast}
+    url: ${WEATHER_API_URL:https://api.weatherapi.com/v1/current.json}
+    key: ${WEATHER_API_KEY:75f97057caa641fa99c73509242910}
 
 market:
   api:

@@ -3,6 +3,7 @@ package com.MyWebpage.register.login.controller;
 import com.MyWebpage.register.login.external.WeatherService;
 import com.MyWebpage.register.login.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,9 +22,15 @@ public class WeatherController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getWeather(
-            @RequestParam double latitude,
-            @RequestParam double longitude) {
-        return ResponseEntity.ok(ApiResponse.success("Weather fetched", weatherService.getWeather(latitude, longitude)));
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getWeatherByCity(
+            @RequestParam String city) {
+        return ResponseEntity.ok(ApiResponse.success("Weather fetched", weatherService.getWeatherByCity(city)));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getWeatherForLoggedInFarmer(
+            Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(ApiResponse.success("Weather fetched", weatherService.getWeatherByFarmerEmail(email)));
     }
 }
