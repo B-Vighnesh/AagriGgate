@@ -8,7 +8,6 @@ import com.MyWebpage.register.login.dto.FarmerUpdateDTO;
 import com.MyWebpage.register.login.model.Farmer;
 import com.MyWebpage.register.login.model.ResetPasswordRequest;
 import com.MyWebpage.register.login.response.ApiResponse;
-import com.MyWebpage.register.login.security.jwt.JWTService;
 import com.MyWebpage.register.login.service.EmailService;
 import com.MyWebpage.register.login.service.FarmerService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,12 +33,10 @@ public class FarmerController {
 
     private final FarmerService farmerService;
     private final EmailService emailService;
-    private final JWTService jwtService;
 
-    public FarmerController(FarmerService farmerService, EmailService emailService, JWTService jwtService) {
+    public FarmerController(FarmerService farmerService, EmailService emailService) {
         this.farmerService = farmerService;
         this.emailService = emailService;
-        this.jwtService = jwtService;
     }
 
     @GetMapping("/sessionid")
@@ -122,8 +118,8 @@ public class FarmerController {
     public ApiResponse<FarmerResponseDTO> updateProfile(
             @RequestBody FarmerUpdateDTO dto,
             Authentication authentication) {
-        String username = authentication.getName();
-        FarmerResponseDTO response = farmerService.updateProfile(dto, username);
+        Long farmerId = Long.parseLong(authentication.getName());
+        FarmerResponseDTO response = farmerService.updateProfile(dto, farmerId);
         return ApiResponse.success("Profile updated", response);
     }
 
@@ -135,12 +131,12 @@ public class FarmerController {
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(
             @RequestBody ResetPasswordRequest resetPasswordRequest,
-            @RequestHeader("Authorization") String token) {
+            Authentication authentication) {
         try {
-            String username = jwtService.extractUsername(token.substring(7));
+            Long farmerId = Long.parseLong(authentication.getName());
 
             return farmerService.changePassword(
-                    username,
+                    farmerId,
                     resetPasswordRequest.getFarmerId(),
                     resetPasswordRequest.getCurrentPassword(),
                     resetPasswordRequest.getNewPassword());

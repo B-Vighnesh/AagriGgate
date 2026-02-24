@@ -6,9 +6,9 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.util.StringUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -22,18 +22,17 @@ public class JWTService {
     @Value("${jwt.secret}")
     private String secretkey;
 
-    public String generateToken(String username, String role) {
+    public String generateToken(Long farmerId, String role) {
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", "ROLE_" + role);
+        claims.put("role", role);
+        claims.put("farmerId", farmerId);
 
         return Jwts.builder()
-                .claims()
-                .add(claims)
-                .subject(username)
+                .claims(claims)
+                .subject(String.valueOf(farmerId))
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 2 * 60 * 60 * 1000))
-                .and()
                 .signWith(getKey(), Jwts.SIG.HS256)
                 .compact();
     }
@@ -55,6 +54,10 @@ public class JWTService {
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public Long extractFarmerId(String token) {
+        return Long.parseLong(extractAllClaims(token).getSubject());
     }
 
     public String extractRole(String token) {
@@ -90,5 +93,13 @@ public class JWTService {
                 .getPayload();
 
         return resolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

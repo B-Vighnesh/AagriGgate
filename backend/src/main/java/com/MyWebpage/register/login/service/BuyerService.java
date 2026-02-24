@@ -9,11 +9,11 @@ public interface BuyerService {
 
     BuyerResponseDTO getById(Long buyerId);
 
-    BuyerResponseDTO getCurrentBuyer(String username);
+    BuyerResponseDTO getCurrentBuyer(Long farmerId);
 
-    BuyerResponseDTO updateCurrentBuyer(String username,
+    BuyerResponseDTO updateCurrentBuyer(Long farmerId,
                                         BuyerRequestDTO request);
 
-    void deleteCurrentBuyer(String username);
+    void deleteCurrentBuyer(Long farmerId);
 
 }

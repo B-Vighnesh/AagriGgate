@@ -100,7 +100,7 @@ public class FarmerServiceImpl implements FarmerService {
                     throw new BadCredentialsException("Authentication failed for user: " + principal);
                 }
 
-                String token = jwtService.generateToken(verifiedFarmer.getUsername(), verifiedFarmer.getRole());
+                String token = jwtService.generateToken(verifiedFarmer.getFarmerId(), verifiedFarmer.getRole());
                 AuthResponseDTO responseDTO = new AuthResponseDTO();
                 responseDTO.setToken(token);
                 responseDTO.setRole(verifiedFarmer.getRole());
@@ -118,14 +118,13 @@ public class FarmerServiceImpl implements FarmerService {
 
     @Override
     @Transactional
-    public ResponseEntity<String> changePassword(String username, Long farmerId, String currentPassword, String newPassword) {
-        Farmer farmer = farmerRepo.findByFarmerId(farmerId);
+    public ResponseEntity<String> changePassword(Long farmerId, Long targetFarmerId, String currentPassword, String newPassword) {
+        Farmer farmer = farmerRepo.findByFarmerId(targetFarmerId);
         if (farmer == null) {
             return new ResponseEntity<>("Farmer not found", HttpStatus.NOT_FOUND);
         }
 
-        Farmer authenticatedFarmer = farmerRepo.findByUsername(username);
-        if (authenticatedFarmer == null || !authenticatedFarmer.getFarmerId().equals(farmerId)) {
+        if (!farmerId.equals(targetFarmerId)) {
             return new ResponseEntity<>("Unauthorized password change request", HttpStatus.UNAUTHORIZED);
         }
 
@@ -141,7 +140,7 @@ public class FarmerServiceImpl implements FarmerService {
                 + "If you did not request this, secure your account immediately.\n\n"
                 + "Thank you,\nAggriGgate";
         emailService.sendMail(farmer.getEmail(), msg, subject);
-        logger.info("Password changed for farmerId: {}", farmerId);
+        logger.info("Password changed for farmerId: {}", targetFarmerId);
         return new ResponseEntity<>("Password changed successfully", HttpStatus.OK);
     }
 
@@ -258,8 +257,8 @@ public class FarmerServiceImpl implements FarmerService {
 
     @Override
     @Transactional
-    public FarmerResponseDTO updateProfile(FarmerUpdateDTO dto, String username) {
-        Farmer existingFarmer = farmerRepo.findByUsername(username);
+    public FarmerResponseDTO updateProfile(FarmerUpdateDTO dto, Long farmerId) {
+        Farmer existingFarmer = farmerRepo.findById(farmerId).orElse(null);
         if (existingFarmer == null) {
             throw new RuntimeException("Farmer not found");
         }

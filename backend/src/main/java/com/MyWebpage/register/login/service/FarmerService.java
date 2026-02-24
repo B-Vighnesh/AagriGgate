@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 public interface FarmerService {
     ResponseEntity<Farmer> register(Farmer farmer);
     AuthResponseDTO verify(Farmer farmer);
-    ResponseEntity<String> changePassword(String username, Long farmerId, String currentPassword, String newPassword);
+    ResponseEntity<String> changePassword(Long farmerId, Long targetFarmerId, String currentPassword, String newPassword);
     ResponseEntity<String> delete(String password, Long farmerId);
     String logout();
     Farmer update(Farmer farmer);
@@ -19,5 +19,5 @@ public interface FarmerService {
     Farmer findByEmail(String email);
     Farmer findByUsername(String username);
     ResponseEntity<String> resetPassword(String email, String newPassword);
-    FarmerResponseDTO updateProfile(FarmerUpdateDTO dto, String username);
+    FarmerResponseDTO updateProfile(FarmerUpdateDTO dto, Long farmerId);
 }

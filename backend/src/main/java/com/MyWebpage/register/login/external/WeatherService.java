@@ -55,8 +55,8 @@ public class WeatherService {
         }
     }
 
-    public Map<String, Object> getWeatherByFarmerUsername(String username) {
-        Farmer farmer = farmerRepo.findByUsername(username);
+    public Map<String, Object> getWeatherByFarmerId(Long farmerId) {
+        Farmer farmer = farmerRepo.findById(farmerId).orElse(null);
         if (farmer == null) {
             throw new RuntimeException("Farmer not found");
         }
