@@ -70,13 +70,11 @@ public class BuyerServiceImpl implements BuyerService {
     }
 
     @Override
-    public BuyerResponseDTO getCurrentBuyer(String email) {
+    public BuyerResponseDTO getCurrentBuyer(String username) {
 
         Farmer buyer =
                 farmerRepository
-                        .findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException("Buyer not found"));
+                        .findByUsername(username);
 
         if (buyer == null ||
                 !buyer.getRole().equals("BUYER")) {
@@ -113,13 +111,11 @@ public class BuyerServiceImpl implements BuyerService {
     }
 
     @Override
-    public void deleteCurrentBuyer(String email) {
+    public void deleteCurrentBuyer(String username) {
 
         Farmer buyer =
                 farmerRepository
-                        .findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException("Buyer not found"));
+                        .findByUsername(username);
 
         if (buyer == null) {
 
