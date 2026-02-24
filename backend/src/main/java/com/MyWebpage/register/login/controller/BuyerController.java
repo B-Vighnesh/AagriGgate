@@ -48,7 +48,7 @@ public class BuyerController {
         return buyerService.register(request);
     }
 
-    @GetMapping("/{buyerId}")
+    @GetMapping("/details/{buyerId}")
     public BuyerResponseDTO getById(
             @PathVariable Long buyerId) {
 
@@ -58,7 +58,7 @@ public class BuyerController {
     @GetMapping("/me")
     public BuyerResponseDTO getCurrentBuyer(
             Authentication authentication) {
-
+    System.out.println("hlo"+authentication.getName());
         return buyerService.getCurrentBuyer(
                 authentication.getName()
         );
