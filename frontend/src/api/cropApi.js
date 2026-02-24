@@ -8,5 +8,5 @@ export const addCrop = async (formData) => {
 };
 
 export const getFarmerById = async (farmerId) => {
-  return requestJson(`/farmers/${farmerId}`);
+  return requestJson('/farmers/me');
 };

@@ -15,7 +15,9 @@ public class FarmerMapper {
         dto.setEmail(farmer.getEmail());
         dto.setPhoneNo(farmer.getPhoneNo());
         dto.setState(farmer.getState());
+        dto.setDistrict(farmer.getDistrict());
         dto.setRole(farmer.getRole());
+
         return dto;
     }
 }

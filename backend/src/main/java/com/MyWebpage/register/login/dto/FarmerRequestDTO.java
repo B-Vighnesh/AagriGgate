@@ -23,6 +23,16 @@ public class FarmerRequestDTO {
     @Size(min = 6, max = 100)
     private String password;
 
+    private String district;
+
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String district) {
+        this.district = district;
+    }
+
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
     public String getFirstName() { return firstName; }

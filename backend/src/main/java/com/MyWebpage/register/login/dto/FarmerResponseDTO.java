@@ -9,7 +9,15 @@ public class FarmerResponseDTO {
     private String phoneNo;
     private String state;
     private String role;
+    private String district;
 
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String district) {
+        this.district = district;
+    }
     public Long getFarmerId() { return farmerId; }
     public void setFarmerId(Long farmerId) { this.farmerId = farmerId; }
     public String getUsername() { return username; }

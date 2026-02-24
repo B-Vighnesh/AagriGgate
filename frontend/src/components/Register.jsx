@@ -7,24 +7,21 @@ import statesWithDistricts from './StatesWithDistricts';
 import { ApiError, requestJson } from '../lib/api';
 
 const INITIAL_FORM = {
+  username: '',
   email: '',
   firstName: '',
   lastName: '',
   phoneNo: '',
-  dob: '',
   state: '',
   district: '',
-  aadharNo: '',
   password: '',
 };
 
 export default function Register() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
   const [role, setRole] = useState('farmer');
   const [form, setForm] = useState(INITIAL_FORM);
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
 
@@ -37,56 +34,6 @@ export default function Register() {
 
   const updateField = (name, value) => {
     setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const isBasicValid = () => {
-    if (!form.email || !form.firstName || !form.phoneNo || !form.state || !form.district || !form.aadharNo || !form.dob) {
-      return false;
-    }
-    if (!/^\d{10}$/.test(form.phoneNo)) return false;
-    if (!/^\d{12}$/.test(form.aadharNo)) return false;
-    return true;
-  };
-
-  const sendOtp = async (event) => {
-    event.preventDefault();
-    if (!isBasicValid()) {
-      showToast('Please fill all required fields with valid values.', 'error');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await requestJson(`/auth/send-otp/${form.email}`, { method: 'POST', body: JSON.stringify({}) });
-      setStep(1);
-      showToast('OTP sent to your email.', 'success');
-    } catch (error) {
-      showToast(error.message || 'Unable to send OTP.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyOtp = async (event) => {
-    event.preventDefault();
-    if (!otp.trim()) {
-      showToast('Please enter OTP.', 'error');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await requestJson(`/auth/verify-otp?email=${encodeURIComponent(form.email)}&otp=${encodeURIComponent(otp)}`, {
-        method: 'POST',
-        body: JSON.stringify({}),
-      });
-      setStep(2);
-      showToast('Email verified.', 'success');
-    } catch (error) {
-      showToast(error.message || 'Invalid OTP.', 'error');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const register = async (event) => {
@@ -102,7 +49,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const endpoint = role === 'buyer' ? '/buyers/register' : '/farmers/register';
+      const endpoint = role === 'buyer' ? '/auth/register/buyer' : '/auth/register/seller';
       await requestJson(endpoint, {
         method: 'POST',
         body: JSON.stringify(form),
@@ -124,77 +71,72 @@ export default function Register() {
     <section className="page page--center auth-page">
       <Card className="auth-card auth-card--wide">
         <h1>Create AagriGgate Account</h1>
-        <p>Step {step + 1} of 3</p>
+        <p>Register as farmer or buyer.</p>
 
-        {step === 0 && (
-          <form className="form" onSubmit={sendOtp}>
-            <div className="segmented">
-              <button
-                type="button"
-                className={role === 'farmer' ? 'segmented__item segmented__item--active' : 'segmented__item'}
-                onClick={() => setRole('farmer')}
-              >
-                Farmer
-              </button>
-              <button
-                type="button"
-                className={role === 'buyer' ? 'segmented__item segmented__item--active' : 'segmented__item'}
-                onClick={() => setRole('buyer')}
-              >
-                Buyer
-              </button>
-            </div>
+        <form className="form" onSubmit={register}>
+          <div className="segmented">
+            <button
+              type="button"
+              className={role === 'farmer' ? 'segmented__item segmented__item--active' : 'segmented__item'}
+              onClick={() => setRole('farmer')}
+            >
+              Farmer
+            </button>
+            <button
+              type="button"
+              className={role === 'buyer' ? 'segmented__item segmented__item--active' : 'segmented__item'}
+              onClick={() => setRole('buyer')}
+            >
+              Buyer
+            </button>
+          </div>
 
-            <label>First Name</label>
-            <input value={form.firstName} onChange={(e) => updateField('firstName', e.target.value)} required />
-            <label>Last Name</label>
-            <input value={form.lastName} onChange={(e) => updateField('lastName', e.target.value)} />
-            <label>Email</label>
-            <input type="email" value={form.email} onChange={(e) => updateField('email', e.target.value)} required />
-            <label>Phone Number</label>
-            <input value={form.phoneNo} onChange={(e) => updateField('phoneNo', e.target.value)} required />
-            <label>Date of Birth</label>
-            <input type="date" value={form.dob} onChange={(e) => updateField('dob', e.target.value)} required />
-            <label>State</label>
-            <select value={form.state} onChange={(e) => {
+          <label>Username</label>
+          <input value={form.username} onChange={(e) => updateField('username', e.target.value)} required />
+
+          <label>First Name</label>
+          <input value={form.firstName} onChange={(e) => updateField('firstName', e.target.value)} required />
+
+          <label>Last Name</label>
+          <input value={form.lastName} onChange={(e) => updateField('lastName', e.target.value)} />
+
+          <label>Email</label>
+          <input type="email" value={form.email} onChange={(e) => updateField('email', e.target.value)} required />
+
+          <label>Phone Number</label>
+          <input value={form.phoneNo} onChange={(e) => updateField('phoneNo', e.target.value)} required />
+
+          <label>State</label>
+          <select
+            value={form.state}
+            onChange={(e) => {
               updateField('state', e.target.value);
               updateField('district', '');
-            }} required>
-              <option value="">Select state</option>
-              {Object.keys(statesWithDistricts).map((state) => (
-                <option key={state} value={state}>{state}</option>
-              ))}
-            </select>
-            <label>District</label>
-            <select value={form.district} onChange={(e) => updateField('district', e.target.value)} required>
-              <option value="">Select district</option>
-              {districts.map((district) => (
-                <option key={district} value={district}>{district}</option>
-              ))}
-            </select>
-            <label>Aadhaar Number</label>
-            <input value={form.aadharNo} maxLength={12} onChange={(e) => updateField('aadharNo', e.target.value)} required />
-            <Button type="submit" loading={loading}>{loading ? 'Sending OTP...' : 'Send OTP'}</Button>
-          </form>
-        )}
+            }}
+            required
+          >
+            <option value="">Select state</option>
+            {Object.keys(statesWithDistricts).map((state) => (
+              <option key={state} value={state}>{state}</option>
+            ))}
+          </select>
 
-        {step === 1 && (
-          <form className="form" onSubmit={verifyOtp}>
-            <label>OTP</label>
-            <input value={otp} onChange={(e) => setOtp(e.target.value)} required />
-            <Button type="submit" loading={loading}>{loading ? 'Verifying...' : 'Verify OTP'}</Button>
-          </form>
-        )}
+          <label>District</label>
+          <select value={form.district} onChange={(e) => updateField('district', e.target.value)}>
+            <option value="">Select district</option>
+            {districts.map((district) => (
+              <option key={district} value={district}>{district}</option>
+            ))}
+          </select>
 
-        {step === 2 && (
-          <form className="form" onSubmit={register}>
-            <label>Password</label>
-            <input type="password" value={form.password} onChange={(e) => updateField('password', e.target.value)} required />
-            <label>Confirm Password</label>
-            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-            <Button type="submit" loading={loading}>{loading ? 'Registering...' : 'Complete Registration'}</Button>
-          </form>
-        )}
+          <label>Password</label>
+          <input type="password" value={form.password} onChange={(e) => updateField('password', e.target.value)} required />
+
+          <label>Confirm Password</label>
+          <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+
+          <Button type="submit" loading={loading}>{loading ? 'Registering...' : 'Create Account'}</Button>
+        </form>
 
         <div className="auth-links">
           <span>Already have an account? <Link to="/login">Sign in</Link></span>
