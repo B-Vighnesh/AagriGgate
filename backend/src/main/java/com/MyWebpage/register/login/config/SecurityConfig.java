@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import java.util.List;
@@ -29,6 +30,11 @@ public class SecurityConfig {
     @Autowired
     private JwtFilter jwtFilter;
 
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+
+        return new BCryptPasswordEncoder();
+    }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
@@ -56,8 +62,11 @@ public class SecurityConfig {
                                 "/api/v1/admin/enquiry",
                                 "/api/v1/farmers/verify")
                         .permitAll()
+                        .requestMatchers("/api/v1/buyers/me")
+                        .hasAnyRole("BUYER", "SELLER")
                         .requestMatchers("/api/v1/buyers/**", "/api/v1/buyer/approach/**").hasRole("BUYER")
                         .requestMatchers("/api/v1/farmers/**", "/api/v1/crops/**", "/api/v1/seller/approach/**", "/api/v1/saved-market-data/**", "/api/v1/market-price/**", "/api/v1/weather/**").hasRole("SELLER")
+
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -1,6 +1,8 @@
 package com.MyWebpage.register.login.repository;
 
 import com.MyWebpage.register.login.model.Farmer;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -22,4 +24,6 @@ public interface FarmerRepo extends JpaRepository<Farmer,Long> {
     Optional<Farmer> findByEmail(String email);
 
     void deleteByFarmerId(Long farmerId);
+
+    boolean existsByEmail(@Email @NotBlank String email);
 }

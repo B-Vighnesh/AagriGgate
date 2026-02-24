@@ -1,4 +1,24 @@
 package com.MyWebpage.register.login.dto;
 
-public class BuyerRequestDTO extends FarmerRequestDTO {
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+@Data
+public class BuyerRequestDTO {
+
+    @NotBlank
+    private String username;
+
+    @Email
+    @NotBlank
+    private String email;
+
+    @NotBlank
+    private String password;
+
+    private String phoneNo;
+
+    private String district;
+
 }

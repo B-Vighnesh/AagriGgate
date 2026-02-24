@@ -1,59 +1,132 @@
 package com.MyWebpage.register.login.service.impl;
 
-import com.MyWebpage.register.login.dto.AuthResponseDTO;
+import com.MyWebpage.register.login.dto.BuyerRequestDTO;
+import com.MyWebpage.register.login.dto.BuyerResponseDTO;
+import com.MyWebpage.register.login.mapper.BuyerMapper;
 import com.MyWebpage.register.login.model.Farmer;
+import com.MyWebpage.register.login.repository.FarmerRepo;
 import com.MyWebpage.register.login.service.BuyerService;
-import com.MyWebpage.register.login.service.FarmerService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
+
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class BuyerServiceImpl implements BuyerService {
 
-    private static final Logger logger = LoggerFactory.getLogger(BuyerServiceImpl.class);
+    private final FarmerRepo farmerRepository;
 
-    private final FarmerService farmerService;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public BuyerServiceImpl(FarmerService farmerService) {
-        this.farmerService = farmerService;
+    private final BuyerMapper buyerMapper;
+
+    public BuyerServiceImpl(FarmerRepo farmerRepository,
+                            BCryptPasswordEncoder bCryptPasswordEncoder,
+                            BuyerMapper buyerMapper) {
+
+        this.farmerRepository = farmerRepository;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.buyerMapper = buyerMapper;
     }
 
     @Override
-    public ResponseEntity<Farmer> register(Farmer buyer) {
-        logger.info("Buyer registration requested for email: {}", buyer.getEmail());
-        return farmerService.register(buyer);
+    public BuyerResponseDTO register(BuyerRequestDTO request) {
+
+        if (farmerRepository.existsByEmail(request.getEmail())) {
+
+            throw new RuntimeException("Email already exists");
+        }
+
+        Farmer buyer = buyerMapper.toEntity(request);
+
+        buyer.setPassword(
+                bCryptPasswordEncoder.encode(request.getPassword())
+        );
+
+        buyer.setRole("BUYER");
+
+        farmerRepository.save(buyer);
+
+        return buyerMapper.toDTO(buyer);
     }
 
     @Override
-    public AuthResponseDTO verify(Farmer buyer) {
-        logger.info("Buyer login requested for principal: {}", buyer.getUsername());
-        return farmerService.verify(buyer);
+    public BuyerResponseDTO getById(Long buyerId) {
+
+        Farmer buyer = farmerRepository
+                .findById(buyerId)
+                .orElseThrow(() ->
+                        new RuntimeException("Buyer not found"));
+
+        if (!buyer.getRole().equals("BUYER")) {
+
+            throw new RuntimeException("Invalid buyer");
+        }
+
+        return buyerMapper.toDTO(buyer);
     }
 
     @Override
-    public ResponseEntity<String> resetPassword(String email, String newPassword) {
-        return farmerService.resetPassword(email, newPassword);
+    public BuyerResponseDTO getCurrentBuyer(String email) {
+
+        Farmer buyer =
+                farmerRepository
+                        .findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException("Buyer not found"));
+
+        if (buyer == null ||
+                !buyer.getRole().equals("BUYER")) {
+
+            throw new RuntimeException("Buyer not found");
+        }
+
+        return buyerMapper.toDTO(buyer);
     }
 
     @Override
-    public Farmer find(Long farmerId) {
-        return farmerService.find(farmerId);
+    public BuyerResponseDTO updateCurrentBuyer(
+            String email,
+            BuyerRequestDTO request) {
+
+        Farmer buyer =
+                farmerRepository
+                        .findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException("Buyer not found"));
+
+        if (buyer == null) {
+
+            throw new RuntimeException("Buyer not found");
+        }
+
+        buyer.setUsername(request.getUsername());
+        buyer.setPhoneNo(request.getPhoneNo());
+        buyer.setDistrict(request.getDistrict());
+
+        farmerRepository.save(buyer);
+
+        return buyerMapper.toDTO(buyer);
     }
 
     @Override
-    public Farmer update(Farmer buyer) {
-        return farmerService.update(buyer);
+    public void deleteCurrentBuyer(String email) {
+
+        Farmer buyer =
+                farmerRepository
+                        .findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException("Buyer not found"));
+
+        if (buyer == null) {
+
+            throw new RuntimeException("Buyer not found");
+        }
+
+        farmerRepository.delete(buyer);
     }
 
-    @Override
-    public ResponseEntity<String> delete(String password, Long farmerId) {
-        return farmerService.delete(password, farmerId);
-    }
-
-    @Override
-    public ResponseEntity<String> changePassword(String email, Long farmerId, String currentPassword, String newPassword) {
-        return farmerService.changePassword(email, farmerId, currentPassword, newPassword);
-    }
 }
