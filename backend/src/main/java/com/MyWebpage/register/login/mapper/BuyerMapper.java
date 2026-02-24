@@ -14,7 +14,10 @@ public class BuyerMapper {
 
         farmer.setUsername(dto.getUsername());
         farmer.setEmail(dto.getEmail());
+        farmer.setFirstName(dto.getFirstName());
+        farmer.setLastName(dto.getLastName());
         farmer.setPhoneNo(dto.getPhoneNo());
+        farmer.setState(dto.getState());
         farmer.setDistrict(dto.getDistrict());
 
         return farmer;
@@ -26,7 +29,10 @@ public class BuyerMapper {
                 .buyerId(farmer.getFarmerId())
                 .username(farmer.getUsername())
                 .email(farmer.getEmail())
+                .firstName(farmer.getFirstName())
+                .lastName(farmer.getLastName())
                 .phoneNo(farmer.getPhoneNo())
+                .state(farmer.getState())
                 .district(farmer.getDistrict())
                 .build();
     }

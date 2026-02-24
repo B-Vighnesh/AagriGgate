@@ -87,23 +87,32 @@ public class BuyerServiceImpl implements BuyerService {
 
     @Override
     public BuyerResponseDTO updateCurrentBuyer(
-            String email,
+            String username,
             BuyerRequestDTO request) {
 
-        Farmer buyer =
-                farmerRepository
-                        .findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException("Buyer not found"));
-
-        if (buyer == null) {
-
+        Farmer buyer = farmerRepository.findByUsername(username);
+        if (buyer == null || !buyer.getRole().equals("BUYER")) {
             throw new RuntimeException("Buyer not found");
         }
 
-        buyer.setUsername(request.getUsername());
-        buyer.setPhoneNo(request.getPhoneNo());
-        buyer.setDistrict(request.getDistrict());
+        if (request.getUsername() != null) {
+            buyer.setUsername(request.getUsername());
+        }
+        if (request.getFirstName() != null) {
+            buyer.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            buyer.setLastName(request.getLastName());
+        }
+        if (request.getPhoneNo() != null) {
+            buyer.setPhoneNo(request.getPhoneNo());
+        }
+        if (request.getState() != null) {
+            buyer.setState(request.getState());
+        }
+        if (request.getDistrict() != null) {
+            buyer.setDistrict(request.getDistrict());
+        }
 
         farmerRepository.save(buyer);
 

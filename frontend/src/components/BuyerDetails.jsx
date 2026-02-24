@@ -24,7 +24,7 @@ export default function BuyerDetails() {
   useEffect(() => {
     (async () => {
       try {
-        const response = await apiGet(`/buyers/me/${buyerId}`);
+        const response = await apiGet(`/buyers/details/${buyerId}`);
         if (!response.ok) throw new Error('Could not load buyer details.');
         const data = await response.json();
         setBuyer(data);

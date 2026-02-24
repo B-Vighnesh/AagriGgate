@@ -18,6 +18,7 @@ public class FarmerRequestDTO {
     @NotBlank
     @Pattern(regexp = "^[0-9]{10}$", message = "phoneNo must be 10 digits")
     private String phoneNo;
+    private String state;
     @NotBlank
     @Size(min = 6, max = 100)
     private String password;
@@ -32,6 +33,8 @@ public class FarmerRequestDTO {
     public void setEmail(String email) { this.email = email; }
     public String getPhoneNo() { return phoneNo; }
     public void setPhoneNo(String phoneNo) { this.phoneNo = phoneNo; }
+    public String getState() { return state; }
+    public void setState(String state) { this.state = state; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 }

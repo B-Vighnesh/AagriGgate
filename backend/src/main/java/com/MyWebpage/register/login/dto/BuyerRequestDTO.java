@@ -17,7 +17,13 @@ public class BuyerRequestDTO {
     @NotBlank
     private String password;
 
+    private String firstName;
+
+    private String lastName;
+
     private String phoneNo;
+
+    private String state;
 
     private String district;
 
