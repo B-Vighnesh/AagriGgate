@@ -118,10 +118,15 @@ public class FarmerServiceImpl implements FarmerService {
 
     @Override
     @Transactional
-    public ResponseEntity<String> changePassword(String email, Long farmerId, String currentPassword, String newPassword) {
+    public ResponseEntity<String> changePassword(String username, Long farmerId, String currentPassword, String newPassword) {
         Farmer farmer = farmerRepo.findByFarmerId(farmerId);
         if (farmer == null) {
             return new ResponseEntity<>("Farmer not found", HttpStatus.NOT_FOUND);
+        }
+
+        Farmer authenticatedFarmer = farmerRepo.findByUsername(username);
+        if (authenticatedFarmer == null || !authenticatedFarmer.getFarmerId().equals(farmerId)) {
+            return new ResponseEntity<>("Unauthorized password change request", HttpStatus.UNAUTHORIZED);
         }
 
         if (!bCryptPasswordEncoder.matches(currentPassword, farmer.getPassword())) {
