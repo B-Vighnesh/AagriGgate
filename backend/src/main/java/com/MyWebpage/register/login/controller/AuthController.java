@@ -7,12 +7,8 @@ import com.MyWebpage.register.login.service.OtpService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSendException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,13 +20,65 @@ public class AuthController {
     private final EmailService emailService;
     private final OtpService otpService;
     private final FarmerService farmerService;
-
+    private final AuthService authService;
     public AuthController(EmailService emailService, OtpService otpService, FarmerService farmerService) {
         this.emailService = emailService;
         this.otpService = otpService;
         this.farmerService = farmerService;
     }
+    @PostMapping("/register/seller")
+    public ResponseEntity<AuthResponseDTO> registerSeller(
+            @RequestBody FarmerRequestDTO dto) {
 
+        return ResponseEntity.ok(
+                authService.register(dto, "SELLER"));
+    }
+
+    @PostMapping("/register/buyer")
+    public ResponseEntity<AuthResponseDTO> registerBuyer(
+            @RequestBody FarmerRequestDTO dto) {
+
+        return ResponseEntity.ok(
+                authService.register(dto, "BUYER"));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponseDTO> login(
+            @RequestBody AuthRequestDTO dto) {
+
+        return ResponseEntity.ok(
+                authService.login(dto));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(
+            Authentication authentication,
+            @RequestBody ChangePasswordDTO dto) {
+
+        Long farmerId =
+                Long.parseLong(authentication.getName());
+
+        authService.changePassword(
+                farmerId,
+                dto);
+
+        return ResponseEntity.ok("Password changed");
+    }
+
+    @DeleteMapping("/delete-account")
+    public ResponseEntity<String> deleteAccount(
+            Authentication authentication,
+            @RequestBody DeleteAccountDTO dto) {
+
+        Long farmerId =
+                Long.parseLong(authentication.getName());
+
+        authService.deleteAccount(
+                farmerId,
+                dto.getPassword());
+
+        return ResponseEntity.ok("Account deleted");
+    }
     @GetMapping("/isTokenValid")
     public ResponseEntity<Boolean> isTokenValid() {
         return new ResponseEntity<>(true, HttpStatus.OK);
