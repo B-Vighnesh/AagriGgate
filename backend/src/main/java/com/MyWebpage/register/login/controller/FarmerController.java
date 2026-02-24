@@ -137,10 +137,10 @@ public class FarmerController {
             @RequestBody ResetPasswordRequest resetPasswordRequest,
             @RequestHeader("Authorization") String token) {
         try {
-            String email = jwtService.extractUsername(token.substring(7));
+            String username = jwtService.extractUsername(token.substring(7));
 
             return farmerService.changePassword(
-                    email,
+                    username,
                     resetPasswordRequest.getFarmerId(),
                     resetPasswordRequest.getCurrentPassword(),
                     resetPasswordRequest.getNewPassword());
