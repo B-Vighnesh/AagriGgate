@@ -22,8 +22,4 @@ public interface AuthService {
             Long farmerId,
             String password);
 
-    void resetPassword(
-            String email,
-            String newPassword);
-
 }

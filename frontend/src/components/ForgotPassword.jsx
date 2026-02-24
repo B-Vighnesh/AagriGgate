@@ -5,9 +5,13 @@ import Card from './common/Card';
 import Toast from './common/Toast';
 import { requestJson } from '../lib/api';
 
+const STEPS = ['Enter Email', 'Verify OTP', 'Reset Password'];
+
 export default function ForgotPassword() {
   const navigate = useNavigate();
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -33,12 +37,46 @@ export default function ForgotPassword() {
     return true;
   };
 
+  const sendOtp = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    try {
+      await requestJson('/password/forgot', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+      setStep(2);
+      showToast('OTP sent to your email.', 'success');
+    } catch (err) {
+      showToast(err.message || 'Unable to send OTP.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyOtp = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    try {
+      await requestJson('/password/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp }),
+      });
+      setStep(3);
+      showToast('OTP verified.', 'success');
+    } catch (err) {
+      showToast(err.message || 'Invalid OTP.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetPassword = async (event) => {
     event.preventDefault();
     if (!validatePassword(newPassword, confirmPassword)) return;
     setLoading(true);
     try {
-      await requestJson('/auth/reset-password', {
+      await requestJson('/password/reset', {
         method: 'POST',
         body: JSON.stringify({ email, newPassword }),
       });
@@ -55,53 +93,77 @@ export default function ForgotPassword() {
     <section className="page page--center auth-page forgot-page">
       <Card className="auth-card forgot-card">
         <h1>Reset Your Password</h1>
-        <p>Enter your registered email and new password.</p>
+        <p>Step {step} of 3 - {STEPS[step - 1]}</p>
 
-        <form className="form" onSubmit={resetPassword}>
-          <label htmlFor="email">Registered Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
+        {step === 1 && (
+          <form className="form" onSubmit={sendOtp}>
+            <label htmlFor="email">Registered Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
+            <Button type="submit" loading={loading}>
+              {loading ? 'Sending OTP...' : 'Send OTP'}
+            </Button>
+          </form>
+        )}
 
-          <label htmlFor="newPassword">New Password</label>
-          <input
-            id="newPassword"
-            type={showPassword ? 'text' : 'password'}
-            value={newPassword}
-            onChange={(event) => {
-              setNewPassword(event.target.value);
-              if (confirmPassword) validatePassword(event.target.value, confirmPassword);
-            }}
-            required
-          />
+        {step === 2 && (
+          <form className="form" onSubmit={verifyOtp}>
+            <label htmlFor="otp">OTP</label>
+            <input
+              id="otp"
+              value={otp}
+              onChange={(event) => setOtp(event.target.value)}
+              required
+            />
+            <Button type="submit" loading={loading}>
+              {loading ? 'Verifying...' : 'Verify OTP'}
+            </Button>
+          </form>
+        )}
 
-          <label htmlFor="confirmPassword">Confirm Password</label>
-          <input
-            id="confirmPassword"
-            type={showPassword ? 'text' : 'password'}
-            value={confirmPassword}
-            onChange={(event) => {
-              setConfirmPassword(event.target.value);
-              validatePassword(newPassword, event.target.value);
-            }}
-            required
-          />
+        {step === 3 && (
+          <form className="form" onSubmit={resetPassword}>
+            <label htmlFor="newPassword">New Password</label>
+            <input
+              id="newPassword"
+              type={showPassword ? 'text' : 'password'}
+              value={newPassword}
+              onChange={(event) => {
+                setNewPassword(event.target.value);
+                if (confirmPassword) validatePassword(event.target.value, confirmPassword);
+              }}
+              required
+            />
 
-          {passwordError ? <small className="settings-error">{passwordError}</small> : null}
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <input
+              id="confirmPassword"
+              type={showPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(event) => {
+                setConfirmPassword(event.target.value);
+                validatePassword(newPassword, event.target.value);
+              }}
+              required
+            />
 
-          <label className="settings-checkbox">
-            <input type="checkbox" checked={showPassword} onChange={() => setShowPassword((prev) => !prev)} />
-            Show password
-          </label>
+            {passwordError ? <small className="settings-error">{passwordError}</small> : null}
 
-          <Button type="submit" loading={loading} disabled={Boolean(passwordError)}>
-            {loading ? 'Resetting...' : 'Reset Password'}
-          </Button>
-        </form>
+            <label className="settings-checkbox">
+              <input type="checkbox" checked={showPassword} onChange={() => setShowPassword((prev) => !prev)} />
+              Show password
+            </label>
+
+            <Button type="submit" loading={loading} disabled={Boolean(passwordError)}>
+              {loading ? 'Resetting...' : 'Reset Password'}
+            </Button>
+          </form>
+        )}
 
         <div className="auth-links">
           <span>Remembered it? <Link to="/login">Login</Link></span>

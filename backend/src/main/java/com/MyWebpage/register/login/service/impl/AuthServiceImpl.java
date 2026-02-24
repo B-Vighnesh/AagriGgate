@@ -9,6 +9,8 @@ import com.MyWebpage.register.login.repository.CropRepo;
 import com.MyWebpage.register.login.repository.FarmerRepo;
 import com.MyWebpage.register.login.security.jwt.JWTService;
 import com.MyWebpage.register.login.service.AuthService;
+import com.MyWebpage.register.login.service.EmailService;
+import com.MyWebpage.register.login.service.OtpService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,6 +33,8 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     private final JWTService jwtService;
+    private final EmailService emailService;
+    private final OtpService otpService;
 
     @Override
     public AuthResponseDTO register(
@@ -39,6 +43,9 @@ public class AuthServiceImpl implements AuthService {
 
         if (farmerRepo.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Email exists");
+        }
+        if (!otpService.isOtpVerified(dto.getEmail())) {
+            throw new RuntimeException("OTP not verified");
         }
 
         Farmer farmer = new Farmer();
@@ -58,6 +65,12 @@ public class AuthServiceImpl implements AuthService {
         farmer.setUsername(generatedUsername);
 
         farmer = farmerRepo.save(farmer);
+        otpService.setOtpVerifiedMap(dto.getEmail(), false);
+        emailService.sendMail(
+                farmer.getEmail(),
+                "Welcome to AagriGgate",
+                "Registration successful"
+        );
 
         String token =
                 jwtService.generateToken(
@@ -107,6 +120,11 @@ public class AuthServiceImpl implements AuthService {
         farmer.setPassword(passwordEncoder.encode(newPassword));
 
         farmerRepo.save(farmer);
+        emailService.sendMail(
+                farmer.getEmail(),
+                "Your password was changed",
+                "Password Change Notification"
+        );
     }
 
     @Override
@@ -128,13 +146,6 @@ public class AuthServiceImpl implements AuthService {
         }
 
         farmerRepo.delete(farmer);
-    }
-
-    @Override
-    public void resetPassword(String email, String newPassword) {
-        Farmer farmer = farmerRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("Farmer not found"));
-        farmer.setPassword(passwordEncoder.encode(newPassword));
-        farmerRepo.save(farmer);
     }
 
     private AuthResponseDTO buildResponse(
