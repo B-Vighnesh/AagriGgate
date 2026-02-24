@@ -1,15 +1,19 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.dto.AuthResponseDTO;
-import com.MyWebpage.register.login.model.Farmer;
-import org.springframework.http.ResponseEntity;
+import com.MyWebpage.register.login.dto.BuyerRequestDTO;
+import com.MyWebpage.register.login.dto.BuyerResponseDTO;
 
 public interface BuyerService {
-    ResponseEntity<Farmer> register(Farmer buyer);
-    AuthResponseDTO verify(Farmer buyer);
-    ResponseEntity<String> resetPassword(String email, String newPassword);
-    Farmer find(Long farmerId);
-    Farmer update(Farmer buyer);
-    ResponseEntity<String> delete(String password, Long farmerId);
-    ResponseEntity<String> changePassword(String email, Long farmerId, String currentPassword, String newPassword);
+
+    BuyerResponseDTO register(BuyerRequestDTO request);
+
+    BuyerResponseDTO getById(Long buyerId);
+
+    BuyerResponseDTO getCurrentBuyer(String email);
+
+    BuyerResponseDTO updateCurrentBuyer(String email,
+                                        BuyerRequestDTO request);
+
+    void deleteCurrentBuyer(String email);
+
 }
