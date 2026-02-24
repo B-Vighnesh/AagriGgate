@@ -3,8 +3,11 @@ package com.MyWebpage.register.login.controller;
 import com.MyWebpage.register.login.dto.AuthRequestDTO;
 import com.MyWebpage.register.login.dto.AuthResponseDTO;
 import com.MyWebpage.register.login.dto.FarmerRequestDTO;
+import com.MyWebpage.register.login.dto.VerifyOtpRequestDTO;
 import com.MyWebpage.register.login.model.ResetPasswordRequest;
 import com.MyWebpage.register.login.service.AuthService;
+import com.MyWebpage.register.login.service.EmailService;
+import com.MyWebpage.register.login.service.OtpService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -20,6 +23,25 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final EmailService emailService;
+    private final OtpService otpService;
+
+    @PostMapping("/register/send-otp")
+    public ResponseEntity<String> sendRegistrationOtp(@RequestBody FarmerRequestDTO dto) {
+        int otp = emailService.sendVerificationEmail1(dto.getEmail());
+        otpService.storeOtp(dto.getEmail(), otp);
+        return ResponseEntity.ok("OTP sent");
+    }
+
+    @PostMapping("/register/verify-otp")
+    public ResponseEntity<String> verifyRegistrationOtp(@RequestBody VerifyOtpRequestDTO dto) {
+        boolean verified = otpService.verifyOtp(dto.getEmail(), Integer.parseInt(dto.getOtp()));
+        if (!verified) {
+            throw new RuntimeException("Invalid OTP");
+        }
+        otpService.setOtpVerifiedMap(dto.getEmail(), true);
+        return ResponseEntity.ok("OTP verified");
+    }
 
     @PostMapping("/register/seller")
     public AuthResponseDTO registerSeller(@RequestBody FarmerRequestDTO dto) {
@@ -52,11 +74,5 @@ public class AuthController {
         Long farmerId = Long.parseLong(authentication.getName());
         authService.deleteAccount(farmerId, request.getCurrentPassword());
         return ResponseEntity.ok("Account deleted");
-    }
-
-    @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
-        authService.resetPassword(request.getEmail(), request.getNewPassword());
-        return ResponseEntity.ok("Password reset");
     }
 }

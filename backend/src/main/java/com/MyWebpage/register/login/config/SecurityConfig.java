@@ -49,9 +49,11 @@ public class SecurityConfig {
                 }))
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(
+                                "/api/v1/auth/register/send-otp",
+                                "/api/v1/auth/register/verify-otp",
                                 "/api/v1/auth/register/**",
                                 "/api/v1/auth/login",
-                                "/api/v1/auth/reset-password",
+                                "/api/v1/password/**",
                                 "/api/v1/admin/login",
                                 "/api/v1/admin/enquiry")
                         .permitAll()

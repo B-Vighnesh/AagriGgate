@@ -18,8 +18,20 @@ export const registerBuyer = async (payload) =>
     body: JSON.stringify(payload),
   });
 
+export const sendForgotPasswordOtp = async (email) =>
+  requestJson('/password/forgot', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+
+export const verifyForgotPasswordOtp = async (email, otp) =>
+  requestJson('/password/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email, otp }),
+  });
+
 export const resetPassword = async (email, newPassword) =>
-  requestJson('/auth/reset-password', {
+  requestJson('/password/reset', {
     method: 'POST',
     body: JSON.stringify({ email, newPassword }),
   });
