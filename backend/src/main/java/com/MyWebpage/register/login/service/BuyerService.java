@@ -5,15 +5,10 @@ import com.MyWebpage.register.login.dto.BuyerResponseDTO;
 
 public interface BuyerService {
 
-    BuyerResponseDTO register(BuyerRequestDTO request);
+    BuyerResponseDTO getProfile(Long farmerId);
 
-    BuyerResponseDTO getById(Long buyerId);
+    BuyerResponseDTO updateProfile(Long farmerId, BuyerRequestDTO request);
 
-    BuyerResponseDTO getCurrentBuyer(Long farmerId);
-
-    BuyerResponseDTO updateCurrentBuyer(Long farmerId,
-                                        BuyerRequestDTO request);
-
-    void deleteCurrentBuyer(Long farmerId);
+    void deleteProfile(Long farmerId);
 
 }

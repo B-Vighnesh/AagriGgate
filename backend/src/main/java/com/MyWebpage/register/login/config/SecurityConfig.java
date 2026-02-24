@@ -49,21 +49,12 @@ public class SecurityConfig {
                 }))
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(
-                                "/api/v1/farmers/register",
-                                "/api/v1/farmers/login",
-                                "/api/v1/farmers/resetpassword",
-                                "/api/v1/buyers/register",
-                                "/api/v1/buyers/login",
-                                "/api/v1/buyers/resetpassword",
-                                "/api/v1/auth/send-otp/**",
-                                "/api/v1/auth/verify-otp",
-                                "/api/v1/auth/reset-otp/**",
+                                "/api/v1/auth/register/**",
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/reset-password",
                                 "/api/v1/admin/login",
-                                "/api/v1/admin/enquiry",
-                                "/api/v1/farmers/verify")
+                                "/api/v1/admin/enquiry")
                         .permitAll()
-                        .requestMatchers("/api/v1/buyers/details/**")
-                        .hasAnyRole("BUYER", "SELLER")
                         .requestMatchers("/api/v1/buyers/**", "/api/v1/buyer/approach/**").hasRole("BUYER")
                         .requestMatchers("/api/v1/farmers/**", "/api/v1/crops/**", "/api/v1/seller/approach/**", "/api/v1/saved-market-data/**", "/api/v1/market-price/**", "/api/v1/weather/**").hasRole("SELLER")
 
