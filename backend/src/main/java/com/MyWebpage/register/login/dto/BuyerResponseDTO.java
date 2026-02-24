@@ -13,7 +13,13 @@ public class BuyerResponseDTO {
 
     private String email;
 
+    private String firstName;
+
+    private String lastName;
+
     private String phoneNo;
+
+    private String state;
 
     private String district;
 

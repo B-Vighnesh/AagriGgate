@@ -122,8 +122,8 @@ public class FarmerController {
     public ApiResponse<FarmerResponseDTO> updateProfile(
             @RequestBody FarmerUpdateDTO dto,
             Authentication authentication) {
-        String email = authentication.getName();
-        FarmerResponseDTO response = farmerService.updateProfile(dto, email);
+        String username = authentication.getName();
+        FarmerResponseDTO response = farmerService.updateProfile(dto, username);
         return ApiResponse.success("Profile updated", response);
     }
 
@@ -158,6 +158,7 @@ public class FarmerController {
         farmer.setFirstName(dto.getFirstName());
         farmer.setLastName(dto.getLastName());
         farmer.setEmail(dto.getEmail());
+        farmer.setState(dto.getState());
         farmer.setPhoneNo(dto.getPhoneNo());
         farmer.setPassword(dto.getPassword());
         return farmer;

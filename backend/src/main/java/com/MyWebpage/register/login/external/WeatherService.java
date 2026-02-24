@@ -1,6 +1,5 @@
 package com.MyWebpage.register.login.external;
 
-import com.MyWebpage.register.login.exception.ResourceNotFoundException;
 import com.MyWebpage.register.login.model.Farmer;
 import com.MyWebpage.register.login.repository.FarmerRepo;
 import org.slf4j.Logger;
@@ -13,7 +12,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class WeatherService {
@@ -57,8 +55,11 @@ public class WeatherService {
         }
     }
 
-    public Map<String, Object> getWeatherByFarmerEmail(String username) {
+    public Map<String, Object> getWeatherByFarmerUsername(String username) {
         Farmer farmer = farmerRepo.findByUsername(username);
+        if (farmer == null) {
+            throw new RuntimeException("Farmer not found");
+        }
 
         String queryCity = firstNonBlank(farmer.getCity(), farmer.getDistrict(), farmer.getState());
         if (queryCity == null) {

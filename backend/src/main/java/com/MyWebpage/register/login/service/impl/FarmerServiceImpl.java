@@ -253,9 +253,11 @@ public class FarmerServiceImpl implements FarmerService {
 
     @Override
     @Transactional
-    public FarmerResponseDTO updateProfile(FarmerUpdateDTO dto, String email) {
-        Farmer existingFarmer = farmerRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Farmer not found"));
+    public FarmerResponseDTO updateProfile(FarmerUpdateDTO dto, String username) {
+        Farmer existingFarmer = farmerRepo.findByUsername(username);
+        if (existingFarmer == null) {
+            throw new RuntimeException("Farmer not found");
+        }
 
         if (dto.getFirstName() != null) {
             existingFarmer.setFirstName(dto.getFirstName());

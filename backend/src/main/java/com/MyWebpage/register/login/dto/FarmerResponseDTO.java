@@ -7,6 +7,7 @@ public class FarmerResponseDTO {
     private String lastName;
     private String email;
     private String phoneNo;
+    private String state;
     private String role;
 
     public Long getFarmerId() { return farmerId; }
@@ -21,6 +22,8 @@ public class FarmerResponseDTO {
     public void setEmail(String email) { this.email = email; }
     public String getPhoneNo() { return phoneNo; }
     public void setPhoneNo(String phoneNo) { this.phoneNo = phoneNo; }
+    public String getState() { return state; }
+    public void setState(String state) { this.state = state; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 }

@@ -19,5 +19,5 @@ public interface FarmerService {
     Farmer findByEmail(String email);
     Farmer findByUsername(String username);
     ResponseEntity<String> resetPassword(String email, String newPassword);
-    FarmerResponseDTO updateProfile(FarmerUpdateDTO dto, String email);
+    FarmerResponseDTO updateProfile(FarmerUpdateDTO dto, String username);
 }
