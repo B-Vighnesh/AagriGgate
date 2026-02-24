@@ -40,19 +40,19 @@ public class BuyerController {
 
     @GetMapping("/me")
     public BuyerResponseDTO getCurrentBuyer(Authentication authentication) {
-        String username = authentication.getName();
-        return buyerService.getCurrentBuyer(username);
+        Long farmerId = Long.parseLong(authentication.getName());
+        return buyerService.getCurrentBuyer(farmerId);
     }
 
     @PutMapping("/me")
     public BuyerResponseDTO update(Authentication authentication, @RequestBody BuyerRequestDTO request) {
-        String username = authentication.getName();
-        return buyerService.updateCurrentBuyer(username, request);
+        Long farmerId = Long.parseLong(authentication.getName());
+        return buyerService.updateCurrentBuyer(farmerId, request);
     }
 
     @DeleteMapping("/me")
     public void delete(Authentication authentication) {
-        String username = authentication.getName();
-        buyerService.deleteCurrentBuyer(username);
+        Long farmerId = Long.parseLong(authentication.getName());
+        buyerService.deleteCurrentBuyer(farmerId);
     }
 }

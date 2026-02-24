@@ -30,7 +30,7 @@ public class WeatherController {
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getWeatherForLoggedInFarmer(
             Authentication authentication) {
-        String username = authentication.getName();
-        return ResponseEntity.ok(ApiResponse.success("Weather fetched", weatherService.getWeatherByFarmerUsername(username)));
+        Long farmerId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success("Weather fetched", weatherService.getWeatherByFarmerId(farmerId)));
     }
 }

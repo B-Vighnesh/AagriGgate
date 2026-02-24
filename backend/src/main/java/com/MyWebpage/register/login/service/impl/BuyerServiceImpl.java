@@ -7,8 +7,6 @@ import com.MyWebpage.register.login.model.Farmer;
 import com.MyWebpage.register.login.repository.FarmerRepo;
 import com.MyWebpage.register.login.service.BuyerService;
 
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,14 +68,11 @@ public class BuyerServiceImpl implements BuyerService {
     }
 
     @Override
-    public BuyerResponseDTO getCurrentBuyer(String username) {
-
-        Farmer buyer =
-                farmerRepository
-                        .findByUsername(username);
-
-        if (buyer == null ||
-                !buyer.getRole().equals("BUYER")) {
+    public BuyerResponseDTO getCurrentBuyer(Long farmerId) {
+        Farmer buyer = farmerRepository
+                .findById(farmerId)
+                .orElse(null);
+        if (buyer == null || !buyer.getRole().equals("BUYER")) {
 
             throw new RuntimeException("Buyer not found");
         }
@@ -87,10 +82,10 @@ public class BuyerServiceImpl implements BuyerService {
 
     @Override
     public BuyerResponseDTO updateCurrentBuyer(
-            String username,
+            Long farmerId,
             BuyerRequestDTO request) {
 
-        Farmer buyer = farmerRepository.findByUsername(username);
+        Farmer buyer = farmerRepository.findById(farmerId).orElse(null);
         if (buyer == null || !buyer.getRole().equals("BUYER")) {
             throw new RuntimeException("Buyer not found");
         }
@@ -120,13 +115,12 @@ public class BuyerServiceImpl implements BuyerService {
     }
 
     @Override
-    public void deleteCurrentBuyer(String username) {
+    public void deleteCurrentBuyer(Long farmerId) {
+        Farmer buyer = farmerRepository
+                .findById(farmerId)
+                .orElse(null);
 
-        Farmer buyer =
-                farmerRepository
-                        .findByUsername(username);
-
-        if (buyer == null) {
+        if (buyer == null || !buyer.getRole().equals("BUYER")) {
 
             throw new RuntimeException("Buyer not found");
         }
