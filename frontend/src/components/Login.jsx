@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
-import { requestJson, ApiError, apiGet } from '../lib/api';
+import { requestJson, ApiError } from '../lib/api';
 import { isLoggedIn, setAuth, clearAuth, hasCompleteSession } from '../lib/auth';
 
 function normalizeRole(role) {
@@ -39,16 +39,13 @@ export default function Login() {
       }
 
       try {
-        const response = await apiGet('/auth/isTokenValid');
-        if (response.ok) {
-          setAlreadyIn(true);
-        } else {
-          clearAuth();
-          setAlreadyIn(false);
-        }
-      } catch {
-        // When server is down, keep existing login guard behavior.
+        const storedRole = localStorage.getItem('role');
+        const endpoint = storedRole === 'buyer' ? '/buyers/me' : '/farmers/me';
+        await requestJson(endpoint, { method: 'GET' });
         setAlreadyIn(true);
+      } catch {
+        clearAuth();
+        setAlreadyIn(false);
       } finally {
         setCheckingSession(false);
       }
@@ -70,8 +67,7 @@ export default function Login() {
     event.preventDefault();
     setLoading(true);
     try {
-      const path = userType === 'buyer' ? '/buyers/login' : '/farmers/login';
-      const data = await requestJson(path, {
+      const data = await requestJson('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ principal, password }),
       });

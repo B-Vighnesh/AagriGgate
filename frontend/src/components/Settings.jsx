@@ -60,10 +60,9 @@ export default function Settings() {
     if (passwordError) return;
     setLoading(true);
     try {
-      const endpoint = role === 'buyer' ? '/buyers/change-password' : '/farmers/change-password';
-      const response = await apiFetch(endpoint, {
+      const response = await apiFetch('/auth/change-password', {
         method: 'POST',
-        body: JSON.stringify({ farmerId, currentPassword, newPassword }),
+        body: JSON.stringify({ currentPassword, newPassword }),
       });
       if (response.status === 401) {
         showToast('Session expired. Please login again.', 'error');
@@ -86,10 +85,9 @@ export default function Settings() {
   const deleteAccount = async () => {
     setDeleteLoading(true);
     try {
-      const endpoint = role === 'buyer' ? '/buyers' : '/farmers';
-      const response = await apiFetch(endpoint, {
+      const response = await apiFetch('/auth/delete-account', {
         method: 'DELETE',
-        body: JSON.stringify({ farmerId, currentPassword: deletePassword }),
+        body: JSON.stringify({ currentPassword: deletePassword }),
       });
       if (response.status === 401) {
         showToast('Incorrect password.', 'error');

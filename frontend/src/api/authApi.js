@@ -1,14 +1,37 @@
 import { requestJson } from '../lib/api';
 
-export const validateToken = async () => {
-  return requestJson('/auth/isTokenValid');
-};
+export const login = async (principal, password) =>
+  requestJson('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ principal, password }),
+  });
 
-export const sendResetOtp = async (principal) => {
-  return requestJson(`/auth/reset-otp/${encodeURIComponent(principal)}`, { method: 'POST' });
-};
+export const registerSeller = async (payload) =>
+  requestJson('/auth/register/seller', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 
-export const verifyOtp = async (email, otp) => {
-  const params = new URLSearchParams({ email, otp });
-  return requestJson(`/auth/verify-otp?${params.toString()}`, { method: 'POST' });
-};
+export const registerBuyer = async (payload) =>
+  requestJson('/auth/register/buyer', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const resetPassword = async (email, newPassword) =>
+  requestJson('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, newPassword }),
+  });
+
+export const changePassword = async (currentPassword, newPassword) =>
+  requestJson('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+
+export const deleteAccount = async (currentPassword) =>
+  requestJson('/auth/delete-account', {
+    method: 'DELETE',
+    body: JSON.stringify({ currentPassword }),
+  });
