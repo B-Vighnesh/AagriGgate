@@ -80,7 +80,12 @@ export async function requestJson(path, options = {}) {
     throw await parseErrorResponse(response);
   }
   if (response.status === 204) return null;
-  return response.json();
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+  const text = await response.text();
+  return text || null;
 }
 
 export const apiGet = (path, headers = {}) =>
