@@ -28,6 +28,8 @@ public class BuyerController {
         return buyerService.register(request);
     }
 
+
+
     @GetMapping("/details/{buyerId}")
     public BuyerResponseDTO getById(@PathVariable Long buyerId) {
         return buyerService.getById(buyerId);

@@ -12,6 +12,7 @@ import com.MyWebpage.register.login.service.EmailService;
 import com.MyWebpage.register.login.service.FarmerService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -28,135 +29,31 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/farmers")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
+@RequiredArgsConstructor
 public class FarmerController {
 
     private final FarmerService farmerService;
-    private final EmailService emailService;
 
-    public FarmerController(FarmerService farmerService, EmailService emailService) {
-        this.farmerService = farmerService;
-        this.emailService = emailService;
-    }
+    @GetMapping("/me")
+    public FarmerResponseDTO getProfile(
+            Authentication auth) {
 
-    @GetMapping("/sessionid")
-    public String login(HttpServletRequest request) {
-        return farmerService.login() + " " + request.getSession().getId();
-    }
+        Long farmerId =
+                Long.parseLong(auth.getName());
 
-    @GetMapping("/csrf")
-    public CsrfToken getToken(HttpServletRequest request) {
-        return (CsrfToken) request.getAttribute("_csrf");
-    }
-
-    @GetMapping("/{farmerId}")
-    public ResponseEntity<Farmer> getFarmer(@PathVariable Long farmerId) {
-        Farmer curFarmer = farmerService.find(farmerId);
-        if (curFarmer == null || "BUYER".equals(curFarmer.getRole())) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(curFarmer, HttpStatus.OK);
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO requestDTO) {
-        try {
-            Farmer farmer = new Farmer();
-            farmer.setUsername(requestDTO.getPrincipal());
-            farmer.setPassword(requestDTO.getPassword());
-            AuthResponseDTO authResponse = farmerService.verify(farmer);
-            if ("BUYER".equals(authResponse.getRole())) {
-                return new ResponseEntity<>(new AuthResponseDTO(), HttpStatus.UNAUTHORIZED);
-            }
-            return ResponseEntity.ok(authResponse);
-        } catch (Exception e) {
-            return new ResponseEntity<>(new AuthResponseDTO(), HttpStatus.UNAUTHORIZED);
-        }
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<Farmer> register(@Valid @RequestBody FarmerRequestDTO dto) {
-        Farmer farmer = toFarmer(dto);
-        farmer.setRole("SELLER");
-        ResponseEntity<Farmer> response = farmerService.register(farmer);
-
-        if (!response.getStatusCode().equals(HttpStatus.OK) || response.getBody() == null) {
-            return response;
-        }
-
-        String to = response.getBody().getEmail();
-        String role = "SELLER".equals(response.getBody().getRole()) ? "Farmer" : "Trader";
-        String subject = "Welcome to AggriGgate - Registration Successful";
-        String msg = "Dear " + role + ",\n\n"
-                + "Congratulations! Your registration with AggriGgate was successful.\n\n"
-                + "Best regards,\nAggriGgate Team";
-        emailService.sendMail(to, msg, subject);
-        return response;
-    }
-
-    @PostMapping("/resetpassword")
-    public ResponseEntity<String> resetpassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
-        return farmerService.resetPassword(resetPasswordRequest.getEmail(), resetPasswordRequest.getNewPassword());
-    }
-
-    @DeleteMapping
-    public ResponseEntity<String> delete(@RequestBody ResetPasswordRequest resetPasswordRequest) {
-        return farmerService.delete(resetPasswordRequest.getCurrentPassword(), resetPasswordRequest.getFarmerId());
-    }
-
-    @PutMapping("/{farmerId}")
-    public ResponseEntity<Farmer> update(@RequestBody Farmer farmer, @PathVariable Long farmerId) {
-        farmer.setFarmerId(farmerId);
-        Farmer updatedFarmer = farmerService.update(farmer);
-        if (updatedFarmer == null) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<>(updatedFarmer, HttpStatus.OK);
+        return farmerService.getProfile(farmerId);
     }
 
     @PutMapping("/me")
-    public ApiResponse<FarmerResponseDTO> updateProfile(
-            @RequestBody FarmerUpdateDTO dto,
-            Authentication authentication) {
-        Long farmerId = Long.parseLong(authentication.getName());
-        FarmerResponseDTO response = farmerService.updateProfile(dto, farmerId);
-        return ApiResponse.success("Profile updated", response);
-    }
+    public FarmerResponseDTO updateProfile(
+            Authentication auth,
+            @RequestBody FarmerUpdateDTO dto) {
 
-    @GetMapping("/findEmail/{email}")
-    public Boolean findEmail(@PathVariable String email) {
-        return farmerService.findEmail(email);
-    }
+        Long farmerId =
+                Long.parseLong(auth.getName());
 
-    @PostMapping("/change-password")
-    public ResponseEntity<String> changePassword(
-            @RequestBody ResetPasswordRequest resetPasswordRequest,
-            Authentication authentication) {
-        try {
-            Long farmerId = Long.parseLong(authentication.getName());
-
-            return farmerService.changePassword(
-                    farmerId,
-                    resetPasswordRequest.getFarmerId(),
-                    resetPasswordRequest.getCurrentPassword(),
-                    resetPasswordRequest.getNewPassword());
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while changing the password.");
-        }
-    }
-
-    private Farmer toFarmer(FarmerRequestDTO dto) {
-        Farmer farmer = new Farmer();
-        farmer.setUsername(dto.getUsername());
-        farmer.setFirstName(dto.getFirstName());
-        farmer.setLastName(dto.getLastName());
-        farmer.setEmail(dto.getEmail());
-        farmer.setState(dto.getState());
-        farmer.setPhoneNo(dto.getPhoneNo());
-        farmer.setPassword(dto.getPassword());
-        return farmer;
+        return farmerService.updateProfile(
+                farmerId,
+                dto);
     }
 }
