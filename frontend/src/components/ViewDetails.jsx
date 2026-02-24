@@ -65,10 +65,10 @@ export default function ViewDetails() {
       try {
         const detailRes = await safeFetch(`/crops/legacy/${cropId}`, { method: 'GET' });
         const imgRes = await safeFetch(`/crops/legacy/${cropId}/image`, { method: 'GET' });
-
         if (!detailRes.ok) throw new Error('This crop is not available.');
         const detailData = await parseJsonIfPresent(detailRes);
-        if (!detailData) throw new Error('This crop is not available.');
+        if (!detailData.cropID) throw new Error('This crop is not available.');
+
         if (!mounted) return;
         setCropDetails(detailData);
 
