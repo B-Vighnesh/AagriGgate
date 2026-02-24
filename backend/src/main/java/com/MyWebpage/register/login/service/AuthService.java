@@ -15,10 +15,15 @@ public interface AuthService {
 
     void changePassword(
             Long farmerId,
-            ChangePasswordDTO dto);
+            String currentPassword,
+            String newPassword);
 
     void deleteAccount(
             Long farmerId,
             String password);
+
+    void resetPassword(
+            String email,
+            String newPassword);
 
 }
