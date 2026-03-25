@@ -105,7 +105,7 @@ export default function ViewAllCrop() {
   const filteredCrops = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    const matchedCrops = crops.filter((crop) => {
+    return crops.filter((crop) => {
       const cropName = (crop.cropName || '').toLowerCase();
       const cropType = (crop.cropType || '').toLowerCase();
       const region = (crop.region || '').toLowerCase();
@@ -119,8 +119,6 @@ export default function ViewAllCrop() {
 
       return matchQuery && matchRegion && matchCategory && matchFarmer && matchPrice;
     });
-
-    return [...matchedCrops].sort((a, b) => Number(b.cropID || 0) - Number(a.cropID || 0));
   }, [crops, searchQuery, filters]);
 
   return (
