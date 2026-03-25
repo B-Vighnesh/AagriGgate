@@ -24,6 +24,7 @@ public class BuyerController {
         Long farmerId = Long.parseLong(auth.getName());
         return buyerService.getProfile(farmerId);
     }
+
     @GetMapping("/me/{buyerId}")
     public BuyerResponseDTO getBuyer(Authentication auth) {
         Long farmerId = Long.parseLong(auth.getName());
