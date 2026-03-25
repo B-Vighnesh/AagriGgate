@@ -14,7 +14,7 @@ import java.util.List;
 
 @Repository
 public interface CropRepo extends JpaRepository<Crop,Long> {
-    @Query("SELECT c FROM Crop c WHERE c.farmer.farmerId = :farmerId")
+    @Query("SELECT c FROM Crop c WHERE c.farmer.farmerId = :farmerId ORDER BY c.cropID DESC")
     List<Crop> findByFarmerId(@Param("farmerId") Long farmerId);
 
     List<Crop> findByCropName(String cropName);
