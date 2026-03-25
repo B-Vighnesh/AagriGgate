@@ -19,6 +19,7 @@ public class BuyerMapper {
         farmer.setPhoneNo(dto.getPhoneNo());
         farmer.setState(dto.getState());
         farmer.setDistrict(dto.getDistrict());
+        farmer.setDob(dto.getDob());
 
         return farmer;
     }
@@ -34,6 +35,7 @@ public class BuyerMapper {
                 .phoneNo(farmer.getPhoneNo())
                 .state(farmer.getState())
                 .district(farmer.getDistrict())
+                .dob(farmer.getDob())
                 .build();
     }
 

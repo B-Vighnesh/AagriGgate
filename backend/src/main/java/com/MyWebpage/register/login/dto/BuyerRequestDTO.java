@@ -27,4 +27,6 @@ public class BuyerRequestDTO {
 
     private String district;
 
+    private String dob;
+
 }

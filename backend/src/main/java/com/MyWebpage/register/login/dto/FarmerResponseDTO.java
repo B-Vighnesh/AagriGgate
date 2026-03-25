@@ -18,6 +18,16 @@ public class FarmerResponseDTO {
     public void setDistrict(String district) {
         this.district = district;
     }
+
+    private String dob;
+
+    public String getDob() {
+        return dob;
+    }
+
+    public void setDob(String dob) {
+        this.dob = dob;
+    }
     public Long getFarmerId() { return farmerId; }
     public void setFarmerId(Long farmerId) { this.farmerId = farmerId; }
     public String getUsername() { return username; }

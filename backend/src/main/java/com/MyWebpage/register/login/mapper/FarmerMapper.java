@@ -17,7 +17,7 @@ public class FarmerMapper {
         dto.setState(farmer.getState());
         dto.setDistrict(farmer.getDistrict());
         dto.setRole(farmer.getRole());
-
+        dto.setDob(farmer.getDob());
         return dto;
     }
 }
