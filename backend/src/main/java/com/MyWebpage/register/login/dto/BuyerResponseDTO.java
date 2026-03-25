@@ -23,4 +23,7 @@ public class BuyerResponseDTO {
 
     private String district;
 
+    private String dob;
+
+
 }
