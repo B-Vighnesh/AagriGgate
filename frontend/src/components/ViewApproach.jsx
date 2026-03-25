@@ -93,8 +93,11 @@ export default function ViewApproach() {
   };
 
   const filteredApproaches = useMemo(() => {
-    if (filter === 'All') return approaches;
-    return approaches.filter((item) => (item.status || '').toLowerCase() === filter.toLowerCase());
+    const matchedApproaches = filter === 'All'
+      ? approaches
+      : approaches.filter((item) => (item.status || '').toLowerCase() === filter.toLowerCase());
+
+    return [...matchedApproaches].sort((a, b) => Number(b.approachId || 0) - Number(a.approachId || 0));
   }, [approaches, filter]);
 
   if (loading) {

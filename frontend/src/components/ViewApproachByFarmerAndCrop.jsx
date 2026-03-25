@@ -73,8 +73,11 @@ export default function ViewApproachByFarmerAndCrop() {
   }, [farmerId, cropId, role]);
 
   const filteredApproaches = useMemo(() => {
-    if (filterStatus === 'All') return approaches;
-    return approaches.filter((approach) => (approach.status || '').toLowerCase() === filterStatus.toLowerCase());
+    const matchedApproaches = filterStatus === 'All'
+      ? approaches
+      : approaches.filter((approach) => (approach.status || '').toLowerCase() === filterStatus.toLowerCase());
+
+    return [...matchedApproaches].sort((a, b) => Number(b.approachId || 0) - Number(a.approachId || 0));
   }, [approaches, filterStatus]);
 
   const handleAction = async (approachId, accept) => {

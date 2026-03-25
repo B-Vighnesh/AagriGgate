@@ -65,13 +65,15 @@ export default function ViewCrop() {
   }, []);
 
   const filteredCrops = useMemo(() => {
-    if (!query.trim()) return crops;
-    const q = query.toLowerCase();
-    return crops.filter((crop) =>
-      (crop.cropName || '').toLowerCase().includes(q) ||
-      (crop.cropType || '').toLowerCase().includes(q) ||
-      (crop.region || '').toLowerCase().includes(q)
-    );
+    const baseList = !query.trim()
+      ? crops
+      : crops.filter((crop) =>
+          (crop.cropName || '').toLowerCase().includes(query.toLowerCase()) ||
+          (crop.cropType || '').toLowerCase().includes(query.toLowerCase()) ||
+          (crop.region || '').toLowerCase().includes(query.toLowerCase())
+        );
+
+    return [...baseList].sort((a, b) => Number(b.cropID || 0) - Number(a.cropID || 0));
   }, [crops, query]);
 
   if (loading) {
