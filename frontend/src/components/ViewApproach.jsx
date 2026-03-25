@@ -23,6 +23,8 @@ export default function ViewApproach() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('All');
+  const [selectedBuyer, setSelectedBuyer] = useState(null);
+  const [buyerLoading, setBuyerLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
 
   const showToast = (message, type = 'info') => {
@@ -73,6 +75,20 @@ export default function ViewApproach() {
       loadApproaches();
     } catch (err) {
       showToast(err.message || 'Unable to process request.', 'error');
+    }
+  };
+
+  const onViewBuyer = async (buyerId) => {
+    setBuyerLoading(true);
+    try {
+      const data = await requestJson(`/buyers/me/${buyerId}`, {
+        method: 'GET',
+      });
+      setSelectedBuyer(data);
+    } catch (err) {
+      showToast(err.message || 'Unable to load buyer details.', 'error');
+    } finally {
+      setBuyerLoading(false);
     }
   };
 
@@ -134,7 +150,9 @@ export default function ViewApproach() {
 
               <div className="approach-actions">
                 <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${item.cropId}`)}>View Crop</Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate(`/view-buyer/${item.userId}`)}>View Buyer</Button>
+                <Button variant="ghost" size="sm" onClick={() => onViewBuyer(item.userId)}>
+                  View Buyer
+                </Button>
                 {(item.status || '').toLowerCase() === 'pending' ? (
                   <>
                     <Button size="sm" onClick={() => onAction(item.approachId, true)}>Accept</Button>
@@ -145,7 +163,59 @@ export default function ViewApproach() {
             </Card>
           ))}
         </div>
+
       </div>
+
+      {buyerLoading ? (
+        <div className="confirm-overlay">
+          <Card className="confirm-card text-center">
+            <h3>Loading Buyer Details</h3>
+            <p>Please wait while we fetch buyer information.</p>
+          </Card>
+        </div>
+      ) : null}
+
+      {selectedBuyer ? (
+        <div className="confirm-overlay" onClick={() => setSelectedBuyer(null)}>
+          <Card className="confirm-card" onClick={(event) => event.stopPropagation()}>
+            <h3>Buyer Details</h3>
+            <p>Details for the selected buyer request.</p>
+
+            <div className="account-info-list">
+              <div className="account-info-row">
+                <span>Username</span>
+                <strong>{selectedBuyer?.username || '-'}</strong>
+              </div>
+              <div className="account-info-row">
+                <span>Name</span>
+                <strong>{`${selectedBuyer?.firstName || ''} ${selectedBuyer?.lastName || ''}`.trim() || '-'}</strong>
+              </div>
+              <div className="account-info-row">
+                <span>Email</span>
+                <strong>{selectedBuyer?.email || '-'}</strong>
+              </div>
+              <div className="account-info-row">
+                <span>Phone</span>
+                <strong>{selectedBuyer?.phoneNo || '-'}</strong>
+              </div>
+              <div className="account-info-row">
+                <span>State</span>
+                <strong>{selectedBuyer?.state || '-'}</strong>
+              </div>
+              <div className="account-info-row">
+                <span>District</span>
+                <strong>{selectedBuyer?.district || '-'}</strong>
+              </div>
+            </div>
+
+            <div className="confirm-actions">
+              <Button variant="outline" onClick={() => setSelectedBuyer(null)}>
+                Close
+              </Button>
+            </div>
+          </Card>
+        </div>
+      ) : null}
 
       <Toast message={toast.message} type={toast.type} />
     </section>

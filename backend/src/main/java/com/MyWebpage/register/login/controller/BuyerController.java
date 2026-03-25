@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,9 +27,8 @@ public class BuyerController {
     }
 
     @GetMapping("/me/{buyerId}")
-    public BuyerResponseDTO getBuyer(Authentication auth) {
-        Long farmerId = Long.parseLong(auth.getName());
-        return buyerService.getProfile(farmerId);
+    public BuyerResponseDTO getBuyer(@PathVariable Long buyerId) {
+        return buyerService.getProfile(buyerId);
     }
 
     @PutMapping("/me")
