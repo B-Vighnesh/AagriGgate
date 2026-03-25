@@ -24,13 +24,17 @@ public class BuyerController {
         Long farmerId = Long.parseLong(auth.getName());
         return buyerService.getProfile(farmerId);
     }
+    @GetMapping("/me/{buyerId}")
+    public BuyerResponseDTO getBuyer(Authentication auth) {
+        Long farmerId = Long.parseLong(auth.getName());
+        return buyerService.getProfile(farmerId);
+    }
 
     @PutMapping("/me")
     public BuyerResponseDTO updateProfile(Authentication auth, @RequestBody BuyerRequestDTO request) {
         Long farmerId = Long.parseLong(auth.getName());
         return buyerService.updateProfile(farmerId, request);
     }
-
 //    @DeleteMapping("/me")
 //    public void deleteProfile(Authentication auth) {
 //        Long farmerId = Long.parseLong(auth.getName());

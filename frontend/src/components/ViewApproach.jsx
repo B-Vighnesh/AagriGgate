@@ -4,7 +4,7 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
-import { apiFetch, apiGet } from '../lib/api';
+import { apiFetch, requestJson } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 const STATUS_CLASS = {
@@ -34,13 +34,17 @@ export default function ViewApproach() {
     setLoading(true);
     setError('');
     try {
-      const response = await apiGet(`/seller/approach/requests/farmer/${farmerId}`);
-      if (!response.ok) throw new Error('No requests found.');
-      const data = await response.json();
+      const data = await requestJson(`/seller/approach/requests/farmer/${farmerId}`, {
+        method: 'GET',
+      });
       setApproaches(Array.isArray(data) ? data : []);
     } catch (err) {
       setApproaches([]);
-      setError(err.message || 'Server busy. Please refresh.');
+      if (err?.message === 'Request failed with status 404') {
+        setError('No requests found.');
+      } else {
+        setError(err.message || 'Server busy. Please refresh.');
+      }
     } finally {
       setLoading(false);
     }
