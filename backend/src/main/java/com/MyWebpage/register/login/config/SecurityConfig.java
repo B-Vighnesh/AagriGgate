@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/v1/buyers/me/**").hasAnyRole("SELLER","BUYER")
                         .requestMatchers("/api/v1/buyers/**", "/api/v1/buyer/approach/**").hasRole("BUYER")
-                        .requestMatchers("/api/v1/farmers/**", "/api/v1/crops/**", "/api/v1/seller/approach/**", "/api/v1/saved-market-data/**", "/api/v1/market-price/**", "/api/v1/weather/**").hasRole("SELLER")
+                        .requestMatchers("/api/v1/farmers/**", "/api/v1/crops/farmer/**", "/api/v1/seller/approach/**", "/api/v1/saved-market-data/**", "/api/v1/market-price/**", "/api/v1/weather/**").hasRole("SELLER")
 
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
