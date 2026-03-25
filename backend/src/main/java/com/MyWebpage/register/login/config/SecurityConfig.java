@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(request -> {
                     var source = new org.springframework.web.cors.CorsConfiguration();
-                    source.setAllowedOrigins(List.of("http://localhost:3000","http://localhost:5173"));
+                    source.setAllowedOrigins(List.of("http://localhost:3000","http://localhost:5173","https://aagriggate.vercel.app"));
                     source.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     source.setAllowedHeaders(List.of("*"));
                     source.setAllowCredentials(true);
