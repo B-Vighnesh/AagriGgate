@@ -4,7 +4,7 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
-import { apiFetch, apiGet } from '../lib/api';
+import { apiFetch, requestJson } from '../lib/api';
 import { getRole, getToken } from '../lib/auth';
 
 const STATUS_CLASS = {
@@ -36,16 +36,17 @@ export default function ViewApproachByFarmerAndCrop() {
     setError('');
 
     try {
-      const response = await apiGet(`/seller/approach/requests/farmer/${farmerId}/${cropId}`);
-      if (!response.ok) {
-        throw new Error(response.status === 404 ? 'No approach records found for this crop.' : 'Unable to load requests.');
-      }
-
-      const data = await response.json();
+      const data = await requestJson(`/seller/approach/requests/farmer/${farmerId}/${cropId}`, {
+        method: 'GET',
+      });
       setApproaches(Array.isArray(data) ? data : []);
     } catch (loadError) {
       setApproaches([]);
-      setError(loadError.message || 'Unable to load requests.');
+      if (loadError?.message === 'Request failed with status 404') {
+        setError('No approach records found for this crop.');
+      } else {
+        setError(loadError.message || 'Unable to load requests.');
+      }
     } finally {
       setLoading(false);
     }

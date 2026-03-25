@@ -35,9 +35,16 @@ public class AuthController {
 
     @PostMapping("/register/verify-otp")
     public ResponseEntity<String> verifyRegistrationOtp(@RequestBody VerifyOtpRequestDTO dto) {
-        boolean verified = otpService.verifyOtp(dto.getEmail(), Integer.parseInt(dto.getOtp()));
+        int otpValue;
+        try {
+            otpValue = Integer.parseInt(dto.getOtp());
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Invalid OTP format");
+        }
+
+        boolean verified = otpService.verifyOtp(dto.getEmail(), otpValue);
         if (!verified) {
-            throw new RuntimeException("Invalid OTP");
+            throw new IllegalArgumentException("Invalid OTP");
         }
         otpService.setOtpVerifiedMap(dto.getEmail(), true);
         return ResponseEntity.ok("OTP verified");
