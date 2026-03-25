@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ApproachFarmerServiceImpl implements ApproachFarmerService {
@@ -109,25 +108,28 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
 
     @Override
     public List<ApproachFarmer> getAllApproaches() {
-        return approachFarmerRepository.findAll();
+        return approachFarmerRepository.findAll()
+                .stream()
+                .sorted((a, b) -> Long.compare(
+                        b.getApproachId() == null ? 0L : b.getApproachId(),
+                        a.getApproachId() == null ? 0L : a.getApproachId()
+                ))
+                .toList();
     }
 
     @Override
     public List<ApproachFarmer> getRequestsByFarmerId(Long farmerId) {
-        return approachFarmerRepository.findAll()
-                .stream()
-                .filter(request -> request.getFarmerId().equals(farmerId))
-                .collect(Collectors.toList());
+        return approachFarmerRepository.findByFarmerIdOrderByApproachIdDesc(farmerId);
     }
 
     @Override
     public List<ApproachFarmer> getRequestsByFarmerIdAndCropId(Long farmerId, Long cropId) {
-        return approachFarmerRepository.findByFarmerIdAndCropId(farmerId, cropId);
+        return approachFarmerRepository.findByFarmerIdAndCropIdOrderByApproachIdDesc(farmerId, cropId);
     }
 
     @Override
     public List<ApproachFarmer> getRequestsByUserId(Long userId) {
-        return approachFarmerRepository.findByUserId(userId);
+        return approachFarmerRepository.findByUserIdOrderByApproachIdDesc(userId);
     }
 
     @Override

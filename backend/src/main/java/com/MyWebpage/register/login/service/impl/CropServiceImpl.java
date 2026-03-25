@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -68,7 +69,7 @@ public class CropServiceImpl implements CropService {
 
     @Override
     public Page<Crop> getAllCropsV1(int page, int size) {
-        return cropRepo.findAll(PageRequest.of(page, size));
+        return cropRepo.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "cropID")));
     }
 
     @Override
@@ -134,7 +135,8 @@ public class CropServiceImpl implements CropService {
 
     @Override
     public Page<CropResponseDTO> getAllCropsV2(int page, int size) {
-        return cropRepo.findAll(PageRequest.of(page, size)).map(cropMapper::toResponse);
+        return cropRepo.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "cropID")))
+                .map(cropMapper::toResponse);
     }
 
     @Override
@@ -162,7 +164,10 @@ public class CropServiceImpl implements CropService {
 
     @Override
     public Page<CropResponseDTO> searchCropsV2(String keyword, int page, int size) {
-        return cropRepo.findByCropNameContainingIgnoreCase(keyword, PageRequest.of(page, size))
+        return cropRepo.findByCropNameContainingIgnoreCase(
+                        keyword,
+                        PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "cropID"))
+                )
                 .map(cropMapper::toResponse);
     }
 

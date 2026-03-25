@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> {
-    List<ApproachFarmer> findByFarmerIdAndCropId(Long farmerId, Long cropId);
+    List<ApproachFarmer> findByFarmerIdAndCropIdOrderByApproachIdDesc(Long farmerId, Long cropId);
 
-    List<ApproachFarmer> findByUserId(Long userId);
+    List<ApproachFarmer> findByUserIdOrderByApproachIdDesc(Long userId);
+    
+    List<ApproachFarmer> findByFarmerIdOrderByApproachIdDesc(Long farmerId);
         boolean existsByFarmerIdAndCropIdAndUserId(Long farmerId, Long cropId, Long userId);
 
 
