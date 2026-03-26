@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import { apiGet } from '../lib/api';
@@ -15,6 +15,7 @@ const FIELDS = [
 
 export default function BuyerDetails() {
   const navigate = useNavigate();
+  const { buyerId } = useParams();
 
   const [buyer, setBuyer] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +24,7 @@ export default function BuyerDetails() {
   useEffect(() => {
     (async () => {
       try {
-        const response = await apiGet('/buyers/me');
+        const response = await apiGet(`/buyers/${buyerId}`);
         if (!response.ok) throw new Error('Could not load buyer details.');
         const data = await response.json();
         setBuyer(data);
@@ -33,7 +34,7 @@ export default function BuyerDetails() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [buyerId]);
 
   if (loading) {
     return (
