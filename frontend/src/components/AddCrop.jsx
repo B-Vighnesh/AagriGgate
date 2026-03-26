@@ -6,6 +6,7 @@ import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 import { addCrop } from '../api/cropApi';
+import statesAndDistricts from './statesAndDistricts';
 
 const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
 const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
@@ -31,6 +32,7 @@ export default function AddCrop() {
   const [imagePreview, setImagePreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const districts = statesAndDistricts[cropData.state] || [];
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -57,6 +59,15 @@ export default function AddCrop() {
   const onFieldChange = (event) => {
     const { name, value } = event.target;
     setCropData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const onStateChange = (event) => {
+    const value = event.target.value;
+    setCropData((prev) => ({
+      ...prev,
+      state: value,
+      district: '',
+    }));
   };
 
   const onImageChange = (event) => {
@@ -156,26 +167,35 @@ export default function AddCrop() {
                 />
               </div>
               <div className="add-crop-field">
+                <label htmlFor="state">State *</label>
+                <select
+                  id="state"
+                  name="state"
+                  value={cropData.state}
+                  onChange={onStateChange}
+                  required
+                >
+                  <option value="">Select State</option>
+                  {Object.keys(statesAndDistricts).map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="add-crop-field">
                 <label htmlFor="district">District *</label>
-                <input
+                <select
                   id="district"
                   name="district"
                   value={cropData.district}
                   onChange={onFieldChange}
-                  placeholder="e.g. Mysore"
+                  disabled={!cropData.state}
                   required
-                />
-              </div>
-              <div className="add-crop-field">
-                <label htmlFor="state">State *</label>
-                <input
-                  id="state"
-                  name="state"
-                  value={cropData.state}
-                  onChange={onFieldChange}
-                  placeholder="e.g. Karnataka"
-                  required
-                />
+                >
+                  <option value="">{cropData.state ? 'Select District' : 'Select State First'}</option>
+                  {districts.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
