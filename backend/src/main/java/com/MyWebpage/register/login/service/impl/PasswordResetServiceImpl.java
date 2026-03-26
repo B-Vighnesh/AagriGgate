@@ -26,7 +26,8 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     @Override
     public void sendOtp(String email) {
-        farmerRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("Email not registered"));
+        Farmer farmer = farmerRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not registered"));
 
         String otp = String.valueOf(new Random().nextInt(900000) + 100000);
 
@@ -37,7 +38,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         resetOtp.setVerified(false);
 
         otpRepository.save(resetOtp);
-        emailService.sendMail(email, "Your OTP is: " + otp, "Password Reset OTP");
+        emailService.sendPasswordResetOtpEmail(farmer, otp);
     }
 
     @Override
@@ -80,10 +81,6 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         stored.setVerified(false);
         otpRepository.save(stored);
 
-        emailService.sendMail(
-                email,
-                "Password changed successfully",
-                "Password Reset Confirmation"
-        );
+        emailService.sendPasswordResetSuccessEmail(farmer);
     }
 }

@@ -28,7 +28,7 @@ public class AuthController {
 
     @PostMapping("/register/send-otp")
     public ResponseEntity<String> sendRegistrationOtp(@RequestBody FarmerRequestDTO dto) {
-        int otp = emailService.sendVerificationEmail1(dto.getEmail());
+        int otp = emailService.sendRegistrationOtpEmail(dto.getEmail(), dto.getFirstName(), dto.getUsername());
         otpService.storeOtp(dto.getEmail(), otp);
         return ResponseEntity.ok("OTP sent");
     }

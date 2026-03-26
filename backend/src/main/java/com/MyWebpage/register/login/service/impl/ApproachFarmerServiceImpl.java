@@ -149,13 +149,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             return false;
         }
         try {
-            String msg = String.format(
-                    "Dear User,\n\nFarmer Name: %s\nFarmer Phone Number: %s\nFarmer Email: %s\nFarmer Location: %s\n",
-                    approachFarmer.getFarmerName(),
-                    approachFarmer.getFarmerPhoneNo(),
-                    approachFarmer.getFarmerEmail(),
-                    approachFarmer.getFarmerLocation());
-            emailService.sendMail(approachFarmer.getUserEmail(), msg);
+            emailService.sendApproachAcceptedEmail(approachFarmer);
             logger.info("Approach mail sent for approachId: {}", approachFarmer.getApproachId());
             return true;
         } catch (Exception e) {

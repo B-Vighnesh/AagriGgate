@@ -66,11 +66,7 @@ public class AuthServiceImpl implements AuthService {
 
         farmer = farmerRepo.save(farmer);
         otpService.setOtpVerifiedMap(dto.getEmail(), false);
-        emailService.sendMail(
-                farmer.getEmail(),
-                "Welcome to AagriGgate",
-                "Registration successful"
-        );
+        emailService.sendWelcomeEmail(farmer);
 
         String token =
                 jwtService.generateToken(
@@ -120,11 +116,7 @@ public class AuthServiceImpl implements AuthService {
         farmer.setPassword(passwordEncoder.encode(newPassword));
 
         farmerRepo.save(farmer);
-        emailService.sendMail(
-                farmer.getEmail(),
-                "Your password was changed",
-                "Password Change Notification"
-        );
+        emailService.sendPasswordChangedEmail(farmer);
     }
 
     @Override
