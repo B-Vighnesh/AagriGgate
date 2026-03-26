@@ -46,7 +46,6 @@ public class AuthController {
         if (!verified) {
             throw new IllegalArgumentException("Invalid OTP");
         }
-        otpService.setOtpVerifiedMap(dto.getEmail(), true);
         return ResponseEntity.ok("OTP verified");
     }
 
