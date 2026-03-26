@@ -1,30 +1,71 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import ValidateToken from './ValidateToken';
 import { getFarmerId, getToken, getRole } from '../lib/auth';
 
-const CORE_POINTS = [
-  'No hidden charges for farmers or buyers',
-  'Direct farmer-to-buyer discovery',
-  'Transparent crop pricing and demand visibility',
-  'Simple OTP-based account access',
+const SLIDES = [
+  {
+    eyebrow: 'Direct Trade',
+    title: 'Connecting Farmers Directly with Buyers - No Middlemen',
+    subtitle: 'Sell crops, discover buyers, track market prices, and plan with weather insights - all in one platform.',
+    primary: 'Sell Your Crop',
+    secondary: 'Browse Crops',
+  },
+  {
+    eyebrow: 'Market Intelligence',
+    title: 'Know Market Prices Before You Sell',
+    subtitle: 'Track real-time market prices and demand so you can decide when and where to sell.',
+    primary: 'Check Market Prices',
+    secondary: 'Browse Crops',
+  },
+  {
+    eyebrow: 'Weather Planning',
+    title: 'Plan Farming with Weather Insights',
+    subtitle: 'Get weather information and plan harvesting, selling, and logistics smarter.',
+    primary: 'Check Weather',
+    secondary: 'Browse Crops',
+  },
+  {
+    eyebrow: 'Transparent Platform',
+    title: 'No Hidden Charges. Direct Trade.',
+    subtitle: 'AagriGgate focuses on transparent trade - not platform commissions.',
+    primary: 'Sign Up Free',
+    secondary: 'Browse Crops',
+  },
+];
+
+const SOLUTION_POINTS = [
+  'One place to list crops and discover buyers',
+  'Direct farmer-to-buyer communication',
+  'Real-time market price visibility',
+  'Weather information for planning',
+  'Location-based crop discovery',
+  'Transparent profiles and pricing',
+  'No hidden platform charges',
+];
+
+const PLATFORM_FEATURES = [
+  ['Direct Farmer-to-Buyer Marketplace', 'Direct crop discovery and contact without middlemen.'],
+  ['Real-Time Market Prices', 'Search market price data before making a selling decision.'],
+  ['Weather Information', 'Use weather context for harvesting and selling plans.'],
+  ['Location-Based Listings', 'State, district, and region context make discovery practical.'],
+  ['OTP Login', 'Simple access and account recovery flows.'],
+  ['Transparent Pricing', 'Crop details and price context are visible to users.'],
+  ['Buyer Request System', 'Buyers can approach and farmers can respond clearly.'],
+  ['Crop Listing System', 'Create, update, and manage crop listings from one dashboard.'],
+  ['Profile & Trust System', 'Profiles add confidence before direct contact starts.'],
+  ['No Hidden Charges', 'The platform message stays focused on direct and fair trade.'],
 ];
 
 const TRUST_POINTS = [
-  {
-    title: 'No Hidden Charges',
-    desc: 'AagriGgate focuses on direct trade value, not surprise platform fees.',
-  },
-  {
-    title: 'Farmer and Buyer Profiles',
-    desc: 'Verified account details and profile visibility improve trust before a deal starts.',
-  },
-  {
-    title: 'Location-Based Selling',
-    desc: 'Region, state, and district context help users evaluate nearby opportunities faster.',
-  },
+  'No hidden charges',
+  'Verified profiles',
+  'Direct communication',
+  'Transparent crop pricing',
+  'Local context with state, district, and region',
+  'Demand visibility through buyer requests',
 ];
 
 const FARMER_FEATURES = [
@@ -32,7 +73,7 @@ const FARMER_FEATURES = [
   ['View buyer requests', 'Demand visibility'],
   ['Weather info', 'Plan farming'],
   ['Market price', 'Avoid middlemen'],
-  ['Direct contact with buyers', 'Negotiate directly'],
+  ['Direct contact with buyers', 'Negotiate'],
   ['Profile', 'Build trust'],
   ['OTP login', 'Easy access'],
   ['Location-based buyers', 'Nearby sales'],
@@ -40,52 +81,148 @@ const FARMER_FEATURES = [
 
 const BUYER_FEATURES = [
   ['Find farmers', 'Direct sourcing'],
-  ['Send crop requirement through requests', 'Bulk purchase planning'],
+  ['Send crop requirement', 'Bulk purchase'],
   ['View crop details', 'Quality info'],
   ['Contact farmer', 'Direct deal'],
-  ['Location context', 'Better logistics planning'],
+  ['Location context', 'Better logistics'],
   ['Price negotiation', 'Better rates'],
 ];
 
-const ADMIN_FUTURE = [
-  ['Approve sellers', 'Prevent fraud'],
-  ['Remove fake users', 'Improve trust'],
-  ['View transactions', 'Analytics'],
-  ['Platform stats', 'Growth tracking'],
+const INTELLIGENCE_POINTS = [
+  'Check real-time market prices before selling',
+  'Understand crop demand trends through request visibility',
+  'Use weather data to plan harvesting and selling',
+  'Make better selling decisions based on data, not guesswork',
 ];
 
-const FUTURE_ROADMAP = [
-  ['Price prediction', 'Very powerful'],
-  ['Weather alerts', 'Useful'],
-  ['Crop demand heatmap', 'Smart selling'],
+const FARMER_STEPS = [
+  'Create account using OTP',
+  'Add crop listing',
+  'Buyers view and contact you',
+  'Negotiate price and finalize deal',
+];
+
+const BUYER_STEPS = [
+  'Create account',
+  'Browse crops or send requirement',
+  'Contact farmer directly',
+  'Finalize deal and logistics',
+];
+
+const ROADMAP = [
+  ['Price prediction', 'Smart selling'],
+  ['Weather alerts', 'Crop safety'],
+  ['Crop demand heatmap', 'Demand insights'],
   ['Transport booking', 'Logistics'],
   ['Fertilizer marketplace', 'Extra revenue'],
   ['Loan / subsidy info', 'Farmer support'],
-  ['AI crop recommendation', 'Advanced'],
+  ['AI crop recommendation', 'Smart farming'],
   ['Warehouse booking', 'Storage'],
   ['Digital contract', 'Trust'],
   ['Escrow payment', 'Secure payment'],
 ];
 
 const FAQS = [
-  { q: 'Is AagriGgate free to use?', a: 'Yes. The current platform experience is focused on direct trade without hidden charges.' },
-  { q: 'Who can use the app?', a: 'Both farmers and buyers can register, manage profiles, and use crop discovery or request flows.' },
-  { q: 'What makes it different?', a: 'It combines crop listings, requests, weather, market pricing, and direct contact in one place.' },
+  ['Is AagriGgate free to use?', 'Yes. The platform is positioned around direct trade without hidden charges.'],
+  ['Who can use the platform?', 'Farmers and buyers can both register and use the platform.'],
+  ['How are farmers and buyers connected?', 'Through crop listings, request flows, and direct contact details.'],
+  ['Does the platform charge commission?', 'The platform messaging is built around transparent trade and no hidden charges.'],
+  ['How is pricing decided?', 'Users compare listing prices with market price information before deciding.'],
 ];
 
-function FeatureTable({ title, rows, tone = 'default' }) {
+function SectionTitle({ id, kicker, title, subtitle, light = false }) {
   return (
-    <Card className={`feature-table feature-table--${tone}`}>
+    <div id={id}>
+      <p className={`section-kicker ${light ? 'section-kicker--light' : ''}`}>{kicker}</p>
+      <h2 className="section-title">{title}</h2>
+      {subtitle ? <p className="section-subtitle">{subtitle}</p> : null}
+    </div>
+  );
+}
+
+function FeatureCard({ title, desc }) {
+  return (
+    <Card className="core-feature-card">
       <h3>{title}</h3>
-      <div className="feature-table__rows">
-        {rows.map(([feature, why]) => (
-          <div key={`${title}-${feature}`} className="feature-table__row">
-            <strong>{feature}</strong>
-            <span>{why}</span>
-          </div>
-        ))}
-      </div>
+      <p>{desc}</p>
     </Card>
+  );
+}
+
+function StepCard({ index, text }) {
+  return (
+    <Card className="step-card step-card--flow">
+      <span>{index}</span>
+      <p>{text}</p>
+    </Card>
+  );
+}
+
+function FAQAccordion({ items, openFaq, setOpenFaq }) {
+  return (
+    <div className="faq-list">
+      {items.map(([q, a], index) => {
+        const open = openFaq === index;
+        return (
+          <Card key={q} className="faq-card">
+            <button type="button" className="faq-card__button" onClick={() => setOpenFaq(open ? null : index)}>
+              <span className="faq-card__question">{q}</span>
+              <span className="faq-card__toggle">{open ? '-' : '+'}</span>
+            </button>
+            {open ? <p className="faq-card__answer">{a}</p> : null}
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function Slider({ slides, activeIndex, onPrimary, onSecondary, setActiveIndex }) {
+  const active = slides[activeIndex];
+
+  return (
+    <section className="hero hero--slider">
+      <div className="ag-container hero-slider">
+        <div className="hero-slider__content">
+          <p className="hero__tag">{active.eyebrow}</p>
+          <h1 className="hero__title">{active.title}</h1>
+          <p className="hero__subtitle">{active.subtitle}</p>
+          <div className="hero__actions">
+            <Button variant="accent" size="lg" onClick={() => onPrimary(activeIndex)}>{active.primary}</Button>
+            <Button variant="outline" size="lg" className="hero-outline" onClick={onSecondary}>{active.secondary}</Button>
+          </div>
+          <div className="hero-slider__dots">
+            {slides.map((slide, index) => (
+              <button
+                key={slide.title}
+                type="button"
+                className={`hero-slider__dot ${index === activeIndex ? 'hero-slider__dot--active' : ''}`}
+                onClick={() => setActiveIndex(index)}
+                aria-label={`Show slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <Card className="hero-slider__panel">
+          <p className="hero-slider__panel-kicker">Why this matters</p>
+          <div className="hero-slider__panel-list">
+            <div>
+              <strong>Direct Trade</strong>
+              <span>No middlemen between listing and buyer response.</span>
+            </div>
+            <div>
+              <strong>Smart Decisions</strong>
+              <span>Weather and market information support better timing.</span>
+            </div>
+            <div>
+              <strong>Trust</strong>
+              <span>Profiles, OTP access, and transparent workflows improve confidence.</span>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </section>
   );
 }
 
@@ -95,154 +232,269 @@ export default function Home() {
   const token = getToken();
   const role = getRole();
   const [openFaq, setOpenFaq] = useState(null);
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % SLIDES.length);
+    }, 4500);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const onPrimaryAction = (index) => {
+    if (index === 0) {
+      navigate(farmerId ? '/add-crop' : '/register');
+      return;
+    }
+    if (index === 1) {
+      navigate('/market');
+      return;
+    }
+    if (index === 2) {
+      navigate('/weather');
+      return;
+    }
+    navigate(farmerId ? '/account' : '/register');
+  };
+
+  const onSecondaryAction = () => {
+    navigate('/view-all-crops');
+  };
 
   return (
     <div className="home-page">
       <ValidateToken token={token} role={role} farmerId={farmerId} />
 
-      <section className="hero">
+      <Slider
+        slides={SLIDES}
+        activeIndex={activeSlide}
+        onPrimary={onPrimaryAction}
+        onSecondary={onSecondaryAction}
+        setActiveIndex={setActiveSlide}
+      />
+
+      <section className="ag-container section reveal-block">
+        <SectionTitle
+          id="problem"
+          kicker="Problem"
+          title="Trade is still too fragmented for everyday farmers and buyers"
+          subtitle="Farmers often sell crops at lower prices due to middlemen and lack of market information. Buyers struggle to find reliable farmers, compare crop listings, and plan logistics efficiently. Most information like prices, weather, and demand is scattered across different sources."
+        />
+        <p className="closing-line">AagriGgate brings all of this into one platform - simple, transparent, and direct.</p>
+      </section>
+
+      <section className="section section--surface reveal-block">
         <div className="ag-container">
-          <p className="hero__tag">India&apos;s Farmer-First Marketplace</p>
-          <h1 className="hero__title">
-            Farm to Table, <span>Without the Middleman</span>
-          </h1>
-          <p className="hero__subtitle">
-            AagriGgate helps farmers and buyers connect directly with transparent pricing, local context,
-            and practical tools for everyday trade.
-          </p>
-
-          <div className="hero__points">
-            {CORE_POINTS.map((point) => (
-              <span key={point} className="hero__point">{point}</span>
+          <SectionTitle
+            id="solution"
+            kicker="Solution"
+            title="What AagriGgate Solves"
+            subtitle="The platform brings the most important trade and planning tools together in one place."
+          />
+          <div className="solution-grid">
+            {SOLUTION_POINTS.map((item) => (
+              <Card key={item} className="solution-card">
+                <p>{item}</p>
+              </Card>
             ))}
-          </div>
-
-          <div className="hero__actions">
-            {!farmerId && (
-              <>
-                <Button variant="accent" size="lg" onClick={() => navigate('/register')}>Get Started</Button>
-                <Button variant="outline" size="lg" className="hero-outline" onClick={() => navigate('/view-all-crops')}>Browse Crops</Button>
-              </>
-            )}
-            {farmerId && (
-              <>
-                <Button variant="accent" size="lg" onClick={() => navigate('/market')}>Go to Market</Button>
-                <Button variant="outline" size="lg" className="hero-outline" onClick={() => navigate('/weather')}>Check Weather</Button>
-              </>
-            )}
           </div>
         </div>
       </section>
 
-      <section id="problem" className="ag-container section">
-        <div className="home-split">
-          <div>
-            <p className="section-kicker">Problem Statement</p>
-            <h2 className="section-title">Trade is still too fragmented for everyday farmers and buyers</h2>
-            <p className="section-subtitle">
-              Farmers often struggle with price opacity, scattered demand, and middlemen pressure. Buyers struggle
-              to discover reliable sellers, compare listings clearly, and build confidence before reaching out.
-            </p>
+      <section className="ag-container section reveal-block">
+        <SectionTitle
+          id="features"
+          kicker="Platform Features"
+          title="Everything important is already inside one platform"
+          subtitle="Listing, discovery, pricing, weather, and communication are part of the same user journey."
+        />
+        <div className="core-feature-grid">
+          {PLATFORM_FEATURES.map(([title, desc]) => (
+            <FeatureCard key={title} title={title} desc={desc} />
+          ))}
+        </div>
+      </section>
+
+      <section className="section section--surface reveal-block">
+        <div className="ag-container">
+          <SectionTitle
+            id="trust"
+            kicker="Trust / Why Choose Us"
+            title="Built Around Trust and Transparency"
+            subtitle="Made for trust, not hidden costs."
+          />
+          <div className="trust-strip">
+            {TRUST_POINTS.map((item) => (
+              <Card key={item} className="trust-chip-card">
+                <strong>{item}</strong>
+              </Card>
+            ))}
           </div>
-          <Card className="problem-card">
-            <h3>What AagriGgate solves</h3>
+        </div>
+      </section>
+
+      <section className="ag-container section reveal-block">
+        <SectionTitle
+          id="farmers"
+          kicker="For Farmers"
+          title="Features for Farmers"
+          subtitle="Farmers earn more when they sell directly with better information."
+        />
+        <div className="feature-table-grid feature-table-grid--single">
+          <Card className="feature-table feature-table--farmer">
+            <h3>Farmer Tools</h3>
+            <div className="feature-table__rows">
+              {FARMER_FEATURES.map(([feature, why]) => (
+                <div key={feature} className="feature-table__row">
+                  <strong>{feature}</strong>
+                  <span>{why}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      <section className="section section--surface reveal-block">
+        <div className="ag-container">
+          <SectionTitle
+            id="buyers"
+            kicker="For Buyers"
+            title="Features for Buyers"
+            subtitle="Buyers get reliable supply directly from farmers with transparent pricing."
+          />
+          <div className="feature-table-grid feature-table-grid--single">
+            <Card className="feature-table feature-table--buyer">
+              <h3>Buyer Tools</h3>
+              <div className="feature-table__rows">
+                {BUYER_FEATURES.map(([feature, why]) => (
+                  <div key={feature} className="feature-table__row">
+                    <strong>{feature}</strong>
+                    <span>{why}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <section className="ag-container section reveal-block">
+        <SectionTitle
+          id="intelligence"
+          kicker="Weather + Market Intelligence"
+          title="Market & Weather Intelligence"
+          subtitle="This is the app's smart layer: better timing, better pricing, and better planning."
+        />
+        <div className="intelligence-grid">
+          <Card className="intelligence-card intelligence-card--market">
+            <h3>Market Intelligence</h3>
+            <p>Check real-time market prices before selling and compare trade context with your own listing strategy.</p>
+          </Card>
+          <Card className="intelligence-card intelligence-card--weather">
+            <h3>Weather Intelligence</h3>
+            <p>Use weather information to plan harvesting, selling, and logistics with less guesswork.</p>
+          </Card>
+          <Card className="intelligence-card intelligence-card--decision">
+            <h3>Decision Support</h3>
             <ul className="home-list">
-              <li>One place to list, discover, compare, and respond</li>
-              <li>Local selling context with state, district, and region-aware listings</li>
-              <li>Practical tools like weather and market price data inside the same flow</li>
-              <li>Direct connection between farmers and buyers without unnecessary complexity</li>
+              {INTELLIGENCE_POINTS.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
           </Card>
         </div>
       </section>
 
-      <section id="trust" className="section section--surface">
+      <section className="section section--surface reveal-block">
         <div className="ag-container">
-          <p className="section-kicker">Trust and Transparency</p>
-          <h2 className="section-title">Built around fair trade, visibility, and straightforward access</h2>
-          <div className="feature-grid">
-            {TRUST_POINTS.map((item) => (
-              <Card key={item.title} className="feature-card feature-card--trust">
-                <h3>{item.title}</h3>
-                <p>{item.desc}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="features" className="ag-container section">
-        <p className="section-kicker">Features Based on Current Backend</p>
-        <h2 className="section-title">What users can already do on the platform</h2>
-        <p className="section-subtitle">The app already supports direct crop trade workflows for farmers and buyers.</p>
-        <div className="feature-table-grid">
-          <FeatureTable title="For Farmers" rows={FARMER_FEATURES} tone="farmer" />
-          <FeatureTable title="For Buyers" rows={BUYER_FEATURES} tone="buyer" />
-        </div>
-      </section>
-
-      <section id="taglines" className="section section--surface">
-        <div className="ag-container">
-          <p className="section-kicker">Product Taglines</p>
-          <div className="tagline-grid">
-            <Card className="tagline-card">
-              <h3>Sell locally. Trade directly. Grow confidently.</h3>
-              <p>A product experience designed to reduce friction between harvest and demand.</p>
+          <SectionTitle
+            id="how-it-works"
+            kicker="How It Works"
+            title="How AagriGgate Works"
+            subtitle="A simple trade flow for both sides of the marketplace."
+          />
+          <div className="how-grid">
+            <Card className="how-column">
+              <h3>For Farmers</h3>
+              <div className="steps-grid steps-grid--stacked">
+                {FARMER_STEPS.map((step, index) => (
+                  <StepCard key={step} index={`0${index + 1}`} text={step} />
+                ))}
+              </div>
             </Card>
-            <Card className="tagline-card">
-              <h3>Clear prices, real buyers, practical tools.</h3>
-              <p>Everything important stays inside the same platform instead of being scattered across channels.</p>
-            </Card>
-            <Card className="tagline-card">
-              <h3>Made for trust, not hidden costs.</h3>
-              <p>Transparent profiles, request workflows, and direct contact keep the trade path simpler.</p>
+            <Card className="how-column">
+              <h3>For Buyers</h3>
+              <div className="steps-grid steps-grid--stacked">
+                {BUYER_STEPS.map((step, index) => (
+                  <StepCard key={step} index={`0${index + 1}`} text={step} />
+                ))}
+              </div>
             </Card>
           </div>
         </div>
       </section>
 
-      <section id="future" className="ag-container section">
-        <p className="section-kicker">Future Direction</p>
-        <h2 className="section-title">Planned features that can make AagriGgate stand out</h2>
-        <p className="section-subtitle">These additions can push the platform from useful to genuinely powerful.</p>
-        <div className="feature-table-grid">
-          <FeatureTable title="For Admin (Future)" rows={ADMIN_FUTURE} tone="admin" />
-          <FeatureTable title="Standout Roadmap" rows={FUTURE_ROADMAP} tone="roadmap" />
-        </div>
-      </section>
-
-      <section id="faq" className="ag-container section">
-        <p className="section-kicker">FAQs</p>
-        <h2 className="section-title">Common questions about the platform</h2>
-        <div className="faq-list">
-          {FAQS.map((item, index) => {
-            const open = openFaq === index;
-            return (
-              <Card key={item.q} className="faq-card">
-                <button type="button" className="faq-card__button" onClick={() => setOpenFaq(open ? null : index)}>
-                  <span className="faq-card__question">{item.q}</span>
-                  <span className="faq-card__toggle">{open ? '-' : '+'}</span>
-                </button>
-                {open && <p className="faq-card__answer">{item.a}</p>}
-              </Card>
-            );
-          })}
-        </div>
-      </section>
-
-      {!farmerId && (
-        <section className="cta">
-          <div className="ag-container">
-            <p className="section-kicker section-kicker--light">Ready to Join?</p>
-            <h2>Start selling or sourcing with more clarity</h2>
-            <p>Sign up free, browse crops, and use direct request flows without hidden platform charges.</p>
-            <div className="hero__actions">
-              <Button variant="accent" onClick={() => navigate('/register')}>Sign Up</Button>
-              <Button variant="outline" className="hero-outline" onClick={() => navigate('/login')}>Sign In</Button>
+      <section className="ag-container section reveal-block">
+        <SectionTitle
+          id="future"
+          kicker="Future Vision"
+          title="Future Direction"
+          subtitle="Our goal is to build a complete digital ecosystem for agriculture - not just a listing platform."
+        />
+        <div className="future-layout">
+          <Card className="feature-table feature-table--roadmap">
+            <h3>Future Roadmap</h3>
+            <div className="feature-table__rows">
+              {ROADMAP.map(([feature, impact]) => (
+                <div key={feature} className="feature-table__row">
+                  <strong>{feature}</strong>
+                  <span>{impact}</span>
+                </div>
+              ))}
             </div>
+          </Card>
+          <div className="vision-cards">
+            <Card className="vision-card vision-card--primary">
+              <p className="vision-card__eyebrow">Smart Selling</p>
+              <h3>Price prediction and demand heatmaps can become the platform's strategic edge</h3>
+              <p>These features can help farmers decide not just what to sell, but when and where to sell.</p>
+            </Card>
+            <Card className="vision-card vision-card--secondary">
+              <p className="vision-card__eyebrow">Execution Layer</p>
+              <h3>Logistics, contracts, and secure payments can turn discovery into trusted execution</h3>
+              <p>That is how the platform evolves from a useful tool into a complete agriculture ecosystem.</p>
+            </Card>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
+
+      <section className="section section--surface reveal-block">
+        <div className="ag-container">
+          <SectionTitle
+            id="faq"
+            kicker="FAQ"
+            title="Common questions before users join"
+          />
+          <FAQAccordion items={FAQS} openFaq={openFaq} setOpenFaq={setOpenFaq} />
+        </div>
+      </section>
+
+      <section className="cta reveal-block">
+        <div className="ag-container">
+          <SectionTitle
+            kicker="Call To Action"
+            title="Start Selling or Sourcing With More Clarity"
+            subtitle="Direct trade, smart decisions, and transparent workflows - all in one place."
+            light
+          />
+          <div className="hero__actions">
+            <Button variant="accent" onClick={() => navigate('/register')}>Sign Up</Button>
+            <Button variant="outline" className="hero-outline" onClick={() => navigate('/view-all-crops')}>Browse Crops</Button>
+            <Button variant="outline" className="hero-outline" onClick={() => navigate(farmerId ? '/view-all-crops' : '/register')}>Post Requirement</Button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
