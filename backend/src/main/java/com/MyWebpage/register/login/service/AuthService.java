@@ -3,6 +3,7 @@ package com.MyWebpage.register.login.service;
 import com.MyWebpage.register.login.dto.AuthRequestDTO;
 import com.MyWebpage.register.login.dto.AuthResponseDTO;
 import com.MyWebpage.register.login.dto.FarmerRequestDTO;
+import com.MyWebpage.register.login.dto.OtpLoginRequestDTO;
 
 public interface AuthService {
 
@@ -12,6 +13,12 @@ public interface AuthService {
 
     AuthResponseDTO login(
             AuthRequestDTO dto);
+
+    void sendLoginOtp(
+            String principal);
+
+    AuthResponseDTO loginWithOtp(
+            OtpLoginRequestDTO dto);
 
     void changePassword(
             Long farmerId,
