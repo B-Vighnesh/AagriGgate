@@ -3,10 +3,13 @@ package com.MyWebpage.register.login.service.impl;
 import com.MyWebpage.register.login.dto.AuthRequestDTO;
 import com.MyWebpage.register.login.dto.AuthResponseDTO;
 import com.MyWebpage.register.login.dto.FarmerRequestDTO;
+import com.MyWebpage.register.login.dto.OtpLoginRequestDTO;
+import com.MyWebpage.register.login.entity.LoginOtp;
 import com.MyWebpage.register.login.model.Farmer;
 import com.MyWebpage.register.login.repository.ApproachFarmerRepo;
 import com.MyWebpage.register.login.repository.CropRepo;
 import com.MyWebpage.register.login.repository.FarmerRepo;
+import com.MyWebpage.register.login.repository.LoginOtpRepository;
 import com.MyWebpage.register.login.security.jwt.JWTService;
 import com.MyWebpage.register.login.service.AuthService;
 import com.MyWebpage.register.login.service.EmailService;
@@ -19,6 +22,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.Random;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -27,6 +33,7 @@ public class AuthServiceImpl implements AuthService {
     private final FarmerRepo farmerRepo;
     private final ApproachFarmerRepo approachFarmerRepository;
     private final CropRepo cropRepo;
+    private final LoginOtpRepository loginOtpRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -102,6 +109,50 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public void sendLoginOtp(
+            String principal) {
+
+        Farmer farmer = findFarmerByPrincipal(principal);
+        String otp = String.valueOf(100000 + new Random().nextInt(900000));
+
+        loginOtpRepository.deleteByFarmerId(farmer.getFarmerId());
+
+        LoginOtp loginOtp = new LoginOtp();
+        loginOtp.setFarmerId(farmer.getFarmerId());
+        loginOtp.setOtp(otp);
+        loginOtp.setExpiryTime(LocalDateTime.now().plusMinutes(10));
+
+        loginOtpRepository.save(loginOtp);
+        emailService.sendLoginOtpEmail(farmer, otp);
+    }
+
+    @Override
+    public AuthResponseDTO loginWithOtp(
+            OtpLoginRequestDTO dto) {
+
+        Farmer farmer = findFarmerByPrincipal(dto.getPrincipal());
+        LoginOtp loginOtp = loginOtpRepository.findTopByFarmerIdOrderByIdDesc(farmer.getFarmerId())
+                .orElseThrow(() -> new IllegalArgumentException("OTP not found"));
+
+        if (loginOtp.getExpiryTime().isBefore(LocalDateTime.now())) {
+            loginOtpRepository.deleteByFarmerId(farmer.getFarmerId());
+            throw new IllegalArgumentException("OTP expired");
+        }
+
+        if (!loginOtp.getOtp().equals(dto.getOtp())) {
+            throw new IllegalArgumentException("Invalid OTP");
+        }
+
+        loginOtpRepository.deleteByFarmerId(farmer.getFarmerId());
+
+        String token = jwtService.generateToken(
+                farmer.getFarmerId(),
+                farmer.getRole());
+
+        return buildResponse(farmer, token);
+    }
+
+    @Override
     public void changePassword(
             Long farmerId,
             String currentPassword,
@@ -151,5 +202,15 @@ public class AuthServiceImpl implements AuthService {
         dto.setRole(farmer.getRole());
 
         return dto;
+    }
+
+    private Farmer findFarmerByPrincipal(String principal) {
+        Farmer farmer = principal.contains("@")
+                ? farmerRepo.findByEmail(principal).orElse(null)
+                : farmerRepo.findByUsername(principal);
+        if (farmer == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+        return farmer;
     }
 }

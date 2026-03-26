@@ -6,6 +6,18 @@ export const login = async (principal, password) =>
     body: JSON.stringify({ principal, password }),
   });
 
+export const sendLoginOtp = async (principal) =>
+  requestJson('/auth/login/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ principal }),
+  });
+
+export const loginWithOtp = async (principal, otp) =>
+  requestJson('/auth/login/otp', {
+    method: 'POST',
+    body: JSON.stringify({ principal, otp }),
+  });
+
 export const registerSeller = async (payload) =>
   requestJson('/auth/register/seller', {
     method: 'POST',

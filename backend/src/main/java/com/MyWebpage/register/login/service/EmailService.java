@@ -134,6 +134,18 @@ public class EmailService {
         sendMail(farmer.getEmail(), msg, subject);
     }
 
+    public void sendLoginOtpEmail(Farmer farmer, String otp) {
+        String subject = "Your AagriGgate Login OTP";
+        String msg = "Hello " + buildDisplayName(farmer.getFirstName(), farmer.getUsername()) + ",\n\n" +
+                "Use the following one-time password (OTP) to sign in to your AagriGgate account:\n\n" +
+                "OTP: " + otp + "\n\n" +
+                "This OTP is valid for 10 minutes. Please do not share it with anyone.\n\n" +
+                "If you did not request this login OTP, you can safely ignore this email.\n\n" +
+                "Regards,\n" +
+                "Team AagriGgate";
+        sendMail(farmer.getEmail(), msg, subject);
+    }
+
     public void sendPasswordResetSuccessEmail(Farmer farmer) {
         String subject = "Your AagriGgate Password Has Been Reset";
         String msg = "Hello " + buildDisplayName(farmer.getFirstName(), farmer.getUsername()) + ",\n\n" +

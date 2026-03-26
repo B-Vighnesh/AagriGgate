@@ -2,6 +2,7 @@ package com.MyWebpage.register.login.service;
 
 import com.MyWebpage.register.login.repository.PasswordResetOtpRepository;
 import com.MyWebpage.register.login.repository.RegistrationOtpRepository;
+import com.MyWebpage.register.login.repository.LoginOtpRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ public class OtpCleanupService {
 
     private final RegistrationOtpRepository registrationOtpRepository;
     private final PasswordResetOtpRepository passwordResetOtpRepository;
+    private final LoginOtpRepository loginOtpRepository;
 
     // Periodically purge expired OTP rows so stale records do not accumulate.
     @Scheduled(cron = "0 */15 * * * *")
@@ -21,5 +23,6 @@ public class OtpCleanupService {
         LocalDateTime now = LocalDateTime.now();
         registrationOtpRepository.deleteByExpiryTimeBefore(now);
         passwordResetOtpRepository.deleteByExpiryTimeBefore(now);
+        loginOtpRepository.deleteByExpiryTimeBefore(now);
     }
 }

@@ -3,6 +3,8 @@ package com.MyWebpage.register.login.controller;
 import com.MyWebpage.register.login.dto.AuthRequestDTO;
 import com.MyWebpage.register.login.dto.AuthResponseDTO;
 import com.MyWebpage.register.login.dto.FarmerRequestDTO;
+import com.MyWebpage.register.login.dto.OtpLoginRequestDTO;
+import com.MyWebpage.register.login.dto.SendLoginOtpRequestDTO;
 import com.MyWebpage.register.login.dto.VerifyOtpRequestDTO;
 import com.MyWebpage.register.login.model.ResetPasswordRequest;
 import com.MyWebpage.register.login.service.AuthService;
@@ -62,6 +64,17 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponseDTO login(@RequestBody AuthRequestDTO dto) {
         return authService.login(dto);
+    }
+
+    @PostMapping("/login/send-otp")
+    public ResponseEntity<String> sendLoginOtp(@RequestBody SendLoginOtpRequestDTO dto) {
+        authService.sendLoginOtp(dto.getPrincipal());
+        return ResponseEntity.ok("Login OTP sent");
+    }
+
+    @PostMapping("/login/otp")
+    public AuthResponseDTO loginWithOtp(@RequestBody OtpLoginRequestDTO dto) {
+        return authService.loginWithOtp(dto);
     }
 
     @PostMapping("/change-password")

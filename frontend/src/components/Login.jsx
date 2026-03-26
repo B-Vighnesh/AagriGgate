@@ -4,6 +4,7 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import { requestJson, ApiError } from '../lib/api';
+import { login as passwordLogin, loginWithOtp, sendLoginOtp } from '../api/authApi';
 import { isLoggedIn, setAuth, clearAuth, hasCompleteSession } from '../lib/auth';
 
 function normalizeRole(role) {
@@ -17,9 +18,12 @@ function normalizeRole(role) {
 export default function Login() {
   const navigate = useNavigate();
   const [userType, setUserType] = useState('farmer');
+  const [loginMode, setLoginMode] = useState('password');
   const [principal, setPrincipal] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [alreadyIn, setAlreadyIn] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
@@ -63,14 +67,30 @@ export default function Login() {
     navigate('/logout');
   };
 
+  const handleSendOtp = async () => {
+    if (!principal.trim()) {
+      showToast('Enter username or email first.', 'error');
+      return;
+    }
+
+    setSendingOtp(true);
+    try {
+      await sendLoginOtp(principal);
+      showToast('OTP sent to your registered email.', 'success');
+    } catch (error) {
+      showToast(error.message || 'Unable to send login OTP.', 'error');
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     try {
-      const data = await requestJson('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ principal, password }),
-      });
+      const data = loginMode === 'password'
+        ? await passwordLogin(principal, password)
+        : await loginWithOtp(principal, otp);
       const normalizedRole = normalizeRole(data?.role);
       const farmerId = data?.farmerId ? String(data.farmerId) : '';
 
@@ -83,7 +103,7 @@ export default function Login() {
       setTimeout(() => navigate('/account'), 700);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        showToast('Invalid principal or password.', 'error');
+        showToast(loginMode === 'password' ? 'Invalid principal or password.' : 'Invalid OTP.', 'error');
       } else {
         showToast(error.message || 'Unable to login. Try again.', 'error');
       }
@@ -138,6 +158,23 @@ export default function Login() {
           </button>
         </div>
 
+        <div className="segmented">
+          <button
+            type="button"
+            className={loginMode === 'password' ? 'segmented__item segmented__item--active' : 'segmented__item'}
+            onClick={() => setLoginMode('password')}
+          >
+            Password Login
+          </button>
+          <button
+            type="button"
+            className={loginMode === 'otp' ? 'segmented__item segmented__item--active' : 'segmented__item'}
+            onClick={() => setLoginMode('otp')}
+          >
+            OTP Login
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="form">
           <label htmlFor="principal">Username</label>
           <input
@@ -147,17 +184,35 @@ export default function Login() {
             required
           />
 
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
+          {loginMode === 'password' ? (
+            <>
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+            </>
+          ) : (
+            <>
+              <Button type="button" variant="outline" onClick={handleSendOtp} loading={sendingOtp}>
+                {sendingOtp ? 'Sending OTP...' : 'Send OTP'}
+              </Button>
+
+              <label htmlFor="otp">OTP</label>
+              <input
+                id="otp"
+                value={otp}
+                onChange={(event) => setOtp(event.target.value)}
+                required
+              />
+            </>
+          )}
 
           <Button type="submit" loading={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Signing in...' : loginMode === 'password' ? 'Sign In' : 'Login With OTP'}
           </Button>
         </form>
 
