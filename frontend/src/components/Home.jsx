@@ -124,17 +124,17 @@ const INTELLIGENCE_POINTS = [
 ];
 
 const FARMER_STEPS = [
-  'Create account using OTP',
-  'Add crop listing',
-  'Buyers view and contact you',
-  'Negotiate price and finalize deal',
+  'Create your account and get started',
+  'Add the crops you want to sell',
+  'Interested buyers reach out to you',
+  'Discuss the price and close the deal',
 ];
 
 const BUYER_STEPS = [
-  'Create account',
-  'Browse crops or send requirement',
-  'Contact farmer directly',
-  'Finalize deal and logistics',
+  'Create your account',
+  'Explore crops or share what you need',
+  'Connect directly with the farmer',
+  'Agree on the deal and plan the next steps',
 ];
 
 const ROADMAP = [
@@ -211,7 +211,7 @@ function Slider({ slides, activeIndex, onPrimary, onSecondary, setActiveIndex })
   return (
     <section className="hero hero--slider">
       <div className="ag-container hero-slider">
-        <div className="hero-slider__content">
+        <div key={`content-${activeIndex}`} className="hero-slider__content">
           <p className="hero__tag">{active.eyebrow}</p>
           <h1 className="hero__title">{active.title}</h1>
           <p className="hero__subtitle">{active.subtitle}</p>
@@ -232,7 +232,7 @@ function Slider({ slides, activeIndex, onPrimary, onSecondary, setActiveIndex })
           </div>
         </div>
 
-        <Card className="hero-slider__panel">
+        <Card key={`panel-${activeIndex}`} className="hero-slider__panel">
           <p className="hero-slider__panel-kicker">{active.panelKicker}</p>
           <h2 className="hero-slider__panel-title">{active.panelTitle}</h2>
           <div className="hero-slider__panel-list">
@@ -442,7 +442,7 @@ export default function Home() {
             id="how-it-works"
             kicker="How It Works"
             title="How AagriGgate Works"
-            subtitle="A simple trade flow for both sides of the marketplace."
+            subtitle="A simple journey that helps farmers and buyers connect without confusion."
           />
           <div className="how-grid">
             <Card className="how-column">
