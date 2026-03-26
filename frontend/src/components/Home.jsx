@@ -12,6 +12,13 @@ const SLIDES = [
     subtitle: 'Sell crops, discover buyers, track market prices, and plan with weather insights - all in one platform.',
     primary: 'Sell Your Crop',
     secondary: 'Browse Crops',
+    panelKicker: 'Why this matters',
+    panelTitle: 'Direct trade keeps the conversation simple and transparent.',
+    panelPoints: [
+      ['Direct Listings', 'Farmers publish crops and buyers respond without marketplace clutter.'],
+      ['Faster Decisions', 'One place for listing, response, and contact removes unnecessary delay.'],
+      ['No Middlemen', 'The platform stays focused on direct connection and clearer pricing.'],
+    ],
   },
   {
     eyebrow: 'Market Intelligence',
@@ -19,6 +26,13 @@ const SLIDES = [
     subtitle: 'Track real-time market prices and demand so you can decide when and where to sell.',
     primary: 'Check Market Prices',
     secondary: 'Browse Crops',
+    panelKicker: 'Market edge',
+    panelTitle: 'Better price visibility improves timing and confidence.',
+    panelPoints: [
+      ['Price Context', 'Compare your listing with live market information before setting expectations.'],
+      ['Demand Signals', 'Buyer request activity helps reveal which listings attract faster interest.'],
+      ['Smarter Selling', 'You decide when to sell with more clarity and less guesswork.'],
+    ],
   },
   {
     eyebrow: 'Weather Planning',
@@ -26,6 +40,13 @@ const SLIDES = [
     subtitle: 'Get weather information and plan harvesting, selling, and logistics smarter.',
     primary: 'Check Weather',
     secondary: 'Browse Crops',
+    panelKicker: 'Weather support',
+    panelTitle: 'Weather context helps reduce avoidable timing mistakes.',
+    panelPoints: [
+      ['Harvest Planning', 'Use current conditions to plan crop handling and harvest timing.'],
+      ['Selling Windows', 'Weather information supports better decisions around transport and sale.'],
+      ['Less Guesswork', 'Farm operations become easier when weather sits next to trade tools.'],
+    ],
   },
   {
     eyebrow: 'Transparent Platform',
@@ -33,17 +54,24 @@ const SLIDES = [
     subtitle: 'AagriGgate focuses on transparent trade - not platform commissions.',
     primary: 'Sign Up Free',
     secondary: 'Browse Crops',
+    panelKicker: 'Trust first',
+    panelTitle: 'A cleaner platform experience builds confidence for both sides.',
+    panelPoints: [
+      ['Clear Profiles', 'Farmer and buyer profiles create accountability before contact begins.'],
+      ['Simple Access', 'OTP-based entry and recovery keep onboarding practical.'],
+      ['Fair Positioning', 'The product message stays aligned with transparent, direct trade.'],
+    ],
   },
 ];
 
 const SOLUTION_POINTS = [
-  'One place to list crops and discover buyers',
-  'Direct farmer-to-buyer communication',
-  'Real-time market price visibility',
-  'Weather information for planning',
-  'Location-based crop discovery',
-  'Transparent profiles and pricing',
-  'No hidden platform charges',
+  ['Unified Marketplace', 'List crops, discover buyers, and respond from one place instead of jumping between tools.'],
+  ['Direct Communication', 'Farmers and buyers connect without extra layers slowing down the trade flow.'],
+  ['Market Visibility', 'Real-time market pricing helps users compare before taking selling decisions.'],
+  ['Weather Planning', 'Weather information supports harvest timing, selling windows, and logistics planning.'],
+  ['Location Discovery', 'State, district, and region context make nearby trade more practical.'],
+  ['Transparent Profiles', 'Clear profile information and visible crop details increase confidence before contact.'],
+  ['Fair Platform Model', 'The product stays focused on direct trade without hidden platform charges.'],
 ];
 
 const PLATFORM_FEATURES = [
@@ -140,9 +168,9 @@ function SectionTitle({ id, kicker, title, subtitle, light = false }) {
   );
 }
 
-function FeatureCard({ title, desc }) {
+function FeatureCard({ title, desc, className = '' }) {
   return (
-    <Card className="core-feature-card">
+    <Card className={`core-feature-card ${className}`.trim()}>
       <h3>{title}</h3>
       <p>{desc}</p>
     </Card>
@@ -205,20 +233,15 @@ function Slider({ slides, activeIndex, onPrimary, onSecondary, setActiveIndex })
         </div>
 
         <Card className="hero-slider__panel">
-          <p className="hero-slider__panel-kicker">Why this matters</p>
+          <p className="hero-slider__panel-kicker">{active.panelKicker}</p>
+          <h2 className="hero-slider__panel-title">{active.panelTitle}</h2>
           <div className="hero-slider__panel-list">
-            <div>
-              <strong>Direct Trade</strong>
-              <span>No middlemen between listing and buyer response.</span>
-            </div>
-            <div>
-              <strong>Smart Decisions</strong>
-              <span>Weather and market information support better timing.</span>
-            </div>
-            <div>
-              <strong>Trust</strong>
-              <span>Profiles, OTP access, and transparent workflows improve confidence.</span>
-            </div>
+            {active.panelPoints.map(([title, desc]) => (
+              <div key={title}>
+                <strong>{title}</strong>
+                <span>{desc}</span>
+              </div>
+            ))}
           </div>
         </Card>
       </div>
@@ -292,9 +315,11 @@ export default function Home() {
             subtitle="The platform brings the most important trade and planning tools together in one place."
           />
           <div className="solution-grid">
-            {SOLUTION_POINTS.map((item) => (
-              <Card key={item} className="solution-card">
-                <p>{item}</p>
+            {SOLUTION_POINTS.map(([title, desc], index) => (
+              <Card key={title} className={`solution-card solution-card--${(index % 3) + 1}`}>
+                <div className="solution-card__index">{String(index + 1).padStart(2, '0')}</div>
+                <h3>{title}</h3>
+                <p>{desc}</p>
               </Card>
             ))}
           </div>
@@ -309,8 +334,13 @@ export default function Home() {
           subtitle="Listing, discovery, pricing, weather, and communication are part of the same user journey."
         />
         <div className="core-feature-grid">
-          {PLATFORM_FEATURES.map(([title, desc]) => (
-            <FeatureCard key={title} title={title} desc={desc} />
+          {PLATFORM_FEATURES.map(([title, desc], index) => (
+            <FeatureCard
+              key={title}
+              title={title}
+              desc={desc}
+              className={index % 2 === 1 ? 'core-feature-card--offset' : ''}
+            />
           ))}
         </div>
       </section>

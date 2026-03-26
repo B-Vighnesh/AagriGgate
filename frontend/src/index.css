@@ -173,6 +173,7 @@ a {
   grid-template-columns: 1.2fr 0.8fr;
   gap: 24px;
   align-items: stretch;
+  min-height: 420px;
 }
 
 .hero-slider__content,
@@ -182,11 +183,32 @@ a {
 
 .hero-slider__panel {
   background:
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 32%),
-    rgba(12, 46, 35, 0.34);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+    radial-gradient(circle at top right, rgba(255, 233, 210, 0.18), transparent 32%),
+    linear-gradient(160deg, rgba(10, 37, 28, 0.94), rgba(18, 73, 55, 0.88));
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  backdrop-filter: blur(12px);
+  box-shadow: 0 20px 40px rgba(7, 30, 22, 0.28);
+  backdrop-filter: blur(10px);
+  min-height: 100%;
+}
+
+.hero-slider__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+}
+
+.ui-card.hero-slider__panel {
+  background:
+    radial-gradient(circle at top right, rgba(255, 233, 210, 0.18), transparent 32%),
+    linear-gradient(160deg, rgba(10, 37, 28, 0.94), rgba(18, 73, 55, 0.88));
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.hero-slider__panel > * {
+  position: relative;
+  z-index: 1;
 }
 
 .hero-slider__panel-kicker {
@@ -198,6 +220,13 @@ a {
   color: #d6ffef;
 }
 
+.hero-slider__panel-title {
+  margin: 0 0 18px;
+  color: #ffffff;
+  font-size: 1.35rem;
+  line-height: 1.3;
+}
+
 .hero-slider__panel-list {
   display: grid;
   gap: 14px;
@@ -206,6 +235,10 @@ a {
 .hero-slider__panel-list div {
   display: grid;
   gap: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .hero-slider__panel-list strong {
@@ -241,6 +274,7 @@ a {
   max-width: 700px;
   font-size: 1rem;
   color: #eef9f3;
+  min-height: 3.2rem;
 }
 
 .hero__actions {
@@ -259,6 +293,7 @@ a {
   margin-top: 18px;
   display: flex;
   gap: 8px;
+  min-height: 12px;
 }
 
 .hero-slider__dot {
@@ -268,12 +303,13 @@ a {
   border: 0;
   background: rgba(255, 255, 255, 0.3);
   cursor: pointer;
-  transition: transform 0.18s ease, background 0.18s ease;
+  transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
 }
 
 .hero-slider__dot--active {
   background: #ffd2a9;
   transform: scale(1.15);
+  box-shadow: 0 0 0 4px rgba(255, 210, 169, 0.16);
 }
 
 .hero__points {
@@ -394,10 +430,55 @@ a {
 }
 
 .solution-card {
-  display: flex;
-  align-items: start;
-  min-height: 110px;
+  position: relative;
+  display: grid;
+  gap: 10px;
+  min-height: 180px;
+  padding-top: 54px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(234, 143, 68, 0.12), transparent 34%),
+    linear-gradient(180deg, #ffffff, #f7fcf9);
   transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.solution-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  border-radius: 14px 0 0 14px;
+  background: linear-gradient(180deg, var(--color-primary), var(--color-primary-light));
+}
+
+.solution-card--2::before {
+  background: linear-gradient(180deg, var(--color-accent), #f0aa6e);
+}
+
+.solution-card--3::before {
+  background: linear-gradient(180deg, #245f8f, #5d97c2);
+}
+
+.solution-card__index {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #e8f5ef;
+  color: var(--color-primary-dark);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.solution-card h3 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 1.02rem;
 }
 
 .solution-card:hover,
@@ -412,6 +493,7 @@ a {
 .solution-card p {
   margin: 0;
   color: var(--color-muted);
+  font-size: 0.95rem;
 }
 
 .feature-grid {
@@ -422,16 +504,20 @@ a {
 
 .core-feature-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 22px;
 }
 
 .core-feature-card {
-  min-height: 200px;
+  min-height: 190px;
   background:
     radial-gradient(circle at top right, rgba(234, 143, 68, 0.1), transparent 30%),
     linear-gradient(180deg, #ffffff, #f8fcfa);
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.core-feature-card--offset {
+  margin-top: 34px;
 }
 
 .core-feature-card:hover {
@@ -441,7 +527,7 @@ a {
 .core-feature-card h3 {
   margin: 0 0 10px;
   color: var(--color-primary-dark);
-  font-size: 1rem;
+  font-size: 1.06rem;
 }
 
 .core-feature-card p {
@@ -511,6 +597,14 @@ a {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+}
+
+.feature-table-grid--single {
+  grid-template-columns: 1fr;
+}
+
+.feature-table-grid--single .feature-table {
+  width: 100%;
 }
 
 .feature-table__rows {
@@ -754,11 +848,11 @@ a {
   color: #ffffff;
 }
 
-.roadmap-highlight {
-  margin-top: 22px;
+.future-layout {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: 1.05fr 0.95fr;
   gap: 18px;
+  align-items: start;
 }
 
 .vision-cards {
@@ -767,7 +861,7 @@ a {
 }
 
 .vision-card {
-  min-height: 190px;
+  min-height: 220px;
   transition: transform 0.22s ease, box-shadow 0.22s ease;
 }
 
@@ -777,8 +871,14 @@ a {
   border: 0;
 }
 
+.ui-card.vision-card--primary {
+  background: linear-gradient(135deg, #1f6f54, #2f9a74);
+  border: 0;
+}
+
 .vision-card--primary h3,
-.vision-card--primary p {
+.vision-card--primary p,
+.vision-card--primary .vision-card__eyebrow {
   color: #ffffff;
 }
 
@@ -787,40 +887,6 @@ a {
 }
 
 .vision-card__eyebrow {
-  margin: 0 0 10px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.86;
-}
-
-.roadmap-highlight__card {
-  min-height: 210px;
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
-}
-
-.roadmap-highlight__card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
-}
-
-.roadmap-highlight__card--primary {
-  background: linear-gradient(135deg, #1f6f54, #3aa17b);
-  color: #ffffff;
-  border: 0;
-}
-
-.roadmap-highlight__card--primary h3,
-.roadmap-highlight__card--primary p {
-  color: #ffffff;
-}
-
-.roadmap-highlight__card--secondary {
-  background: linear-gradient(135deg, #fff8ef, #ffffff);
-}
-
-.roadmap-highlight__eyebrow {
   margin: 0 0 10px;
   font-size: 0.78rem;
   font-weight: 800;
@@ -941,11 +1007,15 @@ a {
   .feature-table-grid,
   .tagline-grid,
   .capability-grid,
-  .roadmap-highlight,
   .intelligence-grid,
   .how-grid,
+  .future-layout,
   .footer-grid {
     grid-template-columns: 1fr;
+  }
+
+  .core-feature-card--offset {
+    margin-top: 0;
   }
 }
 
