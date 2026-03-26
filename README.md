@@ -1,269 +1,98 @@
-# AagriGgate
 
-AagriGgate is a full-stack web application designed to facilitate agricultural trade by connecting farmers and buyers through a secure and structured digital platform. The application provides functionality for farmer registration, crop management, buyer interaction, authentication, and market data handling.
+# AagriGgate – Agricultural Trade Platform
 
-The system is built using a Spring Boot backend and a React (Vite) frontend, with MySQL as the primary database and JWT-based authentication for secure access.
+## Overview
 
----
+**AagriGgate** is a full-stack web application that connects **farmers and buyers** on a digital platform to simplify agricultural trade.
+The platform allows farmers to list crops, buyers to search and approach farmers, and both parties to interact securely through an authenticated system.
 
-# Table of Contents
+The system is built using:
 
-- Project Overview
-- Technology Stack
-- Project Structure
-- Backend Architecture
-- Frontend Architecture
-- Installation and Setup
-- Backend Configuration
-- Frontend Configuration
-- Running the Application
-- Authentication and Security
-- Environment Configuration
-- Build and Deployment
-- License
+* **Spring Boot** (Backend API)
+* **React + Vite** (Frontend)
+* **MySQL** (Database)
+* **JWT Authentication** (Security)
 
 ---
 
-# Project Overview
+## Features
 
-The platform provides the following capabilities:
-
-- Farmer registration and account management
-- Buyer registration and authentication
-- Crop listing and management
-- Farmer–buyer interaction system
-- Enquiry and approach management
-- Market data storage
-- Email verification and OTP services
-- Secure authentication using JWT
-- Role-based security configuration
-
-The project is divided into two main modules:
-
-- Backend – Spring Boot REST API
-- Frontend – React application using Vite
+* Farmer and Buyer Registration
+* Login with JWT Authentication
+* Email Verification with OTP
+* Crop Listing Management (Add / Update / Delete)
+* Buyer → Farmer Approach System
+* Enquiry Management
+* Market Data Storage
+* Role-Based Access Control (Admin / Farmer / Buyer)
+* Secure API with Spring Security
 
 ---
 
-# Technology Stack
+## Tech Stack
 
-## Backend
+### Backend
 
-- Java
-- Spring Boot
-- Spring Security
-- JWT Authentication
-- Spring Data JPA
-- Hibernate
-- Maven
-- MySQL
+* Java
+* Spring Boot
+* Spring Security
+* JWT Authentication
+* Spring Data JPA (Hibernate)
+* Maven
+* MySQL
 
-## Frontend
+### Frontend
 
-- React.js
-- Vite
-- JavaScript
-- CSS
+* React.js
+* Vite
+* JavaScript
+* CSS
 
-## Tools and Configuration
-
-- Maven Wrapper
-- ESLint
-- PostCSS
-- Environment configuration support
 
 ---
 
-# Project Structure
+## Project Structure
 
 ```
 AagriGgate/
 │
-├── backend/
-│   ├── pom.xml
-│   ├── mvnw
-│   ├── mvnw.cmd
-│   │
-│   └── src/main/
-│       ├── java/com/MyWebpage/register/login/
-│       │   ├── Application.java
-│       │   ├── WebConfig.java
-│       │   │
-│       │   ├── controller/
-│       │   │   ├── AdminController.java
-│       │   │   ├── AuthController.java
-│       │   │   ├── BuyerController.java
-│       │   │   ├── FarmerController.java
-│       │   │   ├── CropController.java
-│       │   │   ├── ApproachFarmerController.java
-│       │   │   ├── ApproachFarmerController2.java
-│       │   │   ├── SavedMarketDataController.java
-│       │   │   └── VerificationController.java
-│       │   │
-│       │   ├── model/
-│       │   │   ├── Admin.java
-│       │   │   ├── Buyer.java
-│       │   │   ├── Farmer.java
-│       │   │   ├── Crop.java
-│       │   │   ├── ApproachFarmer.java
-│       │   │   ├── Enquiry.java
-│       │   │   ├── SavedMarketData.java
-│       │   │   ├── VerificationToken.java
-│       │   │   ├── VerificationTokenBuyer.java
-│       │   │   └── ResetPasswordRequest.java
-│       │   │
-│       │   ├── repositor/
-│       │   │   ├── BuyerRepo.java
-│       │   │   ├── FarmerRepo.java
-│       │   │   ├── CropRepo.java
-│       │   │   ├── ApproachFarmerRepo.java
-│       │   │   ├── EnquiryRepository.java
-│       │   │   ├── SavedMarketDataRepository.java
-│       │   │   └── VerificationTokenRepository.java
-│       │   │
-│       │   ├── service/
-│       │   │   ├── AdminService.java
-│       │   │   ├── BuyerService.java
-│       │   │   ├── FarmerService.java
-│       │   │   ├── CropService.java
-│       │   │   ├── ApproachFarmerService.java
-│       │   │   ├── SavedMarketDataService.java
-│       │   │   ├── EmailService.java
-│       │   │   ├── OtpService.java
-│       │   │   ├── MyUserDetailsService.java
-│       │   │   └── AuthResponse.java
-│       │   │
-│       │   ├── security/
-│       │   │   ├── SecurityConfig.java
-│       │   │   └── UserPrincipal.java
-│       │   │
-│       │   └── JWT/
-│       │       ├── JWTService.java
-│       │       ├── JwtFilter.java
-│       │       ├── JwtBuyerAuthenticationFilter.java
-│       │       └── JwtSellerAuthenticationFilter.java
-│       │
-│       └── resources/
-│           ├── application.properties
-│           ├── application.yml
-│           └── templates/
-│               └── home.html
-│
-├── frontend/
-│   ├── package.json
-│   ├── vite.config.js
-│   ├── index.html
-│   ├── .env.example
-│   │
-│   ├── src/
-│   │   ├── main.jsx
-│   │   ├── App.jsx
-│   │   ├── index.css
-│   │   │
-│   │   ├── components/
-│   │   │   ├── Login.jsx
-│   │   │   ├── Register.jsx
-│   │   │   ├── Account.jsx
-│   │   │   ├── AddCrop.jsx
-│   │   │   ├── UpdateCrop.jsx
-│   │   │   ├── DeleteCrop.jsx
-│   │   │   ├── ViewCrop.jsx
-│   │   │   ├── Market.jsx
-│   │   │   ├── ApproachFarmer.jsx
-│   │   │   ├── Enquiry.jsx
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── Footer.jsx
-│   │   │   ├── Weather.jsx
-│   │   │   └── others/
-│   │   │
-│   │   ├── lib/
-│   │   │   ├── api.js
-│   │   │   └── auth.js
-│   │   │
-│   │   └── assets/
-│   │
-│   └── public/
-│
+├── backend/        # Spring Boot Application
+├── frontend/       # React Application (Vite)
 └── README.md
 ```
 
----
+### Backend Architecture (Layered Architecture)
 
-# Backend Architecture
-
-The backend follows layered architecture:
-
-Controller Layer  
-Handles HTTP requests and responses.
-
-Location:
 ```
-backend/src/main/java/com/MyWebpage/register/login/controller/
+Controller → Service → Repository → Database
 ```
 
-Service Layer  
-Contains business logic.
-
-Location:
-```
-backend/src/main/java/com/MyWebpage/register/login/service/
-```
-
-Repository Layer  
-Handles database access using Spring Data JPA.
-
-Location:
-```
-backend/src/main/java/com/MyWebpage/register/login/repositor/
-```
-
-Security Layer  
-Handles authentication and authorization.
-
-Location:
-```
-backend/src/main/java/com/MyWebpage/register/login/security/
-backend/src/main/java/com/MyWebpage/register/login/JWT/
-```
+| Layer      | Responsibility                 |
+| ---------- | ------------------------------ |
+| Controller | Handles HTTP requests          |
+| Service    | Business logic                 |
+| Repository | Database operations            |
+| Security   | Authentication & Authorization |
+| JWT        | Token generation & validation  |
 
 ---
 
-# Frontend Architecture
+## Installation & Setup
 
-The frontend uses React with component-based architecture.
+### Prerequisites
 
-Components:
-```
-frontend/src/components/
-```
+Make sure you have installed:
 
-API utilities:
-```
-frontend/src/lib/api.js
-frontend/src/lib/auth.js
-```
-
-Entry point:
-```
-frontend/src/main.jsx
-```
+* Java 21+
+* Node.js 18+
+* MySQL 8+
+* Maven
 
 ---
 
-# Installation and Setup
+## Backend Setup
 
-## Prerequisites
-
-- Java 17 or higher
-- Node.js 18 or higher
-- MySQL 8 or higher
-- Maven
-
----
-
-# Backend Configuration
-
-```
+```bash
 cd backend
 ```
 
@@ -275,86 +104,105 @@ src/main/resources/application.properties
 
 Example:
 
-```
+```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/agrigate
 spring.datasource.username=YOUR_USERNAME
 spring.datasource.password=YOUR_PASSWORD
 spring.jpa.hibernate.ddl-auto=update
 ```
 
----
+Run backend:
 
-# Frontend Configuration
-
-```
-cd frontend
-npm install
-```
-
----
-
-# Running the Application
-
-Backend:
-
-```
+```bash
 ./mvnw spring-boot:run
 ```
 
-Frontend:
+Backend runs on:
 
 ```
+http://localhost:8080
+```
+
+---
+
+## Frontend Setup
+
+```bash
+cd frontend
+npm install
 npm run dev
 ```
 
----
-
-# Authentication and Security
-
-Authentication components:
-
-- JWTService.java
-- JwtFilter.java
-- SecurityConfig.java
-- UserPrincipal.java
-
-JWT is used to secure API endpoints and validate users.
-
----
-
-# Environment Configuration
-
-Example file:
+Frontend runs on:
 
 ```
-frontend/.env.example
+http://localhost:5173
 ```
 
 ---
 
-# Build and Deployment
+## Authentication Flow (How Login Works)
 
-Backend:
+1. User registers (Farmer/Buyer)
+2. Email OTP verification
+3. User logs in
+4. Server generates **JWT token**
+5. Frontend stores token
+6. Token sent in API requests
+7. Backend validates token and allows access
 
-```
+---
+
+## API Modules
+
+| Module   | Description               |
+| -------- | ------------------------- |
+| Auth     | Login / Register          |
+| Farmer   | Farmer account management |
+| Buyer    | Buyer account management  |
+| Crop     | Crop CRUD operations      |
+| Approach | Buyer approaches farmer   |
+| Enquiry  | Communication             |
+| Market   | Market data               |
+| Admin    | Admin controls            |
+
+---
+
+## Build for Production
+
+### Backend
+
+```bash
 ./mvnw clean package
 java -jar target/*.jar
 ```
 
-Frontend:
+### Frontend
 
-```
+```bash
 npm run build
 ```
 
-Output:
+Output folder:
 
 ```
-dist/
+frontend/dist/
 ```
 
 ---
 
-# License
+## Future Improvements
 
-This project is intended for development and educational purposes.
+* Payment integration
+* Real-time chat
+* Crop price prediction
+* Mobile app version
+* Notifications system
+
+---
+
+## License
+
+This project is developed for **educational and development purposes**.
+
+---
