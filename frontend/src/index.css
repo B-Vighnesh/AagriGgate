@@ -193,9 +193,9 @@ a {
   gap: 10px;
 }
 
-.hero-outline {
-  color: #fff;
-  border-color: #fff;
+.hero__actions .ui-btn {
+  min-width: 160px;
+  min-height: 46px;
 }
 
 .stats {
@@ -412,6 +412,17 @@ a {
   background: transparent;
   color: var(--color-primary);
   border: 1px solid currentColor;
+}
+
+.ui-btn.hero-outline {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ui-btn.hero-outline:hover {
+  background: #ffffff;
+  color: var(--color-primary-dark);
 }
 
 .ui-btn--ghost {
