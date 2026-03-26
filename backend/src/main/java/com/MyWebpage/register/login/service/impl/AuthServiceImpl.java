@@ -65,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
         farmer.setUsername(generatedUsername);
 
         farmer = farmerRepo.save(farmer);
-        otpService.setOtpVerifiedMap(dto.getEmail(), false);
+        otpService.clearOtp(dto.getEmail());
         emailService.sendWelcomeEmail(farmer);
 
         String token =

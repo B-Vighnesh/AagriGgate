@@ -30,6 +30,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
                 .orElseThrow(() -> new RuntimeException("Email not registered"));
 
         String otp = String.valueOf(new Random().nextInt(900000) + 100000);
+        otpRepository.deleteByEmail(email);
 
         PasswordResetOtp resetOtp = new PasswordResetOtp();
         resetOtp.setEmail(email);
@@ -44,7 +45,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     @Override
     public void verifyOtp(String email, String otp) {
         PasswordResetOtp stored = otpRepository
-                .findTopByEmailOrderByExpiryTimeDesc(email)
+                .findTopByEmailOrderByIdDesc(email)
                 .orElseThrow(() -> new RuntimeException("OTP not found"));
 
         if (!stored.getOtp().equals(otp)) {
@@ -52,6 +53,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         }
 
         if (stored.getExpiryTime().isBefore(LocalDateTime.now())) {
+            otpRepository.deleteByEmail(email);
             throw new RuntimeException("OTP expired");
         }
 
@@ -62,7 +64,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     @Override
     public void resetPassword(String email, String newPassword) {
         PasswordResetOtp stored = otpRepository
-                .findTopByEmailOrderByExpiryTimeDesc(email)
+                .findTopByEmailOrderByIdDesc(email)
                 .orElseThrow(() -> new RuntimeException("OTP not found"));
 
         if (!stored.isVerified()) {
@@ -70,6 +72,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         }
 
         if (stored.getExpiryTime().isBefore(LocalDateTime.now())) {
+            otpRepository.deleteByEmail(email);
             throw new RuntimeException("OTP expired");
         }
 
@@ -77,9 +80,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         farmer.setPassword(passwordEncoder.encode(newPassword));
         farmerRepo.save(farmer);
 
-        // Invalidate OTP so it cannot be reused.
-        stored.setVerified(false);
-        otpRepository.save(stored);
+        otpRepository.deleteByEmail(email);
 
         emailService.sendPasswordResetSuccessEmail(farmer);
     }
