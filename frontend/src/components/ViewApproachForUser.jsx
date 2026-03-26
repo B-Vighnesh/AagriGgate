@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
-import { apiGet, apiFetch } from '../lib/api';
+import { apiFetch, requestJson } from '../lib/api';
 import ValidateToken from './ValidateToken';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -45,13 +45,17 @@ export default function ViewApproachForUser() {
       setLoading(true);
       setError('');
       try {
-        const response = await apiGet(`/buyer/approach/requests/user/${farmerId}`);
-        if (!response.ok) throw new Error('Unable to load requests.');
-        const data = await response.json();
+        const data = await requestJson(`/buyer/approach/requests/user/${farmerId}`, {
+          method: 'GET',
+        });
         setApproaches(Array.isArray(data) ? data : []);
       } catch (loadError) {
-        setError(loadError.message || 'Unable to load requests.');
         setApproaches([]);
+        if ([204, 400, 404].includes(loadError?.status)) {
+          setError('');
+        } else {
+          setError(loadError.message || 'Unable to load requests.');
+        }
       } finally {
         setLoading(false);
       }
@@ -105,9 +109,21 @@ export default function ViewApproachForUser() {
 
         {(error || filteredApproaches.length === 0) && (
           <Card className="user-requests-empty">
-            <h3>{error || `No ${filter !== 'All' ? filter.toLowerCase() : ''} requests`}</h3>
-            <p>{error ? 'Try again or browse crops to send a new request.' : 'Requests appear here after you approach a farmer.'}</p>
-            <Button onClick={() => navigate('/view-all-crops')}>Browse Crops</Button>
+            <h3>{error || `No ${filter !== 'All' ? filter.toLowerCase() : 'approach'} requests yet`}</h3>
+            <p>
+              {error
+                ? 'We could not load your requests right now. Please try again or browse crops to send a new request.'
+                : 'Your requests to farmers will appear here once you approach a crop listing.'}
+            </p>
+            {!error && (
+              <p>
+                You can come back here anytime to track whether a farmer has accepted, rejected, or is still reviewing your request.
+              </p>
+            )}
+            <div className="confirm-actions">
+              <Button variant="outline" onClick={() => window.location.reload()}>Refresh</Button>
+              <Button onClick={() => navigate('/view-all-crops')}>Browse Crops</Button>
+            </div>
           </Card>
         )}
 

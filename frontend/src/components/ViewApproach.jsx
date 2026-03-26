@@ -42,8 +42,8 @@ export default function ViewApproach() {
       setApproaches(Array.isArray(data) ? data : []);
     } catch (err) {
       setApproaches([]);
-      if (err?.message === 'Request failed with status 404') {
-        setError('No requests found.');
+      if ([204, 400, 404].includes(err?.status)) {
+        setError('');
       } else {
         setError(err.message || 'Server busy. Please refresh.');
       }
@@ -125,13 +125,21 @@ export default function ViewApproach() {
         {error ? (
           <Card className="view-approach-empty">
             <h3>{error}</h3>
-            <p>When buyers send requests, they will appear here.</p>
+            <p>We could not load buyer requests right now.</p>
+            <p>Please refresh this page in a moment. If the issue continues, check whether the backend is running and your session is still valid.</p>
+            <Button variant="outline" onClick={loadApproaches}>Try Again</Button>
           </Card>
         ) : null}
 
         {!error && filteredApproaches.length === 0 ? (
           <Card className="view-approach-empty">
-            <h3>No {filter !== 'All' ? filter.toLowerCase() : ''} requests</h3>
+            <h3>No {filter !== 'All' ? filter.toLowerCase() : 'buyer'} requests yet</h3>
+            <p>Requests from buyers will appear here after they approach one of your crops.</p>
+            <p>Once a request arrives, you can review the buyer details, open the crop listing, and accept or reject the proposal from this page.</p>
+            <div className="confirm-actions">
+              <Button variant="outline" onClick={() => navigate('/mycrop')}>View My Crops</Button>
+              <Button onClick={loadApproaches}>Refresh</Button>
+            </div>
           </Card>
         ) : null}
 
