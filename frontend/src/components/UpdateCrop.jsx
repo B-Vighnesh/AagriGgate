@@ -136,7 +136,6 @@ export default function UpdateCrop() {
       quantity: Number(cropData.quantity),
       unit: cropData.unit,
       description: cropData.description,
-      farmer: { farmerId: Number(farmerId) },
     };
 
     const formData = new FormData();

@@ -5,6 +5,7 @@ import com.MyWebpage.register.login.service.ApproachFarmerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,14 +16,13 @@ public class ApproachFarmerController2 {
 
     @Autowired
     private ApproachFarmerService approachFarmerService;
-    Long id=0L;
+
     @PostMapping("/accept/{approachId}")
-    public ResponseEntity<String> acceptApproach(@PathVariable Long approachId) {
-        if(id==approachId){
-            return new ResponseEntity<>("Response already submitted",HttpStatus.UNAUTHORIZED);
-        }
-        boolean success = approachFarmerService.updateApproachStatus(approachId, true);
-        id=approachId;
+    public ResponseEntity<String> acceptApproach(
+            @PathVariable Long approachId,
+            Authentication authentication) {
+        Long farmerId = Long.parseLong(authentication.getName());
+        boolean success = approachFarmerService.updateApproachStatus(approachId, farmerId, true);
         if (success) {
             ApproachFarmer approachFarmer=approachFarmerService.findById(approachId);
             boolean a=approachFarmerService.sendMail(approachFarmer);
@@ -39,12 +39,11 @@ public class ApproachFarmerController2 {
 
 
     @PostMapping("/reject/{approachId}")
-    public ResponseEntity<String> rejectApproach(@PathVariable Long approachId) {
-        if(id==approachId){
-            return new ResponseEntity<>("Response already submitted",HttpStatus.UNAUTHORIZED);
-        }
-        id=approachId;
-        boolean success = approachFarmerService.updateApproachStatus(approachId, false);
+    public ResponseEntity<String> rejectApproach(
+            @PathVariable Long approachId,
+            Authentication authentication) {
+        Long farmerId = Long.parseLong(authentication.getName());
+        boolean success = approachFarmerService.updateApproachStatus(approachId, farmerId, false);
         if (success) {
             return ResponseEntity.ok("Approach rejected successfully.");
         } else {
@@ -52,9 +51,10 @@ public class ApproachFarmerController2 {
                     .body("Approach with ID " + approachId + " not found.");
         }
     }
-    @GetMapping("/requests/farmer/{farmerId}")
-    public ResponseEntity<Object> getRequestsByFarmerId(@PathVariable Long farmerId) {
+    @GetMapping("/requests/me")
+    public ResponseEntity<Object> getRequestsByFarmerId(Authentication authentication) {
         try {
+            Long farmerId = Long.parseLong(authentication.getName());
             List<ApproachFarmer> requests = approachFarmerService.getRequestsByFarmerId(farmerId);
             if (requests == null || requests.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -67,11 +67,12 @@ public class ApproachFarmerController2 {
         }
     }
 
-    @GetMapping("/requests/farmer/{farmerId}/{cropId}")
+    @GetMapping("/requests/me/{cropId}")
     public ResponseEntity<Object> getRequestsByFarmerIdAndCropId(
-            @PathVariable Long farmerId,
-            @PathVariable Long cropId) {
+            @PathVariable Long cropId,
+            Authentication authentication) {
         try {
+            Long farmerId = Long.parseLong(authentication.getName());
             List<ApproachFarmer> requests = approachFarmerService.getRequestsByFarmerIdAndCropId(farmerId, cropId);
             if (requests == null || requests.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NO_CONTENT)

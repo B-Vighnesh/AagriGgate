@@ -78,7 +78,7 @@ export default function ViewDetails() {
         }
 
         if (role === 'farmer') {
-          const reqRes = await safeFetch(`/seller/approach/requests/farmer/${currentUserId}/${cropId}`, { method: 'GET' });
+          const reqRes = await safeFetch(`/seller/approach/requests/me/${cropId}`, { method: 'GET' });
           if (reqRes.ok) {
             const reqData = await parseJsonIfPresent(reqRes);
             if (mounted) setRequests(Array.isArray(reqData) ? reqData.length : 0);
@@ -86,7 +86,7 @@ export default function ViewDetails() {
         }
 
         if (role === 'buyer') {
-          const statusRes = await safeFetch(`/buyer/approach/requests/user/${currentUserId}/${cropId}`, { method: 'GET' });
+          const statusRes = await safeFetch(`/buyer/approach/requests/me/${cropId}`, { method: 'GET' });
           if (statusRes.ok) {
             const status = await parseJsonIfPresent(statusRes);
             if (!mounted) return;
@@ -191,8 +191,6 @@ export default function ViewDetails() {
       {showApproachModal ? (
         <ApproachFarmer
           cropId={cropId}
-          farmerId={cropDetails.farmer?.farmerId}
-          userId={currentUserId}
           onClose={() => setShowApproachModal(false)}
         />
       ) : null}

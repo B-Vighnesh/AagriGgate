@@ -5,6 +5,7 @@ import com.MyWebpage.register.login.service.ApproachFarmerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,14 +17,13 @@ public class ApproachFarmerController {
     @Autowired
     private ApproachFarmerService approachFarmerService;
 
-    @PostMapping("/create/{farmerId}/{cropId}/{userId}")
+    @PostMapping("/create/{cropId}")
     public ResponseEntity<String> createApproach(
-            @PathVariable Long farmerId,
             @PathVariable Long cropId,
-            @PathVariable Long userId) {
+            Authentication authentication) {
         try {
-
-            return  approachFarmerService.createApproach(farmerId, cropId, userId);
+            Long userId = Long.parseLong(authentication.getName());
+            return  approachFarmerService.createApproach(userId, cropId);
         } catch (Exception e) {
             if (e.getMessage().contains("Duplicate entry")) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -49,11 +49,10 @@ public class ApproachFarmerController {
 //                    .body("Error fetching approaches: " + e.getMessage());
 //        }
 //    }
-
-
-    @GetMapping("/requests/user/{userId}")
-    public ResponseEntity<Object> getRequestsByUserId(@PathVariable Long userId) {
+    @GetMapping("/requests/me")
+    public ResponseEntity<Object> getRequestsByUserId(Authentication authentication) {
         try {
+            Long userId = Long.parseLong(authentication.getName());
             List<ApproachFarmer> requests = approachFarmerService.getRequestsByUserId(userId);
             if (requests == null || requests.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NO_CONTENT)
@@ -65,12 +64,13 @@ public class ApproachFarmerController {
                     .body("Error fetching requests: " + e.getMessage());
         }
     }
-    @GetMapping("/requests/user/{userId}/{cropId}")
+    @GetMapping("/requests/me/{cropId}")
     public ResponseEntity<Boolean> isApproachAccepted(
-            @PathVariable Long userId,
-            @PathVariable Long cropId
+            @PathVariable Long cropId,
+            Authentication authentication
     ) {
         try {
+            Long userId = Long.parseLong(authentication.getName());
             boolean isAccepted = approachFarmerService.isApproachAccepted(userId, cropId);
             if(isAccepted)
             return ResponseEntity.ok(isAccepted);
@@ -81,14 +81,16 @@ public class ApproachFarmerController {
         }
     }
     @DeleteMapping("/delete/{approachId}")
-    public ResponseEntity<String> deleteApproach(@PathVariable Long approachId) {
+    public ResponseEntity<String> deleteApproach(
+            @PathVariable Long approachId,
+            Authentication authentication) {
         try {
-            boolean isDeleted = approachFarmerService.deleteApproach(approachId);
+            Long userId = Long.parseLong(authentication.getName());
+            boolean isDeleted = approachFarmerService.deleteApproach(approachId, userId);
             if (isDeleted) {
                 return ResponseEntity.ok("Approach record deleted successfully.");
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Approach record not found for ID: " + approachId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Approach record not found for ID: " + approachId);
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

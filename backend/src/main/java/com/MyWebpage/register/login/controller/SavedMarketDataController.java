@@ -5,11 +5,12 @@ import com.MyWebpage.register.login.service.SavedMarketDataService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,21 +26,28 @@ public class SavedMarketDataController {
     }
 
     @PostMapping
-    public ResponseEntity<SavedMarketData> saveMarketData(@RequestBody SavedMarketData data) {
-        return new ResponseEntity<>(savedMarketDataService.save(data), HttpStatus.CREATED);
+    public ResponseEntity<SavedMarketData> saveMarketData(
+            @RequestBody SavedMarketData data,
+            Authentication authentication) {
+        String farmerId = authentication.getName();
+        return new ResponseEntity<>(savedMarketDataService.save(farmerId, data), HttpStatus.CREATED);
     }
 
     @GetMapping
     public Page<SavedMarketData> getAllSavedMarketData(
-            @RequestHeader("X-Farmer-Id") String farmerId,
+            Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+        String farmerId = authentication.getName();
         return savedMarketDataService.getAll(farmerId, page, size);
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> deleteMarketData(@RequestHeader("X-Id") Long id) {
-        savedMarketDataService.delete(id);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMarketData(
+            @PathVariable Long id,
+            Authentication authentication) {
+        String farmerId = authentication.getName();
+        savedMarketDataService.delete(farmerId, id);
         return ResponseEntity.noContent().build();
     }
 }

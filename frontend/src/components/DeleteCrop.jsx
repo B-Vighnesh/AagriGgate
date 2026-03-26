@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import ValidateToken from './ValidateToken';
-import { getApiBaseUrl } from '../lib/api';
+import { apiFetch } from '../lib/api';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
 
 export default function DeleteCrop({ cropId, onClose }) {
@@ -21,9 +21,8 @@ export default function DeleteCrop({ cropId, onClose }) {
     setError('');
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/crops/legacy/${cropId}`, {
+      const response = await apiFetch(`/crops/legacy/${cropId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) throw new Error('Failed to delete the crop. Please try again.');

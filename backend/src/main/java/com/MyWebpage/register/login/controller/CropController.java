@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,17 +39,21 @@ public class CropController {
 
     @PostMapping(value = "/farmer/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Crop> addCropV1(
+            Authentication authentication,
             @RequestPart("crop") Crop crop,
             @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
-        return ResponseEntity.status(HttpStatus.CREATED).body(cropService.addCropV1(crop, imageFile));
+        Long farmerId = Long.parseLong(authentication.getName());
+        return ResponseEntity.status(HttpStatus.CREATED).body(cropService.addCropV1(farmerId, crop, imageFile));
     }
 
     @PutMapping(value = "/farmer/{cropId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Crop> updateCropV1(
+            Authentication authentication,
             @PathVariable Long cropId,
             @RequestPart("crop") Crop crop,
             @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
-        return ResponseEntity.ok(cropService.updateCropV1(cropId, crop, imageFile));
+        Long farmerId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(cropService.updateCropV1(farmerId, cropId, crop, imageFile));
     }
 
     // Legacy V1 endpoints kept for backward compatibility with older clients.
@@ -60,7 +65,19 @@ public class CropController {
     }
 
     @GetMapping("/farmer/{farmerId}/legacy")
-    public ResponseEntity<List<Crop>> getCropsByFarmerIdV1(@PathVariable Long farmerId) {
+    public ResponseEntity<List<Crop>> getCropsByFarmerIdV1(
+            @PathVariable Long farmerId,
+            Authentication authentication) {
+        Long authenticatedFarmerId = Long.parseLong(authentication.getName());
+        if (!authenticatedFarmerId.equals(farmerId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId));
+    }
+
+    @GetMapping("/farmer/me/legacy")
+    public ResponseEntity<List<Crop>> getMyCropsV1(Authentication authentication) {
+        Long farmerId = Long.parseLong(authentication.getName());
         return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId));
     }
 
@@ -87,8 +104,11 @@ public class CropController {
     }
 
     @DeleteMapping("/legacy/{cropId}")
-    public ResponseEntity<String> deleteCropByIdV1(@PathVariable Long cropId) {
-        cropService.deleteCropByIdV1(cropId);
+    public ResponseEntity<String> deleteCropByIdV1(
+            @PathVariable Long cropId,
+            Authentication authentication) {
+        Long farmerId = Long.parseLong(authentication.getName());
+        cropService.deleteCropByIdV1(farmerId, cropId);
         return ResponseEntity.ok("Crop deleted successfully");
     }
 
@@ -101,22 +121,38 @@ public class CropController {
 
     @PostMapping(value = "/v2/farmer/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<CropResponseDTO>> addCropV2(
+            Authentication authentication,
             @Valid @RequestPart("crop") CropRequestDTO crop,
             @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
+        Long farmerId = Long.parseLong(authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Crop added", cropService.addCropV2(crop, imageFile)));
+                .body(ApiResponse.success("Crop added", cropService.addCropV2(farmerId, crop, imageFile)));
     }
 
     @PutMapping(value = "/v2/farmer/{cropId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<CropResponseDTO>> updateCropV2(
+            Authentication authentication,
             @PathVariable Long cropId,
             @Valid @RequestPart("crop") CropRequestDTO crop,
             @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
-        return ResponseEntity.ok(ApiResponse.success("Crop updated", cropService.updateCropV2(cropId, crop, imageFile)));
+        Long farmerId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success("Crop updated", cropService.updateCropV2(farmerId, cropId, crop, imageFile)));
     }
 
     @GetMapping("/v2/farmer/{farmerId}")
-    public ResponseEntity<ApiResponse<List<CropResponseDTO>>> getCropsByFarmerIdV2(@PathVariable Long farmerId) {
+    public ResponseEntity<ApiResponse<List<CropResponseDTO>>> getCropsByFarmerIdV2(
+            @PathVariable Long farmerId,
+            Authentication authentication) {
+        Long authenticatedFarmerId = Long.parseLong(authentication.getName());
+        if (!authenticatedFarmerId.equals(farmerId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId)));
+    }
+
+    @GetMapping("/v2/farmer/me")
+    public ResponseEntity<ApiResponse<List<CropResponseDTO>>> getMyCropsV2(Authentication authentication) {
+        Long farmerId = Long.parseLong(authentication.getName());
         return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId)));
     }
 
@@ -126,13 +162,22 @@ public class CropController {
     }
 
     @DeleteMapping("/v2/{cropId}")
-    public ResponseEntity<ApiResponse<String>> deleteCropByIdV2(@PathVariable Long cropId) {
-        cropService.deleteCropByIdV2(cropId);
+    public ResponseEntity<ApiResponse<String>> deleteCropByIdV2(
+            @PathVariable Long cropId,
+            Authentication authentication) {
+        Long farmerId = Long.parseLong(authentication.getName());
+        cropService.deleteCropByIdV2(farmerId, cropId);
         return ResponseEntity.ok(ApiResponse.success("Crop deleted successfully", "OK"));
     }
 
     @DeleteMapping("/v2/farmer/{farmerId}")
-    public ResponseEntity<ApiResponse<String>> deleteCropByFarmerIdV2(@PathVariable Long farmerId) {
+    public ResponseEntity<ApiResponse<String>> deleteCropByFarmerIdV2(
+            @PathVariable Long farmerId,
+            Authentication authentication) {
+        Long authenticatedFarmerId = Long.parseLong(authentication.getName());
+        if (!authenticatedFarmerId.equals(farmerId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         cropService.deleteCropByFarmerIdV2(farmerId);
         return ResponseEntity.ok(ApiResponse.success("Farmer crops deleted successfully", "OK"));
     }

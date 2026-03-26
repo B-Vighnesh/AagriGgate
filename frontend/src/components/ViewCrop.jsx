@@ -32,7 +32,7 @@ export default function ViewCrop() {
     let mounted = true;
     (async () => {
       try {
-        const response = await apiGet(`/crops/farmer/${farmerId}/legacy`);
+        const response = await apiGet('/crops/farmer/me/legacy');
         if (!response.ok) throw new Error('Unable to load crops.');
         const data = await response.json();
         if (!mounted) return;

@@ -4,7 +4,7 @@ import com.MyWebpage.register.login.model.SavedMarketData;
 import org.springframework.data.domain.Page;
 
 public interface SavedMarketDataService {
-    SavedMarketData save(SavedMarketData data);
+    SavedMarketData save(String farmerId, SavedMarketData data);
     Page<SavedMarketData> getAll(String farmerId, int page, int size);
-    void delete(Long id);
+    void delete(String farmerId, Long id);
 }

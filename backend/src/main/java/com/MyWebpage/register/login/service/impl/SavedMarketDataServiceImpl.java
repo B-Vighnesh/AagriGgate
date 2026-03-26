@@ -1,6 +1,7 @@
 package com.MyWebpage.register.login.service.impl;
 
 import com.MyWebpage.register.login.model.SavedMarketData;
+import com.MyWebpage.register.login.repository.FarmerRepo;
 import com.MyWebpage.register.login.repository.SavedMarketDataRepository;
 import com.MyWebpage.register.login.service.SavedMarketDataService;
 import org.slf4j.Logger;
@@ -15,13 +16,19 @@ public class SavedMarketDataServiceImpl implements SavedMarketDataService {
     private static final Logger logger = LoggerFactory.getLogger(SavedMarketDataServiceImpl.class);
 
     private final SavedMarketDataRepository repository;
+    private final FarmerRepo farmerRepo;
 
-    public SavedMarketDataServiceImpl(SavedMarketDataRepository repository) {
+    public SavedMarketDataServiceImpl(SavedMarketDataRepository repository, FarmerRepo farmerRepo) {
         this.repository = repository;
+        this.farmerRepo = farmerRepo;
     }
 
     @Override
-    public SavedMarketData save(SavedMarketData data) {
+    public SavedMarketData save(String farmerId, SavedMarketData data) {
+        if (farmerRepo.findById(Long.parseLong(farmerId)).isEmpty()) {
+            throw new RuntimeException("Farmer not found");
+        }
+        data.setFarmerId(farmerId);
         SavedMarketData saved = repository.save(data);
         logger.info("Saved market data created: {}", saved.getId());
         return saved;
@@ -33,8 +40,10 @@ public class SavedMarketDataServiceImpl implements SavedMarketDataService {
     }
 
     @Override
-    public void delete(Long id) {
-        repository.deleteById(id);
+    public void delete(String farmerId, Long id) {
+        SavedMarketData savedMarketData = repository.findByIdAndFarmerId(id, farmerId)
+                .orElseThrow(() -> new RuntimeException("Saved market data not found"));
+        repository.delete(savedMarketData);
         logger.info("Saved market data deleted: {}", id);
     }
 }

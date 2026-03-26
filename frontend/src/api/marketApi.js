@@ -9,14 +9,8 @@ export const getMarketPrice = async ({ crop, state, district, arrivalDate }) => 
   return requestJson(`/market-price?${params.toString()}`);
 };
 
-export const getSavedMarketData = async ({ farmerId, page = 0, size = 100 }) => {
-  const response = await apiFetch(`/saved-market-data?page=${page}&size=${size}`, {
-    method: 'GET',
-    headers: { 'X-Farmer-Id': farmerId },
-  });
-  if (!response.ok) return null;
-  return response.json();
-};
+export const getSavedMarketData = async ({ page = 0, size = 100 }) =>
+  requestJson(`/saved-market-data?page=${page}&size=${size}`);
 
 export const saveMarketData = async (body) => {
   return apiFetch('/saved-market-data', {
@@ -26,8 +20,7 @@ export const saveMarketData = async (body) => {
 };
 
 export const deleteSavedMarketData = async (id) => {
-  return apiFetch('/saved-market-data', {
+  return apiFetch(`/saved-market-data/${id}`, {
     method: 'DELETE',
-    headers: { 'X-Id': id },
   });
 };

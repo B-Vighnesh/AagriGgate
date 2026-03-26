@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import Button from './common/Button';
 import Card from './common/Card';
-import { getApiBaseUrl } from '../lib/api';
-import { getToken, getFarmerId } from '../lib/auth';
+import { apiFetch } from '../lib/api';
+import { getToken } from '../lib/auth';
 
-export default function ApproachFarmer({ cropId, farmerId, onClose }) {
+export default function ApproachFarmer({ cropId, onClose }) {
   const token = getToken();
-  const currentUserId = getFarmerId();
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -22,13 +21,8 @@ export default function ApproachFarmer({ cropId, farmerId, onClose }) {
     setError('');
 
     try {
-      const url = `${getApiBaseUrl()}/buyer/approach/create/${farmerId}/${cropId}/${currentUserId}`;
-      const response = await fetch(url, {
+      const response = await apiFetch(`/buyer/approach/create/${cropId}`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
       });
 
       if (!response.ok) {
