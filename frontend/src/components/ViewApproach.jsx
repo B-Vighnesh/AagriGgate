@@ -36,7 +36,7 @@ export default function ViewApproach() {
     setLoading(true);
     setError('');
     try {
-      const data = await requestJson(`/seller/approach/requests/farmer/${farmerId}`, {
+      const data = await requestJson('/seller/approach/requests/me', {
         method: 'GET',
       });
       setApproaches(Array.isArray(data) ? data : []);
@@ -81,7 +81,7 @@ export default function ViewApproach() {
   const onViewBuyer = async (buyerId) => {
     setBuyerLoading(true);
     try {
-      const data = await requestJson(`/buyers/me/${buyerId}`, {
+      const data = await requestJson(`/buyers/${buyerId}`, {
         method: 'GET',
       });
       setSelectedBuyer(data);

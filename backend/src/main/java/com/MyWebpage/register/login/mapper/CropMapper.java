@@ -3,7 +3,6 @@ package com.MyWebpage.register.login.mapper;
 import com.MyWebpage.register.login.dto.CropRequestDTO;
 import com.MyWebpage.register.login.dto.CropResponseDTO;
 import com.MyWebpage.register.login.model.Crop;
-import com.MyWebpage.register.login.model.Farmer;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -17,9 +16,6 @@ public class CropMapper {
         crop.setQuantity(dto.getQuantity());
         crop.setUnit(dto.getUnit());
         crop.setDescription(dto.getDescription());
-        Farmer farmer = new Farmer();
-        farmer.setFarmerId(dto.getFarmerId());
-        crop.setFarmer(farmer);
         return crop;
     }
 

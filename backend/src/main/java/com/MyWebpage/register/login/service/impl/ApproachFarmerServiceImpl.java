@@ -39,8 +39,12 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     }
 
     @Override
-    public ResponseEntity<String> createApproach(Long farmerId, Long cropId, Long userId) {
+    public ResponseEntity<String> createApproach(Long userId, Long cropId) {
         try {
+            Crop crop = cropRepository.findById(cropId)
+                    .orElseThrow(() -> new RuntimeException("Crop not found with ID: " + cropId));
+            Long farmerId = crop.getFarmer().getFarmerId();
+
             boolean isPending = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatus(
                     farmerId, cropId, userId, "pending");
             boolean isAccepted = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatus(
@@ -57,12 +61,14 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                         HttpStatus.BAD_REQUEST);
             }
 
-            Crop crop = cropRepository.findById(cropId)
-                    .orElseThrow(() -> new RuntimeException("Crop not found with ID: " + cropId));
             Farmer farmer = farmerRepository.findById(farmerId)
                     .orElseThrow(() -> new RuntimeException("Farmer not found with ID: " + farmerId));
             Farmer user = farmerRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+            if (farmerId.equals(userId)) {
+                return new ResponseEntity<>("You cannot approach your own crop.", HttpStatus.BAD_REQUEST);
+            }
 
             ApproachFarmer approachFarmer = new ApproachFarmer();
             approachFarmer.setCropId(crop.getCropID());
@@ -93,10 +99,16 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     }
 
     @Override
-    public boolean updateApproachStatus(Long approachId, boolean accept) {
+    public boolean updateApproachStatus(Long approachId, Long farmerId, boolean accept) {
         Optional<ApproachFarmer> optionalApproach = approachFarmerRepository.findById(approachId);
         if (optionalApproach.isPresent()) {
             ApproachFarmer approach = optionalApproach.get();
+            if (!farmerId.equals(approach.getFarmerId())) {
+                return false;
+            }
+            if (!"pending".equalsIgnoreCase(approach.getStatus())) {
+                return false;
+            }
             approach.setAccept(accept);
             approach.setStatus(accept ? "Accepted" : "Rejected");
             approachFarmerRepository.save(approach);
@@ -133,8 +145,9 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     }
 
     @Override
-    public boolean deleteApproach(Long approachId) {
-        if (approachFarmerRepository.existsById(approachId)) {
+    public boolean deleteApproach(Long approachId, Long userId) {
+        Optional<ApproachFarmer> optionalApproach = approachFarmerRepository.findById(approachId);
+        if (optionalApproach.isPresent() && userId.equals(optionalApproach.get().getUserId())) {
             approachFarmerRepository.deleteById(approachId);
             logger.info("Approach deleted: {}", approachId);
             return true;

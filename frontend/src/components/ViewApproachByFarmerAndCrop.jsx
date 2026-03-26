@@ -36,7 +36,7 @@ export default function ViewApproachByFarmerAndCrop() {
     setError('');
 
     try {
-      const data = await requestJson(`/seller/approach/requests/farmer/${farmerId}/${cropId}`, {
+      const data = await requestJson(`/seller/approach/requests/me/${cropId}`, {
         method: 'GET',
       });
       setApproaches(Array.isArray(data) ? data : []);
@@ -102,7 +102,7 @@ export default function ViewApproachByFarmerAndCrop() {
 
   return (
     <section className="page approach-crop-page">
-      <ValidateToken farmerId={farmerId} token={token} role={role} />
+      <ValidateToken token={token} role={role} />
 
       <div className="ag-container">
         <div className="approach-crop-head">

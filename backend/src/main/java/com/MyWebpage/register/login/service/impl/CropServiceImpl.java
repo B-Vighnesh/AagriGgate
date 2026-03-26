@@ -15,12 +15,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import org.springframework.http.HttpStatus;
 
 @Service
 public class CropServiceImpl implements CropService {
@@ -38,10 +40,10 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public Crop addCropV1(Crop crop, MultipartFile imageFile) throws IOException {
-        Farmer farmer = farmerRepo.findByFarmerId(crop.getFarmer().getFarmerId());
+    public Crop addCropV1(Long farmerId, Crop crop, MultipartFile imageFile) throws IOException {
+        Farmer farmer = farmerRepo.findByFarmerId(farmerId);
         if (farmer == null) {
-            throw new ResourceNotFoundException("Farmer not found with ID: " + crop.getFarmer().getFarmerId());
+            throw new ResourceNotFoundException("Farmer not found with ID: " + farmerId);
         }
         crop.setFarmer(farmer);
         crop.setPostDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
@@ -51,10 +53,10 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public Crop updateCropV1(Long cropId, Crop crop, MultipartFile imageFile) throws IOException {
-        Crop existing = cropRepo.findById(cropId)
-                .orElseThrow(() -> new ResourceNotFoundException("Crop not found with ID: " + cropId));
+    public Crop updateCropV1(Long farmerId, Long cropId, Crop crop, MultipartFile imageFile) throws IOException {
+        Crop existing = requireOwnedCrop(cropId, farmerId);
         crop.setCropID(cropId);
+        crop.setFarmer(existing.getFarmer());
         crop.setPostDate(existing.getPostDate());
         if (imageFile != null && !imageFile.isEmpty()) {
             applyImage(crop, imageFile);
@@ -83,7 +85,8 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public void deleteCropByIdV1(Long cropId) {
+    public void deleteCropByIdV1(Long farmerId, Long cropId) {
+        requireOwnedCrop(cropId, farmerId);
         cropRepo.deleteById(cropId);
     }
 
@@ -98,10 +101,10 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public CropResponseDTO addCropV2(CropRequestDTO dto, MultipartFile imageFile) throws IOException {
-        Farmer farmer = farmerRepo.findByFarmerId(dto.getFarmerId());
+    public CropResponseDTO addCropV2(Long farmerId, CropRequestDTO dto, MultipartFile imageFile) throws IOException {
+        Farmer farmer = farmerRepo.findByFarmerId(farmerId);
         if (farmer == null) {
-            throw new ResourceNotFoundException("Farmer not found with ID: " + dto.getFarmerId());
+            throw new ResourceNotFoundException("Farmer not found with ID: " + farmerId);
         }
 
         Crop crop = cropMapper.toEntity(dto);
@@ -109,17 +112,17 @@ public class CropServiceImpl implements CropService {
         crop.setPostDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
         applyImage(crop, imageFile);
 
-        logger.info("[v2] Adding crop {} for farmer {}", dto.getCropName(), dto.getFarmerId());
+        logger.info("[v2] Adding crop {} for farmer {}", dto.getCropName(), farmerId);
         return cropMapper.toResponse(cropRepo.save(crop));
     }
 
     @Override
-    public CropResponseDTO updateCropV2(Long cropId, CropRequestDTO dto, MultipartFile imageFile) throws IOException {
-        Crop existing = cropRepo.findById(cropId)
-                .orElseThrow(() -> new ResourceNotFoundException("Crop not found with ID: " + cropId));
+    public CropResponseDTO updateCropV2(Long farmerId, Long cropId, CropRequestDTO dto, MultipartFile imageFile) throws IOException {
+        Crop existing = requireOwnedCrop(cropId, farmerId);
 
         Crop crop = cropMapper.toEntity(dto);
         crop.setCropID(cropId);
+        crop.setFarmer(existing.getFarmer());
         crop.setPostDate(existing.getPostDate());
         if (imageFile != null && !imageFile.isEmpty()) {
             applyImage(crop, imageFile);
@@ -151,7 +154,8 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public void deleteCropByIdV2(Long cropId) {
+    public void deleteCropByIdV2(Long farmerId, Long cropId) {
+        requireOwnedCrop(cropId, farmerId);
         logger.info("[v2] Deleting crop {}", cropId);
         cropRepo.deleteById(cropId);
     }
@@ -177,5 +181,15 @@ public class CropServiceImpl implements CropService {
             crop.setImageType(imageFile.getContentType());
             crop.setImageData(imageFile.getBytes());
         }
+    }
+
+    private Crop requireOwnedCrop(Long cropId, Long farmerId) {
+        Crop existing = cropRepo.findById(cropId)
+                .orElseThrow(() -> new ResourceNotFoundException("Crop not found with ID: " + cropId));
+        Long ownerId = existing.getFarmer() != null ? existing.getFarmer().getFarmerId() : null;
+        if (!farmerId.equals(ownerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this crop");
+        }
+        return existing;
     }
 }

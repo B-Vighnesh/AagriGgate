@@ -91,7 +91,6 @@ export default function AddCrop() {
       quantity: Number(cropData.quantity),
       unit: cropData.unit,
       description: cropData.description.trim(),
-      farmer: { farmerId: Number(farmerId) },
     };
 
     formData.append('crop', new Blob([JSON.stringify(payload)], { type: 'application/json' }));

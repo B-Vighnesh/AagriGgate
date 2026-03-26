@@ -45,7 +45,7 @@ export default function ViewApproachForUser() {
       setLoading(true);
       setError('');
       try {
-        const data = await requestJson(`/buyer/approach/requests/user/${farmerId}`, {
+        const data = await requestJson('/buyer/approach/requests/me', {
           method: 'GET',
         });
         setApproaches(Array.isArray(data) ? data : []);

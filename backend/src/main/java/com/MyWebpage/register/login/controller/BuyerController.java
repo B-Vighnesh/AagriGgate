@@ -26,7 +26,7 @@ public class BuyerController {
         return buyerService.getProfile(farmerId);
     }
 
-    @GetMapping("/me/{buyerId}")
+    @GetMapping("/{buyerId}")
     public BuyerResponseDTO getBuyer(@PathVariable Long buyerId) {
         return buyerService.getProfile(buyerId);
     }

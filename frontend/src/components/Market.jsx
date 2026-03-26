@@ -138,7 +138,7 @@ export default function Market() {
 
   const fetchSavedData = useCallback(async () => {
     try {
-      const pageData = await getSavedMarketData({ farmerId, page: 0, size: 500 });
+      const pageData = await getSavedMarketData({ page: 0, size: 500 });
       const content = pageData?.content || [];
       setSavedData(Array.isArray(content) ? content : []);
     } catch {
@@ -217,7 +217,7 @@ export default function Market() {
 
   const handleSave = async (item) => {
     try {
-      const body = { ...item, farmerId };
+      const body = { ...item };
       const res = await saveMarketData(body);
       if (!res.ok) {
         showToast('Unable to save this record.', 'error');

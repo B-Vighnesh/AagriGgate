@@ -19,7 +19,6 @@ public class CropRequestDTO {
     @NotNull
     @Positive
     private Double quantity;
-    @NotNull
     private Long farmerId;
     private String unit;
     private String description;
