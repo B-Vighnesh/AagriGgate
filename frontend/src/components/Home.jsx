@@ -128,7 +128,7 @@ export default function Home() {
             <p>Sign up free and start trading directly.</p>
             <div className="hero__actions">
               <Button variant="accent" onClick={() => navigate('/register')}>Sign Up</Button>
-              <Button variant="outline" className="hero-outline" onClick={() => navigate('/login')}>I already have an account</Button>
+              <Button variant="outline" className="hero-outline" onClick={() => navigate('/login')}>Already have an account</Button>
             </div>
           </div>
         </section>
