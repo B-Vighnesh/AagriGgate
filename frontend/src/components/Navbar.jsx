@@ -12,6 +12,7 @@ function navByRole(role) {
       ...base,
       { label: 'Market', to: '/market' },
       { label: 'Weather', to: '/weather' },
+      { label: 'Browse Crops', to: '/view-all-crops' },
       { label: 'Add Crop', to: '/add-crop' },
       { label: 'My Crops', to: '/view-crop' },
       { label: 'Requests', to: '/view-approach' },
