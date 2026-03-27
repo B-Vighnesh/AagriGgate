@@ -133,9 +133,7 @@ export default function ViewDetails() {
 
   if (!cropDetails) return null;
 
-  const isOwner =
-    role === 'farmer' &&
-    Number(cropDetails?.farmer?.farmerId) === Number(currentUserId);
+  const isOwner = role === 'farmer' && cropDetails.ownedByCurrentUser === true;
 
   return (
     <section className="page view-details-page">
@@ -156,7 +154,7 @@ export default function ViewDetails() {
               <span>{cropDetails.cropType}</span>
             </div>
 
-            <DetailRow label="Farmer" value={`${cropDetails.farmer?.firstName || ''} ${cropDetails.farmer?.lastName || ''}`} />
+            <DetailRow label="Farmer" value={cropDetails.farmerName} />
             <DetailRow label="Region" value={cropDetails.region} />
             <DetailRow label="Description" value={cropDetails.description} />
             <DetailRow label="Quantity" value={`${cropDetails.quantity} ${cropDetails.unit}`} />
@@ -178,7 +176,7 @@ export default function ViewDetails() {
               {isOwner ? (
                 <>
                   <Button variant="outline" onClick={() => navigate(`/update-crop/${cropId}`)}>Update Crop</Button>
-                  <Button variant="outline" onClick={() => navigate(`/view-approaches/farmer/${cropDetails.farmer?.farmerId}/crop/${cropId}`)}>View Approaches</Button>
+                  <Button variant="outline" onClick={() => navigate(`/view-approaches/farmer/${currentUserId}/crop/${cropId}`)}>View Approaches</Button>
                   <Button variant="danger" onClick={() => setShowDeleteModal(true)}>Delete Crop</Button>
                 </>
               ) : null}
