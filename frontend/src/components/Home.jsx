@@ -288,11 +288,16 @@ export default function Home() {
   const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
+    const currentTitle = SLIDES[activeSlide]?.title || '';
+    const typingDuration = currentTitle.length * 52;
+    const slideDelay = Math.max(6500, typingDuration + 2200);
+
+    const timer = window.setTimeout(() => {
       setActiveSlide((prev) => (prev + 1) % SLIDES.length);
-    }, 4500);
-    return () => window.clearInterval(timer);
-  }, []);
+    }, slideDelay);
+
+    return () => window.clearTimeout(timer);
+  }, [activeSlide]);
 
   const onPrimaryAction = (index) => {
     if (index === 0) {
