@@ -138,13 +138,21 @@ const BUYER_STEPS = [
 ];
 
 const ROADMAP = [
+  ['Urgent sell', 'A faster path for farmers who need to close a sale quickly.'],
+  ['Waste section', 'A separate space for surplus, waste-side, or lower-grade produce.'],
+  ['Multi-language', 'A more accessible experience for users across different regions.'],
   ['Price prediction', 'Smart selling'],
   ['Weather alerts', 'Crop safety'],
-  ['Crop demand heatmap', 'Demand insights'],
+  ['Demand heatmap', 'Demand insights'],
+  ['Chat system', 'Direct in-app conversation between farmers and buyers.'],
+  ['Notifications', 'Timely updates for requests, responses, and important actions.'],
+  ['Price trend graphs', 'Clear pricing movement over time for better decisions.'],
+  ['Admin panel', 'A stronger operational layer for trust, moderation, and control.'],
   ['Transport booking', 'Logistics'],
   ['Fertilizer marketplace', 'Extra revenue'],
   ['Loan / subsidy info', 'Farmer support'],
   ['AI crop recommendation', 'Smart farming'],
+  ['Image / crop detection', 'Visual assistance for crop-related workflows and checks.'],
   ['Warehouse booking', 'Storage'],
   ['Digital contract', 'Trust'],
   ['Escrow payment', 'Secure payment'],
