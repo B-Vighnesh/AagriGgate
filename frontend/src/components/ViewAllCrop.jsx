@@ -10,6 +10,7 @@ const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org
 
 function CropCard({ crop, imageUrl, onViewDetails }) {
   const handleOpen = () => onViewDetails(crop.cropID);
+  const cardTone = crop.isUrgent ? 'urgent' : crop.isWaste ? 'waste' : 'normal';
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -19,7 +20,7 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
 
   return (
     <Card
-      className="view-all-card view-all-card--clickable"
+      className={`view-all-card view-all-card--clickable view-all-card--${cardTone}`}
       onClick={handleOpen}
       onKeyDown={handleKeyDown}
       role="button"
@@ -138,6 +139,7 @@ export default function ViewAllCrop() {
         if (appliedFilters.listingType === 'urgent') params.set('urgentOnly', 'true');
         if (appliedFilters.listingType === 'waste') params.set('wasteOnly', 'true');
         if (appliedFilters.listingType === 'normal') params.set('normalOnly', 'true');
+        if (appliedFilters.listingType === 'discount') params.set('discountOnly', 'true');
         if (appliedFilters.sortBy) params.set('sortBy', appliedFilters.sortBy);
 
         const response = await apiGet(`/crops/legacy?${params.toString()}`);
@@ -317,6 +319,15 @@ export default function ViewAllCrop() {
                 onChange={() => setFilters((prev) => ({ ...prev, listingType: 'waste' }))}
               />
               <span>Waste items</span>
+            </label>
+            <label className="view-all-toggle">
+              <input
+                type="radio"
+                name="browse-listing-type"
+                checked={filters.listingType === 'discount'}
+                onChange={() => setFilters((prev) => ({ ...prev, listingType: 'discount' }))}
+              />
+              <span>Discount items</span>
             </label>
           </div>
 
