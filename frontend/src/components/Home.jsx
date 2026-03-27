@@ -99,6 +99,10 @@ const TRUST_POINTS = [
 const FARMER_FEATURES = [
   ['Add crop for sale', 'Sell directly'],
   ['Browse all crops', 'See market activity'],
+  ['Urgent sell option', 'Push time-sensitive listings faster'],
+  ['Waste crop listing', 'Move surplus or lower-grade produce separately'],
+  ['Discount pricing', 'Offer quicker deals when needed'],
+  ['Crop status updates', 'Mark listings as available or sold'],
   ['View buyer requests', 'Demand visibility'],
   ['Weather info', 'Plan farming'],
   ['Market price', 'Avoid middlemen'],
@@ -110,8 +114,13 @@ const FARMER_FEATURES = [
 
 const BUYER_FEATURES = [
   ['Find farmers', 'Direct sourcing'],
+  ['Browse urgent crops', 'Catch time-sensitive deals sooner'],
+  ['Browse waste crops', 'Source lower-cost surplus produce'],
+  ['Browse discount listings', 'Spot reduced-price crops quickly'],
+  ['Sort crops by time or price', 'Compare listings the way you want'],
   ['Send crop requirement', 'Bulk purchase'],
   ['View crop details', 'Quality info'],
+  ['Request tracking', 'Follow requests from oldest to newest'],
   ['Contact farmer', 'Direct deal'],
   ['Location context', 'Better logistics'],
   ['Price negotiation', 'Better rates'],
@@ -139,8 +148,6 @@ const BUYER_STEPS = [
 ];
 
 const ROADMAP = [
-  ['Urgent sell', 'A faster path for farmers who need to close a sale quickly.'],
-  ['Waste section', 'A separate space for surplus, waste-side, or lower-grade produce.'],
   ['Multi-language', 'A more accessible experience for users across different regions.'],
   ['Price prediction', 'Smart selling'],
   ['Weather alerts', 'Crop safety'],
