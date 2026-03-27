@@ -217,13 +217,32 @@ function FAQAccordion({ items, openFaq, setOpenFaq }) {
 function Slider({ slides, activeIndex, onPrimary, onSecondary, setActiveIndex, isLoggedIn }) {
   const active = slides[activeIndex];
   const primaryLabel = isLoggedIn && activeIndex === 3 ? 'Go To Account' : active.primary;
+  const [typedTitle, setTypedTitle] = useState('');
+
+  useEffect(() => {
+    let frame = 0;
+    setTypedTitle('');
+
+    const timer = window.setInterval(() => {
+      frame += 1;
+      setTypedTitle(active.title.slice(0, frame));
+      if (frame >= active.title.length) {
+        window.clearInterval(timer);
+      }
+    }, 52);
+
+    return () => window.clearInterval(timer);
+  }, [activeIndex, active.title]);
 
   return (
     <section className="hero hero--slider">
       <div className="ag-container hero-slider">
         <div key={`content-${activeIndex}`} className="hero-slider__content">
           <p className="hero__tag">{active.eyebrow}</p>
-          <h1 className="hero__title">{active.title}</h1>
+          <h1 className="hero__title hero__title--typing">
+            {typedTitle}
+            <span className="hero__title-cursor" aria-hidden="true" />
+          </h1>
           <p className="hero__subtitle">{active.subtitle}</p>
           <div className="hero__actions">
             <Button variant="accent" size="lg" onClick={() => onPrimary(activeIndex)}>{primaryLabel}</Button>
