@@ -200,7 +200,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     private PageRequest buildPageRequest(int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = size <= 0 ? 10 : Math.min(size, 50);
-        return PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "approachId"));
+        return PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.ASC, "approachId"));
     }
 
     private String normalizeStatus(String status) {

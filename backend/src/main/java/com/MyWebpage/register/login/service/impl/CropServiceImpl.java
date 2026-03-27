@@ -73,7 +73,7 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public Page<CropViewDTO> getAllCropsV1(Long currentUserId, int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName) {
+    public Page<CropViewDTO> getAllCropsV1(Long currentUserId, int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName, Boolean urgentOnly, Boolean wasteOnly, String sortBy) {
         return cropRepo.findFilteredCropViews(
                 currentUserId,
                 null,
@@ -82,12 +82,14 @@ public class CropServiceImpl implements CropService {
                 normalizeFilter(category),
                 maxPrice,
                 normalizeFilter(farmerName),
-                buildPageRequest(page, size)
+                normalizeBooleanFilter(urgentOnly),
+                normalizeBooleanFilter(wasteOnly),
+                buildPageRequest(page, size, sortBy)
         );
     }
 
     @Override
-    public Page<CropViewDTO> getCropsByFarmerIdV1(Long currentUserId, Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice) {
+    public Page<CropViewDTO> getCropsByFarmerIdV1(Long currentUserId, Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice, Boolean urgentOnly, Boolean wasteOnly, String sortBy) {
         return cropRepo.findFilteredCropViews(
                 currentUserId,
                 farmerId,
@@ -96,7 +98,9 @@ public class CropServiceImpl implements CropService {
                 normalizeFilter(category),
                 maxPrice,
                 null,
-                buildPageRequest(page, size)
+                normalizeBooleanFilter(urgentOnly),
+                normalizeBooleanFilter(wasteOnly),
+                buildPageRequest(page, size, sortBy)
         );
     }
 
@@ -169,7 +173,7 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public Page<CropResponseDTO> getAllCropsV2(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName) {
+    public Page<CropResponseDTO> getAllCropsV2(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName, Boolean urgentOnly, Boolean wasteOnly, String sortBy) {
         return cropRepo.findFilteredCropResponses(
                         null,
                         normalizeFilter(keyword),
@@ -177,12 +181,14 @@ public class CropServiceImpl implements CropService {
                         normalizeFilter(category),
                         maxPrice,
                         normalizeFilter(farmerName),
-                        buildPageRequest(page, size)
+                        normalizeBooleanFilter(urgentOnly),
+                        normalizeBooleanFilter(wasteOnly),
+                        buildPageRequest(page, size, sortBy)
                 );
     }
 
     @Override
-    public Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice) {
+    public Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice, Boolean urgentOnly, Boolean wasteOnly, String sortBy) {
         return cropRepo.findFilteredCropResponses(
                         farmerId,
                         normalizeFilter(keyword),
@@ -190,7 +196,9 @@ public class CropServiceImpl implements CropService {
                         normalizeFilter(category),
                         maxPrice,
                         null,
-                        buildPageRequest(page, size)
+                        normalizeBooleanFilter(urgentOnly),
+                        normalizeBooleanFilter(wasteOnly),
+                        buildPageRequest(page, size, sortBy)
                 );
     }
 
@@ -240,9 +248,13 @@ public class CropServiceImpl implements CropService {
     }
 
     private PageRequest buildPageRequest(int page, int size) {
+        return buildPageRequest(page, size, "newest");
+    }
+
+    private PageRequest buildPageRequest(int page, int size, String sortBy) {
         int safePage = Math.max(page, 0);
         int safeSize = size <= 0 ? 10 : Math.min(size, 50);
-        return PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "cropID"));
+        return PageRequest.of(safePage, safeSize, resolveSort(sortBy));
     }
 
     private String normalizeFilter(String value) {
@@ -250,6 +262,10 @@ public class CropServiceImpl implements CropService {
             return null;
         }
         return value.trim();
+    }
+
+    private Boolean normalizeBooleanFilter(Boolean value) {
+        return Boolean.TRUE.equals(value) ? Boolean.TRUE : null;
     }
 
     private void normalizeCropFlags(Crop crop) {
@@ -267,5 +283,18 @@ public class CropServiceImpl implements CropService {
         if (crop.getIsWaste() == null) {
             crop.setIsWaste(false);
         }
+    }
+
+    private Sort resolveSort(String sortBy) {
+        if (sortBy == null || sortBy.isBlank()) {
+            return Sort.by(Sort.Direction.DESC, "cropID");
+        }
+
+        return switch (sortBy.trim().toLowerCase()) {
+            case "oldest" -> Sort.by(Sort.Direction.ASC, "cropID");
+            case "price_low", "price-asc", "price-low" ->
+                    Sort.by(Sort.Order.asc("marketPrice"), Sort.Order.desc("cropID"));
+            default -> Sort.by(Sort.Direction.DESC, "cropID");
+        };
     }
 }
