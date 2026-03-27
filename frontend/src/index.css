@@ -1940,7 +1940,8 @@ a {
 .view-crop-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 24px 30px;
+  align-items: start;
 }
 
 .view-crop-card {
@@ -1948,6 +1949,9 @@ a {
   overflow: hidden;
   cursor: pointer;
   border-width: 2px;
+  max-width: 540px;
+  width: 100%;
+  justify-self: center;
 }
 
 .view-crop-card--normal {
@@ -2160,7 +2164,8 @@ a {
 .view-all-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 24px 30px;
+  align-items: start;
 }
 
 .view-all-card {
@@ -2169,6 +2174,9 @@ a {
   display: grid;
   border-width: 2px;
   min-height: 390px;
+  max-width: 540px;
+  width: 100%;
+  justify-self: center;
 }
 
 .view-all-card--normal {
