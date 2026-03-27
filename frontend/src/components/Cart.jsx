@@ -205,8 +205,23 @@ export default function Cart() {
           <div className="buyer-tools-list">
             {items.map((item) => {
               const tone = item.isUrgent ? 'urgent' : item.isWaste ? 'waste' : 'normal';
+              const handleOpen = () => navigate(`/view-details/${item.cropId}`);
+              const handleKeyDown = (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  handleOpen();
+                }
+              };
               return (
-                <Card key={item.cartId} className={`buyer-tools-card buyer-tools-card--${tone}`}>
+                <Card
+                  key={item.cartId}
+                  className={`buyer-tools-card buyer-tools-card--${tone}`}
+                  onClick={handleOpen}
+                  onKeyDown={handleKeyDown}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View details for ${item.cropName}`}
+                >
                   <div className="buyer-tools-card__main">
                     <div>
                       <h3>{item.cropName}</h3>
@@ -232,8 +247,10 @@ export default function Cart() {
                         step="0.1"
                         value={quantities[item.cartId] ?? ''}
                         onChange={(event) => setQuantities((prev) => ({ ...prev, [item.cartId]: event.target.value }))}
+                        onClick={(event) => event.stopPropagation()}
                         onBlur={() => handleQuantitySave(item.cartId, true)}
                         onKeyDown={(event) => {
+                          event.stopPropagation();
                           if (event.key === 'Enter') {
                             event.preventDefault();
                             handleQuantitySave(item.cartId);
@@ -242,9 +259,9 @@ export default function Cart() {
                       />
                     </div>
                     <div className="buyer-tools-card__actions">
-                      <Button variant="outline" onClick={() => navigate(`/view-details/${item.cropId}`)}>View Crop</Button>
-                      <Button variant="accent" onClick={() => setApproachItem(item)}>Send Approach</Button>
-                      <Button variant="ghost" onClick={() => handleRemove(item.cartId)} loading={actionLoading === `remove-${item.cartId}`}>Remove</Button>
+                      <Button variant="outline" onClick={(event) => { event.stopPropagation(); navigate(`/view-details/${item.cropId}`); }}>View Crop</Button>
+                      <Button variant="accent" onClick={(event) => { event.stopPropagation(); setApproachItem(item); }}>Send Approach</Button>
+                      <Button variant="ghost" onClick={(event) => { event.stopPropagation(); handleRemove(item.cartId); }} loading={actionLoading === `remove-${item.cartId}`}>Remove</Button>
                     </div>
                   </div>
                 </Card>

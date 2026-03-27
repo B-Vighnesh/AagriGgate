@@ -4,17 +4,30 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
-import ApproachFarmer from './ApproachFarmer';
 import { addToCart, getFavorites, removeFavorite } from '../api/buyerToolsApi';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 const PAGE_SIZE = 10;
 
-function FavoriteCard({ item, onAddToCart, onRemove, onApproach, loadingAction }) {
+function FavoriteCard({ item, onAddToCart, onRemove, onViewDetails, loadingAction }) {
   const tone = item.isUrgent ? 'urgent' : item.isWaste ? 'waste' : 'normal';
+  const handleOpen = () => onViewDetails(item.cropId);
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleOpen();
+    }
+  };
 
   return (
-    <Card className={`view-all-card view-all-card--${tone}`}>
+    <Card
+      className={`view-all-card view-all-card--clickable view-all-card--${tone}`}
+      onClick={handleOpen}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${item.cropName}`}
+    >
       <div className="view-all-card__body">
         <h3>{item.cropName}</h3>
         <p className="view-all-card__meta">
@@ -37,13 +50,10 @@ function FavoriteCard({ item, onAddToCart, onRemove, onApproach, loadingAction }
           <p className="view-all-card__qty">Qty: {item.quantity} {item.unit}</p>
         </div>
         <div className="buyer-tools-card__actions">
-          <Button variant="outline" onClick={() => onAddToCart(item.cropId)} loading={loadingAction === `cart-${item.cropId}`}>
+          <Button variant="outline" onClick={(event) => { event.stopPropagation(); onAddToCart(item.cropId); }} loading={loadingAction === `cart-${item.cropId}`}>
             Add to Cart
           </Button>
-          <Button variant="accent" onClick={() => onApproach(item.cropId)} loading={loadingAction === `approach-${item.cropId}`}>
-            Send Approach
-          </Button>
-          <Button variant="ghost" onClick={() => onRemove(item.cropId)} loading={loadingAction === `remove-${item.cropId}`}>
+          <Button variant="ghost" onClick={(event) => { event.stopPropagation(); onRemove(item.cropId); }} loading={loadingAction === `remove-${item.cropId}`}>
             Remove
           </Button>
         </div>
@@ -69,7 +79,6 @@ export default function Favorites() {
   const [totalPages, setTotalPages] = useState(0);
   const [actionLoading, setActionLoading] = useState('');
   const [toast, setToast] = useState({ message: '', type: 'info' });
-  const [approachCropId, setApproachCropId] = useState(null);
 
   const showToast = (message, typeValue = 'info') => {
     setToast({ message, type: typeValue });
@@ -213,7 +222,7 @@ export default function Favorites() {
                 item={item}
                 onAddToCart={handleAddToCart}
                 onRemove={handleRemove}
-                onApproach={setApproachCropId}
+                onViewDetails={(id) => navigate(`/view-details/${id}`)}
                 loadingAction={actionLoading}
               />
             ))}
@@ -228,17 +237,6 @@ export default function Favorites() {
           </div>
         ) : null}
       </div>
-      {approachCropId ? (
-        <ApproachFarmer
-          cropId={approachCropId}
-          onClose={() => setApproachCropId(null)}
-          onSuccess={() => {
-            setActionLoading('');
-            showToast('Approach request sent.', 'success');
-            setApproachCropId(null);
-          }}
-        />
-      ) : null}
       <Toast message={toast.message} type={toast.type} />
     </section>
   );
