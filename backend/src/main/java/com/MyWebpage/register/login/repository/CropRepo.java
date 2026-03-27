@@ -55,12 +55,16 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(c.cropType) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(c.region) LIKE lower(concat('%', :keyword, '%'))
+                           OR (lower(:keyword) IN ('urgent', 'urgent sell', 'urgent sale') AND c.isUrgent = true)
+                           OR (lower(:keyword) IN ('waste', 'waste item', 'waste items') AND c.isWaste = true)
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :keyword, '%')))
                       AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
                       AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
                       AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
+                      AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
+                      AND (:wasteOnly IS NULL OR c.isWaste = :wasteOnly)
                       AND (:farmerName IS NULL
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
                            OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
@@ -73,12 +77,16 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(c.cropType) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(c.region) LIKE lower(concat('%', :keyword, '%'))
+                           OR (lower(:keyword) IN ('urgent', 'urgent sell', 'urgent sale') AND c.isUrgent = true)
+                           OR (lower(:keyword) IN ('waste', 'waste item', 'waste items') AND c.isWaste = true)
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :keyword, '%')))
                       AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
                       AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
                       AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
+                      AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
+                      AND (:wasteOnly IS NULL OR c.isWaste = :wasteOnly)
                       AND (:farmerName IS NULL
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
                            OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
@@ -93,6 +101,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             @Param("category") String category,
             @Param("maxPrice") Double maxPrice,
             @Param("farmerName") String farmerName,
+            @Param("urgentOnly") Boolean urgentOnly,
+            @Param("wasteOnly") Boolean wasteOnly,
             Pageable pageable);
 
     @Query("""
@@ -154,12 +164,16 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(c.cropType) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(c.region) LIKE lower(concat('%', :keyword, '%'))
+                           OR (lower(:keyword) IN ('urgent', 'urgent sell', 'urgent sale') AND c.isUrgent = true)
+                           OR (lower(:keyword) IN ('waste', 'waste item', 'waste items') AND c.isWaste = true)
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :keyword, '%')))
                       AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
                       AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
                       AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
+                      AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
+                      AND (:wasteOnly IS NULL OR c.isWaste = :wasteOnly)
                       AND (:farmerName IS NULL
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
                            OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
@@ -172,12 +186,16 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(c.cropType) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(c.region) LIKE lower(concat('%', :keyword, '%'))
+                           OR (lower(:keyword) IN ('urgent', 'urgent sell', 'urgent sale') AND c.isUrgent = true)
+                           OR (lower(:keyword) IN ('waste', 'waste item', 'waste items') AND c.isWaste = true)
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :keyword, '%')))
                       AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
                       AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
                       AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
+                      AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
+                      AND (:wasteOnly IS NULL OR c.isWaste = :wasteOnly)
                       AND (:farmerName IS NULL
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
                            OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
@@ -191,6 +209,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             @Param("category") String category,
             @Param("maxPrice") Double maxPrice,
             @Param("farmerName") String farmerName,
+            @Param("urgentOnly") Boolean urgentOnly,
+            @Param("wasteOnly") Boolean wasteOnly,
             Pageable pageable);
 
     @Query("""

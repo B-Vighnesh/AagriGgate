@@ -67,9 +67,12 @@ public class CropController {
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Double maxPrice,
-            @RequestParam(required = false) String farmerName) {
+            @RequestParam(required = false) String farmerName,
+            @RequestParam(required = false) Boolean urgentOnly,
+            @RequestParam(required = false) Boolean wasteOnly,
+            @RequestParam(defaultValue = "newest") String sortBy) {
         Long currentUserId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(cropService.getAllCropsV1(currentUserId, page, size, keyword, region, category, maxPrice, farmerName));
+        return ResponseEntity.ok(cropService.getAllCropsV1(currentUserId, page, size, keyword, region, category, maxPrice, farmerName, urgentOnly, wasteOnly, sortBy));
     }
 
     @GetMapping("/farmer/{farmerId}/legacy")
@@ -81,12 +84,15 @@ public class CropController {
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Boolean urgentOnly,
+            @RequestParam(required = false) Boolean wasteOnly,
+            @RequestParam(defaultValue = "newest") String sortBy,
             Authentication authentication) {
         Long authenticatedFarmerId = Long.parseLong(authentication.getName());
         if (!authenticatedFarmerId.equals(farmerId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(authenticatedFarmerId, farmerId, page, size, keyword, region, category, maxPrice).getContent());
+        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(authenticatedFarmerId, farmerId, page, size, keyword, region, category, maxPrice, urgentOnly, wasteOnly, sortBy).getContent());
     }
 
     @GetMapping("/farmer/me/legacy")
@@ -97,9 +103,12 @@ public class CropController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) Double maxPrice) {
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Boolean urgentOnly,
+            @RequestParam(required = false) Boolean wasteOnly,
+            @RequestParam(defaultValue = "newest") String sortBy) {
         Long farmerId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId, farmerId, page, size, keyword, region, category, maxPrice));
+        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId, farmerId, page, size, keyword, region, category, maxPrice, urgentOnly, wasteOnly, sortBy));
     }
 
     @GetMapping("/legacy/{cropId}")
@@ -144,8 +153,11 @@ public class CropController {
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Double maxPrice,
-            @RequestParam(required = false) String farmerName) {
-        return ResponseEntity.ok(ApiResponse.success("Crops fetched", cropService.getAllCropsV2(page, size, keyword, region, category, maxPrice, farmerName)));
+            @RequestParam(required = false) String farmerName,
+            @RequestParam(required = false) Boolean urgentOnly,
+            @RequestParam(required = false) Boolean wasteOnly,
+            @RequestParam(defaultValue = "newest") String sortBy) {
+        return ResponseEntity.ok(ApiResponse.success("Crops fetched", cropService.getAllCropsV2(page, size, keyword, region, category, maxPrice, farmerName, urgentOnly, wasteOnly, sortBy)));
     }
 
     @PostMapping(value = "/v2/farmer/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -177,12 +189,15 @@ public class CropController {
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Boolean urgentOnly,
+            @RequestParam(required = false) Boolean wasteOnly,
+            @RequestParam(defaultValue = "newest") String sortBy,
             Authentication authentication) {
         Long authenticatedFarmerId = Long.parseLong(authentication.getName());
         if (!authenticatedFarmerId.equals(farmerId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId, page, size, keyword, region, category, maxPrice)));
+        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId, page, size, keyword, region, category, maxPrice, urgentOnly, wasteOnly, sortBy)));
     }
 
     @GetMapping("/v2/farmer/me")
@@ -193,9 +208,12 @@ public class CropController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) Double maxPrice) {
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Boolean urgentOnly,
+            @RequestParam(required = false) Boolean wasteOnly,
+            @RequestParam(defaultValue = "newest") String sortBy) {
         Long farmerId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId, page, size, keyword, region, category, maxPrice)));
+        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId, page, size, keyword, region, category, maxPrice, urgentOnly, wasteOnly, sortBy)));
     }
 
     @GetMapping("/v2/{cropId}")

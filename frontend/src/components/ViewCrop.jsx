@@ -21,6 +21,8 @@ export default function ViewCrop() {
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [appliedQuery, setAppliedQuery] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+  const [listingFilter, setListingFilter] = useState('all');
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
@@ -33,6 +35,10 @@ export default function ViewCrop() {
 
     return () => window.clearTimeout(timer);
   }, [query]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [sortBy, listingFilter]);
 
   useEffect(() => {
     if (!token || !farmerId) {
@@ -55,6 +61,15 @@ export default function ViewCrop() {
         });
         if (appliedQuery.trim()) {
           params.set('keyword', appliedQuery.trim());
+        }
+        if (sortBy) {
+          params.set('sortBy', sortBy);
+        }
+        if (listingFilter === 'urgent') {
+          params.set('urgentOnly', 'true');
+        }
+        if (listingFilter === 'waste') {
+          params.set('wasteOnly', 'true');
         }
 
         const response = await apiGet(`/crops/farmer/me/legacy?${params.toString()}`);
@@ -90,7 +105,7 @@ export default function ViewCrop() {
         try { URL.revokeObjectURL(url); } catch { /* ignore */ }
       });
     };
-  }, [page, token, farmerId, role, navigate, appliedQuery]);
+  }, [page, token, farmerId, role, navigate, appliedQuery, sortBy, listingFilter]);
 
   if (loading) {
     return (
@@ -131,10 +146,10 @@ export default function ViewCrop() {
           <div className="view-all-toolbar__head">
             <div>
               <h3>Search My Crops</h3>
-              <p>Start typing to find your listings by crop name, type, or region.</p>
+              <p>Start typing to find your listings, then refine by order or listing type.</p>
             </div>
           </div>
-          <div className="view-all-search-row">
+          <div className="view-all-search-row view-all-search-row--split">
             <input
               type="text"
               className="view-all-input"
@@ -142,6 +157,24 @@ export default function ViewCrop() {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by crop name, type, or region"
             />
+            <select
+              className="view-all-input"
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value)}
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="price-low">Price: low to high</option>
+            </select>
+            <select
+              className="view-all-input"
+              value={listingFilter}
+              onChange={(event) => setListingFilter(event.target.value)}
+            >
+              <option value="all">All listings</option>
+              <option value="urgent">Urgent sales only</option>
+              <option value="waste">Waste items only</option>
+            </select>
           </div>
         </Card>
 

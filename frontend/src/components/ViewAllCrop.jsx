@@ -74,9 +74,25 @@ export default function ViewAllCrop() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState({ region: '', price: '', category: '', farmerName: '' });
+  const [filters, setFilters] = useState({
+    region: '',
+    price: '',
+    category: '',
+    farmerName: '',
+    urgentOnly: false,
+    wasteOnly: false,
+    sortBy: 'newest',
+  });
   const [appliedSearch, setAppliedSearch] = useState('');
-  const [appliedFilters, setAppliedFilters] = useState({ region: '', price: '', category: '', farmerName: '' });
+  const [appliedFilters, setAppliedFilters] = useState({
+    region: '',
+    price: '',
+    category: '',
+    farmerName: '',
+    urgentOnly: false,
+    wasteOnly: false,
+    sortBy: 'newest',
+  });
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
@@ -112,6 +128,9 @@ export default function ViewAllCrop() {
         if (appliedFilters.category.trim()) params.set('category', appliedFilters.category.trim());
         if (appliedFilters.farmerName.trim()) params.set('farmerName', appliedFilters.farmerName.trim());
         if (appliedFilters.price) params.set('maxPrice', appliedFilters.price);
+        if (appliedFilters.urgentOnly) params.set('urgentOnly', 'true');
+        if (appliedFilters.wasteOnly) params.set('wasteOnly', 'true');
+        if (appliedFilters.sortBy) params.set('sortBy', appliedFilters.sortBy);
 
         const response = await apiGet(`/crops/legacy?${params.toString()}`);
         if (!response.ok) throw new Error('Failed to load crops. Please try again.');
@@ -157,7 +176,15 @@ export default function ViewAllCrop() {
   };
 
   const clearFilters = () => {
-    const emptyFilters = { region: '', price: '', category: '', farmerName: '' };
+    const emptyFilters = {
+      region: '',
+      price: '',
+      category: '',
+      farmerName: '',
+      urgentOnly: false,
+      wasteOnly: false,
+      sortBy: 'newest',
+    };
     setSearchQuery('');
     setFilters(emptyFilters);
     setAppliedSearch('');
@@ -215,6 +242,15 @@ export default function ViewAllCrop() {
               value={filters.region}
               onChange={(event) => setFilters((prev) => ({ ...prev, region: event.target.value }))}
             />
+            <select
+              className="view-all-input"
+              value={filters.sortBy}
+              onChange={(event) => setFilters((prev) => ({ ...prev, sortBy: event.target.value }))}
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="price-low">Price: low to high</option>
+            </select>
             <input
               className="view-all-input"
               type="number"
@@ -235,6 +271,25 @@ export default function ViewAllCrop() {
               value={filters.farmerName}
               onChange={(event) => setFilters((prev) => ({ ...prev, farmerName: event.target.value }))}
             />
+          </div>
+
+          <div className="view-all-toggle-row">
+            <label className="view-all-toggle">
+              <input
+                type="checkbox"
+                checked={filters.urgentOnly}
+                onChange={(event) => setFilters((prev) => ({ ...prev, urgentOnly: event.target.checked }))}
+              />
+              <span>Urgent sales only</span>
+            </label>
+            <label className="view-all-toggle">
+              <input
+                type="checkbox"
+                checked={filters.wasteOnly}
+                onChange={(event) => setFilters((prev) => ({ ...prev, wasteOnly: event.target.checked }))}
+              />
+              <span>Waste items only</span>
+            </label>
           </div>
 
           <div className="view-all-filter-actions">
