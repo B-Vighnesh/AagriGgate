@@ -1,7 +1,7 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.dto.CartCheckoutResponseDTO;
-import com.MyWebpage.register.login.dto.CartItemDTO;
+import com.MyWebpage.register.login.cart.CartCheckoutResponseDTO;
+import com.MyWebpage.register.login.cart.CartItemDTO;
 import org.springframework.data.domain.Page;
 
 public interface CartService {

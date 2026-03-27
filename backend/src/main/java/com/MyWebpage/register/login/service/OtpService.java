@@ -1,7 +1,7 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.entity.RegistrationOtp;
-import com.MyWebpage.register.login.repository.RegistrationOtpRepository;
+import com.MyWebpage.register.login.otp.RegistrationOtp;
+import com.MyWebpage.register.login.otp.RegistrationOtpRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

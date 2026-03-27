@@ -1,8 +1,8 @@
 package com.MyWebpage.register.login.service.impl;
 
-import com.MyWebpage.register.login.dto.EnquiryRequestDTO;
-import com.MyWebpage.register.login.model.Enquiry;
-import com.MyWebpage.register.login.repository.EnquiryRepository;
+import com.MyWebpage.register.login.enquiry.EnquiryRequestDTO;
+import com.MyWebpage.register.login.enquiry.Enquiry;
+import com.MyWebpage.register.login.enquiry.EnquiryRepository;
 import com.MyWebpage.register.login.service.AdminService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

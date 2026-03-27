@@ -1,6 +1,6 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.model.SavedMarketData;
+import com.MyWebpage.register.login.market.SavedMarketData;
 import org.springframework.data.domain.Page;
 
 public interface SavedMarketDataService {

@@ -1,10 +1,10 @@
 package com.MyWebpage.register.login.service.impl;
 
-import com.MyWebpage.register.login.dto.FarmerResponseDTO;
-import com.MyWebpage.register.login.dto.FarmerUpdateDTO;
-import com.MyWebpage.register.login.mapper.FarmerMapper;
-import com.MyWebpage.register.login.model.Farmer;
-import com.MyWebpage.register.login.repository.FarmerRepo;
+import com.MyWebpage.register.login.farmer.FarmerResponseDTO;
+import com.MyWebpage.register.login.farmer.FarmerUpdateDTO;
+import com.MyWebpage.register.login.farmer.FarmerMapper;
+import com.MyWebpage.register.login.farmer.Farmer;
+import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.service.FarmerService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;

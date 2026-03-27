@@ -1,6 +1,6 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.dto.FavoriteItemDTO;
+import com.MyWebpage.register.login.favorite.FavoriteItemDTO;
 import org.springframework.data.domain.Page;
 
 public interface FavoriteService {

@@ -1,9 +1,9 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.dto.CropRequestDTO;
-import com.MyWebpage.register.login.dto.CropResponseDTO;
-import com.MyWebpage.register.login.dto.CropViewDTO;
-import com.MyWebpage.register.login.model.Crop;
+import com.MyWebpage.register.login.crop.CropRequestDTO;
+import com.MyWebpage.register.login.crop.CropResponseDTO;
+import com.MyWebpage.register.login.crop.CropViewDTO;
+import com.MyWebpage.register.login.crop.Crop;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 

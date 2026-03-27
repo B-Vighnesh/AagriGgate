@@ -1,14 +1,14 @@
 package com.MyWebpage.register.login.service.impl;
 
-import com.MyWebpage.register.login.dto.CropRequestDTO;
-import com.MyWebpage.register.login.dto.CropResponseDTO;
-import com.MyWebpage.register.login.dto.CropViewDTO;
+import com.MyWebpage.register.login.crop.CropRequestDTO;
+import com.MyWebpage.register.login.crop.CropResponseDTO;
+import com.MyWebpage.register.login.crop.CropViewDTO;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
-import com.MyWebpage.register.login.mapper.CropMapper;
-import com.MyWebpage.register.login.model.Crop;
-import com.MyWebpage.register.login.model.Farmer;
-import com.MyWebpage.register.login.repository.CropRepo;
-import com.MyWebpage.register.login.repository.FarmerRepo;
+import com.MyWebpage.register.login.crop.CropMapper;
+import com.MyWebpage.register.login.crop.Crop;
+import com.MyWebpage.register.login.farmer.Farmer;
+import com.MyWebpage.register.login.crop.CropRepo;
+import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.service.CropService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

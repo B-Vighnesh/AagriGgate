@@ -1,7 +1,7 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.dto.ApproachRequestDTO;
-import com.MyWebpage.register.login.model.ApproachFarmer;
+import com.MyWebpage.register.login.approach.ApproachRequestDTO;
+import com.MyWebpage.register.login.approach.ApproachFarmer;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 

@@ -1,12 +1,12 @@
 package com.MyWebpage.register.login.service.impl;
 
-import com.MyWebpage.register.login.dto.ApproachRequestDTO;
-import com.MyWebpage.register.login.model.ApproachFarmer;
-import com.MyWebpage.register.login.model.Crop;
-import com.MyWebpage.register.login.model.Farmer;
-import com.MyWebpage.register.login.repository.ApproachFarmerRepo;
-import com.MyWebpage.register.login.repository.CropRepo;
-import com.MyWebpage.register.login.repository.FarmerRepo;
+import com.MyWebpage.register.login.approach.ApproachRequestDTO;
+import com.MyWebpage.register.login.approach.ApproachFarmer;
+import com.MyWebpage.register.login.crop.Crop;
+import com.MyWebpage.register.login.farmer.Farmer;
+import com.MyWebpage.register.login.approach.ApproachFarmerRepo;
+import com.MyWebpage.register.login.crop.CropRepo;
+import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.service.ApproachFarmerService;
 import com.MyWebpage.register.login.service.EmailService;
 import org.slf4j.Logger;
