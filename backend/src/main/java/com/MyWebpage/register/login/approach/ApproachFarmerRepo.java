@@ -31,7 +31,7 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
 
     @Query(
             value = """
-                    SELECT new com.MyWebpage.register.login.dto.ApproachRequestDTO(
+                    SELECT new com.MyWebpage.register.login.approach.ApproachRequestDTO(
                         a.approachId,
                         a.cropId,
                         a.cropName,
@@ -61,7 +61,7 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
 
     @Query(
             value = """
-                    SELECT new com.MyWebpage.register.login.dto.ApproachRequestDTO(
+                    SELECT new com.MyWebpage.register.login.approach.ApproachRequestDTO(
                         a.approachId,
                         a.cropId,
                         a.cropName,
@@ -94,7 +94,7 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
 
     @Query(
             value = """
-                    SELECT new com.MyWebpage.register.login.dto.ApproachRequestDTO(
+                    SELECT new com.MyWebpage.register.login.approach.ApproachRequestDTO(
                         a.approachId,
                         a.cropId,
                         a.cropName,

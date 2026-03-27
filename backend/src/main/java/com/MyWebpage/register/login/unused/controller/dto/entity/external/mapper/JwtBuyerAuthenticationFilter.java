@@ -1,6 +1,6 @@
 //package com.MyWebpage.register.login.JWT;
 //
-//import com.MyWebpage.register.login.service.MyUserDetailsService;
+//import com.MyWebpage.register.login.security.service.MyUserDetailsService;
 //import io.jsonwebtoken.Claims;
 //import io.jsonwebtoken.Jwts;
 //import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

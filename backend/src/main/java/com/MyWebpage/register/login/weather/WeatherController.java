@@ -1,6 +1,6 @@
 package com.MyWebpage.register.login.weather;
 
-import com.MyWebpage.register.login.response.ApiResponse;
+import com.MyWebpage.register.login.common.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;

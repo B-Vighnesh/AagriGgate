@@ -1,7 +1,6 @@
 package com.MyWebpage.register.login.crop;
 
-import com.MyWebpage.register.login.response.ApiResponse;
-import com.MyWebpage.register.login.service.CropService;
+import com.MyWebpage.register.login.common.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;

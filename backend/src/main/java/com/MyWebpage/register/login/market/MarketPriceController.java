@@ -1,6 +1,6 @@
 package com.MyWebpage.register.login.market;
 
-import com.MyWebpage.register.login.response.ApiResponse;
+import com.MyWebpage.register.login.common.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;

@@ -1,6 +1,5 @@
 package com.MyWebpage.register.login.cart;
 
-import com.MyWebpage.register.login.service.CartService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

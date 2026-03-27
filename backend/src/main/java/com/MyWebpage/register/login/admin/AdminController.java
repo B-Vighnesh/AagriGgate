@@ -2,7 +2,6 @@ package com.MyWebpage.register.login.admin;
 
 import com.MyWebpage.register.login.enquiry.Enquiry;
 import com.MyWebpage.register.login.enquiry.EnquiryRequestDTO;
-import com.MyWebpage.register.login.service.AdminService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;

@@ -21,7 +21,7 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
 
     @Query(
             value = """
-                    SELECT new com.MyWebpage.register.login.dto.CropViewDTO(
+                    SELECT new com.MyWebpage.register.login.crop.CropViewDTO(
                         c.cropID,
                         c.cropName,
                         c.cropType,
@@ -95,7 +95,7 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             Pageable pageable);
 
     @Query("""
-            SELECT new com.MyWebpage.register.login.dto.CropViewDTO(
+            SELECT new com.MyWebpage.register.login.crop.CropViewDTO(
                 c.cropID,
                 c.cropName,
                 c.cropType,
@@ -127,7 +127,7 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
 
     @Query(
             value = """
-                    SELECT new com.MyWebpage.register.login.dto.CropResponseDTO(
+                    SELECT new com.MyWebpage.register.login.crop.CropResponseDTO(
                         c.cropID,
                         c.cropName,
                         c.cropType,
@@ -195,7 +195,7 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             Pageable pageable);
 
     @Query("""
-            SELECT new com.MyWebpage.register.login.dto.CropResponseDTO(
+            SELECT new com.MyWebpage.register.login.crop.CropResponseDTO(
                 c.cropID,
                 c.cropName,
                 c.cropType,
@@ -226,7 +226,7 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
 
     @Query(
             value = """
-                    SELECT new com.MyWebpage.register.login.dto.CropResponseDTO(
+                    SELECT new com.MyWebpage.register.login.crop.CropResponseDTO(
                         c.cropID,
                         c.cropName,
                         c.cropType,

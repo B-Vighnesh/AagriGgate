@@ -1,6 +1,5 @@
 package com.MyWebpage.register.login.favorite;
 
-import com.MyWebpage.register.login.farmer.Favorite;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,7 +14,7 @@ public interface FavoriteRepo extends JpaRepository<Favorite, Long> {
 
     @Query(
             value = """
-                    SELECT new com.MyWebpage.register.login.dto.FavoriteItemDTO(
+                    SELECT new com.MyWebpage.register.login.favorite.FavoriteItemDTO(
                         f.id,
                         c.cropID,
                         c.cropName,
