@@ -2106,6 +2106,21 @@ a {
   font-size: 0.9rem;
 }
 
+.view-all-pagination {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.view-all-pagination__info {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
 /* View Approach */
 .view-approach-page {
   background: #eef7f1;

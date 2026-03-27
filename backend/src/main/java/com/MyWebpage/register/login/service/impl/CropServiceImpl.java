@@ -71,7 +71,7 @@ public class CropServiceImpl implements CropService {
 
     @Override
     public Page<Crop> getAllCropsV1(int page, int size) {
-        return cropRepo.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "cropID")));
+        return cropRepo.findAll(buildPageRequest(page, size));
     }
 
     @Override
@@ -138,7 +138,7 @@ public class CropServiceImpl implements CropService {
 
     @Override
     public Page<CropResponseDTO> getAllCropsV2(int page, int size) {
-        return cropRepo.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "cropID")))
+        return cropRepo.findAll(buildPageRequest(page, size))
                 .map(cropMapper::toResponse);
     }
 
@@ -170,7 +170,7 @@ public class CropServiceImpl implements CropService {
     public Page<CropResponseDTO> searchCropsV2(String keyword, int page, int size) {
         return cropRepo.findByCropNameContainingIgnoreCase(
                         keyword,
-                        PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "cropID"))
+                        buildPageRequest(page, size)
                 )
                 .map(cropMapper::toResponse);
     }
@@ -191,5 +191,11 @@ public class CropServiceImpl implements CropService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this crop");
         }
         return existing;
+    }
+
+    private PageRequest buildPageRequest(int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = size <= 0 ? 10 : Math.min(size, 50);
+        return PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "cropID"));
     }
 }
