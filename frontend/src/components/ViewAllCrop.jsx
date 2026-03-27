@@ -48,6 +48,7 @@ export default function ViewAllCrop() {
   const farmerId = getFarmerId();
   const token = getToken();
   const role = getRole();
+  const PAGE_SIZE = 10;
 
   const [crops, setCrops] = useState([]);
   const [imageUrls, setImageUrls] = useState({});
@@ -55,6 +56,9 @@ export default function ViewAllCrop() {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({ region: '', price: '', category: '', farmerName: '' });
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
   useEffect(() => {
     if (!token) {
@@ -65,14 +69,18 @@ export default function ViewAllCrop() {
     let mounted = true;
 
     const loadData = async () => {
+      setLoading(true);
+      setError('');
       try {
-        const response = await apiGet('/crops/legacy?page=0&size=500');
+        const response = await apiGet(`/crops/legacy?page=${page}&size=${PAGE_SIZE}`);
         if (!response.ok) throw new Error('Failed to load crops. Please try again.');
 
         const data = await response.json();
         const cropList = Array.isArray(data?.content) ? data.content : [];
         if (!mounted) return;
         setCrops(cropList);
+        setTotalPages(Number(data?.totalPages || 0));
+        setTotalElements(Number(data?.totalElements || cropList.length || 0));
 
         cropList.forEach(async (crop) => {
           try {
@@ -100,7 +108,7 @@ export default function ViewAllCrop() {
         try { URL.revokeObjectURL(url); } catch { /* ignore */ }
       });
     };
-  }, []);
+  }, [page, token, navigate]);
 
   const filteredCrops = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -197,7 +205,8 @@ export default function ViewAllCrop() {
 
         {!loading && !error && (
           <p className="view-all-count">
-            {filteredCrops.length} crop{filteredCrops.length !== 1 ? 's' : ''} found
+            Showing {filteredCrops.length} crop{filteredCrops.length !== 1 ? 's' : ''} on this page
+            {totalElements ? ` • ${totalElements} total` : ''}
           </p>
         )}
 
@@ -220,6 +229,28 @@ export default function ViewAllCrop() {
             <p className="view-all-empty__title">No crops match your search.</p>
             <p className="view-all-empty__desc">Try adjusting filters or clear your search.</p>
           </Card>
+        )}
+
+        {!loading && !error && totalPages > 1 && (
+          <div className="view-all-pagination">
+            <Button
+              variant="outline"
+              onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+              disabled={page === 0}
+            >
+              Previous
+            </Button>
+            <span className="view-all-pagination__info">
+              Page {page + 1} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
+              disabled={page >= totalPages - 1}
+            >
+              Next
+            </Button>
+          </div>
         )}
       </div>
     </section>
