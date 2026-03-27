@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './components/Home';
@@ -33,12 +33,36 @@ import Favorites from './components/Favorites';
 import Cart from './components/Cart';
 import './index.css';
 
-function App() {
+function ScrollManager() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.replace('#', '');
+      const frame = window.requestAnimationFrame(() => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return undefined;
+  }, [location.pathname, location.hash]);
+
+  return null;
+}
+
+function AppRoutes() {
+  const location = useLocation();
+
   return (
-    <Router>
-      <div className="app-shell">
-        <Navbar />
-        <main className="app-main">
+    <div className="app-shell">
+      <ScrollManager />
+      <Navbar />
+      <main className="app-main app-main--transition" key={`${location.pathname}${location.hash}`}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/account" element={<Account />} />
@@ -71,9 +95,16 @@ function App() {
             <Route path="/404" element={<Error />} />
             <Route path="*" element={<Error />} />
           </Routes>
-        </main>
-        <Footer />
-      </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppRoutes />
     </Router>
   );
 }

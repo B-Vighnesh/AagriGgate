@@ -15,9 +15,9 @@ export default function Footer() {
         <div className="footer-section">
           <h4>Platform</h4>
           <ul>
-            <li><a href="/#problem">Problem</a></li>
-            <li><a href="/#features">Features</a></li>
-            <li><a href="/#trust">Trust</a></li>
+            <li><Link to="/#problem">Problem</Link></li>
+            <li><Link to="/#features">Features</Link></li>
+            <li><Link to="/#trust">Trust</Link></li>
           </ul>
         </div>
         <div className="footer-section">
@@ -30,13 +30,13 @@ export default function Footer() {
         <div className="footer-section">
           <h4>Future</h4>
           <ul>
-            <li><a href="/#future">Roadmap</a></li>
+            <li><Link to="/#future">Roadmap</Link></li>
           </ul>
         </div>
         <div className="footer-section">
           <h4>Support</h4>
           <ul>
-            <li><a href="/#faq">FAQ</a></li>
+            <li><Link to="/#faq">FAQ</Link></li>
             <li><Link to="/contact-us">Contact Us</Link></li>
           </ul>
         </div>
