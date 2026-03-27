@@ -72,7 +72,8 @@ public class CropServiceImpl implements CropService {
 
     @Override
     public Page<CropViewDTO> getAllCropsV1(Long currentUserId, int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName) {
-        return cropRepo.findFilteredCrops(
+        return cropRepo.findFilteredCropViews(
+                currentUserId,
                 null,
                 normalizeFilter(keyword),
                 normalizeFilter(region),
@@ -80,12 +81,13 @@ public class CropServiceImpl implements CropService {
                 maxPrice,
                 normalizeFilter(farmerName),
                 buildPageRequest(page, size)
-        ).map(crop -> cropMapper.toViewResponse(crop, currentUserId));
+        );
     }
 
     @Override
     public Page<CropViewDTO> getCropsByFarmerIdV1(Long currentUserId, Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice) {
-        return cropRepo.findFilteredCrops(
+        return cropRepo.findFilteredCropViews(
+                currentUserId,
                 farmerId,
                 normalizeFilter(keyword),
                 normalizeFilter(region),
@@ -93,14 +95,16 @@ public class CropServiceImpl implements CropService {
                 maxPrice,
                 null,
                 buildPageRequest(page, size)
-        ).map(crop -> cropMapper.toViewResponse(crop, currentUserId));
+        );
     }
 
     @Override
     public CropViewDTO getCropByCropIdV1(Long currentUserId, Long cropId) {
-        Crop crop = cropRepo.findById(cropId)
-                .orElseThrow(() -> new ResourceNotFoundException("Crop not found with ID: " + cropId));
-        return cropMapper.toViewResponse(crop, currentUserId);
+        CropViewDTO crop = cropRepo.findCropViewById(cropId, currentUserId);
+        if (crop == null) {
+            throw new ResourceNotFoundException("Crop not found with ID: " + cropId);
+        }
+        return crop;
     }
 
     @Override
@@ -162,7 +166,7 @@ public class CropServiceImpl implements CropService {
 
     @Override
     public Page<CropResponseDTO> getAllCropsV2(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName) {
-        return cropRepo.findFilteredCrops(
+        return cropRepo.findFilteredCropResponses(
                         null,
                         normalizeFilter(keyword),
                         normalizeFilter(region),
@@ -170,13 +174,12 @@ public class CropServiceImpl implements CropService {
                         maxPrice,
                         normalizeFilter(farmerName),
                         buildPageRequest(page, size)
-                )
-                .map(cropMapper::toResponse);
+                );
     }
 
     @Override
     public Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice) {
-        return cropRepo.findFilteredCrops(
+        return cropRepo.findFilteredCropResponses(
                         farmerId,
                         normalizeFilter(keyword),
                         normalizeFilter(region),
@@ -184,14 +187,16 @@ public class CropServiceImpl implements CropService {
                         maxPrice,
                         null,
                         buildPageRequest(page, size)
-                )
-                .map(cropMapper::toResponse);
+                );
     }
 
     @Override
     public CropResponseDTO getCropByCropIdV2(Long cropId) {
-        return cropMapper.toResponse(cropRepo.findById(cropId)
-                .orElseThrow(() -> new ResourceNotFoundException("Crop not found with ID: " + cropId)));
+        CropResponseDTO crop = cropRepo.findCropResponseById(cropId);
+        if (crop == null) {
+            throw new ResourceNotFoundException("Crop not found with ID: " + cropId);
+        }
+        return crop;
     }
 
     @Override
@@ -209,11 +214,7 @@ public class CropServiceImpl implements CropService {
 
     @Override
     public Page<CropResponseDTO> searchCropsV2(String keyword, int page, int size) {
-        return cropRepo.findByCropNameContainingIgnoreCase(
-                        keyword,
-                        buildPageRequest(page, size)
-                )
-                .map(cropMapper::toResponse);
+        return cropRepo.searchCropResponses(keyword, buildPageRequest(page, size));
     }
 
     private void applyImage(Crop crop, MultipartFile imageFile) throws IOException {
