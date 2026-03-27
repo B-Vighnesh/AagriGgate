@@ -92,6 +92,7 @@ export default function Favorites() {
   const [actionLoading, setActionLoading] = useState('');
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [imageUrls, setImageUrls] = useState({});
+  const [pendingRemove, setPendingRemove] = useState(null);
 
   const showToast = (message, typeValue = 'info') => {
     setToast({ message, type: typeValue });
@@ -260,7 +261,7 @@ export default function Favorites() {
                 item={item}
                 imageUrl={imageUrls[item.cropId]}
                 onAddToCart={handleAddToCart}
-                onRemove={handleRemove}
+                onRemove={(cropId) => setPendingRemove({ cropId, step: 1 })}
                 onViewDetails={(id) => navigate(`/view-details/${id}`)}
                 loadingAction={actionLoading}
               />
@@ -276,6 +277,40 @@ export default function Favorites() {
           </div>
         ) : null}
       </div>
+      {pendingRemove ? (
+        <div className="confirm-overlay" onClick={() => setPendingRemove(null)}>
+          <Card className="confirm-card" onClick={(event) => event.stopPropagation()}>
+            {pendingRemove.step === 1 ? (
+              <>
+                <h3>Remove Favorite?</h3>
+                <p>This crop will be removed from your saved favorites list.</p>
+                <div className="confirm-actions">
+                  <Button variant="outline" onClick={() => setPendingRemove(null)}>Cancel</Button>
+                  <Button variant="danger" onClick={() => setPendingRemove((prev) => ({ ...prev, step: 2 }))}>Continue</Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3>Confirm Removal</h3>
+                <p>Please confirm once more to remove this crop from favorites.</p>
+                <div className="confirm-actions">
+                  <Button variant="outline" onClick={() => setPendingRemove(null)}>Keep Favorite</Button>
+                  <Button
+                    variant="danger"
+                    loading={actionLoading === `remove-${pendingRemove.cropId}`}
+                    onClick={async () => {
+                      await handleRemove(pendingRemove.cropId);
+                      setPendingRemove(null);
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </>
+            )}
+          </Card>
+        </div>
+      ) : null}
       <Toast message={toast.message} type={toast.type} />
     </section>
   );
