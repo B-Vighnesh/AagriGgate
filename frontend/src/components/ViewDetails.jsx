@@ -234,18 +234,6 @@ export default function ViewDetails() {
                   <p>Save this listing for later or move it to your cart before sending the final request.</p>
                 </div>
                 <div className="buyer-detail-actions__grid">
-                  <div className="buyer-detail-actions__qty">
-                    <label htmlFor="requestedQuantity">Quantity</label>
-                    <input
-                      id="requestedQuantity"
-                      type="number"
-                      min="1"
-                      step="0.1"
-                      value={requestedQuantity}
-                      onChange={(event) => setRequestedQuantity(event.target.value)}
-                      disabled={isSold}
-                    />
-                  </div>
                   <div className="buyer-detail-actions__buttons">
                     <Button variant="outline" onClick={handleFavoriteToggle} loading={favoriteLoading}>
                       {isFavorite ? 'Remove Favorite' : 'Save to Favorites'}
