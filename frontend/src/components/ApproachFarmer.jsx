@@ -4,13 +4,13 @@ import Card from './common/Card';
 import { apiFetch } from '../lib/api';
 import { getToken } from '../lib/auth';
 
-export default function ApproachFarmer({ cropId, onClose }) {
+export default function ApproachFarmer({ cropId, onClose, initialQuantity = 1, onSuccess }) {
   const token = getToken();
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [quantity, setQuantity] = useState('1');
+  const [quantity, setQuantity] = useState(String(initialQuantity || 1));
 
   const handleApproach = async () => {
     if (!token) {
@@ -33,6 +33,9 @@ export default function ApproachFarmer({ cropId, onClose }) {
       }
 
       setSuccess(true);
+      if (onSuccess) {
+        onSuccess(Number(quantity || 1));
+      }
     } catch (requestError) {
       setError(requestError.message || 'Server busy. Please try again.');
     } finally {
