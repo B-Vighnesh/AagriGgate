@@ -7,6 +7,7 @@ import ValidateToken from './ValidateToken';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 import { addCrop } from '../api/cropApi';
 import statesAndDistricts from './statesAndDistricts';
+import commodities from './commodities';
 
 const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
 const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
@@ -33,6 +34,7 @@ export default function AddCrop() {
     discountPrice: '',
     status: 'available',
   });
+  const [commoditySelection, setCommoditySelection] = useState('');
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [loading, setLoading] = useState(false);
@@ -72,6 +74,15 @@ export default function AddCrop() {
       ...prev,
       state: value,
       district: '',
+    }));
+  };
+
+  const onCommodityChange = (event) => {
+    const value = event.target.value;
+    setCommoditySelection(value);
+    setCropData((prev) => ({
+      ...prev,
+      cropName: value === 'OTHER' ? '' : value,
     }));
   };
 
@@ -150,7 +161,28 @@ export default function AddCrop() {
             <div className="add-crop-grid add-crop-grid--2">
               <div className="add-crop-field">
                 <label htmlFor="cropName">Crop Name *</label>
-                <input id="cropName" name="cropName" value={cropData.cropName} onChange={onFieldChange} placeholder="e.g. Tomato" required />
+                <select
+                  id="cropName"
+                  name="cropName"
+                  value={commoditySelection}
+                  onChange={onCommodityChange}
+                  required
+                >
+                  <option value="">Select Commodity</option>
+                  {commodities.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                  <option value="OTHER">Other</option>
+                </select>
+                {commoditySelection === 'OTHER' ? (
+                  <input
+                    name="cropName"
+                    value={cropData.cropName}
+                    onChange={onFieldChange}
+                    placeholder="Enter crop name"
+                    required
+                  />
+                ) : null}
               </div>
               <div className="add-crop-field">
                 <label htmlFor="cropType">Category *</label>
