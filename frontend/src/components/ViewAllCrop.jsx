@@ -221,14 +221,14 @@ export default function ViewAllCrop() {
           <div className="view-all-toolbar__head">
             <div>
               <h3>Search Crops</h3>
-              <p>Start typing to search crops by name, type, region, or farmer.</p>
+              <p>Start typing to search by crop name only.</p>
             </div>
           </div>
           <div className="view-all-search-row">
             <input
               className="view-all-input"
               type="text"
-              placeholder="Search by crop, type, region or farmer..."
+              placeholder="Search by crop name..."
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
             />
