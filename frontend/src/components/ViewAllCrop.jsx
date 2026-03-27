@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiGet, apiFetch } from '../lib/api';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
@@ -56,6 +56,8 @@ export default function ViewAllCrop() {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({ region: '', price: '', category: '', farmerName: '' });
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [appliedFilters, setAppliedFilters] = useState({ region: '', price: '', category: '', farmerName: '' });
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
@@ -72,7 +74,18 @@ export default function ViewAllCrop() {
       setLoading(true);
       setError('');
       try {
-        const response = await apiGet(`/crops/legacy?page=${page}&size=${PAGE_SIZE}`);
+        const params = new URLSearchParams({
+          page: String(page),
+          size: String(PAGE_SIZE),
+        });
+
+        if (appliedSearch.trim()) params.set('keyword', appliedSearch.trim());
+        if (appliedFilters.region.trim()) params.set('region', appliedFilters.region.trim());
+        if (appliedFilters.category.trim()) params.set('category', appliedFilters.category.trim());
+        if (appliedFilters.farmerName.trim()) params.set('farmerName', appliedFilters.farmerName.trim());
+        if (appliedFilters.price) params.set('maxPrice', appliedFilters.price);
+
+        const response = await apiGet(`/crops/legacy?${params.toString()}`);
         if (!response.ok) throw new Error('Failed to load crops. Please try again.');
 
         const data = await response.json();
@@ -108,26 +121,22 @@ export default function ViewAllCrop() {
         try { URL.revokeObjectURL(url); } catch { /* ignore */ }
       });
     };
-  }, [page, token, navigate]);
+  }, [page, token, navigate, appliedSearch, appliedFilters]);
 
-  const filteredCrops = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
+  const applyFilters = () => {
+    setPage(0);
+    setAppliedSearch(searchQuery);
+    setAppliedFilters(filters);
+  };
 
-    return crops.filter((crop) => {
-      const cropName = (crop.cropName || '').toLowerCase();
-      const cropType = (crop.cropType || '').toLowerCase();
-      const region = (crop.region || '').toLowerCase();
-      const farmer = (crop.farmer?.firstName || '').toLowerCase();
-
-      const matchQuery = !query || cropName.includes(query) || cropType.includes(query) || region.includes(query) || farmer.includes(query);
-      const matchRegion = !filters.region || region.includes(filters.region.toLowerCase());
-      const matchCategory = !filters.category || cropType.includes(filters.category.toLowerCase());
-      const matchFarmer = !filters.farmerName || farmer.includes(filters.farmerName.toLowerCase());
-      const matchPrice = !filters.price || Number(crop.marketPrice || 0) <= Number(filters.price);
-
-      return matchQuery && matchRegion && matchCategory && matchFarmer && matchPrice;
-    });
-  }, [crops, searchQuery, filters]);
+  const clearFilters = () => {
+    const emptyFilters = { region: '', price: '', category: '', farmerName: '' };
+    setSearchQuery('');
+    setFilters(emptyFilters);
+    setAppliedSearch('');
+    setAppliedFilters(emptyFilters);
+    setPage(0);
+  };
 
   return (
     <section className="page view-all-page">
@@ -186,6 +195,11 @@ export default function ViewAllCrop() {
               onChange={(event) => setFilters((prev) => ({ ...prev, farmerName: event.target.value }))}
             />
           </div>
+
+          <div className="view-all-filter-actions">
+            <Button onClick={applyFilters}>Apply Filters</Button>
+            <Button variant="outline" onClick={clearFilters}>Reset</Button>
+          </div>
         </Card>
 
         {loading && (
@@ -205,14 +219,14 @@ export default function ViewAllCrop() {
 
         {!loading && !error && (
           <p className="view-all-count">
-            Showing {filteredCrops.length} crop{filteredCrops.length !== 1 ? 's' : ''} on this page
+            Showing {crops.length} crop{crops.length !== 1 ? 's' : ''} on this page
             {totalElements ? ` • ${totalElements} total` : ''}
           </p>
         )}
 
-        {!loading && !error && filteredCrops.length > 0 && (
+        {!loading && !error && crops.length > 0 && (
           <div className="view-all-grid">
-            {filteredCrops.map((crop) => (
+            {crops.map((crop) => (
               <CropCard
                 key={crop.cropID}
                 crop={crop}
@@ -223,11 +237,11 @@ export default function ViewAllCrop() {
           </div>
         )}
 
-        {!loading && !error && filteredCrops.length === 0 && (
+        {!loading && !error && crops.length === 0 && (
           <Card className="view-all-empty">
             <p className="view-all-empty__icon">0</p>
-            <p className="view-all-empty__title">No crops match your search.</p>
-            <p className="view-all-empty__desc">Try adjusting filters or clear your search.</p>
+            <p className="view-all-empty__title">No crops match your filters.</p>
+            <p className="view-all-empty__desc">Try different filters or reset the form.</p>
           </Card>
         )}
 

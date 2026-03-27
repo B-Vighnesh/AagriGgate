@@ -13,8 +13,8 @@ public interface CropService {
     // v1 methods (legacy contract retained)
     Crop addCropV1(Long farmerId, Crop crop, MultipartFile imageFile) throws IOException;
     Crop updateCropV1(Long farmerId, Long cropId, Crop crop, MultipartFile imageFile) throws IOException;
-    Page<Crop> getAllCropsV1(int page, int size);
-    Page<Crop> getCropsByFarmerIdV1(Long farmerId, int page, int size);
+    Page<Crop> getAllCropsV1(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName);
+    Page<Crop> getCropsByFarmerIdV1(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice);
     Crop getCropByCropIdV1(Long cropId);
     void deleteCropByIdV1(Long farmerId, Long cropId);
     void deleteCropByFarmerIdV1(Long farmerId);
@@ -23,8 +23,8 @@ public interface CropService {
     // v2 methods (industry-standard DTO contract)
     CropResponseDTO addCropV2(Long farmerId, CropRequestDTO cropRequestDTO, MultipartFile imageFile) throws IOException;
     CropResponseDTO updateCropV2(Long farmerId, Long cropId, CropRequestDTO cropRequestDTO, MultipartFile imageFile) throws IOException;
-    Page<CropResponseDTO> getAllCropsV2(int page, int size);
-    Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size);
+    Page<CropResponseDTO> getAllCropsV2(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName);
+    Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice);
     CropResponseDTO getCropByCropIdV2(Long cropId);
     void deleteCropByIdV2(Long farmerId, Long cropId);
     void deleteCropByFarmerIdV2(Long farmerId);

@@ -1979,6 +1979,13 @@ a {
   gap: 10px;
 }
 
+.view-all-filter-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .view-all-loading {
   display: flex;
   align-items: center;

@@ -70,13 +70,29 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public Page<Crop> getAllCropsV1(int page, int size) {
-        return cropRepo.findAll(buildPageRequest(page, size));
+    public Page<Crop> getAllCropsV1(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName) {
+        return cropRepo.findFilteredCrops(
+                null,
+                normalizeFilter(keyword),
+                normalizeFilter(region),
+                normalizeFilter(category),
+                maxPrice,
+                normalizeFilter(farmerName),
+                buildPageRequest(page, size)
+        );
     }
 
     @Override
-    public Page<Crop> getCropsByFarmerIdV1(Long farmerId, int page, int size) {
-        return cropRepo.findPageByFarmerId(farmerId, buildPageRequest(page, size));
+    public Page<Crop> getCropsByFarmerIdV1(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice) {
+        return cropRepo.findFilteredCrops(
+                farmerId,
+                normalizeFilter(keyword),
+                normalizeFilter(region),
+                normalizeFilter(category),
+                maxPrice,
+                null,
+                buildPageRequest(page, size)
+        );
     }
 
     @Override
@@ -137,14 +153,31 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public Page<CropResponseDTO> getAllCropsV2(int page, int size) {
-        return cropRepo.findAll(buildPageRequest(page, size))
+    public Page<CropResponseDTO> getAllCropsV2(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName) {
+        return cropRepo.findFilteredCrops(
+                        null,
+                        normalizeFilter(keyword),
+                        normalizeFilter(region),
+                        normalizeFilter(category),
+                        maxPrice,
+                        normalizeFilter(farmerName),
+                        buildPageRequest(page, size)
+                )
                 .map(cropMapper::toResponse);
     }
 
     @Override
-    public Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size) {
-        return cropRepo.findPageByFarmerId(farmerId, buildPageRequest(page, size)).map(cropMapper::toResponse);
+    public Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice) {
+        return cropRepo.findFilteredCrops(
+                        farmerId,
+                        normalizeFilter(keyword),
+                        normalizeFilter(region),
+                        normalizeFilter(category),
+                        maxPrice,
+                        null,
+                        buildPageRequest(page, size)
+                )
+                .map(cropMapper::toResponse);
     }
 
     @Override
@@ -197,5 +230,12 @@ public class CropServiceImpl implements CropService {
         int safePage = Math.max(page, 0);
         int safeSize = size <= 0 ? 10 : Math.min(size, 50);
         return PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "cropID"));
+    }
+
+    private String normalizeFilter(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }

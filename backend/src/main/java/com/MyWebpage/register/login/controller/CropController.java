@@ -60,8 +60,13 @@ public class CropController {
     @GetMapping("/legacy")
     public ResponseEntity<Page<Crop>> getAllCropsV1(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(cropService.getAllCropsV1(page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) String farmerName) {
+        return ResponseEntity.ok(cropService.getAllCropsV1(page, size, keyword, region, category, maxPrice, farmerName));
     }
 
     @GetMapping("/farmer/{farmerId}/legacy")
@@ -69,21 +74,29 @@ public class CropController {
             @PathVariable Long farmerId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Double maxPrice,
             Authentication authentication) {
         Long authenticatedFarmerId = Long.parseLong(authentication.getName());
         if (!authenticatedFarmerId.equals(farmerId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId, page, size).getContent());
+        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId, page, size, keyword, region, category, maxPrice).getContent());
     }
 
     @GetMapping("/farmer/me/legacy")
     public ResponseEntity<Page<Crop>> getMyCropsV1(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Double maxPrice) {
         Long farmerId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId, page, size));
+        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId, page, size, keyword, region, category, maxPrice));
     }
 
     @GetMapping("/legacy/{cropId}")
@@ -120,8 +133,13 @@ public class CropController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<CropResponseDTO>>> getAllCropsV2(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(ApiResponse.success("Crops fetched", cropService.getAllCropsV2(page, size)));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) String farmerName) {
+        return ResponseEntity.ok(ApiResponse.success("Crops fetched", cropService.getAllCropsV2(page, size, keyword, region, category, maxPrice, farmerName)));
     }
 
     @PostMapping(value = "/v2/farmer/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -149,21 +167,29 @@ public class CropController {
             @PathVariable Long farmerId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Double maxPrice,
             Authentication authentication) {
         Long authenticatedFarmerId = Long.parseLong(authentication.getName());
         if (!authenticatedFarmerId.equals(farmerId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId, page, size)));
+        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId, page, size, keyword, region, category, maxPrice)));
     }
 
     @GetMapping("/v2/farmer/me")
     public ResponseEntity<ApiResponse<Page<CropResponseDTO>>> getMyCropsV2(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Double maxPrice) {
         Long farmerId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId, page, size)));
+        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId, page, size, keyword, region, category, maxPrice)));
     }
 
     @GetMapping("/v2/{cropId}")

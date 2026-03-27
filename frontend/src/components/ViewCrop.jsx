@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -20,6 +20,7 @@ export default function ViewCrop() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
+  const [appliedQuery, setAppliedQuery] = useState('');
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
@@ -39,7 +40,15 @@ export default function ViewCrop() {
       setLoading(true);
       setError('');
       try {
-        const response = await apiGet(`/crops/farmer/me/legacy?page=${page}&size=${PAGE_SIZE}`);
+        const params = new URLSearchParams({
+          page: String(page),
+          size: String(PAGE_SIZE),
+        });
+        if (appliedQuery.trim()) {
+          params.set('keyword', appliedQuery.trim());
+        }
+
+        const response = await apiGet(`/crops/farmer/me/legacy?${params.toString()}`);
         if (!response.ok) throw new Error('Unable to load crops.');
         const data = await response.json();
         if (!mounted) return;
@@ -72,17 +81,18 @@ export default function ViewCrop() {
         try { URL.revokeObjectURL(url); } catch { /* ignore */ }
       });
     };
-  }, [page, token, farmerId, role, navigate]);
+  }, [page, token, farmerId, role, navigate, appliedQuery]);
 
-  const filteredCrops = useMemo(() => {
-    if (!query.trim()) return crops;
-    const q = query.toLowerCase();
-    return crops.filter((crop) =>
-      (crop.cropName || '').toLowerCase().includes(q) ||
-      (crop.cropType || '').toLowerCase().includes(q) ||
-      (crop.region || '').toLowerCase().includes(q)
-    );
-  }, [crops, query]);
+  const applySearch = () => {
+    setPage(0);
+    setAppliedQuery(query);
+  };
+
+  const clearSearch = () => {
+    setQuery('');
+    setAppliedQuery('');
+    setPage(0);
+  };
 
   if (loading) {
     return (
@@ -112,7 +122,7 @@ export default function ViewCrop() {
           <div>
             <h1>My Crops Dashboard</h1>
             <p>
-              Showing {filteredCrops.length} crop{filteredCrops.length !== 1 ? 's' : ''} on this page
+              Showing {crops.length} crop{crops.length !== 1 ? 's' : ''} on this page
               {totalElements ? ` • ${totalElements} total` : ''}
             </p>
           </div>
@@ -126,15 +136,19 @@ export default function ViewCrop() {
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search by crop name, type, or region"
           />
+          <div className="view-all-filter-actions">
+            <Button onClick={applySearch}>Search</Button>
+            <Button variant="outline" onClick={clearSearch}>Reset</Button>
+          </div>
         </div>
 
-        {filteredCrops.length === 0 ? (
+        {crops.length === 0 ? (
           <Card className="view-crop-empty">
-            {crops.length === 0 ? 'No crops listed yet. Add your first crop.' : 'No crops match your search.'}
+            {appliedQuery ? 'No crops match your search.' : 'No crops listed yet. Add your first crop.'}
           </Card>
         ) : (
           <div className="view-crop-grid">
-            {filteredCrops.map((crop) => (
+            {crops.map((crop) => (
               <Card key={crop.cropID} className="view-crop-card" onClick={() => navigate(`/view-details/${crop.cropID}`)}>
                 <div className="view-crop-card__image-wrap">
                   <img
