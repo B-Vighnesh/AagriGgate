@@ -12,6 +12,10 @@ public class CropViewDTO {
     private String postDate;
     private String farmerName;
     private boolean ownedByCurrentUser;
+    private Boolean isUrgent;
+    private Boolean isWaste;
+    private Double discountPrice;
+    private String status;
 
     public CropViewDTO() {
     }
@@ -27,7 +31,11 @@ public class CropViewDTO {
             String description,
             String postDate,
             String farmerName,
-            boolean ownedByCurrentUser
+            boolean ownedByCurrentUser,
+            Boolean isUrgent,
+            Boolean isWaste,
+            Double discountPrice,
+            String status
     ) {
         this.cropID = cropID;
         this.cropName = cropName;
@@ -40,6 +48,10 @@ public class CropViewDTO {
         this.postDate = postDate;
         this.farmerName = farmerName;
         this.ownedByCurrentUser = ownedByCurrentUser;
+        this.isUrgent = isUrgent;
+        this.isWaste = isWaste;
+        this.discountPrice = discountPrice;
+        this.status = status;
     }
 
     public Long getCropID() {
@@ -128,5 +140,37 @@ public class CropViewDTO {
 
     public void setOwnedByCurrentUser(boolean ownedByCurrentUser) {
         this.ownedByCurrentUser = ownedByCurrentUser;
+    }
+
+    public Boolean getIsUrgent() {
+        return isUrgent;
+    }
+
+    public void setIsUrgent(Boolean urgent) {
+        isUrgent = urgent;
+    }
+
+    public Boolean getIsWaste() {
+        return isWaste;
+    }
+
+    public void setIsWaste(Boolean waste) {
+        isWaste = waste;
+    }
+
+    public Double getDiscountPrice() {
+        return discountPrice;
+    }
+
+    public void setDiscountPrice(Double discountPrice) {
+        this.discountPrice = discountPrice;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

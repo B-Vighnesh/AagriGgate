@@ -165,11 +165,17 @@ export default function ViewCrop() {
                     <h3>{crop.cropName}</h3>
                     <span>{crop.cropType}</span>
                   </div>
+                  <div className="crop-flag-row">
+                    {crop.status ? <span className={`crop-flag crop-flag--${crop.status.toLowerCase()}`}>{crop.status}</span> : null}
+                    {crop.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
+                    {crop.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
+                  </div>
                   <p className="region">{crop.region}</p>
                   <div className="view-crop-card__price">
                     <strong>Rs {Number(crop.marketPrice || 0).toFixed(2)}</strong>
                     <small>per {crop.unit}</small>
                   </div>
+                  {crop.discountPrice ? <p className="view-all-card__discount">Discount: Rs {Number(crop.discountPrice).toFixed(2)}</p> : null}
                   <p className="qty">{crop.quantity} {crop.unit}</p>
                 </div>
               </Card>

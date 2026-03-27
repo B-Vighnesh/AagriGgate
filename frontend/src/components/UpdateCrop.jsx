@@ -9,6 +9,7 @@ import { getToken, getFarmerId, getRole } from '../lib/auth';
 
 const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
 const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
+const CROP_STATUS = ['available', 'sold'];
 
 export default function UpdateCrop() {
   const navigate = useNavigate();
@@ -25,6 +26,10 @@ export default function UpdateCrop() {
     quantity: '',
     unit: 'kg',
     description: '',
+    isUrgent: false,
+    isWaste: false,
+    discountPrice: '',
+    status: 'available',
   });
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
@@ -72,6 +77,10 @@ export default function UpdateCrop() {
             quantity: details.quantity ?? '',
             unit: details.unit || 'kg',
             description: details.description || '',
+            isUrgent: Boolean(details.isUrgent),
+            isWaste: Boolean(details.isWaste),
+            discountPrice: details.discountPrice ?? '',
+            status: details.status || 'available',
           });
         }
 
@@ -98,8 +107,8 @@ export default function UpdateCrop() {
   }, [cropId]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
-    setCropData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = event.target;
+    setCropData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleImageChange = (event) => {
@@ -136,6 +145,10 @@ export default function UpdateCrop() {
       quantity: Number(cropData.quantity),
       unit: cropData.unit,
       description: cropData.description,
+      isUrgent: cropData.isUrgent,
+      isWaste: cropData.isWaste,
+      discountPrice: cropData.discountPrice === '' ? null : Number(cropData.discountPrice),
+      status: cropData.status,
     };
 
     const formData = new FormData();
@@ -226,6 +239,51 @@ export default function UpdateCrop() {
             <div className="update-crop-field">
               <label htmlFor="description">Description</label>
               <textarea id="description" name="description" rows="4" value={cropData.description} onChange={handleChange} />
+            </div>
+
+            <div className="update-crop-grid update-crop-grid--2">
+              <div className="update-crop-field">
+                <label htmlFor="status">Status</label>
+                <select id="status" name="status" value={cropData.status} onChange={handleChange}>
+                  {CROP_STATUS.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="update-crop-field">
+                <label htmlFor="discountPrice">Discount Price</label>
+                <input
+                  id="discountPrice"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  name="discountPrice"
+                  value={cropData.discountPrice}
+                  onChange={handleChange}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <div className="update-crop-grid update-crop-grid--2">
+              <label className="add-crop-check">
+                <input
+                  type="checkbox"
+                  name="isUrgent"
+                  checked={cropData.isUrgent}
+                  onChange={handleChange}
+                />
+                <span>Urgent sale</span>
+              </label>
+              <label className="add-crop-check">
+                <input
+                  type="checkbox"
+                  name="isWaste"
+                  checked={cropData.isWaste}
+                  onChange={handleChange}
+                />
+                <span>Waste / surplus sale</span>
+              </label>
             </div>
 
             <div className="update-crop-image-row">

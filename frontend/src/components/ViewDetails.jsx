@@ -81,7 +81,10 @@ export default function ViewDetails() {
           const reqRes = await safeFetch(`/seller/approach/requests/me/${cropId}`, { method: 'GET' });
           if (reqRes.ok) {
             const reqData = await parseJsonIfPresent(reqRes);
-            if (mounted) setRequests(Array.isArray(reqData) ? reqData.length : 0);
+            if (mounted) {
+              const total = Number(reqData?.totalElements || reqData?.content?.length || 0);
+              setRequests(total);
+            }
           }
         }
 
@@ -156,6 +159,12 @@ export default function ViewDetails() {
 
             <DetailRow label="Farmer" value={cropDetails.farmerName} />
             <DetailRow label="Region" value={cropDetails.region} />
+            <DetailRow label="Status" value={cropDetails.status} />
+            <DetailRow label="Urgent Sale" value={cropDetails.isUrgent ? 'Yes' : 'No'} />
+            <DetailRow label="Waste Sale" value={cropDetails.isWaste ? 'Yes' : 'No'} />
+            {cropDetails.discountPrice ? (
+              <DetailRow label="Discount Price" value={`Rs ${Number(cropDetails.discountPrice).toFixed(2)}`} />
+            ) : null}
             <DetailRow label="Description" value={cropDetails.description} />
             <DetailRow label="Quantity" value={`${cropDetails.quantity} ${cropDetails.unit}`} />
             <DetailRow label="Added" value={cropDetails.postDate} />

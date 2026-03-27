@@ -11,6 +11,10 @@ public class CropResponseDTO {
     private String description;
     private String postDate;
     private String farmerName;
+    private Boolean isUrgent;
+    private Boolean isWaste;
+    private Double discountPrice;
+    private String status;
 
     public CropResponseDTO() {
     }
@@ -25,7 +29,11 @@ public class CropResponseDTO {
             String unit,
             String description,
             String postDate,
-            String farmerName
+            String farmerName,
+            Boolean isUrgent,
+            Boolean isWaste,
+            Double discountPrice,
+            String status
     ) {
         this.cropId = cropId;
         this.cropName = cropName;
@@ -37,6 +45,10 @@ public class CropResponseDTO {
         this.description = description;
         this.postDate = postDate;
         this.farmerName = farmerName;
+        this.isUrgent = isUrgent;
+        this.isWaste = isWaste;
+        this.discountPrice = discountPrice;
+        this.status = status;
     }
 
     public Long getCropId() { return cropId; }
@@ -59,4 +71,12 @@ public class CropResponseDTO {
     public void setPostDate(String postDate) { this.postDate = postDate; }
     public String getFarmerName() { return farmerName; }
     public void setFarmerName(String farmerName) { this.farmerName = farmerName; }
+    public Boolean getIsUrgent() { return isUrgent; }
+    public void setIsUrgent(Boolean urgent) { isUrgent = urgent; }
+    public Boolean getIsWaste() { return isWaste; }
+    public void setIsWaste(Boolean waste) { isWaste = waste; }
+    public Double getDiscountPrice() { return discountPrice; }
+    public void setDiscountPrice(Double discountPrice) { this.discountPrice = discountPrice; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

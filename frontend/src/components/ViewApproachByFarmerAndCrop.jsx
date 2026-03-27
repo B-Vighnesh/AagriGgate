@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -24,6 +24,8 @@ export default function ViewApproachByFarmerAndCrop() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [toast, setToast] = useState({ message: '', type: 'info' });
 
   const showToast = (message, type = 'info') => {
@@ -36,14 +38,24 @@ export default function ViewApproachByFarmerAndCrop() {
     setError('');
 
     try {
-      const data = await requestJson(`/seller/approach/requests/me/${cropId}`, {
+      const params = new URLSearchParams({
+        page: String(page),
+        size: '10',
+      });
+      if (filterStatus !== 'All') {
+        params.set('status', filterStatus);
+      }
+
+      const data = await requestJson(`/seller/approach/requests/me/${cropId}?${params.toString()}`, {
         method: 'GET',
       });
-      setApproaches(Array.isArray(data) ? data : []);
+      setApproaches(Array.isArray(data?.content) ? data.content : []);
+      setTotalPages(Number(data?.totalPages || 0));
     } catch (loadError) {
       setApproaches([]);
-      if (loadError?.message === 'Request failed with status 404') {
-        setError('No approach records found for this crop.');
+      setTotalPages(0);
+      if ([204, 400, 404].includes(loadError?.status)) {
+        setError('');
       } else {
         setError(loadError.message || 'Unable to load requests.');
       }
@@ -70,12 +82,7 @@ export default function ViewApproachByFarmerAndCrop() {
     }
 
     loadApproaches();
-  }, [farmerId, cropId, role]);
-
-  const filteredApproaches = useMemo(() => {
-    if (filterStatus === 'All') return approaches;
-    return approaches.filter((approach) => (approach.status || '').toLowerCase() === filterStatus.toLowerCase());
-  }, [approaches, filterStatus]);
+  }, [farmerId, cropId, role, page, filterStatus]);
 
   const handleAction = async (approachId, accept) => {
     const endpoint = accept
@@ -114,7 +121,7 @@ export default function ViewApproachByFarmerAndCrop() {
 
           <div className="approach-crop-filter">
             <label htmlFor="status-filter">Filter by Status</label>
-            <select id="status-filter" value={filterStatus} onChange={(event) => setFilterStatus(event.target.value)}>
+            <select id="status-filter" value={filterStatus} onChange={(event) => { setPage(0); setFilterStatus(event.target.value); }}>
               <option value="All">All</option>
               <option value="Pending">Pending</option>
               <option value="Accepted">Accepted</option>
@@ -130,15 +137,15 @@ export default function ViewApproachByFarmerAndCrop() {
           </Card>
         ) : null}
 
-        {!error && filteredApproaches.length === 0 ? (
+        {!error && approaches.length === 0 ? (
           <Card className="approach-crop-empty">
             <h3>No {filterStatus !== 'All' ? filterStatus.toLowerCase() : ''} requests</h3>
           </Card>
         ) : null}
 
-        {!error && filteredApproaches.length > 0 ? (
+        {!error && approaches.length > 0 ? (
           <div className="approach-crop-list">
-            {filteredApproaches.map((approach) => {
+            {approaches.map((approach) => {
               const status = (approach.status || 'pending').toLowerCase();
               const isPending = status === 'pending';
 
@@ -173,6 +180,28 @@ export default function ViewApproachByFarmerAndCrop() {
                 </Card>
               );
             })}
+          </div>
+        ) : null}
+
+        {!loading && !error && totalPages > 1 ? (
+          <div className="view-all-pagination">
+            <Button
+              variant="outline"
+              onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+              disabled={page === 0}
+            >
+              Previous
+            </Button>
+            <span className="view-all-pagination__info">
+              Page {page + 1} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
+              disabled={page >= totalPages - 1}
+            >
+              Next
+            </Button>
           </div>
         ) : null}
       </div>

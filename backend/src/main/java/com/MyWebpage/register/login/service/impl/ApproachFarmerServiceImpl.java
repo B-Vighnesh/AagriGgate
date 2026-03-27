@@ -1,5 +1,6 @@
 package com.MyWebpage.register.login.service.impl;
 
+import com.MyWebpage.register.login.dto.ApproachRequestDTO;
 import com.MyWebpage.register.login.model.ApproachFarmer;
 import com.MyWebpage.register.login.model.Crop;
 import com.MyWebpage.register.login.model.Farmer;
@@ -10,6 +11,9 @@ import com.MyWebpage.register.login.service.ApproachFarmerService;
 import com.MyWebpage.register.login.service.EmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -130,18 +134,31 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     }
 
     @Override
-    public List<ApproachFarmer> getRequestsByFarmerId(Long farmerId) {
-        return approachFarmerRepository.findByFarmerIdOrderByApproachIdDesc(farmerId);
+    public Page<ApproachRequestDTO> getRequestsByFarmerId(Long farmerId, String status, int page, int size) {
+        return approachFarmerRepository.findRequestViewsByFarmerId(
+                farmerId,
+                normalizeStatus(status),
+                buildPageRequest(page, size)
+        );
     }
 
     @Override
-    public List<ApproachFarmer> getRequestsByFarmerIdAndCropId(Long farmerId, Long cropId) {
-        return approachFarmerRepository.findByFarmerIdAndCropIdOrderByApproachIdDesc(farmerId, cropId);
+    public Page<ApproachRequestDTO> getRequestsByFarmerIdAndCropId(Long farmerId, Long cropId, String status, int page, int size) {
+        return approachFarmerRepository.findRequestViewsByFarmerIdAndCropId(
+                farmerId,
+                cropId,
+                normalizeStatus(status),
+                buildPageRequest(page, size)
+        );
     }
 
     @Override
-    public List<ApproachFarmer> getRequestsByUserId(Long userId) {
-        return approachFarmerRepository.findByUserIdOrderByApproachIdDesc(userId);
+    public Page<ApproachRequestDTO> getRequestsByUserId(Long userId, String status, int page, int size) {
+        return approachFarmerRepository.findRequestViewsByUserId(
+                userId,
+                normalizeStatus(status),
+                buildPageRequest(page, size)
+        );
     }
 
     @Override
@@ -178,5 +195,18 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
         } catch (Exception e) {
             throw new RuntimeException("Error occurred while checking the approach status: " + e.getMessage(), e);
         }
+    }
+
+    private PageRequest buildPageRequest(int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = size <= 0 ? 10 : Math.min(size, 50);
+        return PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "approachId"));
+    }
+
+    private String normalizeStatus(String status) {
+        if (status == null || status.isBlank() || "All".equalsIgnoreCase(status)) {
+            return null;
+        }
+        return status.trim();
     }
 }

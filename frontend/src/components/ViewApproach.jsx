@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -23,6 +23,8 @@ export default function ViewApproach() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('All');
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
   const [buyerLoading, setBuyerLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
@@ -36,12 +38,22 @@ export default function ViewApproach() {
     setLoading(true);
     setError('');
     try {
-      const data = await requestJson('/seller/approach/requests/me', {
+      const params = new URLSearchParams({
+        page: String(page),
+        size: '10',
+      });
+      if (filter !== 'All') {
+        params.set('status', filter);
+      }
+
+      const data = await requestJson(`/seller/approach/requests/me?${params.toString()}`, {
         method: 'GET',
       });
-      setApproaches(Array.isArray(data) ? data : []);
+      setApproaches(Array.isArray(data?.content) ? data.content : []);
+      setTotalPages(Number(data?.totalPages || 0));
     } catch (err) {
       setApproaches([]);
+      setTotalPages(0);
       if ([204, 400, 404].includes(err?.status)) {
         setError('');
       } else {
@@ -62,7 +74,7 @@ export default function ViewApproach() {
       return;
     }
     loadApproaches();
-  }, []);
+  }, [page, filter]);
 
   const onAction = async (approachId, accept) => {
     const endpoint = accept
@@ -92,11 +104,6 @@ export default function ViewApproach() {
     }
   };
 
-  const filteredApproaches = useMemo(() => {
-    if (filter === 'All') return approaches;
-    return approaches.filter((item) => (item.status || '').toLowerCase() === filter.toLowerCase());
-  }, [approaches, filter]);
-
   if (loading) {
     return (
       <section className="page page--center">
@@ -114,7 +121,7 @@ export default function ViewApproach() {
             <h1>Buying Proposals</h1>
             <p>Manage buyer requests for your crops.</p>
           </div>
-          <select value={filter} onChange={(event) => setFilter(event.target.value)}>
+          <select value={filter} onChange={(event) => { setPage(0); setFilter(event.target.value); }}>
             <option value="All">All</option>
             <option value="Pending">Pending</option>
             <option value="Accepted">Accepted</option>
@@ -131,7 +138,7 @@ export default function ViewApproach() {
           </Card>
         ) : null}
 
-        {!error && filteredApproaches.length === 0 ? (
+        {!error && approaches.length === 0 ? (
           <Card className="view-approach-empty">
             <h3>No {filter !== 'All' ? filter.toLowerCase() : 'buyer'} requests yet</h3>
             <p>Requests from buyers will appear here after they approach one of your crops.</p>
@@ -144,7 +151,7 @@ export default function ViewApproach() {
         ) : null}
 
         <div className="view-approach-list">
-          {filteredApproaches.map((item) => (
+          {approaches.map((item) => (
             <Card key={item.approachId} className="approach-card">
               <div className="approach-card__head">
                 <div>
@@ -171,6 +178,28 @@ export default function ViewApproach() {
             </Card>
           ))}
         </div>
+
+        {!loading && !error && totalPages > 1 ? (
+          <div className="view-all-pagination">
+            <Button
+              variant="outline"
+              onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+              disabled={page === 0}
+            >
+              Previous
+            </Button>
+            <span className="view-all-pagination__info">
+              Page {page + 1} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
+              disabled={page >= totalPages - 1}
+            >
+              Next
+            </Button>
+          </div>
+        ) : null}
 
       </div>
 

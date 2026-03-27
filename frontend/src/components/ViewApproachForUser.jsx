@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
 import { apiFetch, requestJson } from '../lib/api';
@@ -23,6 +23,8 @@ export default function ViewApproachForUser() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('All');
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [toast, setToast] = useState({ message: '', type: 'info' });
 
   const showToast = (message, type = 'info') => {
@@ -45,12 +47,22 @@ export default function ViewApproachForUser() {
       setLoading(true);
       setError('');
       try {
-        const data = await requestJson('/buyer/approach/requests/me', {
+        const params = new URLSearchParams({
+          page: String(page),
+          size: '10',
+        });
+        if (filter !== 'All') {
+          params.set('status', filter);
+        }
+
+        const data = await requestJson(`/buyer/approach/requests/me?${params.toString()}`, {
           method: 'GET',
         });
-        setApproaches(Array.isArray(data) ? data : []);
+        setApproaches(Array.isArray(data?.content) ? data.content : []);
+        setTotalPages(Number(data?.totalPages || 0));
       } catch (loadError) {
         setApproaches([]);
+        setTotalPages(0);
         if ([204, 400, 404].includes(loadError?.status)) {
           setError('');
         } else {
@@ -62,7 +74,7 @@ export default function ViewApproachForUser() {
     };
 
     loadApproaches();
-  }, []);
+  }, [page, filter]);
 
   const handleWithdraw = async (approachId) => {
     try {
@@ -74,11 +86,6 @@ export default function ViewApproachForUser() {
       showToast(requestError.message || 'Server busy. Please try again.', 'error');
     }
   };
-
-  const filteredApproaches = useMemo(() => {
-    if (filter === 'All') return approaches;
-    return approaches.filter((item) => (item.status || '').toLowerCase() === filter.toLowerCase());
-  }, [approaches, filter]);
 
   if (loading) {
     return (
@@ -99,7 +106,7 @@ export default function ViewApproachForUser() {
             <p>Track the status of your approach requests to farmers.</p>
           </div>
 
-          <select value={filter} onChange={(event) => setFilter(event.target.value)}>
+          <select value={filter} onChange={(event) => { setPage(0); setFilter(event.target.value); }}>
             <option value="All">All</option>
             <option value="Pending">Pending</option>
             <option value="Accepted">Accepted</option>
@@ -107,7 +114,7 @@ export default function ViewApproachForUser() {
           </select>
         </div>
 
-        {(error || filteredApproaches.length === 0) && (
+        {(error || approaches.length === 0) && (
           <Card className="user-requests-empty">
             <h3>{error || `No ${filter !== 'All' ? filter.toLowerCase() : 'approach'} requests yet`}</h3>
             <p>
@@ -127,9 +134,9 @@ export default function ViewApproachForUser() {
           </Card>
         )}
 
-        {!error && filteredApproaches.length > 0 && (
+        {!error && approaches.length > 0 && (
           <div className="user-requests-list">
-            {filteredApproaches.map((item) => (
+            {approaches.map((item) => (
               <Card key={item.approachId} className="user-requests-card">
                 <div className="user-requests-card__main">
                   <h3>{item.cropName}</h3>
@@ -155,6 +162,28 @@ export default function ViewApproachForUser() {
             ))}
           </div>
         )}
+
+        {!loading && !error && totalPages > 1 ? (
+          <div className="view-all-pagination">
+            <Button
+              variant="outline"
+              onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+              disabled={page === 0}
+            >
+              Previous
+            </Button>
+            <span className="view-all-pagination__info">
+              Page {page + 1} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
+              disabled={page >= totalPages - 1}
+            >
+              Next
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       <Toast message={toast.message} type={toast.type} />
