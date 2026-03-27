@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { getRole } from '../lib/auth';
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const role = getRole();
+  const intelligenceLink = role === 'buyer' ? '/#buyers' : '/#intelligence';
 
   return (
     <footer className="site-footer">
@@ -23,8 +26,8 @@ export default function Footer() {
         <div className="footer-section">
           <h4>Intelligence</h4>
           <ul>
-            <li><Link to="/weather">Weather</Link></li>
-            <li><Link to="/market">Market Prices</Link></li>
+            <li><Link to={intelligenceLink}>Weather</Link></li>
+            <li><Link to={intelligenceLink}>Market Prices</Link></li>
           </ul>
         </div>
         <div className="footer-section">
