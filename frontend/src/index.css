@@ -2224,8 +2224,10 @@ a {
 
 .view-all-card__body {
   padding: 12px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 7px;
+  height: 100%;
 }
 
 .view-all-card__body h3 {
@@ -2279,6 +2281,7 @@ a {
   align-items: flex-end;
   justify-content: space-between;
   gap: 10px;
+  margin-top: auto;
 }
 
 .view-all-card__price {
@@ -3183,6 +3186,10 @@ a {
   flex-wrap: wrap;
   gap: 8px;
   align-items: flex-end;
+}
+
+.buyer-tools-card__actions {
+  margin-top: auto;
 }
 
 .buyer-tools-card__footer {
