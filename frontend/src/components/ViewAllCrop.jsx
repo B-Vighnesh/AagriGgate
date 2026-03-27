@@ -79,8 +79,7 @@ export default function ViewAllCrop() {
     price: '',
     category: '',
     farmerName: '',
-    urgentOnly: false,
-    wasteOnly: false,
+    listingType: 'all',
     sortBy: 'newest',
   });
   const [appliedSearch, setAppliedSearch] = useState('');
@@ -89,8 +88,7 @@ export default function ViewAllCrop() {
     price: '',
     category: '',
     farmerName: '',
-    urgentOnly: false,
-    wasteOnly: false,
+    listingType: 'all',
     sortBy: 'newest',
   });
   const [page, setPage] = useState(0);
@@ -105,6 +103,15 @@ export default function ViewAllCrop() {
 
     return () => window.clearTimeout(timer);
   }, [searchQuery]);
+
+  useEffect(() => {
+    setPage(0);
+    setAppliedFilters((prev) => ({
+      ...prev,
+      sortBy: filters.sortBy,
+      listingType: filters.listingType,
+    }));
+  }, [filters.sortBy, filters.listingType]);
 
   useEffect(() => {
     if (!token) {
@@ -128,8 +135,9 @@ export default function ViewAllCrop() {
         if (appliedFilters.category.trim()) params.set('category', appliedFilters.category.trim());
         if (appliedFilters.farmerName.trim()) params.set('farmerName', appliedFilters.farmerName.trim());
         if (appliedFilters.price) params.set('maxPrice', appliedFilters.price);
-        if (appliedFilters.urgentOnly) params.set('urgentOnly', 'true');
-        if (appliedFilters.wasteOnly) params.set('wasteOnly', 'true');
+        if (appliedFilters.listingType === 'urgent') params.set('urgentOnly', 'true');
+        if (appliedFilters.listingType === 'waste') params.set('wasteOnly', 'true');
+        if (appliedFilters.listingType === 'normal') params.set('normalOnly', 'true');
         if (appliedFilters.sortBy) params.set('sortBy', appliedFilters.sortBy);
 
         const response = await apiGet(`/crops/legacy?${params.toString()}`);
@@ -181,8 +189,7 @@ export default function ViewAllCrop() {
       price: '',
       category: '',
       farmerName: '',
-      urgentOnly: false,
-      wasteOnly: false,
+      listingType: 'all',
       sortBy: 'newest',
     };
     setSearchQuery('');
@@ -250,6 +257,7 @@ export default function ViewAllCrop() {
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
               <option value="price-low">Price: low to high</option>
+              <option value="price-high">Price: high to low</option>
             </select>
             <input
               className="view-all-input"
@@ -276,19 +284,39 @@ export default function ViewAllCrop() {
           <div className="view-all-toggle-row">
             <label className="view-all-toggle">
               <input
-                type="checkbox"
-                checked={filters.urgentOnly}
-                onChange={(event) => setFilters((prev) => ({ ...prev, urgentOnly: event.target.checked }))}
+                type="radio"
+                name="browse-listing-type"
+                checked={filters.listingType === 'all'}
+                onChange={() => setFilters((prev) => ({ ...prev, listingType: 'all' }))}
               />
-              <span>Urgent sales only</span>
+              <span>All crops</span>
             </label>
             <label className="view-all-toggle">
               <input
-                type="checkbox"
-                checked={filters.wasteOnly}
-                onChange={(event) => setFilters((prev) => ({ ...prev, wasteOnly: event.target.checked }))}
+                type="radio"
+                name="browse-listing-type"
+                checked={filters.listingType === 'normal'}
+                onChange={() => setFilters((prev) => ({ ...prev, listingType: 'normal' }))}
               />
-              <span>Waste items only</span>
+              <span>Normal crops</span>
+            </label>
+            <label className="view-all-toggle">
+              <input
+                type="radio"
+                name="browse-listing-type"
+                checked={filters.listingType === 'urgent'}
+                onChange={() => setFilters((prev) => ({ ...prev, listingType: 'urgent' }))}
+              />
+              <span>Urgent sales</span>
+            </label>
+            <label className="view-all-toggle">
+              <input
+                type="radio"
+                name="browse-listing-type"
+                checked={filters.listingType === 'waste'}
+                onChange={() => setFilters((prev) => ({ ...prev, listingType: 'waste' }))}
+              />
+              <span>Waste items</span>
             </label>
           </div>
 

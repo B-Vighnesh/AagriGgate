@@ -73,7 +73,7 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public Page<CropViewDTO> getAllCropsV1(Long currentUserId, int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName, Boolean urgentOnly, Boolean wasteOnly, String sortBy) {
+    public Page<CropViewDTO> getAllCropsV1(Long currentUserId, int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, String sortBy) {
         return cropRepo.findFilteredCropViews(
                 currentUserId,
                 null,
@@ -84,12 +84,13 @@ public class CropServiceImpl implements CropService {
                 normalizeFilter(farmerName),
                 normalizeBooleanFilter(urgentOnly),
                 normalizeBooleanFilter(wasteOnly),
+                normalizeBooleanFilter(normalOnly),
                 buildPageRequest(page, size, sortBy)
         );
     }
 
     @Override
-    public Page<CropViewDTO> getCropsByFarmerIdV1(Long currentUserId, Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice, Boolean urgentOnly, Boolean wasteOnly, String sortBy) {
+    public Page<CropViewDTO> getCropsByFarmerIdV1(Long currentUserId, Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, String sortBy) {
         return cropRepo.findFilteredCropViews(
                 currentUserId,
                 farmerId,
@@ -100,6 +101,7 @@ public class CropServiceImpl implements CropService {
                 null,
                 normalizeBooleanFilter(urgentOnly),
                 normalizeBooleanFilter(wasteOnly),
+                normalizeBooleanFilter(normalOnly),
                 buildPageRequest(page, size, sortBy)
         );
     }
@@ -173,7 +175,7 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public Page<CropResponseDTO> getAllCropsV2(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName, Boolean urgentOnly, Boolean wasteOnly, String sortBy) {
+    public Page<CropResponseDTO> getAllCropsV2(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, String sortBy) {
         return cropRepo.findFilteredCropResponses(
                         null,
                         normalizeFilter(keyword),
@@ -183,12 +185,13 @@ public class CropServiceImpl implements CropService {
                         normalizeFilter(farmerName),
                         normalizeBooleanFilter(urgentOnly),
                         normalizeBooleanFilter(wasteOnly),
+                        normalizeBooleanFilter(normalOnly),
                         buildPageRequest(page, size, sortBy)
                 );
     }
 
     @Override
-    public Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice, Boolean urgentOnly, Boolean wasteOnly, String sortBy) {
+    public Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, String sortBy) {
         return cropRepo.findFilteredCropResponses(
                         farmerId,
                         normalizeFilter(keyword),
@@ -198,6 +201,7 @@ public class CropServiceImpl implements CropService {
                         null,
                         normalizeBooleanFilter(urgentOnly),
                         normalizeBooleanFilter(wasteOnly),
+                        normalizeBooleanFilter(normalOnly),
                         buildPageRequest(page, size, sortBy)
                 );
     }
@@ -294,6 +298,8 @@ public class CropServiceImpl implements CropService {
             case "oldest" -> Sort.by(Sort.Direction.ASC, "cropID");
             case "price_low", "price-asc", "price-low" ->
                     Sort.by(Sort.Order.asc("marketPrice"), Sort.Order.desc("cropID"));
+            case "price_high", "price-desc", "price-high" ->
+                    Sort.by(Sort.Order.desc("marketPrice"), Sort.Order.desc("cropID"));
             default -> Sort.by(Sort.Direction.DESC, "cropID");
         };
     }
