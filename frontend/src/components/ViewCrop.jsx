@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Button from './common/Button';
 import Card from './common/Card';
 import ValidateToken from './ValidateToken';
 import { apiGet, apiFetch } from '../lib/api';
@@ -12,12 +13,16 @@ export default function ViewCrop() {
   const farmerId = getFarmerId();
   const token = getToken();
   const role = getRole();
+  const PAGE_SIZE = 10;
 
   const [crops, setCrops] = useState([]);
   const [images, setImages] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
   useEffect(() => {
     if (!token || !farmerId) {
@@ -31,14 +36,19 @@ export default function ViewCrop() {
 
     let mounted = true;
     (async () => {
+      setLoading(true);
+      setError('');
       try {
-        const response = await apiGet('/crops/farmer/me/legacy');
+        const response = await apiGet(`/crops/farmer/me/legacy?page=${page}&size=${PAGE_SIZE}`);
         if (!response.ok) throw new Error('Unable to load crops.');
         const data = await response.json();
         if (!mounted) return;
-        setCrops(Array.isArray(data) ? data : []);
+        const cropList = Array.isArray(data?.content) ? data.content : [];
+        setCrops(cropList);
+        setTotalPages(Number(data?.totalPages || 0));
+        setTotalElements(Number(data?.totalElements || cropList.length || 0));
 
-        data.forEach(async (crop) => {
+        cropList.forEach(async (crop) => {
           try {
             const imgRes = await apiFetch(`/crops/legacy/${crop.cropID}/image`, { method: 'GET' });
             if (!imgRes.ok) return;
@@ -62,7 +72,7 @@ export default function ViewCrop() {
         try { URL.revokeObjectURL(url); } catch { /* ignore */ }
       });
     };
-  }, []);
+  }, [page, token, farmerId, role, navigate]);
 
   const filteredCrops = useMemo(() => {
     if (!query.trim()) return crops;
@@ -101,7 +111,10 @@ export default function ViewCrop() {
         <div className="view-crop-head">
           <div>
             <h1>My Crops Dashboard</h1>
-            <p>{crops.length} crop{crops.length !== 1 ? 's' : ''} listed</p>
+            <p>
+              Showing {filteredCrops.length} crop{filteredCrops.length !== 1 ? 's' : ''} on this page
+              {totalElements ? ` • ${totalElements} total` : ''}
+            </p>
           </div>
           <Link to="/add-crop" className="ui-btn ui-btn--primary">Add New Crop</Link>
         </div>
@@ -144,6 +157,28 @@ export default function ViewCrop() {
                 </div>
               </Card>
             ))}
+          </div>
+        )}
+
+        {!loading && !error && totalPages > 1 && (
+          <div className="view-all-pagination">
+            <Button
+              variant="outline"
+              onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+              disabled={page === 0}
+            >
+              Previous
+            </Button>
+            <span className="view-all-pagination__info">
+              Page {page + 1} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
+              disabled={page >= totalPages - 1}
+            >
+              Next
+            </Button>
           </div>
         )}
       </div>

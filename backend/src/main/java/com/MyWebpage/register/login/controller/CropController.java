@@ -67,18 +67,23 @@ public class CropController {
     @GetMapping("/farmer/{farmerId}/legacy")
     public ResponseEntity<List<Crop>> getCropsByFarmerIdV1(
             @PathVariable Long farmerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
         Long authenticatedFarmerId = Long.parseLong(authentication.getName());
         if (!authenticatedFarmerId.equals(farmerId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId));
+        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId, page, size).getContent());
     }
 
     @GetMapping("/farmer/me/legacy")
-    public ResponseEntity<List<Crop>> getMyCropsV1(Authentication authentication) {
+    public ResponseEntity<Page<Crop>> getMyCropsV1(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         Long farmerId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId));
+        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId, page, size));
     }
 
     @GetMapping("/legacy/{cropId}")
@@ -140,20 +145,25 @@ public class CropController {
     }
 
     @GetMapping("/v2/farmer/{farmerId}")
-    public ResponseEntity<ApiResponse<List<CropResponseDTO>>> getCropsByFarmerIdV2(
+    public ResponseEntity<ApiResponse<Page<CropResponseDTO>>> getCropsByFarmerIdV2(
             @PathVariable Long farmerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
         Long authenticatedFarmerId = Long.parseLong(authentication.getName());
         if (!authenticatedFarmerId.equals(farmerId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId)));
+        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId, page, size)));
     }
 
     @GetMapping("/v2/farmer/me")
-    public ResponseEntity<ApiResponse<List<CropResponseDTO>>> getMyCropsV2(Authentication authentication) {
+    public ResponseEntity<ApiResponse<Page<CropResponseDTO>>> getMyCropsV2(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         Long farmerId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId)));
+        return ResponseEntity.ok(ApiResponse.success("Farmer crops fetched", cropService.getCropsByFarmerIdV2(farmerId, page, size)));
     }
 
     @GetMapping("/v2/{cropId}")
