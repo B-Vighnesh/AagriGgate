@@ -32,6 +32,7 @@ export default function Cart() {
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [approachItem, setApproachItem] = useState(null);
   const [imageUrls, setImageUrls] = useState({});
+  const [pendingRemove, setPendingRemove] = useState(null);
 
   const showToast = (message, typeValue = 'info') => {
     setToast({ message, type: typeValue });
@@ -298,7 +299,7 @@ export default function Cart() {
                     <div className="buyer-tools-card__actions">
                       <Button variant="outline" onClick={(event) => { event.stopPropagation(); navigate(`/view-details/${item.cropId}`); }}>View Crop</Button>
                       <Button variant="accent" onClick={(event) => { event.stopPropagation(); setApproachItem(item); }}>Send Approach</Button>
-                      <Button variant="ghost" onClick={(event) => { event.stopPropagation(); handleRemove(item.cartId); }} loading={actionLoading === `remove-${item.cartId}`}>Remove</Button>
+                      <Button variant="ghost" onClick={(event) => { event.stopPropagation(); setPendingRemove({ cartId: item.cartId, step: 1 }); }} loading={actionLoading === `remove-${item.cartId}`}>Remove</Button>
                     </div>
                   </div>
                   </div>
@@ -323,6 +324,40 @@ export default function Cart() {
           onClose={() => setApproachItem(null)}
           onSuccess={handleApproachFromCart}
         />
+      ) : null}
+      {pendingRemove ? (
+        <div className="confirm-overlay" onClick={() => setPendingRemove(null)}>
+          <Card className="confirm-card" onClick={(event) => event.stopPropagation()}>
+            {pendingRemove.step === 1 ? (
+              <>
+                <h3>Remove Cart Item?</h3>
+                <p>This crop will be removed from your cart.</p>
+                <div className="confirm-actions">
+                  <Button variant="outline" onClick={() => setPendingRemove(null)}>Cancel</Button>
+                  <Button variant="danger" onClick={() => setPendingRemove((prev) => ({ ...prev, step: 2 }))}>Continue</Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3>Confirm Removal</h3>
+                <p>Please confirm once more to remove this crop from your cart.</p>
+                <div className="confirm-actions">
+                  <Button variant="outline" onClick={() => setPendingRemove(null)}>Keep in Cart</Button>
+                  <Button
+                    variant="danger"
+                    loading={actionLoading === `remove-${pendingRemove.cartId}`}
+                    onClick={async () => {
+                      await handleRemove(pendingRemove.cartId);
+                      setPendingRemove(null);
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </>
+            )}
+          </Card>
+        </div>
       ) : null}
       <Toast message={toast.message} type={toast.type} />
     </section>
