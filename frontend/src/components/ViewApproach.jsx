@@ -157,6 +157,7 @@ export default function ViewApproach() {
                 <div>
                   <h3>{item.cropName}</h3>
                   <p>Buyer: <strong>{item.userName}</strong></p>
+                  {item.requestedQuantity ? <p>Requested: <strong>{item.requestedQuantity}</strong></p> : null}
                 </div>
                 <span className={`approach-badge ${STATUS_CLASS[(item.status || '').toLowerCase()] || ''}`}>
                   {item.status}

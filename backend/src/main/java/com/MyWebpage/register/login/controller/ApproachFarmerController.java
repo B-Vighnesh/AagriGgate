@@ -1,6 +1,7 @@
 package com.MyWebpage.register.login.controller;
 
 import com.MyWebpage.register.login.dto.ApproachRequestDTO;
+import com.MyWebpage.register.login.dto.CreateApproachRequestDTO;
 import com.MyWebpage.register.login.model.ApproachFarmer;
 import com.MyWebpage.register.login.service.ApproachFarmerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +23,15 @@ public class ApproachFarmerController {
     @PostMapping("/create/{cropId}")
     public ResponseEntity<String> createApproach(
             @PathVariable Long cropId,
+            @RequestBody(required = false) CreateApproachRequestDTO request,
             Authentication authentication) {
         try {
             Long userId = Long.parseLong(authentication.getName());
-            return  approachFarmerService.createApproach(userId, cropId);
+            return approachFarmerService.createApproach(
+                    userId,
+                    cropId,
+                    request != null ? request.getQuantity() : null
+            );
         } catch (Exception e) {
             if (e.getMessage().contains("Duplicate entry")) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)

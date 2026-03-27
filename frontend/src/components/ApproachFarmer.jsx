@@ -10,6 +10,7 @@ export default function ApproachFarmer({ cropId, onClose }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [quantity, setQuantity] = useState('1');
 
   const handleApproach = async () => {
     if (!token) {
@@ -23,6 +24,7 @@ export default function ApproachFarmer({ cropId, onClose }) {
     try {
       const response = await apiFetch(`/buyer/approach/create/${cropId}`, {
         method: 'POST',
+        body: JSON.stringify({ quantity: Number(quantity || 1) }),
       });
 
       if (!response.ok) {
@@ -45,8 +47,19 @@ export default function ApproachFarmer({ cropId, onClose }) {
           <>
             <h2>Approach Farmer</h2>
             <p>
-              Are you sure you want to send an approach request to the farmer for this crop?
+              Confirm the quantity and send your request to the farmer for this crop.
             </p>
+            <div className="buyer-detail-actions__qty">
+              <label htmlFor="approachQuantity">Quantity</label>
+              <input
+                id="approachQuantity"
+                type="number"
+                min="1"
+                step="0.1"
+                value={quantity}
+                onChange={(event) => setQuantity(event.target.value)}
+              />
+            </div>
             <div className="approach-modal__actions">
               <Button onClick={handleApproach} loading={loading}>Yes, Approach</Button>
               <Button variant="outline" onClick={onClose}>Cancel</Button>

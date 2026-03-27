@@ -141,6 +141,7 @@ export default function ViewApproachForUser() {
                 <div className="user-requests-card__main">
                   <h3>{item.cropName}</h3>
                   <p>Farmer: <strong>{item.farmerName}</strong></p>
+                  {item.requestedQuantity ? <p>Requested: <strong>{item.requestedQuantity}</strong></p> : null}
                 </div>
 
                 <span className={`user-requests-status ${STATUS_CLASS[(item.status || '').toLowerCase()] || ''}`}>

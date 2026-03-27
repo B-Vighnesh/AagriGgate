@@ -25,6 +25,7 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
     Optional<ApproachFarmer> findByUserIdAndCropId(Long userId, Long cropId);
 
     boolean existsByCropIdAndUserIdAndStatus(Long cropId, Long userId, String accepted);
+    boolean existsByCropIdAndUserIdAndStatusIgnoreCase(Long cropId, Long userId, String status);
 
     void deleteByUserId(Long farmerId);
 
@@ -40,6 +41,7 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
                         a.farmerName,
                         a.userId,
                         a.userName,
+                        a.requestedQuantity,
                         a.status
                     )
                     FROM ApproachFarmer a
@@ -69,6 +71,7 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
                         a.farmerName,
                         a.userId,
                         a.userName,
+                        a.requestedQuantity,
                         a.status
                     )
                     FROM ApproachFarmer a
@@ -101,6 +104,7 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
                         a.farmerName,
                         a.userId,
                         a.userName,
+                        a.requestedQuantity,
                         a.status
                     )
                     FROM ApproachFarmer a

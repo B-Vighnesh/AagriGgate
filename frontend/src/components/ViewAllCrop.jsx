@@ -213,9 +213,17 @@ export default function ViewAllCrop() {
           </div>
 
           {role === 'buyer' && (
-            <Link to="/view-approaches-user">
-              <Button variant="outline" className="view-all-requests-btn">My Requests</Button>
-            </Link>
+            <div className="view-all-head__actions">
+              <Link to="/favorites">
+                <Button variant="outline" className="view-all-requests-btn">Favorites</Button>
+              </Link>
+              <Link to="/cart">
+                <Button variant="outline" className="view-all-requests-btn">Cart</Button>
+              </Link>
+              <Link to="/view-approaches-user">
+                <Button variant="outline" className="view-all-requests-btn">My Requests</Button>
+              </Link>
+            </div>
           )}
         </div>
 

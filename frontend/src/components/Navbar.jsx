@@ -23,6 +23,8 @@ function navByRole(role) {
   return [
     ...base,
     { label: 'Browse Crops', to: '/view-all-crops' },
+    { label: 'Favorites', to: '/favorites' },
+    { label: 'Cart', to: '/cart' },
     { label: 'My Requests', to: '/view-approaches-user' },
     { label: 'Account', to: '/account' },
   ];
