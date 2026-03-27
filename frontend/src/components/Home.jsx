@@ -205,8 +205,9 @@ function FAQAccordion({ items, openFaq, setOpenFaq }) {
   );
 }
 
-function Slider({ slides, activeIndex, onPrimary, onSecondary, setActiveIndex }) {
+function Slider({ slides, activeIndex, onPrimary, onSecondary, setActiveIndex, isLoggedIn }) {
   const active = slides[activeIndex];
+  const primaryLabel = isLoggedIn && activeIndex === 3 ? 'Go To Account' : active.primary;
 
   return (
     <section className="hero hero--slider">
@@ -216,7 +217,7 @@ function Slider({ slides, activeIndex, onPrimary, onSecondary, setActiveIndex })
           <h1 className="hero__title">{active.title}</h1>
           <p className="hero__subtitle">{active.subtitle}</p>
           <div className="hero__actions">
-            <Button variant="accent" size="lg" onClick={() => onPrimary(activeIndex)}>{active.primary}</Button>
+            <Button variant="accent" size="lg" onClick={() => onPrimary(activeIndex)}>{primaryLabel}</Button>
             <Button variant="outline" size="lg" className="hero-outline" onClick={onSecondary}>{active.secondary}</Button>
           </div>
           <div className="hero-slider__dots">
@@ -254,6 +255,7 @@ export default function Home() {
   const farmerId = getFarmerId();
   const token = getToken();
   const role = getRole();
+  const isLoggedIn = Boolean(token && farmerId && role);
   const [openFaq, setOpenFaq] = useState(null);
   const [activeSlide, setActiveSlide] = useState(0);
 
@@ -294,6 +296,7 @@ export default function Home() {
         onPrimary={onPrimaryAction}
         onSecondary={onSecondaryAction}
         setActiveIndex={setActiveSlide}
+        isLoggedIn={isLoggedIn}
       />
 
       <section className="ag-container section reveal-block">
@@ -519,7 +522,9 @@ export default function Home() {
             light
           />
           <div className="hero__actions">
-            <Button variant="accent" onClick={() => navigate('/register')}>Sign Up</Button>
+            <Button variant="accent" onClick={() => navigate(isLoggedIn ? '/account' : '/register')}>
+              {isLoggedIn ? 'Go To Account' : 'Sign Up'}
+            </Button>
             <Button variant="outline" className="hero-outline" onClick={() => navigate('/view-all-crops')}>Browse Crops</Button>
             <Button variant="outline" className="hero-outline" onClick={() => navigate(farmerId ? '/view-all-crops' : '/register')}>Post Requirement</Button>
           </div>

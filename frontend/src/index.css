@@ -641,6 +641,7 @@ a {
   font-size: 0.92rem;
 }
 
+
 .feature-table--farmer {
   background: linear-gradient(180deg, #ffffff, #f5fbf7);
 }
@@ -1041,6 +1042,7 @@ a {
     height: auto;
     min-height: 168px;
   }
+
 }
 
 .ui-spinner--lg {
