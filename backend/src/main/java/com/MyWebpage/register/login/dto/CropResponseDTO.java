@@ -12,6 +12,33 @@ public class CropResponseDTO {
     private String postDate;
     private String farmerName;
 
+    public CropResponseDTO() {
+    }
+
+    public CropResponseDTO(
+            Long cropId,
+            String cropName,
+            String cropType,
+            String region,
+            Double marketPrice,
+            Double quantity,
+            String unit,
+            String description,
+            String postDate,
+            String farmerName
+    ) {
+        this.cropId = cropId;
+        this.cropName = cropName;
+        this.cropType = cropType;
+        this.region = region;
+        this.marketPrice = marketPrice;
+        this.quantity = quantity;
+        this.unit = unit;
+        this.description = description;
+        this.postDate = postDate;
+        this.farmerName = farmerName;
+    }
+
     public Long getCropId() { return cropId; }
     public void setCropId(Long cropId) { this.cropId = cropId; }
     public String getCropName() { return cropName; }

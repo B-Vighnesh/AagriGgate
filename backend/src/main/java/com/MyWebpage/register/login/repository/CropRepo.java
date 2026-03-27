@@ -1,5 +1,7 @@
 package com.MyWebpage.register.login.repository;
 
+import com.MyWebpage.register.login.dto.CropResponseDTO;
+import com.MyWebpage.register.login.dto.CropViewDTO;
 import com.MyWebpage.register.login.model.Crop;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
@@ -22,7 +24,28 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
 
     @Query(
             value = """
-                    SELECT c FROM Crop c
+                    SELECT new com.MyWebpage.register.login.dto.CropViewDTO(
+                        c.cropID,
+                        c.cropName,
+                        c.cropType,
+                        c.region,
+                        c.marketPrice,
+                        c.quantity,
+                        c.unit,
+                        c.description,
+                        c.postDate,
+                        CASE
+                            WHEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, ''))) <> ''
+                            THEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, '')))
+                            ELSE c.farmer.username
+                        END,
+                        CASE
+                            WHEN :currentUserId IS NOT NULL AND c.farmer.farmerId = :currentUserId
+                            THEN true
+                            ELSE false
+                        END
+                    )
+                    FROM Crop c
                     WHERE (:farmerId IS NULL OR c.farmer.farmerId = :farmerId)
                       AND (:keyword IS NULL
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
@@ -58,7 +81,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                            OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :farmerName, '%')))
                     """
     )
-    Page<Crop> findFilteredCrops(
+    Page<CropViewDTO> findFilteredCropViews(
+            @Param("currentUserId") Long currentUserId,
             @Param("farmerId") Long farmerId,
             @Param("keyword") String keyword,
             @Param("region") String region,
@@ -67,11 +91,149 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             @Param("farmerName") String farmerName,
             Pageable pageable);
 
+    @Query("""
+            SELECT new com.MyWebpage.register.login.dto.CropViewDTO(
+                c.cropID,
+                c.cropName,
+                c.cropType,
+                c.region,
+                c.marketPrice,
+                c.quantity,
+                c.unit,
+                c.description,
+                c.postDate,
+                CASE
+                    WHEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, ''))) <> ''
+                    THEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, '')))
+                    ELSE c.farmer.username
+                END,
+                CASE
+                    WHEN :currentUserId IS NOT NULL AND c.farmer.farmerId = :currentUserId
+                    THEN true
+                    ELSE false
+                END
+            )
+            FROM Crop c
+            WHERE c.cropID = :cropId
+            """)
+    CropViewDTO findCropViewById(@Param("cropId") Long cropId, @Param("currentUserId") Long currentUserId);
+
+    @Query(
+            value = """
+                    SELECT new com.MyWebpage.register.login.dto.CropResponseDTO(
+                        c.cropID,
+                        c.cropName,
+                        c.cropType,
+                        c.region,
+                        c.marketPrice,
+                        c.quantity,
+                        c.unit,
+                        c.description,
+                        c.postDate,
+                        CASE
+                            WHEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, ''))) <> ''
+                            THEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, '')))
+                            ELSE c.farmer.username
+                        END
+                    )
+                    FROM Crop c
+                    WHERE (:farmerId IS NULL OR c.farmer.farmerId = :farmerId)
+                      AND (:keyword IS NULL
+                           OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
+                           OR lower(c.cropType) LIKE lower(concat('%', :keyword, '%'))
+                           OR lower(c.region) LIKE lower(concat('%', :keyword, '%'))
+                           OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :keyword, '%'))
+                           OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :keyword, '%'))
+                           OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :keyword, '%')))
+                      AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
+                      AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
+                      AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
+                      AND (:farmerName IS NULL
+                           OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
+                           OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
+                           OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :farmerName, '%')))
+                    """,
+            countQuery = """
+                    SELECT COUNT(c) FROM Crop c
+                    WHERE (:farmerId IS NULL OR c.farmer.farmerId = :farmerId)
+                      AND (:keyword IS NULL
+                           OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
+                           OR lower(c.cropType) LIKE lower(concat('%', :keyword, '%'))
+                           OR lower(c.region) LIKE lower(concat('%', :keyword, '%'))
+                           OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :keyword, '%'))
+                           OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :keyword, '%'))
+                           OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :keyword, '%')))
+                      AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
+                      AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
+                      AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
+                      AND (:farmerName IS NULL
+                           OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
+                           OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
+                           OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :farmerName, '%')))
+                    """
+    )
+    Page<CropResponseDTO> findFilteredCropResponses(
+            @Param("farmerId") Long farmerId,
+            @Param("keyword") String keyword,
+            @Param("region") String region,
+            @Param("category") String category,
+            @Param("maxPrice") Double maxPrice,
+            @Param("farmerName") String farmerName,
+            Pageable pageable);
+
+    @Query("""
+            SELECT new com.MyWebpage.register.login.dto.CropResponseDTO(
+                c.cropID,
+                c.cropName,
+                c.cropType,
+                c.region,
+                c.marketPrice,
+                c.quantity,
+                c.unit,
+                c.description,
+                c.postDate,
+                CASE
+                    WHEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, ''))) <> ''
+                    THEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, '')))
+                    ELSE c.farmer.username
+                END
+            )
+            FROM Crop c
+            WHERE c.cropID = :cropId
+            """)
+    CropResponseDTO findCropResponseById(@Param("cropId") Long cropId);
+
     List<Crop> findByCropName(String cropName);
 
     Page<Crop> findByCropNameContaining(String keyword, Pageable pageable);
 
-    Page<Crop> findByCropNameContainingIgnoreCase(String keyword, Pageable pageable);
+    @Query(
+            value = """
+                    SELECT new com.MyWebpage.register.login.dto.CropResponseDTO(
+                        c.cropID,
+                        c.cropName,
+                        c.cropType,
+                        c.region,
+                        c.marketPrice,
+                        c.quantity,
+                        c.unit,
+                        c.description,
+                        c.postDate,
+                        CASE
+                            WHEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, ''))) <> ''
+                            THEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, '')))
+                            ELSE c.farmer.username
+                        END
+                    )
+                    FROM Crop c
+                    WHERE lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
+                    """,
+            countQuery = """
+                    SELECT COUNT(c) FROM Crop c
+                    WHERE lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
+                    """
+    )
+    Page<CropResponseDTO> searchCropResponses(@Param("keyword") String keyword, Pageable pageable);
 
     @Transactional
     @Modifying

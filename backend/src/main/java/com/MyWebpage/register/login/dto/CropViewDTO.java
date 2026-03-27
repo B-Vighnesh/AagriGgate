@@ -13,6 +13,35 @@ public class CropViewDTO {
     private String farmerName;
     private boolean ownedByCurrentUser;
 
+    public CropViewDTO() {
+    }
+
+    public CropViewDTO(
+            Long cropID,
+            String cropName,
+            String cropType,
+            String region,
+            Double marketPrice,
+            Double quantity,
+            String unit,
+            String description,
+            String postDate,
+            String farmerName,
+            boolean ownedByCurrentUser
+    ) {
+        this.cropID = cropID;
+        this.cropName = cropName;
+        this.cropType = cropType;
+        this.region = region;
+        this.marketPrice = marketPrice;
+        this.quantity = quantity;
+        this.unit = unit;
+        this.description = description;
+        this.postDate = postDate;
+        this.farmerName = farmerName;
+        this.ownedByCurrentUser = ownedByCurrentUser;
+    }
+
     public Long getCropID() {
         return cropID;
     }
