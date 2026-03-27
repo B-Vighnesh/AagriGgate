@@ -26,6 +26,15 @@ export default function ViewCrop() {
   const [totalElements, setTotalElements] = useState(0);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setPage(0);
+      setAppliedQuery(query);
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
     if (!token || !farmerId) {
       navigate('/login');
       return;
@@ -83,11 +92,6 @@ export default function ViewCrop() {
     };
   }, [page, token, farmerId, role, navigate, appliedQuery]);
 
-  const applySearch = () => {
-    setPage(0);
-    setAppliedQuery(query);
-  };
-
   if (loading) {
     return (
       <section className="page page--center">
@@ -127,10 +131,10 @@ export default function ViewCrop() {
           <div className="view-all-toolbar__head">
             <div>
               <h3>Search My Crops</h3>
-              <p>Find your listings by crop name, type, or region.</p>
+              <p>Start typing to find your listings by crop name, type, or region.</p>
             </div>
           </div>
-          <div className="view-all-search-row view-all-search-row--split">
+          <div className="view-all-search-row">
             <input
               type="text"
               className="view-all-input"
@@ -138,7 +142,6 @@ export default function ViewCrop() {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by crop name, type, or region"
             />
-            <Button onClick={applySearch}>Search</Button>
           </div>
         </Card>
 
