@@ -29,6 +29,8 @@ import Enquiry from './components/Enquiry';
 import Error from './components/Error';
 import ValidateToken from './components/ValidateToken';
 import BuyerDetails from './components/BuyerDetails';
+import Favorites from './components/Favorites';
+import Cart from './components/Cart';
 import './index.css';
 
 function App() {
@@ -60,6 +62,8 @@ function App() {
             <Route path="/view-approaches-user" element={<ViewApproachForUser />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/view-buyer/:buyerId" element={<BuyerDetails />} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/cart" element={<Cart />} />
             <Route path="/delete-approach/:approachId" element={<DeleteApproach />} />
             <Route path="/view-approaches/farmer/:farmerId/crop/:cropId" element={<ViewApproachByFarmerAndCrop />} />
             <Route path="/enquiry" element={<Enquiry />} />

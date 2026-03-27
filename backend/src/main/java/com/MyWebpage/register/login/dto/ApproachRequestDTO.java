@@ -8,6 +8,7 @@ public class ApproachRequestDTO {
     private String farmerName;
     private Long userId;
     private String userName;
+    private Double requestedQuantity;
     private String status;
 
     public ApproachRequestDTO() {
@@ -21,6 +22,7 @@ public class ApproachRequestDTO {
             String farmerName,
             Long userId,
             String userName,
+            Double requestedQuantity,
             String status
     ) {
         this.approachId = approachId;
@@ -30,6 +32,7 @@ public class ApproachRequestDTO {
         this.farmerName = farmerName;
         this.userId = userId;
         this.userName = userName;
+        this.requestedQuantity = requestedQuantity;
         this.status = status;
     }
 
@@ -87,6 +90,14 @@ public class ApproachRequestDTO {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public Double getRequestedQuantity() {
+        return requestedQuantity;
+    }
+
+    public void setRequestedQuantity(Double requestedQuantity) {
+        this.requestedQuantity = requestedQuantity;
     }
 
     public String getStatus() {

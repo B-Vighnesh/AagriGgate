@@ -21,6 +21,7 @@ public class ApproachFarmer {
     private String userName;
     private String userPhoneNo;
     private String userEmail;
+    private Double requestedQuantity;
 
     private boolean accept;
     private String status;
@@ -136,5 +137,13 @@ public class ApproachFarmer {
 
     public void setUserEmail(String userEmail) {
         this.userEmail = userEmail;
+    }
+
+    public Double getRequestedQuantity() {
+        return requestedQuantity;
+    }
+
+    public void setRequestedQuantity(Double requestedQuantity) {
+        this.requestedQuantity = requestedQuantity;
     }
 }

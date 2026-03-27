@@ -43,10 +43,13 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     }
 
     @Override
-    public ResponseEntity<String> createApproach(Long userId, Long cropId) {
+    public ResponseEntity<String> createApproach(Long userId, Long cropId, Double requestedQuantity) {
         try {
             Crop crop = cropRepository.findById(cropId)
                     .orElseThrow(() -> new RuntimeException("Crop not found with ID: " + cropId));
+            if ("sold".equalsIgnoreCase(crop.getStatus())) {
+                return new ResponseEntity<>("This crop is already sold.", HttpStatus.BAD_REQUEST);
+            }
             Long farmerId = crop.getFarmer().getFarmerId();
 
             boolean isPending = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatus(
@@ -86,6 +89,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             approachFarmer.setUserName(user.getFirstName() + " " + user.getLastName());
             approachFarmer.setUserPhoneNo(user.getPhoneNo());
             approachFarmer.setUserEmail(user.getEmail());
+            approachFarmer.setRequestedQuantity(normalizeRequestedQuantity(requestedQuantity, crop));
             approachFarmer.setStatus("pending");
 
             approachFarmerRepository.save(approachFarmer);
@@ -208,5 +212,16 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             return null;
         }
         return status.trim();
+    }
+
+    private Double normalizeRequestedQuantity(Double requestedQuantity, Crop crop) {
+        double quantity = requestedQuantity == null ? 1.0 : requestedQuantity;
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Requested quantity must be greater than zero.");
+        }
+        if (crop.getQuantity() != null && quantity > crop.getQuantity()) {
+            throw new IllegalArgumentException("Requested quantity exceeds available crop quantity.");
+        }
+        return quantity;
     }
 }

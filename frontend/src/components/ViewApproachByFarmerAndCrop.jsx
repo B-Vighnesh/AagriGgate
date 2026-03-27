@@ -154,6 +154,7 @@ export default function ViewApproachByFarmerAndCrop() {
                   <div className="approach-crop-card__main">
                     <h3>{approach.cropName}</h3>
                     <p>Buyer: <strong>{approach.userName}</strong></p>
+                    {approach.requestedQuantity ? <p>Requested: <strong>{approach.requestedQuantity}</strong></p> : null}
                   </div>
 
                   <span className={`approach-crop-status ${STATUS_CLASS[status] || ''}`}>

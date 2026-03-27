@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
+import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import DeleteCrop from './DeleteCrop';
-import ApproachFarmer from './ApproachFarmer';
 import { getApiBaseUrl } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
+import { addFavorite, addToCart, getFavoriteStatus, removeFavorite } from '../api/buyerToolsApi';
 
 const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect width="360" height="220" fill="%23d8f3dc"/><text x="50%" y="55%" text-anchor="middle" font-size="28" fill="%231f6f54">Crop</text></svg>';
 
@@ -35,7 +36,11 @@ export default function ViewDetails() {
   const [approachStatus, setApproachStatus] = useState(null);
   const [infoAlert, setInfoAlert] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showApproachModal, setShowApproachModal] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
+  const [requestedQuantity, setRequestedQuantity] = useState('1');
+  const [toast, setToast] = useState({ message: '', type: 'info' });
 
   const safeFetch = (path, options = {}) => {
     return fetch(`${getApiBaseUrl()}${path}`, {
@@ -89,6 +94,12 @@ export default function ViewDetails() {
         }
 
         if (role === 'buyer') {
+          try {
+            const favorite = await getFavoriteStatus(cropId);
+            if (mounted) setIsFavorite(Boolean(favorite));
+          } catch {
+            // ignore favorite status load errors
+          }
           const statusRes = await safeFetch(`/buyer/approach/requests/me/${cropId}`, { method: 'GET' });
           if (statusRes.ok) {
             const status = await parseJsonIfPresent(statusRes);
@@ -137,6 +148,43 @@ export default function ViewDetails() {
   if (!cropDetails) return null;
 
   const isOwner = role === 'farmer' && cropDetails.ownedByCurrentUser === true;
+  const isSold = (cropDetails.status || '').toLowerCase() === 'sold';
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    window.setTimeout(() => setToast({ message: '', type: 'info' }), 2800);
+  };
+
+  const handleFavoriteToggle = async () => {
+    setFavoriteLoading(true);
+    try {
+      if (isFavorite) {
+        await removeFavorite(cropId);
+        setIsFavorite(false);
+        showToast('Removed from favorites.', 'info');
+      } else {
+        await addFavorite(cropId);
+        setIsFavorite(true);
+        showToast('Saved to favorites.', 'success');
+      }
+    } catch (errorValue) {
+      showToast(errorValue.message || 'Unable to update favorites.', 'error');
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    setCartLoading(true);
+    try {
+      await addToCart({ cropId: Number(cropId), quantity: Number(requestedQuantity || 1) });
+      showToast('Added to cart.', 'success');
+    } catch (errorValue) {
+      showToast(errorValue.message || 'Unable to add crop to cart.', 'error');
+    } finally {
+      setCartLoading(false);
+    }
+  };
 
   return (
     <section className="page view-details-page">
@@ -177,11 +225,39 @@ export default function ViewDetails() {
               <h2>Rs {Number(cropDetails.marketPrice || 0).toFixed(2)} <small>/ {cropDetails.unit}</small></h2>
             </div>
 
-            <div className="view-details-actions">
-              {role === 'buyer' && approachStatus !== true ? (
-                <Button onClick={() => setShowApproachModal(true)}>Approach Farmer</Button>
-              ) : null}
+            {role === 'buyer' ? (
+              <Card className="buyer-detail-actions">
+                <div className="buyer-detail-actions__head">
+                  <h3>Buyer Actions</h3>
+                  <p>Save this listing for later or move it to your cart before sending the final request.</p>
+                </div>
+                <div className="buyer-detail-actions__grid">
+                  <div className="buyer-detail-actions__qty">
+                    <label htmlFor="requestedQuantity">Quantity</label>
+                    <input
+                      id="requestedQuantity"
+                      type="number"
+                      min="1"
+                      step="0.1"
+                      value={requestedQuantity}
+                      onChange={(event) => setRequestedQuantity(event.target.value)}
+                      disabled={isSold}
+                    />
+                  </div>
+                  <div className="buyer-detail-actions__buttons">
+                    <Button variant="outline" onClick={handleFavoriteToggle} loading={favoriteLoading}>
+                      {isFavorite ? 'Remove Favorite' : 'Save to Favorites'}
+                    </Button>
+                    <Button onClick={handleAddToCart} loading={cartLoading} disabled={isSold}>
+                      {isSold ? 'Sold Out' : 'Add to Cart'}
+                    </Button>
+                    <Button variant="ghost" onClick={() => navigate('/cart')}>Open Cart</Button>
+                  </div>
+                </div>
+              </Card>
+            ) : null}
 
+            <div className="view-details-actions">
               {isOwner ? (
                 <>
                   <Button variant="outline" onClick={() => navigate(`/update-crop/${cropId}`)}>Update Crop</Button>
@@ -195,12 +271,7 @@ export default function ViewDetails() {
       </div>
 
       {showDeleteModal ? <DeleteCrop cropId={cropId} onClose={() => setShowDeleteModal(false)} /> : null}
-      {showApproachModal ? (
-        <ApproachFarmer
-          cropId={cropId}
-          onClose={() => setShowApproachModal(false)}
-        />
-      ) : null}
+      <Toast message={toast.message} type={toast.type} />
     </section>
   );
 }
