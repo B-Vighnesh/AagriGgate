@@ -63,6 +63,15 @@ export default function ViewAllCrop() {
   const [totalElements, setTotalElements] = useState(0);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setPage(0);
+      setAppliedSearch(searchQuery);
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
     if (!token) {
       navigate('/login');
       return;
@@ -125,7 +134,6 @@ export default function ViewAllCrop() {
 
   const applyFilters = () => {
     setPage(0);
-    setAppliedSearch(searchQuery);
     setAppliedFilters(filters);
   };
 
@@ -160,10 +168,10 @@ export default function ViewAllCrop() {
           <div className="view-all-toolbar__head">
             <div>
               <h3>Search Crops</h3>
-              <p>Look up crops by name, type, region, or farmer.</p>
+              <p>Start typing to search crops by name, type, region, or farmer.</p>
             </div>
           </div>
-          <div className="view-all-search-row view-all-search-row--split">
+          <div className="view-all-search-row">
             <input
               className="view-all-input"
               type="text"
@@ -171,7 +179,6 @@ export default function ViewAllCrop() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
             />
-            <Button onClick={applyFilters}>Search</Button>
           </div>
         </Card>
 
