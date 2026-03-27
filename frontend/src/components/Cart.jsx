@@ -4,6 +4,7 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
+import ApproachFarmer from './ApproachFarmer';
 import { checkoutCart, getCart, removeCartItem, updateCartItem } from '../api/buyerToolsApi';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
@@ -27,6 +28,7 @@ export default function Cart() {
   const [quantities, setQuantities] = useState({});
   const [actionLoading, setActionLoading] = useState('');
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [approachItem, setApproachItem] = useState(null);
 
   const showToast = (message, typeValue = 'info') => {
     setToast({ message, type: typeValue });
@@ -77,14 +79,16 @@ export default function Cart() {
     loadCart();
   }, [token, role, navigate, page, appliedSearch, type, sortBy]);
 
-  const handleQuantitySave = async (cartId) => {
+  const handleQuantitySave = async (cartId, quiet = false) => {
     setActionLoading(`save-${cartId}`);
     try {
       await updateCartItem({ cartId, quantity: Number(quantities[cartId]) });
-      showToast('Cart quantity updated.', 'success');
-      loadCart();
+      if (!quiet) {
+        showToast('Cart quantity updated.', 'success');
+      }
     } catch (errorValue) {
       showToast(errorValue.message || 'Unable to update quantity.', 'error');
+      loadCart();
     } finally {
       setActionLoading('');
     }
@@ -121,6 +125,20 @@ export default function Cart() {
       showToast(errorValue.message || 'Unable to checkout cart.', 'error');
     } finally {
       setActionLoading('');
+    }
+  };
+
+  const handleApproachFromCart = async () => {
+    if (!approachItem) return;
+    try {
+      await removeCartItem(approachItem.cartId);
+      setItems((prev) => prev.filter((item) => item.cartId !== approachItem.cartId));
+      showToast('Approach sent and cart item removed.', 'success');
+    } catch (errorValue) {
+      showToast(errorValue.message || 'Approach was sent, but cart cleanup needs attention.', 'info');
+      loadCart();
+    } finally {
+      setApproachItem(null);
     }
   };
 
@@ -214,11 +232,18 @@ export default function Cart() {
                         step="0.1"
                         value={quantities[item.cartId] ?? ''}
                         onChange={(event) => setQuantities((prev) => ({ ...prev, [item.cartId]: event.target.value }))}
+                        onBlur={() => handleQuantitySave(item.cartId, true)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.preventDefault();
+                            handleQuantitySave(item.cartId);
+                          }
+                        }}
                       />
                     </div>
                     <div className="buyer-tools-card__actions">
                       <Button variant="outline" onClick={() => navigate(`/view-details/${item.cropId}`)}>View Crop</Button>
-                      <Button onClick={() => handleQuantitySave(item.cartId)} loading={actionLoading === `save-${item.cartId}`}>Update Qty</Button>
+                      <Button variant="accent" onClick={() => setApproachItem(item)}>Send Approach</Button>
                       <Button variant="ghost" onClick={() => handleRemove(item.cartId)} loading={actionLoading === `remove-${item.cartId}`}>Remove</Button>
                     </div>
                   </div>
@@ -236,6 +261,14 @@ export default function Cart() {
           </div>
         ) : null}
       </div>
+      {approachItem ? (
+        <ApproachFarmer
+          cropId={approachItem.cropId}
+          initialQuantity={Number(quantities[approachItem.cartId] || approachItem.requestedQuantity || 1)}
+          onClose={() => setApproachItem(null)}
+          onSuccess={handleApproachFromCart}
+        />
+      ) : null}
       <Toast message={toast.message} type={toast.type} />
     </section>
   );

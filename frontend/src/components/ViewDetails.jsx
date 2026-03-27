@@ -5,6 +5,7 @@ import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import DeleteCrop from './DeleteCrop';
+import ApproachFarmer from './ApproachFarmer';
 import { getApiBaseUrl } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 import { addFavorite, addToCart, getFavoriteStatus, removeFavorite } from '../api/buyerToolsApi';
@@ -41,6 +42,7 @@ export default function ViewDetails() {
   const [cartLoading, setCartLoading] = useState(false);
   const [requestedQuantity, setRequestedQuantity] = useState('1');
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [showApproachModal, setShowApproachModal] = useState(false);
 
   const safeFetch = (path, options = {}) => {
     return fetch(`${getApiBaseUrl()}${path}`, {
@@ -251,6 +253,9 @@ export default function ViewDetails() {
                     <Button onClick={handleAddToCart} loading={cartLoading} disabled={isSold}>
                       {isSold ? 'Sold Out' : 'Add to Cart'}
                     </Button>
+                    <Button variant="accent" onClick={() => setShowApproachModal(true)} disabled={isSold || approachStatus === true}>
+                      {approachStatus === true ? 'Request Accepted' : 'Send Approach'}
+                    </Button>
                     <Button variant="ghost" onClick={() => navigate('/cart')}>Open Cart</Button>
                   </div>
                 </div>
@@ -271,6 +276,18 @@ export default function ViewDetails() {
       </div>
 
       {showDeleteModal ? <DeleteCrop cropId={cropId} onClose={() => setShowDeleteModal(false)} /> : null}
+      {showApproachModal ? (
+        <ApproachFarmer
+          cropId={cropId}
+          initialQuantity={Number(requestedQuantity || 1)}
+          onClose={() => setShowApproachModal(false)}
+          onSuccess={() => {
+            setApproachStatus(false);
+            setInfoAlert('Your request is pending review from the farmer.');
+            showToast('Approach request sent.', 'success');
+          }}
+        />
+      ) : null}
       <Toast message={toast.message} type={toast.type} />
     </section>
   );

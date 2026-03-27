@@ -4,12 +4,13 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
+import ApproachFarmer from './ApproachFarmer';
 import { addToCart, getFavorites, removeFavorite } from '../api/buyerToolsApi';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 const PAGE_SIZE = 10;
 
-function FavoriteCard({ item, onAddToCart, onRemove, loadingAction }) {
+function FavoriteCard({ item, onAddToCart, onRemove, onApproach, loadingAction }) {
   const tone = item.isUrgent ? 'urgent' : item.isWaste ? 'waste' : 'normal';
 
   return (
@@ -39,6 +40,9 @@ function FavoriteCard({ item, onAddToCart, onRemove, loadingAction }) {
           <Button variant="outline" onClick={() => onAddToCart(item.cropId)} loading={loadingAction === `cart-${item.cropId}`}>
             Add to Cart
           </Button>
+          <Button variant="accent" onClick={() => onApproach(item.cropId)} loading={loadingAction === `approach-${item.cropId}`}>
+            Send Approach
+          </Button>
           <Button variant="ghost" onClick={() => onRemove(item.cropId)} loading={loadingAction === `remove-${item.cropId}`}>
             Remove
           </Button>
@@ -65,6 +69,7 @@ export default function Favorites() {
   const [totalPages, setTotalPages] = useState(0);
   const [actionLoading, setActionLoading] = useState('');
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [approachCropId, setApproachCropId] = useState(null);
 
   const showToast = (message, typeValue = 'info') => {
     setToast({ message, type: typeValue });
@@ -208,6 +213,7 @@ export default function Favorites() {
                 item={item}
                 onAddToCart={handleAddToCart}
                 onRemove={handleRemove}
+                onApproach={setApproachCropId}
                 loadingAction={actionLoading}
               />
             ))}
@@ -222,6 +228,17 @@ export default function Favorites() {
           </div>
         ) : null}
       </div>
+      {approachCropId ? (
+        <ApproachFarmer
+          cropId={approachCropId}
+          onClose={() => setApproachCropId(null)}
+          onSuccess={() => {
+            setActionLoading('');
+            showToast('Approach request sent.', 'success');
+            setApproachCropId(null);
+          }}
+        />
+      ) : null}
       <Toast message={toast.message} type={toast.type} />
     </section>
   );
