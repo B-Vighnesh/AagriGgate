@@ -1960,8 +1960,39 @@ a {
   margin-bottom: 12px;
 }
 
+.view-all-search-card {
+  margin-bottom: 12px;
+}
+
+.view-all-toolbar__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.view-all-toolbar__head h3 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 1rem;
+}
+
+.view-all-toolbar__head p {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+}
+
 .view-all-search-row {
   margin-bottom: 10px;
+}
+
+.view-all-search-row--split {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-bottom: 0;
 }
 
 .view-all-input {
@@ -3297,6 +3328,10 @@ a {
 
   .view-all-filter-grid,
   .view-all-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .view-all-search-row--split {
     grid-template-columns: 1fr;
   }
 
