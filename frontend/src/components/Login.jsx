@@ -17,7 +17,6 @@ function normalizeRole(role) {
 
 export default function Login() {
   const navigate = useNavigate();
-  const [userType, setUserType] = useState('farmer');
   const [loginMode, setLoginMode] = useState('password');
   const [principal, setPrincipal] = useState('');
   const [password, setPassword] = useState('');
@@ -96,7 +95,7 @@ export default function Login() {
 
       setAuth({
         token: data?.token,
-        role: normalizedRole || userType,
+        role: normalizedRole,
         farmerId,
       });
       showToast('Login successful.', 'success');
@@ -139,24 +138,7 @@ export default function Login() {
     <section className="page page--center auth-page">
       <Card className="auth-card">
         <h1>Login to AagriGgate</h1>
-        <p>Access your farmer or buyer account.</p>
-
-        <div className="segmented">
-          <button
-            type="button"
-            className={userType === 'farmer' ? 'segmented__item segmented__item--active' : 'segmented__item'}
-            onClick={() => setUserType('farmer')}
-          >
-            Farmer
-          </button>
-          <button
-            type="button"
-            className={userType === 'buyer' ? 'segmented__item segmented__item--active' : 'segmented__item'}
-            onClick={() => setUserType('buyer')}
-          >
-            Buyer
-          </button>
-        </div>
+        <p>Sign in with your account credentials. We will take you to the right dashboard automatically.</p>
 
         <div className="segmented">
           <button
@@ -176,11 +158,12 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="form">
-          <label htmlFor="principal">Username</label>
+          <label htmlFor="principal">Username or Email</label>
           <input
             id="principal"
             value={principal}
             onChange={(event) => setPrincipal(event.target.value)}
+            placeholder="Enter username or email"
             required
           />
 
@@ -192,6 +175,7 @@ export default function Login() {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                placeholder="Enter password"
                 required
               />
             </>
@@ -206,6 +190,7 @@ export default function Login() {
                 id="otp"
                 value={otp}
                 onChange={(event) => setOtp(event.target.value)}
+                placeholder="Enter OTP"
                 required
               />
             </>
@@ -219,7 +204,7 @@ export default function Login() {
         <div className="auth-links">
           <Link to="/forgot-password">Forgot password?</Link>
           <span>
-            New user? <Link to="/register">Create account</Link>
+            New user? <Link to="/register">Choose account type</Link>
           </span>
         </div>
       </Card>
