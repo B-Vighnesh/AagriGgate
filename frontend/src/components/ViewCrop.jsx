@@ -121,7 +121,7 @@ export default function ViewCrop() {
             <h1>My Crops Dashboard</h1>
             <p>
               Showing {crops.length} crop{crops.length !== 1 ? 's' : ''} on this page
-              {totalElements ? ` • ${totalElements} total` : ''}
+              {totalElements ? ` | ${totalElements} total` : ''}
             </p>
           </div>
           <Link to="/add-crop" className="ui-btn ui-btn--primary">Add New Crop</Link>
@@ -202,3 +202,6 @@ export default function ViewCrop() {
     </section>
   );
 }
+
+
+

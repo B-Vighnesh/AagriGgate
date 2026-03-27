@@ -2,6 +2,7 @@ package com.MyWebpage.register.login.service.impl;
 
 import com.MyWebpage.register.login.dto.CropRequestDTO;
 import com.MyWebpage.register.login.dto.CropResponseDTO;
+import com.MyWebpage.register.login.dto.CropViewDTO;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
 import com.MyWebpage.register.login.mapper.CropMapper;
 import com.MyWebpage.register.login.model.Crop;
@@ -70,7 +71,7 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public Page<Crop> getAllCropsV1(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName) {
+    public Page<CropViewDTO> getAllCropsV1(Long currentUserId, int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName) {
         return cropRepo.findFilteredCrops(
                 null,
                 normalizeFilter(keyword),
@@ -79,11 +80,11 @@ public class CropServiceImpl implements CropService {
                 maxPrice,
                 normalizeFilter(farmerName),
                 buildPageRequest(page, size)
-        );
+        ).map(crop -> cropMapper.toViewResponse(crop, currentUserId));
     }
 
     @Override
-    public Page<Crop> getCropsByFarmerIdV1(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice) {
+    public Page<CropViewDTO> getCropsByFarmerIdV1(Long currentUserId, Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice) {
         return cropRepo.findFilteredCrops(
                 farmerId,
                 normalizeFilter(keyword),
@@ -92,12 +93,19 @@ public class CropServiceImpl implements CropService {
                 maxPrice,
                 null,
                 buildPageRequest(page, size)
-        );
+        ).map(crop -> cropMapper.toViewResponse(crop, currentUserId));
     }
 
     @Override
-    public Crop getCropByCropIdV1(Long cropId) {
-        return cropRepo.findById(cropId).orElse(new Crop());
+    public CropViewDTO getCropByCropIdV1(Long currentUserId, Long cropId) {
+        Crop crop = cropRepo.findById(cropId)
+                .orElseThrow(() -> new ResourceNotFoundException("Crop not found with ID: " + cropId));
+        return cropMapper.toViewResponse(crop, currentUserId);
+    }
+
+    @Override
+    public Crop getCropEntityById(Long cropId) {
+        return cropRepo.findById(cropId).orElse(null);
     }
 
     @Override

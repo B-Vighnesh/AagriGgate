@@ -2,6 +2,7 @@ package com.MyWebpage.register.login.controller;
 
 import com.MyWebpage.register.login.dto.CropRequestDTO;
 import com.MyWebpage.register.login.dto.CropResponseDTO;
+import com.MyWebpage.register.login.dto.CropViewDTO;
 import com.MyWebpage.register.login.model.Crop;
 import com.MyWebpage.register.login.response.ApiResponse;
 import com.MyWebpage.register.login.service.CropService;
@@ -58,7 +59,8 @@ public class CropController {
 
     // Legacy V1 endpoints kept for backward compatibility with older clients.
     @GetMapping("/legacy")
-    public ResponseEntity<Page<Crop>> getAllCropsV1(
+    public ResponseEntity<Page<CropViewDTO>> getAllCropsV1(
+            Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
@@ -66,11 +68,12 @@ public class CropController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) String farmerName) {
-        return ResponseEntity.ok(cropService.getAllCropsV1(page, size, keyword, region, category, maxPrice, farmerName));
+        Long currentUserId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(cropService.getAllCropsV1(currentUserId, page, size, keyword, region, category, maxPrice, farmerName));
     }
 
     @GetMapping("/farmer/{farmerId}/legacy")
-    public ResponseEntity<List<Crop>> getCropsByFarmerIdV1(
+    public ResponseEntity<List<CropViewDTO>> getCropsByFarmerIdV1(
             @PathVariable Long farmerId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -83,11 +86,11 @@ public class CropController {
         if (!authenticatedFarmerId.equals(farmerId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId, page, size, keyword, region, category, maxPrice).getContent());
+        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(authenticatedFarmerId, farmerId, page, size, keyword, region, category, maxPrice).getContent());
     }
 
     @GetMapping("/farmer/me/legacy")
-    public ResponseEntity<Page<Crop>> getMyCropsV1(
+    public ResponseEntity<Page<CropViewDTO>> getMyCropsV1(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -96,17 +99,20 @@ public class CropController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Double maxPrice) {
         Long farmerId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId, page, size, keyword, region, category, maxPrice));
+        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId, farmerId, page, size, keyword, region, category, maxPrice));
     }
 
     @GetMapping("/legacy/{cropId}")
-    public ResponseEntity<Crop> getCropByCropIdV1(@PathVariable Long cropId) {
-        return ResponseEntity.ok(cropService.getCropByCropIdV1(cropId));
+    public ResponseEntity<CropViewDTO> getCropByCropIdV1(
+            Authentication authentication,
+            @PathVariable Long cropId) {
+        Long currentUserId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(cropService.getCropByCropIdV1(currentUserId, cropId));
     }
 
     @GetMapping("/legacy/{cropId}/image")
     public ResponseEntity<byte[]> getCropImageByCropIdV1(@PathVariable Long cropId) {
-        Crop crop = cropService.getCropByCropIdV1(cropId);
+        Crop crop = cropService.getCropEntityById(cropId);
         if (crop == null || crop.getImageData() == null || crop.getImageData().length == 0) {
             return ResponseEntity.notFound().build();
         }

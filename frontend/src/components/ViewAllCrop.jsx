@@ -24,7 +24,7 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
       <div className="view-all-card__body">
         <h3>{crop.cropName}</h3>
         <p className="view-all-card__meta">
-          Farmer: {crop.farmer?.firstName || 'N/A'} | Region: {crop.region || 'N/A'}
+          Farmer: {crop.farmerName || 'N/A'} | Region: {crop.region || 'N/A'}
         </p>
 
         <div className="view-all-card__price-row">
@@ -242,7 +242,7 @@ export default function ViewAllCrop() {
         {!loading && !error && (
           <p className="view-all-count">
             Showing {crops.length} crop{crops.length !== 1 ? 's' : ''} on this page
-            {totalElements ? ` • ${totalElements} total` : ''}
+            {totalElements ? ` | ${totalElements} total` : ''}
           </p>
         )}
 
@@ -292,3 +292,5 @@ export default function ViewAllCrop() {
     </section>
   );
 }
+
+

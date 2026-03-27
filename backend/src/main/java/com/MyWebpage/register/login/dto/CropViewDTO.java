@@ -1,0 +1,103 @@
+package com.MyWebpage.register.login.dto;
+
+public class CropViewDTO {
+    private Long cropID;
+    private String cropName;
+    private String cropType;
+    private String region;
+    private Double marketPrice;
+    private Double quantity;
+    private String unit;
+    private String description;
+    private String postDate;
+    private String farmerName;
+    private boolean ownedByCurrentUser;
+
+    public Long getCropID() {
+        return cropID;
+    }
+
+    public void setCropID(Long cropID) {
+        this.cropID = cropID;
+    }
+
+    public String getCropName() {
+        return cropName;
+    }
+
+    public void setCropName(String cropName) {
+        this.cropName = cropName;
+    }
+
+    public String getCropType() {
+        return cropType;
+    }
+
+    public void setCropType(String cropType) {
+        this.cropType = cropType;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public Double getMarketPrice() {
+        return marketPrice;
+    }
+
+    public void setMarketPrice(Double marketPrice) {
+        this.marketPrice = marketPrice;
+    }
+
+    public Double getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Double quantity) {
+        this.quantity = quantity;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getPostDate() {
+        return postDate;
+    }
+
+    public void setPostDate(String postDate) {
+        this.postDate = postDate;
+    }
+
+    public String getFarmerName() {
+        return farmerName;
+    }
+
+    public void setFarmerName(String farmerName) {
+        this.farmerName = farmerName;
+    }
+
+    public boolean isOwnedByCurrentUser() {
+        return ownedByCurrentUser;
+    }
+
+    public void setOwnedByCurrentUser(boolean ownedByCurrentUser) {
+        this.ownedByCurrentUser = ownedByCurrentUser;
+    }
+}

@@ -10,7 +10,7 @@ public class CropResponseDTO {
     private String unit;
     private String description;
     private String postDate;
-    private Long farmerId;
+    private String farmerName;
 
     public Long getCropId() { return cropId; }
     public void setCropId(Long cropId) { this.cropId = cropId; }
@@ -30,6 +30,6 @@ public class CropResponseDTO {
     public void setDescription(String description) { this.description = description; }
     public String getPostDate() { return postDate; }
     public void setPostDate(String postDate) { this.postDate = postDate; }
-    public Long getFarmerId() { return farmerId; }
-    public void setFarmerId(Long farmerId) { this.farmerId = farmerId; }
+    public String getFarmerName() { return farmerName; }
+    public void setFarmerName(String farmerName) { this.farmerName = farmerName; }
 }
