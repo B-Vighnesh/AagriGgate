@@ -5,10 +5,12 @@ import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import ApproachFarmer from './ApproachFarmer';
+import { apiFetch } from '../lib/api';
 import { checkoutCart, getCart, removeCartItem, updateCartItem } from '../api/buyerToolsApi';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 const PAGE_SIZE = 10;
+const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect fill="%23e7f4ee" width="360" height="220"/><rect fill="%23cfe7da" x="0" y="160" width="360" height="60"/><text x="180" y="118" font-family="Arial" font-size="24" text-anchor="middle" fill="%232a6e55">Crop Image</text></svg>';
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ export default function Cart() {
   const [actionLoading, setActionLoading] = useState('');
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [approachItem, setApproachItem] = useState(null);
+  const [imageUrls, setImageUrls] = useState({});
 
   const showToast = (message, typeValue = 'info') => {
     setToast({ message, type: typeValue });
@@ -58,6 +61,24 @@ export default function Cart() {
       setItems(nextItems);
       setTotalPages(Number(data?.totalPages || 0));
       setQuantities(Object.fromEntries(nextItems.map((item) => [item.cartId, item.requestedQuantity ?? 1])));
+      const imageEntries = await Promise.all(nextItems.map(async (item) => {
+        try {
+          const response = await apiFetch(`/crops/legacy/${item.cropId}/image`);
+          if (!response.ok) return [item.cropId, ''];
+          const blob = await response.blob();
+          return [item.cropId, URL.createObjectURL(blob)];
+        } catch {
+          return [item.cropId, ''];
+        }
+      }));
+      setImageUrls((prev) => {
+        Object.values(prev).forEach((url) => {
+          if (url) {
+            try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+          }
+        });
+        return Object.fromEntries(imageEntries);
+      });
     } catch (loadError) {
       setItems([]);
       setTotalPages(0);
@@ -77,6 +98,13 @@ export default function Cart() {
       return;
     }
     loadCart();
+    return () => {
+      Object.values(imageUrls).forEach((url) => {
+        if (url) {
+          try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+        }
+      });
+    };
   }, [token, role, navigate, page, appliedSearch, type, sortBy]);
 
   const handleQuantitySave = async (cartId, quiet = false) => {
@@ -222,6 +250,15 @@ export default function Cart() {
                   tabIndex={0}
                   aria-label={`View details for ${item.cropName}`}
                 >
+                  <div className="buyer-tools-card__image-wrap">
+                    <img
+                      src={imageUrls[item.cropId] || IMAGE_PLACEHOLDER}
+                      alt={item.cropName}
+                      className="buyer-tools-card__image"
+                      onError={(event) => { event.currentTarget.src = IMAGE_PLACEHOLDER; }}
+                    />
+                  </div>
+                  <div className="buyer-tools-card__content">
                   <div className="buyer-tools-card__main">
                     <div>
                       <h3>{item.cropName}</h3>
@@ -263,6 +300,7 @@ export default function Cart() {
                       <Button variant="accent" onClick={(event) => { event.stopPropagation(); setApproachItem(item); }}>Send Approach</Button>
                       <Button variant="ghost" onClick={(event) => { event.stopPropagation(); handleRemove(item.cartId); }} loading={actionLoading === `remove-${item.cartId}`}>Remove</Button>
                     </div>
+                  </div>
                   </div>
                 </Card>
               );
