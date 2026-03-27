@@ -98,6 +98,7 @@ const TRUST_POINTS = [
 
 const FARMER_FEATURES = [
   ['Add crop for sale', 'Sell directly'],
+  ['Browse all crops', 'See market activity'],
   ['View buyer requests', 'Demand visibility'],
   ['Weather info', 'Plan farming'],
   ['Market price', 'Avoid middlemen'],
