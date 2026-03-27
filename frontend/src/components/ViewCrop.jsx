@@ -71,6 +71,9 @@ export default function ViewCrop() {
         if (listingFilter === 'waste') {
           params.set('wasteOnly', 'true');
         }
+        if (listingFilter === 'normal') {
+          params.set('normalOnly', 'true');
+        }
 
         const response = await apiGet(`/crops/farmer/me/legacy?${params.toString()}`);
         if (!response.ok) throw new Error('Unable to load crops.');
@@ -165,6 +168,7 @@ export default function ViewCrop() {
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
               <option value="price-low">Price: low to high</option>
+              <option value="price-high">Price: high to low</option>
             </select>
             <select
               className="view-all-input"
@@ -172,6 +176,7 @@ export default function ViewCrop() {
               onChange={(event) => setListingFilter(event.target.value)}
             >
               <option value="all">All listings</option>
+              <option value="normal">Normal crops only</option>
               <option value="urgent">Urgent sales only</option>
               <option value="waste">Waste items only</option>
             </select>

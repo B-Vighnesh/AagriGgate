@@ -65,6 +65,7 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                       AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
                       AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
                       AND (:wasteOnly IS NULL OR c.isWaste = :wasteOnly)
+                      AND (:normalOnly IS NULL OR (coalesce(c.isUrgent, false) = false AND coalesce(c.isWaste, false) = false))
                       AND (:farmerName IS NULL
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
                            OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
@@ -87,6 +88,7 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                       AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
                       AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
                       AND (:wasteOnly IS NULL OR c.isWaste = :wasteOnly)
+                      AND (:normalOnly IS NULL OR (coalesce(c.isUrgent, false) = false AND coalesce(c.isWaste, false) = false))
                       AND (:farmerName IS NULL
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
                            OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
@@ -103,6 +105,7 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             @Param("farmerName") String farmerName,
             @Param("urgentOnly") Boolean urgentOnly,
             @Param("wasteOnly") Boolean wasteOnly,
+            @Param("normalOnly") Boolean normalOnly,
             Pageable pageable);
 
     @Query("""
@@ -174,6 +177,7 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                       AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
                       AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
                       AND (:wasteOnly IS NULL OR c.isWaste = :wasteOnly)
+                      AND (:normalOnly IS NULL OR (coalesce(c.isUrgent, false) = false AND coalesce(c.isWaste, false) = false))
                       AND (:farmerName IS NULL
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
                            OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
@@ -196,6 +200,7 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                       AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
                       AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
                       AND (:wasteOnly IS NULL OR c.isWaste = :wasteOnly)
+                      AND (:normalOnly IS NULL OR (coalesce(c.isUrgent, false) = false AND coalesce(c.isWaste, false) = false))
                       AND (:farmerName IS NULL
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
                            OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
@@ -211,6 +216,7 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             @Param("farmerName") String farmerName,
             @Param("urgentOnly") Boolean urgentOnly,
             @Param("wasteOnly") Boolean wasteOnly,
+            @Param("normalOnly") Boolean normalOnly,
             Pageable pageable);
 
     @Query("""
