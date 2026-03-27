@@ -3,14 +3,28 @@ import { useNavigate, Link } from 'react-router-dom';
 import { apiGet, apiFetch } from '../lib/api';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
 import ValidateToken from './ValidateToken';
-import Button from './common/Button';
 import Card from './common/Card';
 
 const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect fill="%23e7f4ee" width="360" height="220"/><rect fill="%23cfe7da" x="0" y="160" width="360" height="60"/><text x="180" y="118" font-family="Arial" font-size="24" text-anchor="middle" fill="%232a6e55">Crop Image</text></svg>';
 
 function CropCard({ crop, imageUrl, onViewDetails }) {
+  const handleOpen = () => onViewDetails(crop.cropID);
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleOpen();
+    }
+  };
+
   return (
-    <Card className="view-all-card">
+    <Card
+      className="view-all-card view-all-card--clickable"
+      onClick={handleOpen}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${crop.cropName}`}
+    >
       <div className="view-all-card__image-wrap">
         <img
           src={imageUrl || IMAGE_PLACEHOLDER}
@@ -34,10 +48,6 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
           </div>
           <p className="view-all-card__qty">Qty: {crop.quantity} {crop.unit}</p>
         </div>
-
-        <Button className="view-all-card__cta" onClick={() => onViewDetails(crop.cropID)}>
-          View Details
-        </Button>
       </div>
     </Card>
   );
