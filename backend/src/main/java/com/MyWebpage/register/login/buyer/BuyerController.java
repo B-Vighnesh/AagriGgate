@@ -1,6 +1,5 @@
 package com.MyWebpage.register.login.buyer;
 
-import com.MyWebpage.register.login.service.BuyerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;

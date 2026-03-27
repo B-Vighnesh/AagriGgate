@@ -15,7 +15,7 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
 
     @Query(
             value = """
-                    SELECT new com.MyWebpage.register.login.dto.CartItemDTO(
+                    SELECT new com.MyWebpage.register.login.cart.CartItemDTO(
                         ci.id,
                         c.cropID,
                         c.cropName,

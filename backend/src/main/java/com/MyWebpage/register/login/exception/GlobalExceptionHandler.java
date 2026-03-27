@@ -1,6 +1,6 @@
 package com.MyWebpage.register.login.exception;
 
-import com.MyWebpage.register.login.response.ApiResponse;
+import com.MyWebpage.register.login.common.ApiResponse;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.HttpStatus;

@@ -1,7 +1,6 @@
 package com.MyWebpage.register.login.passwordreset;
 
 import com.MyWebpage.register.login.otp.VerifyOtpRequestDTO;
-import com.MyWebpage.register.login.service.PasswordResetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

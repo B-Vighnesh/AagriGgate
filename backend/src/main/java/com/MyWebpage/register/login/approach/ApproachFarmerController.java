@@ -1,6 +1,5 @@
 package com.MyWebpage.register.login.approach;
 
-import com.MyWebpage.register.login.service.ApproachFarmerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;

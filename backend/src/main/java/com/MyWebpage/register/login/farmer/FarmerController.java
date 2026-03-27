@@ -1,6 +1,5 @@
 package com.MyWebpage.register.login.farmer;
 
-import com.MyWebpage.register.login.service.FarmerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
