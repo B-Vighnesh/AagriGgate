@@ -53,6 +53,10 @@ a {
   flex: 1;
 }
 
+.app-main--transition {
+  animation: pageFadeIn 0.34s ease;
+}
+
 .ag-container {
   width: min(1120px, 92%);
   margin: 0 auto;
@@ -1064,6 +1068,17 @@ a {
   from {
     opacity: 0;
     transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
