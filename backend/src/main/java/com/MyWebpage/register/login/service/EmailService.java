@@ -20,8 +20,8 @@
 //}
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.model.ApproachFarmer;
-import com.MyWebpage.register.login.model.Farmer;
+import com.MyWebpage.register.login.approach.ApproachFarmer;
+import com.MyWebpage.register.login.farmer.Farmer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;

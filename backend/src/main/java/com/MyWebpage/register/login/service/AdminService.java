@@ -1,7 +1,7 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.dto.EnquiryRequestDTO;
-import com.MyWebpage.register.login.model.Enquiry;
+import com.MyWebpage.register.login.enquiry.EnquiryRequestDTO;
+import com.MyWebpage.register.login.enquiry.Enquiry;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 

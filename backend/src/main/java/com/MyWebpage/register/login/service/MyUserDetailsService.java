@@ -1,8 +1,8 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.repository.FarmerRepo;
+import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.security.UserPrincipal;
-import com.MyWebpage.register.login.model.Farmer;
+import com.MyWebpage.register.login.farmer.Farmer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

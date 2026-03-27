@@ -1,6 +1,6 @@
 package com.MyWebpage.register.login.security;
 
-import com.MyWebpage.register.login.model.Farmer;
+import com.MyWebpage.register.login.farmer.Farmer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

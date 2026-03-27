@@ -1,8 +1,8 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.dto.FarmerResponseDTO;
-import com.MyWebpage.register.login.dto.FarmerUpdateDTO;
-import com.MyWebpage.register.login.model.Farmer;
+import com.MyWebpage.register.login.farmer.FarmerResponseDTO;
+import com.MyWebpage.register.login.farmer.FarmerUpdateDTO;
+import com.MyWebpage.register.login.farmer.Farmer;
 
 public interface FarmerService {
     FarmerResponseDTO getProfile(Long farmerId);

@@ -1,6 +1,6 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.repository.CropRepo;
+import com.MyWebpage.register.login.crop.CropRepo;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

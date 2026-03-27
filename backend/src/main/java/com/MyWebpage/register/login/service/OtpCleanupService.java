@@ -1,8 +1,8 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.repository.PasswordResetOtpRepository;
-import com.MyWebpage.register.login.repository.RegistrationOtpRepository;
-import com.MyWebpage.register.login.repository.LoginOtpRepository;
+import com.MyWebpage.register.login.otp.PasswordResetOtpRepository;
+import com.MyWebpage.register.login.otp.RegistrationOtpRepository;
+import com.MyWebpage.register.login.otp.LoginOtpRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;

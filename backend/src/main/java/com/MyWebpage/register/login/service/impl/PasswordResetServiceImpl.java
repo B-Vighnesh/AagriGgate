@@ -1,9 +1,9 @@
 package com.MyWebpage.register.login.service.impl;
 
-import com.MyWebpage.register.login.entity.PasswordResetOtp;
-import com.MyWebpage.register.login.model.Farmer;
-import com.MyWebpage.register.login.repository.FarmerRepo;
-import com.MyWebpage.register.login.repository.PasswordResetOtpRepository;
+import com.MyWebpage.register.login.otp.PasswordResetOtp;
+import com.MyWebpage.register.login.farmer.Farmer;
+import com.MyWebpage.register.login.farmer.FarmerRepo;
+import com.MyWebpage.register.login.otp.PasswordResetOtpRepository;
 import com.MyWebpage.register.login.service.EmailService;
 import com.MyWebpage.register.login.service.PasswordResetService;
 import jakarta.transaction.Transactional;

@@ -1,15 +1,15 @@
 package com.MyWebpage.register.login.service.impl;
 
-import com.MyWebpage.register.login.dto.AuthRequestDTO;
-import com.MyWebpage.register.login.dto.AuthResponseDTO;
-import com.MyWebpage.register.login.dto.FarmerRequestDTO;
-import com.MyWebpage.register.login.dto.OtpLoginRequestDTO;
-import com.MyWebpage.register.login.entity.LoginOtp;
-import com.MyWebpage.register.login.model.Farmer;
-import com.MyWebpage.register.login.repository.ApproachFarmerRepo;
-import com.MyWebpage.register.login.repository.CropRepo;
-import com.MyWebpage.register.login.repository.FarmerRepo;
-import com.MyWebpage.register.login.repository.LoginOtpRepository;
+import com.MyWebpage.register.login.auth.AuthRequestDTO;
+import com.MyWebpage.register.login.auth.AuthResponseDTO;
+import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
+import com.MyWebpage.register.login.otp.OtpLoginRequestDTO;
+import com.MyWebpage.register.login.otp.LoginOtp;
+import com.MyWebpage.register.login.farmer.Farmer;
+import com.MyWebpage.register.login.approach.ApproachFarmerRepo;
+import com.MyWebpage.register.login.crop.CropRepo;
+import com.MyWebpage.register.login.farmer.FarmerRepo;
+import com.MyWebpage.register.login.otp.LoginOtpRepository;
 import com.MyWebpage.register.login.security.jwt.JWTService;
 import com.MyWebpage.register.login.service.AuthService;
 import com.MyWebpage.register.login.service.EmailService;

@@ -1,0 +1,176 @@
+package com.MyWebpage.register.login.crop;
+
+public class CropViewDTO {
+    private Long cropID;
+    private String cropName;
+    private String cropType;
+    private String region;
+    private Double marketPrice;
+    private Double quantity;
+    private String unit;
+    private String description;
+    private String postDate;
+    private String farmerName;
+    private boolean ownedByCurrentUser;
+    private Boolean isUrgent;
+    private Boolean isWaste;
+    private Double discountPrice;
+    private String status;
+
+    public CropViewDTO() {
+    }
+
+    public CropViewDTO(
+            Long cropID,
+            String cropName,
+            String cropType,
+            String region,
+            Double marketPrice,
+            Double quantity,
+            String unit,
+            String description,
+            String postDate,
+            String farmerName,
+            boolean ownedByCurrentUser,
+            Boolean isUrgent,
+            Boolean isWaste,
+            Double discountPrice,
+            String status
+    ) {
+        this.cropID = cropID;
+        this.cropName = cropName;
+        this.cropType = cropType;
+        this.region = region;
+        this.marketPrice = marketPrice;
+        this.quantity = quantity;
+        this.unit = unit;
+        this.description = description;
+        this.postDate = postDate;
+        this.farmerName = farmerName;
+        this.ownedByCurrentUser = ownedByCurrentUser;
+        this.isUrgent = isUrgent;
+        this.isWaste = isWaste;
+        this.discountPrice = discountPrice;
+        this.status = status;
+    }
+
+    public Long getCropID() {
+        return cropID;
+    }
+
+    public void setCropID(Long cropID) {
+        this.cropID = cropID;
+    }
+
+    public String getCropName() {
+        return cropName;
+    }
+
+    public void setCropName(String cropName) {
+        this.cropName = cropName;
+    }
+
+    public String getCropType() {
+        return cropType;
+    }
+
+    public void setCropType(String cropType) {
+        this.cropType = cropType;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public Double getMarketPrice() {
+        return marketPrice;
+    }
+
+    public void setMarketPrice(Double marketPrice) {
+        this.marketPrice = marketPrice;
+    }
+
+    public Double getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Double quantity) {
+        this.quantity = quantity;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getPostDate() {
+        return postDate;
+    }
+
+    public void setPostDate(String postDate) {
+        this.postDate = postDate;
+    }
+
+    public String getFarmerName() {
+        return farmerName;
+    }
+
+    public void setFarmerName(String farmerName) {
+        this.farmerName = farmerName;
+    }
+
+    public boolean isOwnedByCurrentUser() {
+        return ownedByCurrentUser;
+    }
+
+    public void setOwnedByCurrentUser(boolean ownedByCurrentUser) {
+        this.ownedByCurrentUser = ownedByCurrentUser;
+    }
+
+    public Boolean getIsUrgent() {
+        return isUrgent;
+    }
+
+    public void setIsUrgent(Boolean urgent) {
+        isUrgent = urgent;
+    }
+
+    public Boolean getIsWaste() {
+        return isWaste;
+    }
+
+    public void setIsWaste(Boolean waste) {
+        isWaste = waste;
+    }
+
+    public Double getDiscountPrice() {
+        return discountPrice;
+    }
+
+    public void setDiscountPrice(Double discountPrice) {
+        this.discountPrice = discountPrice;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+}

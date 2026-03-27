@@ -1,9 +1,9 @@
 package com.MyWebpage.register.login.service;
 
-import com.MyWebpage.register.login.dto.AuthRequestDTO;
-import com.MyWebpage.register.login.dto.AuthResponseDTO;
-import com.MyWebpage.register.login.dto.FarmerRequestDTO;
-import com.MyWebpage.register.login.dto.OtpLoginRequestDTO;
+import com.MyWebpage.register.login.auth.AuthRequestDTO;
+import com.MyWebpage.register.login.auth.AuthResponseDTO;
+import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
+import com.MyWebpage.register.login.otp.OtpLoginRequestDTO;
 
 public interface AuthService {
 

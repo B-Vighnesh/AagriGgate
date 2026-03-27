@@ -1,14 +1,13 @@
 package com.MyWebpage.register.login.service.impl;
 
-import com.MyWebpage.register.login.dto.CartCheckoutResponseDTO;
-import com.MyWebpage.register.login.dto.CartItemDTO;
+import com.MyWebpage.register.login.cart.CartCheckoutResponseDTO;
+import com.MyWebpage.register.login.cart.CartItemDTO;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
-import com.MyWebpage.register.login.model.ApproachFarmer;
-import com.MyWebpage.register.login.model.CartItem;
-import com.MyWebpage.register.login.model.Crop;
-import com.MyWebpage.register.login.repository.ApproachFarmerRepo;
-import com.MyWebpage.register.login.repository.CartItemRepo;
-import com.MyWebpage.register.login.repository.CropRepo;
+import com.MyWebpage.register.login.cart.CartItem;
+import com.MyWebpage.register.login.crop.Crop;
+import com.MyWebpage.register.login.approach.ApproachFarmerRepo;
+import com.MyWebpage.register.login.cart.CartItemRepo;
+import com.MyWebpage.register.login.crop.CropRepo;
 import com.MyWebpage.register.login.service.ApproachFarmerService;
 import com.MyWebpage.register.login.service.CartService;
 import org.springframework.data.domain.Page;

@@ -1,10 +1,10 @@
 package com.MyWebpage.register.login.service.impl;
 
-import com.MyWebpage.register.login.dto.BuyerRequestDTO;
-import com.MyWebpage.register.login.dto.BuyerResponseDTO;
-import com.MyWebpage.register.login.mapper.BuyerMapper;
-import com.MyWebpage.register.login.model.Farmer;
-import com.MyWebpage.register.login.repository.FarmerRepo;
+import com.MyWebpage.register.login.buyer.BuyerRequestDTO;
+import com.MyWebpage.register.login.buyer.BuyerResponseDTO;
+import com.MyWebpage.register.login.buyer.BuyerMapper;
+import com.MyWebpage.register.login.farmer.Farmer;
+import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.service.BuyerService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

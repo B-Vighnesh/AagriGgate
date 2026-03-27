@@ -1,8 +1,8 @@
 package com.MyWebpage.register.login.service.impl;
 
-import com.MyWebpage.register.login.model.SavedMarketData;
-import com.MyWebpage.register.login.repository.FarmerRepo;
-import com.MyWebpage.register.login.repository.SavedMarketDataRepository;
+import com.MyWebpage.register.login.market.SavedMarketData;
+import com.MyWebpage.register.login.farmer.FarmerRepo;
+import com.MyWebpage.register.login.market.SavedMarketDataRepository;
 import com.MyWebpage.register.login.service.SavedMarketDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

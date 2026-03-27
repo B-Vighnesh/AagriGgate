@@ -1,11 +1,11 @@
 package com.MyWebpage.register.login.service.impl;
 
-import com.MyWebpage.register.login.dto.FavoriteItemDTO;
+import com.MyWebpage.register.login.favorite.FavoriteItemDTO;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
-import com.MyWebpage.register.login.model.Crop;
-import com.MyWebpage.register.login.model.Favorite;
-import com.MyWebpage.register.login.repository.CropRepo;
-import com.MyWebpage.register.login.repository.FavoriteRepo;
+import com.MyWebpage.register.login.crop.Crop;
+import com.MyWebpage.register.login.farmer.Favorite;
+import com.MyWebpage.register.login.crop.CropRepo;
+import com.MyWebpage.register.login.favorite.FavoriteRepo;
 import com.MyWebpage.register.login.service.FavoriteService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
