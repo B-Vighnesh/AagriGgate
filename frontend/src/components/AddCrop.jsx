@@ -10,6 +10,7 @@ import statesAndDistricts from './statesAndDistricts';
 
 const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
 const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
+const CROP_STATUS = ['available', 'sold'];
 
 export default function AddCrop() {
   const navigate = useNavigate();
@@ -27,6 +28,10 @@ export default function AddCrop() {
     quantity: '',
     unit: 'kg',
     description: '',
+    isUrgent: false,
+    isWaste: false,
+    discountPrice: '',
+    status: 'available',
   });
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
@@ -57,8 +62,8 @@ export default function AddCrop() {
   }, [imagePreview]);
 
   const onFieldChange = (event) => {
-    const { name, value } = event.target;
-    setCropData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = event.target;
+    setCropData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const onStateChange = (event) => {
@@ -102,6 +107,10 @@ export default function AddCrop() {
       quantity: Number(cropData.quantity),
       unit: cropData.unit,
       description: cropData.description.trim(),
+      isUrgent: cropData.isUrgent,
+      isWaste: cropData.isWaste,
+      discountPrice: cropData.discountPrice === '' ? null : Number(cropData.discountPrice),
+      status: cropData.status,
     };
 
     formData.append('crop', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
@@ -229,6 +238,51 @@ export default function AddCrop() {
                 placeholder="Quality, freshness, harvesting method..."
                 required
               />
+            </div>
+
+            <div className="add-crop-grid add-crop-grid--2">
+              <div className="add-crop-field">
+                <label htmlFor="status">Status</label>
+                <select id="status" name="status" value={cropData.status} onChange={onFieldChange}>
+                  {CROP_STATUS.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="add-crop-field">
+                <label htmlFor="discountPrice">Discount Price (Optional)</label>
+                <input
+                  id="discountPrice"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  name="discountPrice"
+                  value={cropData.discountPrice}
+                  onChange={onFieldChange}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <div className="add-crop-grid add-crop-grid--2">
+              <label className="add-crop-check">
+                <input
+                  type="checkbox"
+                  name="isUrgent"
+                  checked={cropData.isUrgent}
+                  onChange={onFieldChange}
+                />
+                <span>Mark this as urgent sale</span>
+              </label>
+              <label className="add-crop-check">
+                <input
+                  type="checkbox"
+                  name="isWaste"
+                  checked={cropData.isWaste}
+                  onChange={onFieldChange}
+                />
+                <span>Mark this as waste / surplus sale</span>
+              </label>
             </div>
 
             <div className="add-crop-field">

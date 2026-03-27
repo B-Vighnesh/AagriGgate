@@ -1,8 +1,10 @@
 package com.MyWebpage.register.login.controller;
 
+import com.MyWebpage.register.login.dto.ApproachRequestDTO;
 import com.MyWebpage.register.login.model.ApproachFarmer;
 import com.MyWebpage.register.login.service.ApproachFarmerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -50,18 +52,16 @@ public class ApproachFarmerController {
 //        }
 //    }
     @GetMapping("/requests/me")
-    public ResponseEntity<Object> getRequestsByUserId(Authentication authentication) {
+    public ResponseEntity<Page<ApproachRequestDTO>> getRequestsByUserId(
+            Authentication authentication,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
             Long userId = Long.parseLong(authentication.getName());
-            List<ApproachFarmer> requests = approachFarmerService.getRequestsByUserId(userId);
-            if (requests == null || requests.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                        .body("No requests found for User ID: " + userId);
-            }
-            return ResponseEntity.ok(requests);
+            return ResponseEntity.ok(approachFarmerService.getRequestsByUserId(userId, status, page, size));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error fetching requests: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     @GetMapping("/requests/me/{cropId}")

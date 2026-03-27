@@ -43,7 +43,11 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                             WHEN :currentUserId IS NOT NULL AND c.farmer.farmerId = :currentUserId
                             THEN true
                             ELSE false
-                        END
+                        END,
+                        c.isUrgent,
+                        c.isWaste,
+                        c.discountPrice,
+                        c.status
                     )
                     FROM Crop c
                     WHERE (:farmerId IS NULL OR c.farmer.farmerId = :farmerId)
@@ -111,7 +115,11 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                     WHEN :currentUserId IS NOT NULL AND c.farmer.farmerId = :currentUserId
                     THEN true
                     ELSE false
-                END
+                END,
+                c.isUrgent,
+                c.isWaste,
+                c.discountPrice,
+                c.status
             )
             FROM Crop c
             WHERE c.cropID = :cropId
@@ -134,7 +142,11 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                             WHEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, ''))) <> ''
                             THEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, '')))
                             ELSE c.farmer.username
-                        END
+                        END,
+                        c.isUrgent,
+                        c.isWaste,
+                        c.discountPrice,
+                        c.status
                     )
                     FROM Crop c
                     WHERE (:farmerId IS NULL OR c.farmer.farmerId = :farmerId)
@@ -196,7 +208,11 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                     WHEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, ''))) <> ''
                     THEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, '')))
                     ELSE c.farmer.username
-                END
+                END,
+                c.isUrgent,
+                c.isWaste,
+                c.discountPrice,
+                c.status
             )
             FROM Crop c
             WHERE c.cropID = :cropId
@@ -223,7 +239,11 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                             WHEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, ''))) <> ''
                             THEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, '')))
                             ELSE c.farmer.username
-                        END
+                        END,
+                        c.isUrgent,
+                        c.isWaste,
+                        c.discountPrice,
+                        c.status
                     )
                     FROM Crop c
                     WHERE lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))

@@ -1,8 +1,10 @@
 package com.MyWebpage.register.login.controller;
 
+import com.MyWebpage.register.login.dto.ApproachRequestDTO;
 import com.MyWebpage.register.login.model.ApproachFarmer;
 import com.MyWebpage.register.login.service.ApproachFarmerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -52,36 +54,31 @@ public class ApproachFarmerController2 {
         }
     }
     @GetMapping("/requests/me")
-    public ResponseEntity<Object> getRequestsByFarmerId(Authentication authentication) {
+    public ResponseEntity<Page<ApproachRequestDTO>> getRequestsByFarmerId(
+            Authentication authentication,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
             Long farmerId = Long.parseLong(authentication.getName());
-            List<ApproachFarmer> requests = approachFarmerService.getRequestsByFarmerId(farmerId);
-            if (requests == null || requests.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("No requests found for Farmer ID: " + farmerId);
-            }
-            return ResponseEntity.ok(requests);
+            return ResponseEntity.ok(approachFarmerService.getRequestsByFarmerId(farmerId, status, page, size));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error fetching requests: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping("/requests/me/{cropId}")
-    public ResponseEntity<Object> getRequestsByFarmerIdAndCropId(
+    public ResponseEntity<Page<ApproachRequestDTO>> getRequestsByFarmerIdAndCropId(
             @PathVariable Long cropId,
-            Authentication authentication) {
+            Authentication authentication,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
             Long farmerId = Long.parseLong(authentication.getName());
-            List<ApproachFarmer> requests = approachFarmerService.getRequestsByFarmerIdAndCropId(farmerId, cropId);
-            if (requests == null || requests.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                        .body("No requests found for Farmer ID: " + farmerId + " and Crop ID: " + cropId);
-            }
-            return ResponseEntity.ok(requests);
+            return ResponseEntity.ok(approachFarmerService.getRequestsByFarmerIdAndCropId(farmerId, cropId, status, page, size));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error fetching requests: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

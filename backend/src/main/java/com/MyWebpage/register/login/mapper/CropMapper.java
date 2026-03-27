@@ -17,6 +17,10 @@ public class CropMapper {
         crop.setQuantity(dto.getQuantity());
         crop.setUnit(dto.getUnit());
         crop.setDescription(dto.getDescription());
+        crop.setIsUrgent(dto.getIsUrgent());
+        crop.setIsWaste(dto.getIsWaste());
+        crop.setDiscountPrice(dto.getDiscountPrice());
+        crop.setStatus(dto.getStatus());
         return crop;
     }
 
@@ -32,6 +36,10 @@ public class CropMapper {
         dto.setDescription(crop.getDescription());
         dto.setPostDate(crop.getPostDate());
         dto.setFarmerName(buildFarmerName(crop));
+        dto.setIsUrgent(crop.getIsUrgent());
+        dto.setIsWaste(crop.getIsWaste());
+        dto.setDiscountPrice(crop.getDiscountPrice());
+        dto.setStatus(crop.getStatus());
         return dto;
     }
 
@@ -49,6 +57,10 @@ public class CropMapper {
         dto.setFarmerName(buildFarmerName(crop));
         Long ownerId = crop.getFarmer() != null ? crop.getFarmer().getFarmerId() : null;
         dto.setOwnedByCurrentUser(currentUserId != null && currentUserId.equals(ownerId));
+        dto.setIsUrgent(crop.getIsUrgent());
+        dto.setIsWaste(crop.getIsWaste());
+        dto.setDiscountPrice(crop.getDiscountPrice());
+        dto.setStatus(crop.getStatus());
         return dto;
     }
 

@@ -48,6 +48,7 @@ public class CropServiceImpl implements CropService {
         }
         crop.setFarmer(farmer);
         crop.setPostDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+        normalizeCropFlags(crop);
         applyImage(crop, imageFile);
         logger.info("[v1] Adding crop {}", crop.getCropName());
         return cropRepo.save(crop);
@@ -66,6 +67,7 @@ public class CropServiceImpl implements CropService {
             crop.setImageName(existing.getImageName());
             crop.setImageType(existing.getImageType());
         }
+        normalizeCropFlags(crop);
         logger.info("[v1] Updating crop {}", cropId);
         return cropRepo.save(crop);
     }
@@ -138,6 +140,7 @@ public class CropServiceImpl implements CropService {
         Crop crop = cropMapper.toEntity(dto);
         crop.setFarmer(farmer);
         crop.setPostDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+        normalizeCropFlags(crop);
         applyImage(crop, imageFile);
 
         logger.info("[v2] Adding crop {} for farmer {}", dto.getCropName(), farmerId);
@@ -160,6 +163,7 @@ public class CropServiceImpl implements CropService {
             crop.setImageType(existing.getImageType());
         }
 
+        normalizeCropFlags(crop);
         logger.info("[v2] Updating crop {}", cropId);
         return cropMapper.toResponse(cropRepo.save(crop));
     }
@@ -246,5 +250,22 @@ public class CropServiceImpl implements CropService {
             return null;
         }
         return value.trim();
+    }
+
+    private void normalizeCropFlags(Crop crop) {
+        if (crop.getStatus() == null || crop.getStatus().isBlank()) {
+            crop.setStatus("available");
+        } else {
+            crop.setStatus(crop.getStatus().trim().toLowerCase());
+        }
+        if (crop.getDiscountPrice() != null && crop.getDiscountPrice() < 0) {
+            crop.setDiscountPrice(0.0);
+        }
+        if (crop.getIsUrgent() == null) {
+            crop.setIsUrgent(false);
+        }
+        if (crop.getIsWaste() == null) {
+            crop.setIsWaste(false);
+        }
     }
 }

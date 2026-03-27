@@ -26,6 +26,10 @@ public class Crop {
     private String imageType;
     private String unit;
     private String description;
+    private Boolean isUrgent;
+    private Boolean isWaste;
+    private Double discountPrice;
+    private String status;
     @Lob
     private byte[] imageData;
     @ManyToOne
@@ -76,6 +80,38 @@ public class Crop {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Boolean getIsUrgent() {
+        return isUrgent;
+    }
+
+    public void setIsUrgent(Boolean urgent) {
+        isUrgent = urgent;
+    }
+
+    public Boolean getIsWaste() {
+        return isWaste;
+    }
+
+    public void setIsWaste(Boolean waste) {
+        isWaste = waste;
+    }
+
+    public Double getDiscountPrice() {
+        return discountPrice;
+    }
+
+    public void setDiscountPrice(Double discountPrice) {
+        this.discountPrice = discountPrice;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public String getUnit() {

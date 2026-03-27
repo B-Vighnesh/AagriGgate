@@ -22,6 +22,10 @@ public class CropRequestDTO {
     private Long farmerId;
     private String unit;
     private String description;
+    private Boolean isUrgent;
+    private Boolean isWaste;
+    private Double discountPrice;
+    private String status;
 
     public String getCropName() { return cropName; }
     public void setCropName(String cropName) { this.cropName = cropName; }
@@ -39,4 +43,12 @@ public class CropRequestDTO {
     public void setUnit(String unit) { this.unit = unit; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public Boolean getIsUrgent() { return isUrgent; }
+    public void setIsUrgent(Boolean urgent) { isUrgent = urgent; }
+    public Boolean getIsWaste() { return isWaste; }
+    public void setIsWaste(Boolean waste) { isWaste = waste; }
+    public Double getDiscountPrice() { return discountPrice; }
+    public void setDiscountPrice(Double discountPrice) { this.discountPrice = discountPrice; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }
