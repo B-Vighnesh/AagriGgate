@@ -17,6 +17,9 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
     @Query("SELECT c FROM Crop c WHERE c.farmer.farmerId = :farmerId ORDER BY c.cropID DESC")
     List<Crop> findByFarmerId(@Param("farmerId") Long farmerId);
 
+    @Query("SELECT c FROM Crop c WHERE c.farmer.farmerId = :farmerId")
+    Page<Crop> findPageByFarmerId(@Param("farmerId") Long farmerId, Pageable pageable);
+
     List<Crop> findByCropName(String cropName);
 
     Page<Crop> findByCropNameContaining(String keyword, Pageable pageable);

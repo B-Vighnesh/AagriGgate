@@ -14,7 +14,7 @@ public interface CropService {
     Crop addCropV1(Long farmerId, Crop crop, MultipartFile imageFile) throws IOException;
     Crop updateCropV1(Long farmerId, Long cropId, Crop crop, MultipartFile imageFile) throws IOException;
     Page<Crop> getAllCropsV1(int page, int size);
-    List<Crop> getCropsByFarmerIdV1(Long farmerId);
+    Page<Crop> getCropsByFarmerIdV1(Long farmerId, int page, int size);
     Crop getCropByCropIdV1(Long cropId);
     void deleteCropByIdV1(Long farmerId, Long cropId);
     void deleteCropByFarmerIdV1(Long farmerId);
@@ -24,7 +24,7 @@ public interface CropService {
     CropResponseDTO addCropV2(Long farmerId, CropRequestDTO cropRequestDTO, MultipartFile imageFile) throws IOException;
     CropResponseDTO updateCropV2(Long farmerId, Long cropId, CropRequestDTO cropRequestDTO, MultipartFile imageFile) throws IOException;
     Page<CropResponseDTO> getAllCropsV2(int page, int size);
-    List<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId);
+    Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size);
     CropResponseDTO getCropByCropIdV2(Long cropId);
     void deleteCropByIdV2(Long farmerId, Long cropId);
     void deleteCropByFarmerIdV2(Long farmerId);

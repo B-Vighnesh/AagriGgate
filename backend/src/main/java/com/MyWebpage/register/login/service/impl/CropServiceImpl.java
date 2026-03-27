@@ -75,8 +75,8 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public List<Crop> getCropsByFarmerIdV1(Long farmerId) {
-        return cropRepo.findByFarmerId(farmerId);
+    public Page<Crop> getCropsByFarmerIdV1(Long farmerId, int page, int size) {
+        return cropRepo.findPageByFarmerId(farmerId, buildPageRequest(page, size));
     }
 
     @Override
@@ -143,8 +143,8 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public List<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId) {
-        return cropRepo.findByFarmerId(farmerId).stream().map(cropMapper::toResponse).toList();
+    public Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size) {
+        return cropRepo.findPageByFarmerId(farmerId, buildPageRequest(page, size)).map(cropMapper::toResponse);
     }
 
     @Override
