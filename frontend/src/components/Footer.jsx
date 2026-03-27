@@ -7,11 +7,12 @@ export default function Footer() {
   return (
     <footer className="site-footer">
       <div className="ag-container footer-grid">
-        <div>
+        <div className="footer-brand">
           <h3>AagriGgate</h3>
           <p>Direct trade, smarter decisions, and transparent agriculture workflows in one platform.</p>
+          <p className="footer-brand__note">Built to connect farmers and buyers with more clarity, less friction, and no hidden platform charges.</p>
         </div>
-        <div>
+        <div className="footer-section">
           <h4>Platform</h4>
           <ul>
             <li><a href="/#problem">Problem</a></li>
@@ -19,20 +20,20 @@ export default function Footer() {
             <li><a href="/#trust">Trust</a></li>
           </ul>
         </div>
-        <div>
+        <div className="footer-section">
           <h4>Intelligence</h4>
           <ul>
             <li><Link to="/weather">Weather</Link></li>
             <li><Link to="/market">Market Prices</Link></li>
           </ul>
         </div>
-        <div>
+        <div className="footer-section">
           <h4>Future</h4>
           <ul>
             <li><a href="/#future">Roadmap</a></li>
           </ul>
         </div>
-        <div>
+        <div className="footer-section">
           <h4>Support</h4>
           <ul>
             <li><a href="/#faq">FAQ</a></li>
@@ -42,7 +43,9 @@ export default function Footer() {
       </div>
       <div className="footer-bottom">
         <span>&copy; {year} AagriGgate. All rights reserved.</span>
-        <span>webappfarmer@gmail.com | +91 8618402581 | Mangalore, Karnataka</span>
+        <span>webappfarmer@gmail.com</span>
+        <span>+91 8618402581</span>
+        <span>Mangalore, Karnataka</span>
       </div>
     </footer>
   );
