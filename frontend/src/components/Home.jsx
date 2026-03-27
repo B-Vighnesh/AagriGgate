@@ -107,9 +107,8 @@ const FARMER_FEATURES = [
   ['Weather info', 'Plan farming'],
   ['Market price', 'Avoid middlemen'],
   ['Direct contact with buyers', 'Negotiate'],
-  ['Profile', 'Build trust'],
+  ['Hidden profile', 'Privacy'],
   ['OTP login', 'Easy access'],
-  ['Location-based buyers', 'Nearby sales'],
 ];
 
 const BUYER_FEATURES = [
@@ -122,8 +121,6 @@ const BUYER_FEATURES = [
   ['View crop details', 'Quality info'],
   ['Request tracking', 'Follow requests from oldest to newest'],
   ['Contact farmer', 'Direct deal'],
-  ['Location context', 'Better logistics'],
-  ['Price negotiation', 'Better rates'],
 ];
 
 const INTELLIGENCE_POINTS = [
@@ -149,6 +146,8 @@ const BUYER_STEPS = [
 
 const ROADMAP = [
   ['Multi-language', 'A more accessible experience for users across different regions.'],
+  ['Location context', 'Better logistics support for sourcing and transport planning.'],
+  ['Price negotiation', 'More structured bargaining and offer flows inside the platform.'],
   ['Price prediction', 'Smart selling'],
   ['Weather alerts', 'Crop safety'],
   ['Demand heatmap', 'Demand insights'],
