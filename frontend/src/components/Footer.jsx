@@ -1,8 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { getRole, getToken } from '../lib/auth';
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const role = getRole();
+  const isLoggedIn = Boolean(getToken() && role);
+  const farmerLink = isLoggedIn && role === 'farmer' ? '/add-crop' : '/register';
+  const requestLink = isLoggedIn && role === 'farmer' ? '/view-approach' : '/register';
+  const browseLink = '/view-all-crops';
+  const buyerActionLink = isLoggedIn && role === 'buyer' ? '/cart' : '/register';
+  const weatherLink = isLoggedIn && role === 'farmer' ? '/weather' : '/#intelligence';
+  const marketLink = isLoggedIn && role === 'farmer' ? '/market' : '/#intelligence';
 
   return (
     <footer className="site-footer">
@@ -22,22 +31,22 @@ export default function Footer() {
         <div>
           <h4>Farmers</h4>
           <ul>
-            <li><a href="/#farmers">Add Crop</a></li>
-            <li><a href="/#how-it-works">View Requests</a></li>
+            <li><Link to={farmerLink}>Add Crop</Link></li>
+            <li><Link to={requestLink}>View Requests</Link></li>
           </ul>
         </div>
         <div>
           <h4>Buyers</h4>
           <ul>
-            <li><a href="/#buyers">Browse Crops</a></li>
-            <li><a href="/#buyers">Post Requirement</a></li>
+            <li><Link to={browseLink}>Browse Crops</Link></li>
+            <li><Link to={buyerActionLink}>{isLoggedIn && role === 'buyer' ? 'Open Cart' : 'Create Account'}</Link></li>
           </ul>
         </div>
         <div>
           <h4>Intelligence</h4>
           <ul>
-            <li><a href="/#intelligence">Weather</a></li>
-            <li><a href="/#intelligence">Market Prices</a></li>
+            <li><Link to={weatherLink}>Weather</Link></li>
+            <li><Link to={marketLink}>Market Prices</Link></li>
           </ul>
         </div>
         <div>
