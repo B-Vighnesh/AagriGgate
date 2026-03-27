@@ -4,12 +4,14 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
+import { apiFetch } from '../lib/api';
 import { addToCart, getFavorites, removeFavorite } from '../api/buyerToolsApi';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 const PAGE_SIZE = 10;
+const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect fill="%23e7f4ee" width="360" height="220"/><rect fill="%23cfe7da" x="0" y="160" width="360" height="60"/><text x="180" y="118" font-family="Arial" font-size="24" text-anchor="middle" fill="%232a6e55">Crop Image</text></svg>';
 
-function FavoriteCard({ item, onAddToCart, onRemove, onViewDetails, loadingAction }) {
+function FavoriteCard({ item, imageUrl, onAddToCart, onRemove, onViewDetails, loadingAction }) {
   const tone = item.isUrgent ? 'urgent' : item.isWaste ? 'waste' : 'normal';
   const handleOpen = () => onViewDetails(item.cropId);
   const handleKeyDown = (event) => {
@@ -21,41 +23,51 @@ function FavoriteCard({ item, onAddToCart, onRemove, onViewDetails, loadingActio
 
   return (
     <Card
-      className={`view-all-card view-all-card--clickable view-all-card--${tone}`}
+      className={`buyer-tools-card buyer-tools-card--clickable buyer-tools-card--${tone}`}
       onClick={handleOpen}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
       aria-label={`View details for ${item.cropName}`}
     >
-      <div className="view-all-card__body">
-        <h3>{item.cropName}</h3>
-        <p className="view-all-card__meta">
-          Farmer: {item.farmerName || 'N/A'} | Region: {item.region || 'N/A'}
-        </p>
-        <div className="crop-flag-row">
-          {item.status ? <span className={`crop-flag crop-flag--${item.status.toLowerCase()}`}>{item.status}</span> : null}
-          {item.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
-          {item.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
-          {item.discountPrice ? <span className="crop-flag crop-flag--discount">Discount</span> : null}
-        </div>
-        <div className="view-all-card__price-row">
+      <div className="buyer-tools-card__image-wrap">
+        <img
+          src={imageUrl || IMAGE_PLACEHOLDER}
+          alt={item.cropName}
+          className="buyer-tools-card__image"
+          onError={(event) => { event.currentTarget.src = IMAGE_PLACEHOLDER; }}
+        />
+      </div>
+      <div className="buyer-tools-card__content">
+        <div className="buyer-tools-card__main">
           <div>
-            <p className="view-all-card__price">Rs {Number(item.marketPrice || 0).toFixed(2)}</p>
-            <p className="view-all-card__unit">per {item.unit || 'unit'}</p>
-            {item.discountPrice ? (
-              <p className="view-all-card__discount">Discount: Rs {Number(item.discountPrice).toFixed(2)}</p>
-            ) : null}
+            <h3>{item.cropName}</h3>
+            <p>Farmer: <strong>{item.farmerName || 'N/A'}</strong> | Region: {item.region || 'N/A'}</p>
           </div>
-          <p className="view-all-card__qty">Qty: {item.quantity} {item.unit}</p>
+          <div className="crop-flag-row">
+            {item.status ? <span className={`crop-flag crop-flag--${item.status.toLowerCase()}`}>{item.status}</span> : null}
+            {item.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
+            {item.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
+            {item.discountPrice ? <span className="crop-flag crop-flag--discount">Discount</span> : null}
+          </div>
         </div>
-        <div className="buyer-tools-card__actions">
-          <Button variant="outline" onClick={(event) => { event.stopPropagation(); onAddToCart(item.cropId); }} loading={loadingAction === `cart-${item.cropId}`}>
-            Add to Cart
-          </Button>
-          <Button variant="ghost" onClick={(event) => { event.stopPropagation(); onRemove(item.cropId); }} loading={loadingAction === `remove-${item.cropId}`}>
-            Remove
-          </Button>
+        <div className="buyer-tools-card__meta">
+          <span>Price: Rs {Number(item.marketPrice || 0).toFixed(2)} / {item.unit || 'unit'}</span>
+          <span>Available: {item.quantity} {item.unit}</span>
+          {item.discountPrice ? <span>Discount: Rs {Number(item.discountPrice).toFixed(2)}</span> : null}
+        </div>
+        <div className="buyer-tools-card__footer">
+          <div className="buyer-tools-card__summary">
+            <span>Saved for later</span>
+          </div>
+          <div className="buyer-tools-card__actions">
+            <Button variant="outline" onClick={(event) => { event.stopPropagation(); onAddToCart(item.cropId); }} loading={loadingAction === `cart-${item.cropId}`}>
+              Add to Cart
+            </Button>
+            <Button variant="ghost" onClick={(event) => { event.stopPropagation(); onRemove(item.cropId); }} loading={loadingAction === `remove-${item.cropId}`}>
+              Remove
+            </Button>
+          </div>
         </div>
       </div>
     </Card>
@@ -79,6 +91,7 @@ export default function Favorites() {
   const [totalPages, setTotalPages] = useState(0);
   const [actionLoading, setActionLoading] = useState('');
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [imageUrls, setImageUrls] = useState({});
 
   const showToast = (message, typeValue = 'info') => {
     setToast({ message, type: typeValue });
@@ -116,8 +129,28 @@ export default function Favorites() {
           sortBy,
         });
         if (!mounted) return;
-        setItems(Array.isArray(data?.content) ? data.content : []);
+        const nextItems = Array.isArray(data?.content) ? data.content : [];
+        setItems(nextItems);
         setTotalPages(Number(data?.totalPages || 0));
+        const imageEntries = await Promise.all(nextItems.map(async (item) => {
+          try {
+            const response = await apiFetch(`/crops/legacy/${item.cropId}/image`);
+            if (!response.ok) return [item.cropId, ''];
+            const blob = await response.blob();
+            return [item.cropId, URL.createObjectURL(blob)];
+          } catch {
+            return [item.cropId, ''];
+          }
+        }));
+        if (!mounted) return;
+        setImageUrls((prev) => {
+          Object.values(prev).forEach((url) => {
+            if (url) {
+              try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+            }
+          });
+          return Object.fromEntries(imageEntries);
+        });
       } catch (loadError) {
         if (!mounted) return;
         setItems([]);
@@ -130,6 +163,11 @@ export default function Favorites() {
 
     return () => {
       mounted = false;
+      Object.values(imageUrls).forEach((url) => {
+        if (url) {
+          try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+        }
+      });
     };
   }, [token, role, navigate, page, appliedSearch, type, sortBy]);
 
@@ -215,11 +253,12 @@ export default function Favorites() {
         ) : null}
 
         {!loading && !error && items.length > 0 ? (
-          <div className="view-all-grid">
+          <div className="buyer-tools-list">
             {items.map((item) => (
               <FavoriteCard
                 key={item.favoriteId}
                 item={item}
+                imageUrl={imageUrls[item.cropId]}
                 onAddToCart={handleAddToCart}
                 onRemove={handleRemove}
                 onViewDetails={(id) => navigate(`/view-details/${id}`)}
