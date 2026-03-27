@@ -156,8 +156,14 @@ export default function ViewAllCrop() {
           )}
         </div>
 
-        <Card className="view-all-filter-card">
-          <div className="view-all-search-row">
+        <Card className="view-all-search-card">
+          <div className="view-all-toolbar__head">
+            <div>
+              <h3>Search Crops</h3>
+              <p>Look up crops by name, type, region, or farmer.</p>
+            </div>
+          </div>
+          <div className="view-all-search-row view-all-search-row--split">
             <input
               className="view-all-input"
               type="text"
@@ -165,12 +171,21 @@ export default function ViewAllCrop() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
             />
+            <Button onClick={applyFilters}>Search</Button>
           </div>
+        </Card>
 
+        <Card className="view-all-filter-card">
+          <div className="view-all-toolbar__head">
+            <div>
+              <h3>Filters</h3>
+              <p>Narrow results by region, category, price, or farmer.</p>
+            </div>
+          </div>
           <div className="view-all-filter-grid">
             <input
               className="view-all-input"
-              placeholder="Filter by region"
+              placeholder="Region"
               value={filters.region}
               onChange={(event) => setFilters((prev) => ({ ...prev, region: event.target.value }))}
             />
@@ -184,13 +199,13 @@ export default function ViewAllCrop() {
             />
             <input
               className="view-all-input"
-              placeholder="Filter by category"
+              placeholder="Category"
               value={filters.category}
               onChange={(event) => setFilters((prev) => ({ ...prev, category: event.target.value }))}
             />
             <input
               className="view-all-input"
-              placeholder="Filter by farmer"
+              placeholder="Farmer name"
               value={filters.farmerName}
               onChange={(event) => setFilters((prev) => ({ ...prev, farmerName: event.target.value }))}
             />
@@ -198,7 +213,7 @@ export default function ViewAllCrop() {
 
           <div className="view-all-filter-actions">
             <Button onClick={applyFilters}>Apply Filters</Button>
-            <Button variant="outline" onClick={clearFilters}>Reset</Button>
+            <Button variant="outline" onClick={clearFilters}>Clear Filters</Button>
           </div>
         </Card>
 
@@ -241,7 +256,7 @@ export default function ViewAllCrop() {
           <Card className="view-all-empty">
             <p className="view-all-empty__icon">0</p>
             <p className="view-all-empty__title">No crops match your filters.</p>
-            <p className="view-all-empty__desc">Try different filters or reset the form.</p>
+            <p className="view-all-empty__desc">Try different filters or clear the current selection.</p>
           </Card>
         )}
 

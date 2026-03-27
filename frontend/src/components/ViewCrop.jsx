@@ -88,12 +88,6 @@ export default function ViewCrop() {
     setAppliedQuery(query);
   };
 
-  const clearSearch = () => {
-    setQuery('');
-    setAppliedQuery('');
-    setPage(0);
-  };
-
   if (loading) {
     return (
       <section className="page page--center">
@@ -129,18 +123,24 @@ export default function ViewCrop() {
           <Link to="/add-crop" className="ui-btn ui-btn--primary">Add New Crop</Link>
         </div>
 
-        <div className="view-crop-search">
-          <input
-            type="text"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by crop name, type, or region"
-          />
-          <div className="view-all-filter-actions">
-            <Button onClick={applySearch}>Search</Button>
-            <Button variant="outline" onClick={clearSearch}>Reset</Button>
+        <Card className="view-all-search-card">
+          <div className="view-all-toolbar__head">
+            <div>
+              <h3>Search My Crops</h3>
+              <p>Find your listings by crop name, type, or region.</p>
+            </div>
           </div>
-        </div>
+          <div className="view-all-search-row view-all-search-row--split">
+            <input
+              type="text"
+              className="view-all-input"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search by crop name, type, or region"
+            />
+            <Button onClick={applySearch}>Search</Button>
+          </div>
+        </Card>
 
         {crops.length === 0 ? (
           <Card className="view-crop-empty">
