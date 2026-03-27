@@ -27,6 +27,12 @@ export default function ViewCrop() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
+  const getCardTone = (crop) => {
+    if (crop.isUrgent) return 'urgent';
+    if (crop.isWaste) return 'waste';
+    return 'normal';
+  };
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setPage(0);
@@ -73,6 +79,9 @@ export default function ViewCrop() {
         }
         if (listingFilter === 'normal') {
           params.set('normalOnly', 'true');
+        }
+        if (listingFilter === 'discount') {
+          params.set('discountOnly', 'true');
         }
 
         const response = await apiGet(`/crops/farmer/me/legacy?${params.toString()}`);
@@ -179,6 +188,7 @@ export default function ViewCrop() {
               <option value="normal">Normal crops only</option>
               <option value="urgent">Urgent sales only</option>
               <option value="waste">Waste items only</option>
+              <option value="discount">Discount items only</option>
             </select>
           </div>
         </Card>
@@ -190,7 +200,7 @@ export default function ViewCrop() {
         ) : (
           <div className="view-crop-grid">
             {crops.map((crop) => (
-              <Card key={crop.cropID} className="view-crop-card" onClick={() => navigate(`/view-details/${crop.cropID}`)}>
+              <Card key={crop.cropID} className={`view-crop-card view-crop-card--${getCardTone(crop)}`} onClick={() => navigate(`/view-details/${crop.cropID}`)}>
                 <div className="view-crop-card__image-wrap">
                   <img
                     src={images[crop.cropID] || PLACEHOLDER}

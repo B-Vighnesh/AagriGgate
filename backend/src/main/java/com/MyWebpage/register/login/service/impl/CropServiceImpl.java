@@ -73,7 +73,7 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public Page<CropViewDTO> getAllCropsV1(Long currentUserId, int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, String sortBy) {
+    public Page<CropViewDTO> getAllCropsV1(Long currentUserId, int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, Boolean discountOnly, String sortBy) {
         return cropRepo.findFilteredCropViews(
                 currentUserId,
                 null,
@@ -85,12 +85,13 @@ public class CropServiceImpl implements CropService {
                 normalizeBooleanFilter(urgentOnly),
                 normalizeBooleanFilter(wasteOnly),
                 normalizeBooleanFilter(normalOnly),
+                normalizeBooleanFilter(discountOnly),
                 buildPageRequest(page, size, sortBy)
         );
     }
 
     @Override
-    public Page<CropViewDTO> getCropsByFarmerIdV1(Long currentUserId, Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, String sortBy) {
+    public Page<CropViewDTO> getCropsByFarmerIdV1(Long currentUserId, Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, Boolean discountOnly, String sortBy) {
         return cropRepo.findFilteredCropViews(
                 currentUserId,
                 farmerId,
@@ -102,6 +103,7 @@ public class CropServiceImpl implements CropService {
                 normalizeBooleanFilter(urgentOnly),
                 normalizeBooleanFilter(wasteOnly),
                 normalizeBooleanFilter(normalOnly),
+                normalizeBooleanFilter(discountOnly),
                 buildPageRequest(page, size, sortBy)
         );
     }
@@ -175,7 +177,7 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public Page<CropResponseDTO> getAllCropsV2(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, String sortBy) {
+    public Page<CropResponseDTO> getAllCropsV2(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, Boolean discountOnly, String sortBy) {
         return cropRepo.findFilteredCropResponses(
                         null,
                         normalizeFilter(keyword),
@@ -186,12 +188,13 @@ public class CropServiceImpl implements CropService {
                         normalizeBooleanFilter(urgentOnly),
                         normalizeBooleanFilter(wasteOnly),
                         normalizeBooleanFilter(normalOnly),
+                        normalizeBooleanFilter(discountOnly),
                         buildPageRequest(page, size, sortBy)
                 );
     }
 
     @Override
-    public Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, String sortBy) {
+    public Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, Boolean discountOnly, String sortBy) {
         return cropRepo.findFilteredCropResponses(
                         farmerId,
                         normalizeFilter(keyword),
@@ -202,6 +205,7 @@ public class CropServiceImpl implements CropService {
                         normalizeBooleanFilter(urgentOnly),
                         normalizeBooleanFilter(wasteOnly),
                         normalizeBooleanFilter(normalOnly),
+                        normalizeBooleanFilter(discountOnly),
                         buildPageRequest(page, size, sortBy)
                 );
     }
