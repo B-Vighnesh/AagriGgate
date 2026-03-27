@@ -149,7 +149,7 @@ export default function ViewCrop() {
           <div className="view-all-toolbar__head">
             <div>
               <h3>Search My Crops</h3>
-              <p>Start typing to find your listings, then refine by order or listing type.</p>
+              <p>Start typing to find your listings by crop name, then refine by order or listing type.</p>
             </div>
           </div>
           <div className="view-all-search-row view-all-search-row--split">
@@ -158,7 +158,7 @@ export default function ViewCrop() {
               className="view-all-input"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by crop name, type, or region"
+              placeholder="Search by crop name"
             />
             <select
               className="view-all-input"
