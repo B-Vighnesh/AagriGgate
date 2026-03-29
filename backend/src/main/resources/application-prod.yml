@@ -14,6 +14,8 @@ spring:
     user:
       name: ${APP_SECURITY_USER}
       password: ${APP_SECURITY_PASSWORD}
+  flyway:
+    locations: classpath:db/migration/postgresql
   mail:
     host: ${MAIL_HOST}
     port: ${MAIL_PORT:587}

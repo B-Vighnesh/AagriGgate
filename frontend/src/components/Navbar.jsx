@@ -4,7 +4,7 @@ import { getRole } from '../lib/auth';
 import agrigateIcon from '../images/agrigate.jpg';
 
 function navByRole(role) {
-  const base = [{ label: 'Home', to: '/' }];
+  const base = [{ label: 'Home', to: '/' }, { label: 'News & Alerts', to: '/news' }];
   if (!role) return [...base, { label: 'Login', to: '/login' }, { label: 'Register', to: '/register' }];
 
   if (role === 'farmer') {
@@ -12,6 +12,7 @@ function navByRole(role) {
       ...base,
       { label: 'Market', to: '/market' },
       { label: 'Weather', to: '/weather' },
+      { label: 'Saved News', to: '/news/saved' },
       { label: 'Browse Crops', to: '/view-all-crops' },
       { label: 'Add Crop', to: '/add-crop' },
       { label: 'My Crops', to: '/view-crop' },
@@ -22,6 +23,7 @@ function navByRole(role) {
 
   return [
     ...base,
+    { label: 'Saved News', to: '/news/saved' },
     { label: 'Browse Crops', to: '/view-all-crops' },
     { label: 'Favorites', to: '/favorites' },
     { label: 'Cart', to: '/cart' },

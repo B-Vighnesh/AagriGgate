@@ -1,7 +1,14 @@
 package com.MyWebpage.register.login.admin;
 
+import com.MyWebpage.register.login.common.ApiResponse;
 import com.MyWebpage.register.login.enquiry.Enquiry;
 import com.MyWebpage.register.login.enquiry.EnquiryRequestDTO;
+import com.MyWebpage.register.login.news.dto.NewsRequest;
+import com.MyWebpage.register.login.news.dto.NewsResponse;
+import com.MyWebpage.register.login.news.dto.TrustedSourceRequest;
+import com.MyWebpage.register.login.news.entity.TrustedSource;
+import com.MyWebpage.register.login.news.enums.NewsStatus;
+import com.MyWebpage.register.login.news.service.NewsService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -12,6 +19,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,9 +37,11 @@ public class AdminController {
     private String adminPassword;
 
     private final AdminService adminService;
+    private final NewsService newsService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, NewsService newsService) {
         this.adminService = adminService;
+        this.newsService = newsService;
     }
 
     @GetMapping("/enquiries")
@@ -62,5 +72,125 @@ public class AdminController {
     @DeleteMapping("/enquiry/{id}")
     public ResponseEntity<String> deleteEnquiry(@PathVariable Long id) {
         return adminService.deleteEnquiry(id);
+    }
+
+    @PostMapping("/news")
+    public ResponseEntity<ApiResponse<NewsResponse>> createNews(
+            @RequestParam String username,
+            @RequestParam String password,
+            @Valid @RequestBody NewsRequest request
+    ) {
+        if (!isAdminAuthorized(username, password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("News created", newsService.createNews(request, "ADMIN")));
+    }
+
+    @PutMapping("/news/{id}")
+    public ResponseEntity<ApiResponse<NewsResponse>> updateNews(
+            @PathVariable Long id,
+            @RequestParam String username,
+            @RequestParam String password,
+            @Valid @RequestBody NewsRequest request
+    ) {
+        if (!isAdminAuthorized(username, password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
+        }
+        return ResponseEntity.ok(ApiResponse.success("News updated", newsService.updateNews(id, request)));
+    }
+
+    @DeleteMapping("/news/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteNews(
+            @PathVariable Long id,
+            @RequestParam String username,
+            @RequestParam String password
+    ) {
+        if (!isAdminAuthorized(username, password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
+        }
+        newsService.softDeleteNews(id);
+        return ResponseEntity.ok(ApiResponse.success("News deleted", "OK"));
+    }
+
+    @GetMapping("/news")
+    public ResponseEntity<ApiResponse<Page<NewsResponse>>> getAllNews(
+            @RequestParam String username,
+            @RequestParam String password,
+            @RequestParam(required = false) NewsStatus status,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "newest") String sortBy
+    ) {
+        if (!isAdminAuthorized(username, password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
+        }
+        return ResponseEntity.ok(ApiResponse.success("Admin news fetched", newsService.getAdminNews(status, keyword, page, size, sortBy)));
+    }
+
+    @PostMapping("/news/{id}/archive")
+    public ResponseEntity<ApiResponse<NewsResponse>> archiveNews(
+            @PathVariable Long id,
+            @RequestParam String username,
+            @RequestParam String password
+    ) {
+        if (!isAdminAuthorized(username, password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
+        }
+        return ResponseEntity.ok(ApiResponse.success("News archived", newsService.archiveNews(id)));
+    }
+
+    @PostMapping("/sources")
+    public ResponseEntity<ApiResponse<TrustedSource>> createTrustedSource(
+            @RequestParam String username,
+            @RequestParam String password,
+            @Valid @RequestBody TrustedSourceRequest request
+    ) {
+        if (!isAdminAuthorized(username, password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Trusted source created", newsService.createTrustedSource(request)));
+    }
+
+    @GetMapping("/sources")
+    public ResponseEntity<ApiResponse<java.util.List<TrustedSource>>> getAllSources(
+            @RequestParam String username,
+            @RequestParam String password
+    ) {
+        if (!isAdminAuthorized(username, password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
+        }
+        return ResponseEntity.ok(ApiResponse.success("Trusted sources fetched", newsService.getAllTrustedSources()));
+    }
+
+    @PutMapping("/sources/{id}")
+    public ResponseEntity<ApiResponse<TrustedSource>> updateTrustedSource(
+            @PathVariable Long id,
+            @RequestParam String username,
+            @RequestParam String password,
+            @Valid @RequestBody TrustedSourceRequest request
+    ) {
+        if (!isAdminAuthorized(username, password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
+        }
+        return ResponseEntity.ok(ApiResponse.success("Trusted source updated", newsService.updateTrustedSource(id, request)));
+    }
+
+    @DeleteMapping("/sources/{id}")
+    public ResponseEntity<ApiResponse<TrustedSource>> deactivateTrustedSource(
+            @PathVariable Long id,
+            @RequestParam String username,
+            @RequestParam String password
+    ) {
+        if (!isAdminAuthorized(username, password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
+        }
+        return ResponseEntity.ok(ApiResponse.success("Trusted source deactivated", newsService.deactivateTrustedSource(id)));
+    }
+
+    private boolean isAdminAuthorized(String username, String password) {
+        return adminUsername.equals(username) && adminPassword.equals(password);
     }
 }
