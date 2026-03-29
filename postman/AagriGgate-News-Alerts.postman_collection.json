@@ -1,0 +1,603 @@
+{
+  "info": {
+    "name": "AagriGgate - News & Alerts",
+    "_postman_id": "c8d58d08-4ef2-49f6-98e8-55b69eb77d9c",
+    "description": "Postman collection for the Level 1 News + Weather Alerts feature.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"principal\": \"{{user_principal}}\",\n  \"password\": \"{{user_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response && response.token) {",
+                  "  pm.environment.set('jwt_token', response.token);",
+                  "}",
+                  "if (response && response.farmerId) {",
+                  "  pm.environment.set('user_id', response.farmerId);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Public News",
+      "item": [
+        {
+          "name": "Get News Feed",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/news?page=0&size=10&sortBy=newest",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "news"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "newest"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Weather News",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/news?category=WEATHER&isImportant=true&page=0&size=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "news"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "WEATHER"
+                },
+                {
+                  "key": "isImportant",
+                  "value": "true"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get News By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/news/{{news_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "news",
+                "{{news_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Track News View",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/news/{{news_id}}/view",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "news",
+                "{{news_id}}",
+                "view"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Saved News",
+      "item": [
+        {
+          "name": "Get Saved News",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/news/saved?page=0&size=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "news",
+                "saved"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Save News",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/news/saved/{{news_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "news",
+                "saved",
+                "{{news_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unsave News",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/news/saved/{{news_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "news",
+                "saved",
+                "{{news_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check Saved Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/news/saved/{{news_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "news",
+                "saved",
+                "{{news_id}}",
+                "status"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin News",
+      "item": [
+        {
+          "name": "Create News",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Demo Market Update\",\n  \"summary\": \"A fresh market advisory for testing the News & Alerts module.\",\n  \"sourceName\": \"AagriGgate QA\",\n  \"sourceUrl\": \"https://example.com/news/demo-market-update\",\n  \"imageUrl\": \"https://example.com/images/demo-market-update.jpg\",\n  \"category\": \"MARKET\",\n  \"newsType\": \"EXTERNAL\",\n  \"language\": \"en\",\n  \"isImportant\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/news?username={{admin_username}}&password={{admin_password}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "news"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{admin_username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update News",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Demo Market Update Revised\",\n  \"summary\": \"Updated text for the same demo news item.\",\n  \"sourceName\": \"AagriGgate QA\",\n  \"sourceUrl\": \"https://example.com/news/demo-market-update-revised\",\n  \"imageUrl\": \"https://example.com/images/demo-market-update-revised.jpg\",\n  \"category\": \"MARKET\",\n  \"newsType\": \"EXTERNAL\",\n  \"language\": \"en\",\n  \"isImportant\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/news/{{news_id}}?username={{admin_username}}&password={{admin_password}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "news",
+                "{{news_id}}"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{admin_username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Admin News",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/news?username={{admin_username}}&password={{admin_password}}&page=0&size=10&sortBy=newest",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "news"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{admin_username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "newest"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Archive News",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/news/{{news_id}}/archive?username={{admin_username}}&password={{admin_password}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "news",
+                "{{news_id}}",
+                "archive"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{admin_username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete News",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/news/{{news_id}}?username={{admin_username}}&password={{admin_password}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "news",
+                "{{news_id}}"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{admin_username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Sources",
+      "item": [
+        {
+          "name": "Create Trusted Source",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gov Alerts Feed\",\n  \"domain\": \"example.com\",\n  \"sourceUrl\": \"https://example.com/rss\",\n  \"categoryScope\": \"WEATHER,ALERT\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/sources?username={{admin_username}}&password={{admin_password}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "sources"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{admin_username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Trusted Sources",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/sources?username={{admin_username}}&password={{admin_password}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "sources"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{admin_username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Trusted Source",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gov Alerts Feed Updated\",\n  \"domain\": \"example.com\",\n  \"sourceUrl\": \"https://example.com/rss-updated\",\n  \"categoryScope\": \"WEATHER,ALERT,LAW\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/sources/{{source_id}}?username={{admin_username}}&password={{admin_password}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "sources",
+                "{{source_id}}"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{admin_username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deactivate Trusted Source",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/sources/{{source_id}}?username={{admin_username}}&password={{admin_password}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "sources",
+                "{{source_id}}"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{admin_username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
