@@ -4,6 +4,7 @@ CREATE TABLE news (
     summary VARCHAR(1000) NOT NULL,
     source_name VARCHAR(255) NULL,
     source_url VARCHAR(1000) NOT NULL,
+    source_url_hash CHAR(64) NOT NULL,
     image_url VARCHAR(1000) NULL,
     category VARCHAR(50) NOT NULL,
     news_type VARCHAR(50) NOT NULL,
@@ -14,7 +15,7 @@ CREATE TABLE news (
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     CONSTRAINT pk_news PRIMARY KEY (id),
-    CONSTRAINT uk_news_source_url UNIQUE (source_url)
+    CONSTRAINT uk_news_source_url_hash UNIQUE (source_url_hash)
 );
 
 CREATE TABLE trusted_sources (

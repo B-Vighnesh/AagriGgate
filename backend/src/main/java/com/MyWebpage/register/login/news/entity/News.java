@@ -11,18 +11,23 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(
         name = "news",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_news_source_url", columnNames = "source_url")
+                @UniqueConstraint(name = "uk_news_source_url_hash", columnNames = "source_url_hash")
         },
         indexes = {
                 @Index(name = "idx_news_category", columnList = "category"),
@@ -50,6 +55,9 @@ public class News {
 
     @Column(name = "source_url", nullable = false, length = 1000)
     private String sourceUrl;
+
+    @Column(name = "source_url_hash", nullable = false, length = 64)
+    private String sourceUrlHash;
 
     @Column(name = "image_url", length = 1000)
     private String imageUrl;
@@ -123,6 +131,14 @@ public class News {
         this.sourceUrl = sourceUrl;
     }
 
+    public String getSourceUrlHash() {
+        return sourceUrlHash;
+    }
+
+    public void setSourceUrlHash(String sourceUrlHash) {
+        this.sourceUrlHash = sourceUrlHash;
+    }
+
     public String getImageUrl() {
         return imageUrl;
     }
@@ -193,5 +209,27 @@ public class News {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void syncSourceUrlHash() {
+        if (sourceUrl != null && !sourceUrl.isBlank()) {
+            this.sourceUrlHash = sha256(sourceUrl.trim());
+        }
+    }
+
+    private String sha256(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] bytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder builder = new StringBuilder(bytes.length * 2);
+            for (byte current : bytes) {
+                builder.append(String.format("%02x", current));
+            }
+            return builder.toString();
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("Unable to hash source URL", ex);
+        }
     }
 }
