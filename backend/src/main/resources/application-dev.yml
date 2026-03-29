@@ -18,6 +18,9 @@ spring:
       name: ${APP_SECURITY_USER:vighnesh}
       password: ${APP_SECURITY_PASSWORD:v123}
 
+  flyway:
+    locations: classpath:db/migration/mysql
+
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}

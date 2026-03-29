@@ -18,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import java.util.List;
 
 @Configuration
@@ -57,8 +58,15 @@ public class SecurityConfig {
                                 "/api/v1/auth/login/otp",
                                 "/api/v1/password/**",
                                 "/api/v1/admin/login",
-                                "/api/v1/admin/enquiry")
+                                "/api/v1/admin/enquiry",
+                                "/api/v1/admin/news",
+                                "/api/v1/admin/news/**",
+                                "/api/v1/admin/sources",
+                                "/api/v1/admin/sources/**")
                         .permitAll()
+                        .requestMatchers("/api/v1/news/saved", "/api/v1/news/saved/**").hasAnyRole("SELLER", "BUYER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/news", "/api/v1/news/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/news/*/view").permitAll()
                         .requestMatchers("/api/v1/buyers/me", "/api/v1/buyers/*").hasAnyRole("SELLER","BUYER")
                         .requestMatchers("/api/v1/buyers/**", "/api/v1/buyer/approach/**", "/api/v1/users/favorites/**", "/api/v1/cart/**", "/api/v1/crops/*/favorite").hasRole("BUYER")
                         .requestMatchers("/api/v1/farmers/**", "/api/v1/crops/farmer/**", "/api/v1/seller/approach/**", "/api/v1/saved-market-data/**", "/api/v1/market-price/**", "/api/v1/weather/**").hasRole("SELLER")
