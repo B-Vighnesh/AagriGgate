@@ -1,7 +1,7 @@
 package com.MyWebpage.register.login.news.controller;
 
 import com.MyWebpage.register.login.common.ApiResponse;
-import com.MyWebpage.register.login.news.dto.SavedNewsResponse;
+import com.MyWebpage.register.login.news.dto.response.SavedNewsResponse;
 import com.MyWebpage.register.login.news.enums.NewsCategory;
 import com.MyWebpage.register.login.news.service.SavedNewsService;
 import org.springframework.data.domain.Page;
@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/news/saved")
@@ -36,27 +34,27 @@ public class SavedNewsController {
             @RequestParam(defaultValue = "10") int size
     ) {
         Long userId = Long.parseLong(authentication.getName());
-        Page<SavedNewsResponse> response = savedNewsService.getSavedNews(userId, category, keyword, page, size);
-        return ResponseEntity.ok(ApiResponse.success("Saved news fetched", response));
+        Page<SavedNewsResponse> data = savedNewsService.getSavedNews(userId, category, keyword, page, size);
+        return ResponseEntity.ok(ApiResponse.success("Saved news fetched", data));
     }
 
     @PostMapping("/{newsId}")
-    public ResponseEntity<ApiResponse<String>> saveNews(@PathVariable Long newsId, Authentication authentication) {
+    public ResponseEntity<ApiResponse<SavedNewsResponse>> saveNews(@PathVariable Long newsId, Authentication authentication) {
         Long userId = Long.parseLong(authentication.getName());
-        savedNewsService.saveNews(userId, newsId);
-        return ResponseEntity.ok(ApiResponse.success("News saved", "OK"));
+        SavedNewsResponse response = savedNewsService.saveNews(userId, newsId);
+        return ResponseEntity.ok(ApiResponse.success("News saved", response));
     }
 
     @DeleteMapping("/{newsId}")
     public ResponseEntity<ApiResponse<String>> unsaveNews(@PathVariable Long newsId, Authentication authentication) {
         Long userId = Long.parseLong(authentication.getName());
         savedNewsService.unsaveNews(userId, newsId);
-        return ResponseEntity.ok(ApiResponse.success("News removed from saved list", "OK"));
+        return ResponseEntity.ok(ApiResponse.success("News unsaved", "OK"));
     }
 
-    @GetMapping("/{newsId}/status")
-    public ResponseEntity<ApiResponse<Map<String, Boolean>>> getSavedStatus(@PathVariable Long newsId, Authentication authentication) {
+    @GetMapping("/{newsId}/check")
+    public ResponseEntity<ApiResponse<Boolean>> checkSaved(@PathVariable Long newsId, Authentication authentication) {
         Long userId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(ApiResponse.success("Saved status fetched", Map.of("saved", savedNewsService.isSaved(userId, newsId))));
+        return ResponseEntity.ok(ApiResponse.success("Saved status fetched", savedNewsService.isSaved(userId, newsId)));
     }
 }

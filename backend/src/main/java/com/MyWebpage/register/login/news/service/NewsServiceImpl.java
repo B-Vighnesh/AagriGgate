@@ -1,192 +1,203 @@
 package com.MyWebpage.register.login.news.service;
 
+import com.MyWebpage.register.login.exception.DuplicateNewsException;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
-import com.MyWebpage.register.login.news.dto.NewsRequest;
-import com.MyWebpage.register.login.news.dto.NewsResponse;
-import com.MyWebpage.register.login.news.dto.TrustedSourceRequest;
+import com.MyWebpage.register.login.farmer.Farmer;
+import com.MyWebpage.register.login.farmer.FarmerRepo;
+import com.MyWebpage.register.login.news.dto.request.NewsRequest;
+import com.MyWebpage.register.login.news.dto.request.TrustedSourceRequest;
+import com.MyWebpage.register.login.news.dto.response.NewsResponse;
 import com.MyWebpage.register.login.news.entity.News;
 import com.MyWebpage.register.login.news.entity.TrustedSource;
 import com.MyWebpage.register.login.news.enums.NewsCategory;
 import com.MyWebpage.register.login.news.enums.NewsStatus;
 import com.MyWebpage.register.login.news.enums.NewsType;
-import com.MyWebpage.register.login.news.notification.NewsNotificationService;
+import com.MyWebpage.register.login.news.mapper.NewsMapper;
 import com.MyWebpage.register.login.news.repository.NewsRepository;
 import com.MyWebpage.register.login.news.repository.SavedNewsRepository;
 import com.MyWebpage.register.login.news.repository.TrustedSourceRepository;
-import jakarta.transaction.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.MyWebpage.register.login.news.scheduler.NewsFetchScheduler;
+import com.MyWebpage.register.login.notification.enums.NotificationType;
+import com.MyWebpage.register.login.notification.service.NotificationService;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 @Service
 public class NewsServiceImpl implements NewsService {
 
-    private static final Logger logger = LoggerFactory.getLogger(NewsServiceImpl.class);
-
     private final NewsRepository newsRepository;
+    private final NewsMapper newsMapper;
     private final SavedNewsRepository savedNewsRepository;
     private final TrustedSourceRepository trustedSourceRepository;
-    private final NewsNotificationService newsNotificationService;
+    private final NotificationService notificationService;
+    private final FarmerRepo farmerRepo;
+    private final NewsFetchScheduler newsFetchScheduler;
 
     public NewsServiceImpl(
             NewsRepository newsRepository,
+            NewsMapper newsMapper,
             SavedNewsRepository savedNewsRepository,
             TrustedSourceRepository trustedSourceRepository,
-            NewsNotificationService newsNotificationService
+            NotificationService notificationService,
+            FarmerRepo farmerRepo,
+            NewsFetchScheduler newsFetchScheduler
     ) {
         this.newsRepository = newsRepository;
+        this.newsMapper = newsMapper;
         this.savedNewsRepository = savedNewsRepository;
         this.trustedSourceRepository = trustedSourceRepository;
-        this.newsNotificationService = newsNotificationService;
+        this.notificationService = notificationService;
+        this.farmerRepo = farmerRepo;
+        this.newsFetchScheduler = newsFetchScheduler;
     }
 
     @Override
-    @Transactional
-    public NewsResponse createNews(NewsRequest request, String uploadedBy) {
-        String normalizedSourceUrl = normalizeUrl(request.getSourceUrl());
-        String normalizedTitle = normalizeRequired(request.getTitle(), "title");
-        if (newsRepository.existsBySourceUrl(normalizedSourceUrl)) {
-            throw new IllegalArgumentException("News already exists with this source URL");
-        }
-        if (newsRepository.existsByTitle(normalizedTitle)) {
-            throw new IllegalArgumentException("News already exists with this title");
-        }
-
-        News news = new News();
-        applyRequest(news, request);
-        news.setTitle(normalizedTitle);
-        news.setSourceUrl(normalizedSourceUrl);
-        news.setUploadedBy(normalizeUploadedBy(uploadedBy));
-        News saved = newsRepository.save(news);
-        newsNotificationService.notifyImportantNews(saved);
-        logger.info("News created with id={} uploadedBy={}", saved.getId(), saved.getUploadedBy());
-        return toResponse(saved, false);
-    }
-
-    @Override
-    @Transactional
-    public NewsResponse updateNews(Long id, NewsRequest request) {
-        News existing = requireNews(id);
-        if (existing.getStatus() == NewsStatus.DELETED) {
-            throw new IllegalArgumentException("Deleted news cannot be edited");
-        }
-
-        String normalizedSourceUrl = normalizeUrl(request.getSourceUrl());
-        String normalizedTitle = normalizeRequired(request.getTitle(), "title");
-        if (newsRepository.existsBySourceUrl(normalizedSourceUrl) && !normalizedSourceUrl.equals(existing.getSourceUrl())) {
-            throw new IllegalArgumentException("News already exists with this source URL");
-        }
-        if (newsRepository.existsByTitle(normalizedTitle) && !normalizedTitle.equals(existing.getTitle())) {
-            throw new IllegalArgumentException("News already exists with this title");
-        }
-
-        applyRequest(existing, request);
-        existing.setTitle(normalizedTitle);
-        existing.setSourceUrl(normalizedSourceUrl);
-        News saved = newsRepository.save(existing);
-        logger.info("News updated with id={}", saved.getId());
-        return toResponse(saved, false);
-    }
-
-    @Override
-    @Transactional
-    public void softDeleteNews(Long id) {
-        News existing = requireNews(id);
-        if (existing.getStatus() == NewsStatus.DELETED) {
-            return;
-        }
-        existing.setStatus(NewsStatus.DELETED);
-        newsRepository.save(existing);
-        logger.info("News soft deleted with id={}", id);
-    }
-
-    @Override
-    @Transactional
-    public NewsResponse archiveNews(Long id) {
-        News existing = requireNews(id);
-        if (existing.getStatus() == NewsStatus.DELETED) {
-            throw new IllegalArgumentException("Deleted news cannot be archived");
-        }
-        if (existing.getStatus() == NewsStatus.ARCHIVED) {
-            throw new IllegalArgumentException("News is already archived");
-        }
-        existing.setStatus(NewsStatus.ARCHIVED);
-        News saved = newsRepository.save(existing);
-        logger.info("News archived with id={}", id);
-        return toResponse(saved, false);
-    }
-
-    @Override
-    @Transactional(Transactional.TxType.SUPPORTS)
+    @Transactional(readOnly = true)
     public Page<NewsResponse> getAllNews(
             NewsCategory category,
             NewsType newsType,
             String language,
             Boolean isImportant,
             String keyword,
+            Long currentUserId,
             int page,
             int size,
-            String sortBy,
-            Long userId
+            String sortBy
     ) {
-        Pageable pageable = buildPageable(page, size, sortBy);
-        Specification<News> specification = buildNewsSpecification(NewsStatus.ACTIVE, category, newsType, language, isImportant, keyword);
-        return newsRepository.findAll(specification, pageable)
-                .map(news -> toResponse(news, isSaved(userId, news.getId())));
+        var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50), resolveSort(sortBy));
+        Page<News> newsPage = newsRepository.findAll(buildSpecification(NewsStatus.ACTIVE, category, newsType, language, isImportant, keyword), pageable);
+        Set<Long> savedIds = loadSavedIds(currentUserId, newsPage.getContent().stream().map(News::getId).toList());
+        return newsPage.map(news -> newsMapper.toResponse(news, savedIds.contains(news.getId())));
     }
 
     @Override
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public NewsResponse getNewsById(Long id, Long userId) {
-        News news = newsRepository.findOne(buildIdSpecification(id, NewsStatus.ACTIVE))
+    @Transactional(readOnly = true)
+    public NewsResponse getNewsById(Long id, Long currentUserId) {
+        News news = newsRepository.findByIdAndStatus(id, NewsStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("News not found with ID: " + id));
-        return toResponse(news, isSaved(userId, news.getId()));
+        boolean isSaved = currentUserId != null && savedNewsRepository.existsByUserIdAndNews_Id(currentUserId, id);
+        return newsMapper.toResponse(news, isSaved);
     }
 
     @Override
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public Page<NewsResponse> getAdminNews(NewsStatus status, String keyword, int page, int size, String sortBy) {
-        Pageable pageable = buildPageable(page, size, sortBy);
-        Specification<News> specification = Specification.where(null);
-        if (status != null) {
-            specification = specification.and((root, query, cb) -> cb.equal(root.get("status"), status));
+    @Transactional
+    public NewsResponse createNews(NewsRequest request, String uploadedBy) {
+        String sourceUrl = normalizeRequired(request.getSourceUrl(), "sourceUrl");
+        String title = normalizeRequired(request.getTitle(), "title");
+        if (newsRepository.existsBySourceUrlOrTitle(sourceUrl, title)) {
+            throw new DuplicateNewsException("News already exists with the same source URL or title");
         }
-        if (keyword != null && !keyword.isBlank()) {
-            String likeValue = "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
-            specification = specification.and((root, query, cb) -> cb.or(
-                    cb.like(cb.lower(root.get("title")), likeValue),
-                    cb.like(cb.lower(root.get("summary")), likeValue),
-                    cb.like(cb.lower(cb.coalesce(root.get("sourceName").as(String.class), "")), likeValue)
-            ));
+
+        request.setSourceUrl(sourceUrl);
+        request.setTitle(title);
+        News news = newsMapper.toEntity(request);
+        news.setUploadedBy(normalizeUploadedBy(uploadedBy));
+        News saved = newsRepository.save(news);
+        notifyImportantNews(saved);
+        return newsMapper.toResponse(saved, false);
+    }
+
+    @Override
+    @Transactional
+    public NewsResponse updateNews(Long id, NewsRequest request) {
+        News existing = newsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("News not found with ID: " + id));
+
+        String sourceUrl = normalizeRequired(request.getSourceUrl(), "sourceUrl");
+        String title = normalizeRequired(request.getTitle(), "title");
+
+        newsRepository.findBySourceUrl(sourceUrl)
+                .filter(news -> !news.getId().equals(id))
+                .ifPresent(news -> {
+                    throw new DuplicateNewsException("News already exists with the same source URL");
+                });
+
+        newsRepository.findByTitle(title)
+                .filter(news -> !news.getId().equals(id))
+                .ifPresent(news -> {
+                    throw new DuplicateNewsException("News already exists with the same title");
+                });
+
+        request.setSourceUrl(sourceUrl);
+        request.setTitle(title);
+        newsMapper.updateEntity(existing, request);
+        return newsMapper.toResponse(newsRepository.save(existing), false);
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteNews(Long id) {
+        News news = requireNews(id);
+        news.setStatus(NewsStatus.DELETED);
+        newsRepository.save(news);
+    }
+
+    @Override
+    @Transactional
+    public void archiveNews(Long id) {
+        News news = requireNews(id);
+        news.setStatus(NewsStatus.ARCHIVED);
+        newsRepository.save(news);
+    }
+
+    @Override
+    @Transactional
+    public NewsResponse restoreNews(Long id) {
+        News news = requireNews(id);
+        news.setStatus(NewsStatus.ACTIVE);
+        return newsMapper.toResponse(newsRepository.save(news), false);
+    }
+
+    @Override
+    @Transactional
+    public void reportNews(Long newsId, String reason) {
+        News news = requireNews(newsId);
+        news.setReportReason(normalizeRequired(reason, "reason"));
+        news.setReportCount((news.getReportCount() == null ? 0 : news.getReportCount()) + 1);
+        if (news.getReportCount() >= 5) {
+            news.setStatus(NewsStatus.ARCHIVED);
         }
-        return newsRepository.findAll(specification, pageable)
-                .map(news -> toResponse(news, false));
+        newsRepository.save(news);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<NewsResponse> getAdminNews(
+            NewsStatus status,
+            NewsCategory category,
+            NewsType newsType,
+            String keyword,
+            int page,
+            int size,
+            String sortBy
+    ) {
+        var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50), resolveSort(sortBy));
+        return newsRepository.findAll(buildSpecification(status, category, newsType, null, null, keyword), pageable)
+                .map(newsMapper::toResponse);
     }
 
     @Override
     @Transactional
     public TrustedSource createTrustedSource(TrustedSourceRequest request) {
         TrustedSource source = new TrustedSource();
-        applyTrustedSourceRequest(source, request);
-        TrustedSource saved = trustedSourceRepository.save(source);
-        logger.info("Trusted source created with id={}", saved.getId());
-        return saved;
+        applyTrustedSource(source, request);
+        return trustedSourceRepository.save(source);
     }
 
     @Override
-    @Transactional(Transactional.TxType.SUPPORTS)
+    @Transactional(readOnly = true)
     public List<TrustedSource> getAllTrustedSources() {
         return trustedSourceRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
     }
@@ -196,10 +207,8 @@ public class NewsServiceImpl implements NewsService {
     public TrustedSource updateTrustedSource(Long id, TrustedSourceRequest request) {
         TrustedSource source = trustedSourceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trusted source not found with ID: " + id));
-        applyTrustedSourceRequest(source, request);
-        TrustedSource saved = trustedSourceRepository.save(source);
-        logger.info("Trusted source updated with id={}", saved.getId());
-        return saved;
+        applyTrustedSource(source, request);
+        return trustedSourceRepository.save(source);
     }
 
     @Override
@@ -208,39 +217,18 @@ public class NewsServiceImpl implements NewsService {
         TrustedSource source = trustedSourceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trusted source not found with ID: " + id));
         source.setIsActive(false);
-        TrustedSource saved = trustedSourceRepository.save(source);
-        logger.info("Trusted source deactivated with id={}", saved.getId());
-        return saved;
+        return trustedSourceRepository.save(source);
     }
 
-    private News requireNews(Long id) {
-        return newsRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("News not found with ID: " + id));
+    @Override
+    @Transactional
+    public int triggerTrustedSourceFetch(Long id) {
+        TrustedSource source = trustedSourceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Trusted source not found with ID: " + id));
+        return newsFetchScheduler.fetchSource(source);
     }
 
-    private void applyRequest(News news, NewsRequest request) {
-        news.setSummary(normalizeRequired(request.getSummary(), "summary"));
-        news.setSourceName(normalizeOptional(request.getSourceName()));
-        news.setImageUrl(normalizeOptionalUrl(request.getImageUrl()));
-        news.setCategory(request.getCategory());
-        news.setNewsType(request.getNewsType());
-        news.setLanguage(normalizeLanguage(request.getLanguage()));
-        news.setIsImportant(Boolean.TRUE.equals(request.getIsImportant()));
-        if (news.getStatus() == null) {
-            news.setStatus(NewsStatus.ACTIVE);
-        }
-    }
-
-    private void applyTrustedSourceRequest(TrustedSource source, TrustedSourceRequest request) {
-        String sourceUrl = normalizeUrl(request.getSourceUrl());
-        source.setName(normalizeRequired(request.getName(), "name"));
-        source.setSourceUrl(sourceUrl);
-        source.setDomain(resolveDomain(request.getDomain(), sourceUrl));
-        source.setCategoryScope(normalizeCategoryScope(request.getCategoryScope()));
-        source.setIsActive(request.getIsActive() == null || request.getIsActive());
-    }
-
-    private Specification<News> buildNewsSpecification(
+    private Specification<News> buildSpecification(
             NewsStatus status,
             NewsCategory category,
             NewsType newsType,
@@ -249,44 +237,47 @@ public class NewsServiceImpl implements NewsService {
             String keyword
     ) {
         return (root, query, cb) -> {
-            Specification<News> specification = Specification.where((r, q, c) -> c.equal(r.get("status"), status));
+            List<Predicate> predicates = new ArrayList<>();
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
             if (category != null) {
-                specification = specification.and((r, q, c) -> c.equal(r.get("category"), category));
+                predicates.add(cb.equal(root.get("category"), category));
             }
             if (newsType != null) {
-                specification = specification.and((r, q, c) -> c.equal(r.get("newsType"), newsType));
+                predicates.add(cb.equal(root.get("newsType"), newsType));
             }
-            String normalizedLanguage = normalizeOptional(language);
-            if (normalizedLanguage != null) {
-                specification = specification.and((r, q, c) -> c.equal(c.lower(r.get("language")), normalizedLanguage.toLowerCase(Locale.ROOT)));
+            if (language != null && !language.isBlank()) {
+                predicates.add(cb.equal(cb.lower(root.get("language")), language.trim().toLowerCase(Locale.ROOT)));
             }
             if (Boolean.TRUE.equals(isImportant)) {
-                specification = specification.and((r, q, c) -> c.isTrue(r.get("isImportant")));
+                predicates.add(cb.isTrue(root.get("isImportant")));
             }
-            String normalizedKeyword = normalizeOptional(keyword);
-            if (normalizedKeyword != null) {
-                String likeValue = "%" + normalizedKeyword.toLowerCase(Locale.ROOT) + "%";
-                specification = specification.and((r, q, c) -> c.or(
-                        c.like(c.lower(r.get("title")), likeValue),
-                        c.like(c.lower(r.get("summary")), likeValue),
-                        c.like(c.lower(c.coalesce(r.get("sourceName").as(String.class), "")), likeValue)
+            if (keyword != null && !keyword.isBlank()) {
+                String likeValue = "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("title")), likeValue),
+                        cb.like(cb.lower(root.get("summary")), likeValue),
+                        cb.like(cb.lower(cb.coalesce(root.get("sourceName"), "")), likeValue)
                 ));
             }
-            return specification.toPredicate(root, query, cb);
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 
-    private Specification<News> buildIdSpecification(Long id, NewsStatus status) {
-        return (root, query, cb) -> cb.and(
-                cb.equal(root.get("id"), id),
-                cb.equal(root.get("status"), status)
-        );
+    private Set<Long> loadSavedIds(Long currentUserId, List<Long> newsIds) {
+        if (currentUserId == null || newsIds.isEmpty()) {
+            return java.util.Collections.emptySet();
+        }
+        Set<Long> savedIds = new HashSet<>();
+        savedNewsRepository.findByUserIdAndNews_IdIn(currentUserId, newsIds)
+                .forEach(saved -> savedIds.add(saved.getNews().getId()));
+        return savedIds;
     }
 
-    private Pageable buildPageable(int page, int size, String sortBy) {
-        int safePage = Math.max(page, 0);
-        int safeSize = size <= 0 ? 10 : Math.min(size, 50);
-        return PageRequest.of(safePage, safeSize, resolveSort(sortBy));
+    private News requireNews(Long id) {
+        return newsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("News not found with ID: " + id));
     }
 
     private Sort resolveSort(String sortBy) {
@@ -296,44 +287,92 @@ public class NewsServiceImpl implements NewsService {
         return Sort.by(Sort.Direction.DESC, "createdAt");
     }
 
-    private boolean isSaved(Long userId, Long newsId) {
-        return userId != null && savedNewsRepository.existsByUserIdAndNews_Id(userId, newsId);
+    private void applyTrustedSource(TrustedSource source, TrustedSourceRequest request) {
+        String sourceUrl = normalizeRequired(request.getSourceUrl(), "sourceUrl");
+        source.setName(normalizeRequired(request.getName(), "name"));
+        source.setSourceUrl(sourceUrl);
+        source.setDomain(resolveDomain(request.getDomain(), sourceUrl));
+        source.setCategoryScope(normalizeCategoryScope(request.getCategoryScope()));
+        source.setSourceType(normalizeSourceType(request.getSourceType()));
+        source.setFetchKeyword(normalizeOptional(request.getFetchKeyword()));
+        source.setIsActive(request.getIsActive() == null || request.getIsActive());
     }
 
-    private NewsResponse toResponse(News news, boolean isSaved) {
-        NewsResponse response = new NewsResponse();
-        response.setId(news.getId());
-        response.setTitle(news.getTitle());
-        response.setSummary(news.getSummary());
-        response.setSourceName(news.getSourceName());
-        response.setSourceUrl(news.getSourceUrl());
-        response.setImageUrl(news.getImageUrl());
-        response.setCategory(news.getCategory());
-        response.setNewsType(news.getNewsType());
-        response.setLanguage(news.getLanguage());
-        response.setIsImportant(news.getIsImportant());
-        response.setUploadedBy(news.getUploadedBy());
-        response.setStatus(news.getStatus());
-        response.setCreatedAt(news.getCreatedAt());
-        response.setUpdatedAt(news.getUpdatedAt());
-        response.setIsSaved(isSaved);
-        return response;
-    }
-
-    private String normalizeUploadedBy(String uploadedBy) {
-        String normalized = normalizeOptional(uploadedBy);
-        if (normalized == null) {
-            return "SYSTEM";
+    private void notifyImportantNews(News news) {
+        if (!Boolean.TRUE.equals(news.getIsImportant())) {
+            return;
         }
-        return normalized.toUpperCase(Locale.ROOT);
+        if (!(news.getCategory() == NewsCategory.LAW
+                || news.getCategory() == NewsCategory.SUBSIDY
+                || news.getCategory() == NewsCategory.LOAN
+                || news.getCategory() == NewsCategory.WEATHER)) {
+            return;
+        }
+
+        String body = buildImportantNotificationBody(news);
+        for (Farmer farmer : farmerRepo.findAll()) {
+            notificationService.createNotification(
+                    farmer.getFarmerId(),
+                    news.getTitle(),
+                    body,
+                    NotificationType.NEWS_IMPORTANT,
+                    String.valueOf(news.getId()),
+                    "NEWS"
+            );
+        }
     }
 
-    private String normalizeLanguage(String language) {
-        String normalized = normalizeOptional(language);
-        if (normalized == null) {
-            return "en";
+    private String buildImportantNotificationBody(News news) {
+        String summary = news.getSummary() == null ? "" : news.getSummary().trim();
+        if (summary.length() > 180) {
+            summary = summary.substring(0, 177) + "...";
         }
-        return normalized.toLowerCase(Locale.ROOT);
+        return news.getCategory().name() + ": " + summary;
+    }
+
+    private String normalizeUploadedBy(String value) {
+        String normalized = normalizeOptional(value);
+        return normalized == null ? "SYSTEM" : normalized.toUpperCase(Locale.ROOT);
+    }
+
+    private String normalizeCategoryScope(String value) {
+        String normalized = normalizeOptional(value);
+        if (normalized == null) {
+            return null;
+        }
+        List<String> values = java.util.Arrays.stream(normalized.split(","))
+                .map(String::trim)
+                .filter(token -> !token.isEmpty())
+                .map(token -> token.toUpperCase(Locale.ROOT))
+                .peek(NewsCategory::valueOf)
+                .distinct()
+                .toList();
+        return values.isEmpty() ? null : String.join(",", values);
+    }
+
+    private String normalizeSourceType(String value) {
+        String normalized = normalizeRequired(value, "sourceType").toUpperCase(Locale.ROOT);
+        if (!normalized.equals("RSS") && !normalized.equals("GNEWS_TOPIC") && !normalized.equals("GNEWS_KEYWORD")) {
+            throw new IllegalArgumentException("sourceType must be RSS, GNEWS_TOPIC, or GNEWS_KEYWORD");
+        }
+        return normalized;
+    }
+
+    private String resolveDomain(String domain, String sourceUrl) {
+        String normalized = normalizeOptional(domain);
+        if (normalized != null) {
+            return normalized.toLowerCase(Locale.ROOT);
+        }
+        try {
+            URI uri = URI.create(sourceUrl);
+            String host = uri.getHost();
+            if (host == null) {
+                return null;
+            }
+            return host.startsWith("www.") ? host.substring(4).toLowerCase(Locale.ROOT) : host.toLowerCase(Locale.ROOT);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     private String normalizeRequired(String value, String field) {
@@ -350,45 +389,5 @@ public class NewsServiceImpl implements NewsService {
         }
         String normalized = value.trim();
         return normalized.isEmpty() ? null : normalized;
-    }
-
-    private String normalizeUrl(String url) {
-        return normalizeRequired(url, "sourceUrl");
-    }
-
-    private String normalizeOptionalUrl(String url) {
-        return normalizeOptional(url);
-    }
-
-    private String resolveDomain(String domain, String sourceUrl) {
-        String normalizedDomain = normalizeOptional(domain);
-        if (normalizedDomain != null) {
-            return normalizedDomain.toLowerCase(Locale.ROOT);
-        }
-        try {
-            URI uri = new URI(sourceUrl);
-            String host = uri.getHost();
-            if (host == null) {
-                return null;
-            }
-            return host.startsWith("www.") ? host.substring(4).toLowerCase(Locale.ROOT) : host.toLowerCase(Locale.ROOT);
-        } catch (URISyntaxException ex) {
-            return null;
-        }
-    }
-
-    private String normalizeCategoryScope(String categoryScope) {
-        String normalized = normalizeOptional(categoryScope);
-        if (normalized == null) {
-            return null;
-        }
-        List<String> values = Arrays.stream(normalized.split(","))
-                .map(String::trim)
-                .filter(value -> !value.isEmpty())
-                .map(value -> value.toUpperCase(Locale.ROOT))
-                .peek(value -> NewsCategory.valueOf(value))
-                .distinct()
-                .collect(Collectors.toList());
-        return values.isEmpty() ? null : String.join(",", values);
     }
 }

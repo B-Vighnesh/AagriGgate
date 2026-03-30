@@ -1,7 +1,8 @@
 spring:
-  mail:
-    username: ${EMAIL_USERNAME}
-    password: ${EMAIL_PASSWORD}
+  application:
+    name: aagrigate
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   jpa:
     properties:
       hibernate:
@@ -13,18 +14,28 @@ spring:
     baseline-version: 0
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:YWFncmlnZ2F0ZS1sZXZlbC0xLW5ld3Mtc2VjcmV0LWtleS0yMDI2LTAzLTMwLWFhZ3JpZ2dhdGU=}
 
 weather:
   api:
-    url: ${WEATHER_API_URL}
-    key: ${WEATHER_API_KEY}
+    url: ${WEATHER_API_URL:https://api.weatherapi.com/v1/current.json}
+    key: ${WEATHER_API_KEY:demo-weather-key}
 
 market:
   api:
-    url: ${MARKET_API_URL}
-    key: ${MARKET_API_KEY}
+    url: ${MARKET_API_URL:https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24}
+    key: ${MARKET_API_KEY:demo-market-key}
+
+news:
+  api:
+    key: ${NEWS_API_KEY:demo-news-key}
+    gnews-url: https://gnews.io/api/v4
+    rss-timeout-seconds: 10
+    max-items-per-source: 10
 
 admin:
-  username: ${ADMIN_USERNAME}
-  password: ${ADMIN_PASSWORD}
+  username: ${ADMIN_USERNAME:admin}
+  password: ${ADMIN_PASSWORD:admin123}
+
+server:
+  port: 8080

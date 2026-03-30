@@ -1,17 +1,17 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/app}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/aagrigate}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
-    hibernate:
-      ddl-auto: update
 
   security:
     user:
@@ -19,7 +19,7 @@ spring:
       password: ${APP_SECURITY_PASSWORD:v123}
 
   flyway:
-    locations: classpath:db/migration/mysql
+    enabled: false
 
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
@@ -33,25 +33,7 @@ spring:
           starttls:
             enable: true
 
-jwt:
-  # your project currently generates dynamic secret,
-  # but this is proper fixed fallback
-  secret: ${JWT_SECRET:YWFncmlnZ2F0ZS1zZWN1cmUtand0LXNlY3JldC1rZXktMjAyNi1mZWItMjM=}
-
-weather:
-  api:
-    url: ${WEATHER_API_URL:https://api.weatherapi.com/v1/current.json}
-    key: ${WEATHER_API_KEY:75f97057caa641fa99c73509242910}
-
-market:
-  api:
-    url: ${MARKET_API_URL:https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24}
-    key: ${MARKET_API_KEY:579b464db66ec23bdd000001602edb9ef1a64cd961329419d730f705}   # your project currently does not use API key
-
-location:
-  api:
-    url: ${LOCATION_API_URL:https://api.opencagedata.com/geocode/v1/json}
-    key: ${LOCATION_KEY:4138beff07ea4a259f0c2ff71ba19378}
-admin:
-  username: ${ADMIN_USERNAME:admin}
-  password: ${ADMIN_PASSWORD:admin123}
+logging:
+  level:
+    org.springframework: DEBUG
+    com.MyWebpage: DEBUG

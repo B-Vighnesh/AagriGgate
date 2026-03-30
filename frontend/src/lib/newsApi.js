@@ -1,4 +1,4 @@
-import { apiFetch, requestJson } from './api';
+import { requestJson } from './api';
 
 const unwrap = async (promise) => {
   const response = await promise;
@@ -21,6 +21,12 @@ export const getNews = (params = {}) => {
 export const getNewsById = (id) =>
   unwrap(requestJson(`/news/${id}`, { method: 'GET' }));
 
+export const reportNews = (newsId, reason) =>
+  unwrap(requestJson(`/news/${newsId}/report`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  }));
+
 export const getSavedNews = (params = {}) => {
   const searchParams = new URLSearchParams();
   if (params.category) searchParams.set('category', params.category);
@@ -37,14 +43,13 @@ export const unsaveNews = (newsId) =>
   unwrap(requestJson(`/news/saved/${newsId}`, { method: 'DELETE' }));
 
 export const checkSaved = async (newsId) => {
-  const data = await unwrap(requestJson(`/news/saved/${newsId}/status`, { method: 'GET' }));
-  return Boolean(data?.saved);
+  const data = await unwrap(requestJson(`/news/saved/${newsId}/check`, { method: 'GET' }));
+  return Boolean(data);
 };
 
-export const trackNewsView = async (newsId) => {
-  try {
-    await apiFetch(`/news/${newsId}/view`, { method: 'POST' });
-  } catch {
-    // analytics tracking is best-effort only
-  }
-};
+export const getImportantNews = (params = {}) => getNews({
+  isImportant: true,
+  page: params.page ?? 0,
+  size: params.size ?? 5,
+  sortBy: params.sortBy ?? 'createdAt',
+});

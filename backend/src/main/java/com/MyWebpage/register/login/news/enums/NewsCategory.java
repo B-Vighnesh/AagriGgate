@@ -7,6 +7,5 @@ public enum NewsCategory {
     WEATHER,
     MARKET,
     FARMING_TIP,
-    ALERT,
     OTHER
 }

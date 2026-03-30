@@ -1,23 +1,23 @@
 package com.MyWebpage.register.login.news.service;
 
+import com.MyWebpage.register.login.exception.AlreadySavedException;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
-import com.MyWebpage.register.login.news.dto.NewsResponse;
-import com.MyWebpage.register.login.news.dto.SavedNewsResponse;
+import com.MyWebpage.register.login.news.dto.response.SavedNewsResponse;
 import com.MyWebpage.register.login.news.entity.News;
 import com.MyWebpage.register.login.news.entity.SavedNews;
 import com.MyWebpage.register.login.news.enums.NewsCategory;
 import com.MyWebpage.register.login.news.enums.NewsStatus;
+import com.MyWebpage.register.login.news.mapper.SavedNewsMapper;
 import com.MyWebpage.register.login.news.repository.NewsRepository;
 import com.MyWebpage.register.login.news.repository.SavedNewsRepository;
-import jakarta.persistence.criteria.Join;
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -25,90 +25,82 @@ public class SavedNewsServiceImpl implements SavedNewsService {
 
     private final SavedNewsRepository savedNewsRepository;
     private final NewsRepository newsRepository;
+    private final SavedNewsMapper savedNewsMapper;
 
-    public SavedNewsServiceImpl(SavedNewsRepository savedNewsRepository, NewsRepository newsRepository) {
+    public SavedNewsServiceImpl(
+            SavedNewsRepository savedNewsRepository,
+            NewsRepository newsRepository,
+            SavedNewsMapper savedNewsMapper
+    ) {
         this.savedNewsRepository = savedNewsRepository;
         this.newsRepository = newsRepository;
+        this.savedNewsMapper = savedNewsMapper;
     }
 
     @Override
     @Transactional
-    public void saveNews(Long userId, Long newsId) {
-        if (savedNewsRepository.existsByUserIdAndNews_Id(userId, newsId)) {
-            return;
-        }
-        News news = newsRepository.findById(newsId)
+    public SavedNewsResponse saveNews(Long userId, Long newsId) {
+        News news = newsRepository.findByIdAndStatus(newsId, NewsStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("News not found with ID: " + newsId));
-        if (news.getStatus() != NewsStatus.ACTIVE) {
-            throw new IllegalArgumentException("Only active news can be saved");
+
+        if (savedNewsRepository.existsByUserIdAndNews_Id(userId, newsId)) {
+            throw new AlreadySavedException("News is already saved");
         }
+
         SavedNews savedNews = new SavedNews();
         savedNews.setUserId(userId);
         savedNews.setNews(news);
-        savedNewsRepository.save(savedNews);
+        return savedNewsMapper.toResponse(savedNewsRepository.save(savedNews));
     }
 
     @Override
     @Transactional
     public void unsaveNews(Long userId, Long newsId) {
-        savedNewsRepository.deleteByUserIdAndNews_Id(userId, newsId);
+        SavedNews savedNews = savedNewsRepository.findByUserIdAndNews_Id(userId, newsId)
+                .orElseThrow(() -> new ResourceNotFoundException("Saved news not found for news ID: " + newsId));
+        savedNewsRepository.delete(savedNews);
     }
 
     @Override
-    @Transactional(Transactional.TxType.SUPPORTS)
+    @Transactional(readOnly = true)
     public Page<SavedNewsResponse> getSavedNews(Long userId, NewsCategory category, String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(Math.max(page, 0), size <= 0 ? 10 : Math.min(size, 50), Sort.by(Sort.Direction.DESC, "createdAt"));
-        Specification<SavedNews> specification = (root, query, cb) -> {
-            Join<SavedNews, News> newsJoin = root.join("news");
-            Specification<SavedNews> spec = Specification.<SavedNews>where((r, q, c) -> c.equal(r.get("userId"), userId))
-                    .and((r, q, c) -> c.equal(newsJoin.get("status"), NewsStatus.ACTIVE));
-            if (category != null) {
-                spec = spec.and((r, q, c) -> c.equal(newsJoin.get("category"), category));
-            }
-            if (keyword != null && !keyword.isBlank()) {
-                String likeValue = "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
-                spec = spec.and((r, q, c) -> c.or(
-                        c.like(c.lower(newsJoin.get("title")), likeValue),
-                        c.like(c.lower(newsJoin.get("summary")), likeValue),
-                        c.like(c.lower(c.coalesce(newsJoin.get("sourceName").as(String.class), "")), likeValue)
-                ));
-            }
-            return spec.toPredicate(root, query, cb);
-        };
+        List<SavedNews> savedItems = savedNewsRepository.findAllByUserIdOrderByCreatedAtDesc(userId).stream()
+                .filter(item -> item.getNews() != null && item.getNews().getStatus() == NewsStatus.ACTIVE)
+                .filter(item -> category == null || item.getNews().getCategory() == category)
+                .filter(item -> matchesKeyword(item, keyword))
+                .toList();
 
-        return savedNewsRepository.findAll(specification, pageable)
-                .map(this::toResponse);
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 50);
+        int fromIndex = Math.min(safePage * safeSize, savedItems.size());
+        int toIndex = Math.min(fromIndex + safeSize, savedItems.size());
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+
+        List<SavedNewsResponse> content = savedItems.subList(fromIndex, toIndex).stream()
+                .map(savedNewsMapper::toResponse)
+                .toList();
+
+        return new PageImpl<>(content, pageable, savedItems.size());
     }
 
     @Override
-    @Transactional(Transactional.TxType.SUPPORTS)
+    @Transactional(readOnly = true)
     public boolean isSaved(Long userId, Long newsId) {
         return savedNewsRepository.existsByUserIdAndNews_Id(userId, newsId);
     }
 
-    private SavedNewsResponse toResponse(SavedNews savedNews) {
+    private boolean matchesKeyword(SavedNews savedNews, String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return true;
+        }
+        String normalized = keyword.trim().toLowerCase(Locale.ROOT);
         News news = savedNews.getNews();
-        NewsResponse newsResponse = new NewsResponse();
-        newsResponse.setId(news.getId());
-        newsResponse.setTitle(news.getTitle());
-        newsResponse.setSummary(news.getSummary());
-        newsResponse.setSourceName(news.getSourceName());
-        newsResponse.setSourceUrl(news.getSourceUrl());
-        newsResponse.setImageUrl(news.getImageUrl());
-        newsResponse.setCategory(news.getCategory());
-        newsResponse.setNewsType(news.getNewsType());
-        newsResponse.setLanguage(news.getLanguage());
-        newsResponse.setIsImportant(news.getIsImportant());
-        newsResponse.setUploadedBy(news.getUploadedBy());
-        newsResponse.setStatus(news.getStatus());
-        newsResponse.setCreatedAt(news.getCreatedAt());
-        newsResponse.setUpdatedAt(news.getUpdatedAt());
-        newsResponse.setIsSaved(true);
+        return contains(news.getTitle(), normalized)
+                || contains(news.getSummary(), normalized)
+                || contains(news.getSourceName(), normalized);
+    }
 
-        SavedNewsResponse response = new SavedNewsResponse();
-        response.setId(savedNews.getId());
-        response.setNews(newsResponse);
-        response.setSavedAt(savedNews.getCreatedAt());
-        return response;
+    private boolean contains(String value, String keyword) {
+        return value != null && value.toLowerCase(Locale.ROOT).contains(keyword);
     }
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import '../assets/NewsCard.css';
 import Button from './common/Button';
@@ -11,14 +11,15 @@ const CATEGORY_LABELS = {
   WEATHER: 'Weather',
   MARKET: 'Market',
   FARMING_TIP: 'Farming Tip',
-  ALERT: 'Alert',
   OTHER: 'Other',
 };
+
+const REPORT_OPTIONS = ['Fake News', 'Wrong Category', 'Outdated', 'Other'];
 
 function formatDate(value) {
   if (!value) return 'Unknown date';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Unknown date';
+  if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat('en-GB', {
     day: '2-digit',
     month: 'short',
@@ -31,23 +32,19 @@ export default function NewsCard({
   isSaved = false,
   onSave,
   onUnsave,
-  onOpen,
+  onReport,
   showSaveButton = true,
 }) {
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState(REPORT_OPTIONS[0]);
+  const [reporting, setReporting] = useState(false);
+
   const category = news?.category || 'OTHER';
   const type = news?.newsType || 'EXTERNAL';
 
   const handleOpen = () => {
-    if (onOpen) onOpen(news);
     if (news?.sourceUrl) {
       window.open(news.sourceUrl, '_blank', 'noopener,noreferrer');
-    }
-  };
-
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handleOpen();
     }
   };
 
@@ -60,14 +57,33 @@ export default function NewsCard({
     onSave?.(news);
   };
 
+  const handleReportSubmit = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!onReport) return;
+    setReporting(true);
+    try {
+      await onReport(news, reportReason);
+      setReportOpen(false);
+    } catch {
+      // Page-level toast handles the visible error state.
+    } finally {
+      setReporting(false);
+    }
+  };
+
   return (
     <Card
       className={`news-card news-card--${category.toLowerCase()}`}
+      onClick={handleOpen}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleOpen();
+        }
+      }}
       role="button"
       tabIndex={0}
-      onClick={handleOpen}
-      onKeyDown={handleKeyDown}
-      aria-label={`Open article: ${news?.title || 'news item'}`}
     >
       {news?.imageUrl ? (
         <img src={news.imageUrl} alt={news.title} className="news-card__image" />
@@ -101,13 +117,55 @@ export default function NewsCard({
               size="sm"
               className="news-card__save"
               onClick={handleSaveClick}
-              aria-label={isSaved ? 'Unsave news item' : 'Save news item'}
             >
               <i className={`${isSaved ? 'fa-solid' : 'fa-regular'} fa-bookmark`} aria-hidden="true" />
               <span>{isSaved ? 'Saved' : 'Save'}</span>
             </Button>
           ) : null}
         </div>
+
+        <div className="news-card__report">
+          <button
+            type="button"
+            className="news-card__report-link"
+            onClick={(event) => {
+              event.stopPropagation();
+              setReportOpen((prev) => !prev);
+            }}
+          >
+            Report
+          </button>
+        </div>
+
+        {reportOpen ? (
+          <form
+            className="news-card__report-form"
+            onSubmit={handleReportSubmit}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <label htmlFor={`report-${news?.id}`}>Reason</label>
+            <select
+              id={`report-${news?.id}`}
+              value={reportReason}
+              onChange={(event) => setReportReason(event.target.value)}
+            >
+              {REPORT_OPTIONS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+            <div className="news-card__report-actions">
+              <Button type="submit" size="sm" loading={reporting}>Submit</Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setReportOpen(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        ) : null}
       </div>
     </Card>
   );
