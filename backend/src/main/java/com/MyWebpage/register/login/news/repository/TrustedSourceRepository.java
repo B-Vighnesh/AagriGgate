@@ -8,4 +8,6 @@ import java.util.List;
 public interface TrustedSourceRepository extends JpaRepository<TrustedSource, Long> {
 
     List<TrustedSource> findByIsActiveTrue();
+
+    boolean existsByName(String name);
 }
