@@ -1,34 +1,34 @@
-package com.MyWebpage.register.login.news.dto;
+package com.MyWebpage.register.login.news.dto.request;
 
 import com.MyWebpage.register.login.news.enums.NewsCategory;
 import com.MyWebpage.register.login.news.enums.NewsType;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.hibernate.validator.constraints.URL;
+
+import java.net.URI;
 
 public class NewsRequest {
-
-    private static final String URL_REGEX = "^(https?://).+";
 
     @NotBlank
     @Size(max = 255)
     private String title;
 
     @NotBlank
-    @Size(max = 1000)
+    @Size(max = 2000)
     private String summary;
 
-    @Size(max = 255)
+    @Size(max = 200)
     private String sourceName;
 
     @NotBlank
     @Size(max = 1000)
-    @Pattern(regexp = URL_REGEX, message = "must be a valid URL")
+    @URL
     private String sourceUrl;
 
     @Size(max = 1000)
-    @Pattern(regexp = "(^$)|(^(https?://).+)", message = "must be a valid URL")
     private String imageUrl;
 
     @NotNull
@@ -38,9 +38,9 @@ public class NewsRequest {
     private NewsType newsType;
 
     @Size(max = 10)
-    private String language = "en";
+    private String language;
 
-    private Boolean isImportant = false;
+    private Boolean isImportant;
 
     public String getTitle() {
         return title;
@@ -112,5 +112,18 @@ public class NewsRequest {
 
     public void setIsImportant(Boolean important) {
         isImportant = important;
+    }
+
+    @AssertTrue(message = "imageUrl must be a valid URL")
+    public boolean isImageUrlValid() {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return true;
+        }
+        try {
+            URI uri = URI.create(imageUrl.trim());
+            return uri.getScheme() != null && uri.getHost() != null;
+        } catch (Exception ex) {
+            return false;
+        }
     }
 }

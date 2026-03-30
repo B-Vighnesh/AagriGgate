@@ -3,11 +3,13 @@ package com.MyWebpage.register.login.admin;
 import com.MyWebpage.register.login.common.ApiResponse;
 import com.MyWebpage.register.login.enquiry.Enquiry;
 import com.MyWebpage.register.login.enquiry.EnquiryRequestDTO;
-import com.MyWebpage.register.login.news.dto.NewsRequest;
-import com.MyWebpage.register.login.news.dto.NewsResponse;
-import com.MyWebpage.register.login.news.dto.TrustedSourceRequest;
+import com.MyWebpage.register.login.news.dto.request.NewsRequest;
+import com.MyWebpage.register.login.news.dto.request.TrustedSourceRequest;
+import com.MyWebpage.register.login.news.dto.response.NewsResponse;
 import com.MyWebpage.register.login.news.entity.TrustedSource;
+import com.MyWebpage.register.login.news.enums.NewsCategory;
 import com.MyWebpage.register.login.news.enums.NewsStatus;
+import com.MyWebpage.register.login.news.enums.NewsType;
 import com.MyWebpage.register.login.news.service.NewsService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -118,6 +121,8 @@ public class AdminController {
             @RequestParam String username,
             @RequestParam String password,
             @RequestParam(required = false) NewsStatus status,
+            @RequestParam(required = false) NewsCategory category,
+            @RequestParam(required = false) NewsType newsType,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -126,11 +131,11 @@ public class AdminController {
         if (!isAdminAuthorized(username, password)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
         }
-        return ResponseEntity.ok(ApiResponse.success("Admin news fetched", newsService.getAdminNews(status, keyword, page, size, sortBy)));
+        return ResponseEntity.ok(ApiResponse.success("Admin news fetched", newsService.getAdminNews(status, category, newsType, keyword, page, size, sortBy)));
     }
 
-    @PostMapping("/news/{id}/archive")
-    public ResponseEntity<ApiResponse<NewsResponse>> archiveNews(
+    @PatchMapping("/news/{id}/archive")
+    public ResponseEntity<ApiResponse<String>> archiveNews(
             @PathVariable Long id,
             @RequestParam String username,
             @RequestParam String password
@@ -138,7 +143,20 @@ public class AdminController {
         if (!isAdminAuthorized(username, password)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
         }
-        return ResponseEntity.ok(ApiResponse.success("News archived", newsService.archiveNews(id)));
+        newsService.archiveNews(id);
+        return ResponseEntity.ok(ApiResponse.success("News archived", "OK"));
+    }
+
+    @PatchMapping("/news/{id}/restore")
+    public ResponseEntity<ApiResponse<NewsResponse>> restoreNews(
+            @PathVariable Long id,
+            @RequestParam String username,
+            @RequestParam String password
+    ) {
+        if (!isAdminAuthorized(username, password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
+        }
+        return ResponseEntity.ok(ApiResponse.success("News restored", newsService.restoreNews(id)));
     }
 
     @PostMapping("/sources")
@@ -188,6 +206,19 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
         }
         return ResponseEntity.ok(ApiResponse.success("Trusted source deactivated", newsService.deactivateTrustedSource(id)));
+    }
+
+    @PostMapping("/sources/{id}/trigger-fetch")
+    public ResponseEntity<ApiResponse<String>> triggerFetch(
+            @PathVariable Long id,
+            @RequestParam String username,
+            @RequestParam String password
+    ) {
+        if (!isAdminAuthorized(username, password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials", null));
+        }
+        int savedCount = newsService.triggerTrustedSourceFetch(id);
+        return ResponseEntity.ok(ApiResponse.success("Trusted source fetch triggered", "Saved " + savedCount + " new items"));
     }
 
     private boolean isAdminAuthorized(String username, String password) {

@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "news",
         uniqueConstraints = {
+                @UniqueConstraint(name = "uk_news_title", columnNames = "title"),
                 @UniqueConstraint(name = "uk_news_source_url_hash", columnNames = "source_url_hash")
         },
         indexes = {
@@ -47,10 +48,10 @@ public class News {
     @Column(nullable = false, length = 255)
     private String title;
 
-    @Column(nullable = false, length = 1000)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String summary;
 
-    @Column(name = "source_name", length = 255)
+    @Column(name = "source_name", length = 200)
     private String sourceName;
 
     @Column(name = "source_url", nullable = false, length = 1000)
@@ -70,6 +71,10 @@ public class News {
     @Column(name = "news_type", nullable = false, length = 50)
     private NewsType newsType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private NewsStatus status = NewsStatus.ACTIVE;
+
     @Column(nullable = false, length = 10)
     private String language = "en";
 
@@ -79,9 +84,11 @@ public class News {
     @Column(name = "uploaded_by", nullable = false, length = 20)
     private String uploadedBy = "SYSTEM";
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private NewsStatus status = NewsStatus.ACTIVE;
+    @Column(name = "report_reason", length = 500)
+    private String reportReason;
+
+    @Column(name = "report_count", nullable = false)
+    private Integer reportCount = 0;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -163,6 +170,14 @@ public class News {
         this.newsType = newsType;
     }
 
+    public NewsStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(NewsStatus status) {
+        this.status = status;
+    }
+
     public String getLanguage() {
         return language;
     }
@@ -187,12 +202,20 @@ public class News {
         this.uploadedBy = uploadedBy;
     }
 
-    public NewsStatus getStatus() {
-        return status;
+    public String getReportReason() {
+        return reportReason;
     }
 
-    public void setStatus(NewsStatus status) {
-        this.status = status;
+    public void setReportReason(String reportReason) {
+        this.reportReason = reportReason;
+    }
+
+    public Integer getReportCount() {
+        return reportCount;
+    }
+
+    public void setReportCount(Integer reportCount) {
+        this.reportCount = reportCount;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -219,10 +242,10 @@ public class News {
         }
     }
 
-    private String sha256(String input) {
+    private String sha256(String value) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] bytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            byte[] bytes = digest.digest(value.getBytes(StandardCharsets.UTF_8));
             StringBuilder builder = new StringBuilder(bytes.length * 2);
             for (byte current : bytes) {
                 builder.append(String.format("%02x", current));

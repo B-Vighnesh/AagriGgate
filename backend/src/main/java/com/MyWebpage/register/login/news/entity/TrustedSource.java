@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "trusted_sources",
+        name = "trusted_source",
         indexes = {
-                @Index(name = "idx_trusted_sources_is_active", columnList = "is_active")
+                @Index(name = "idx_trusted_source_is_active", columnList = "is_active")
         }
 )
 public class TrustedSource {
@@ -36,6 +36,12 @@ public class TrustedSource {
 
     @Column(name = "category_scope", length = 255)
     private String categoryScope;
+
+    @Column(name = "source_type", nullable = false, length = 50)
+    private String sourceType;
+
+    @Column(name = "fetch_keyword", length = 255)
+    private String fetchKeyword;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
@@ -89,6 +95,22 @@ public class TrustedSource {
 
     public void setCategoryScope(String categoryScope) {
         this.categoryScope = categoryScope;
+    }
+
+    public String getSourceType() {
+        return sourceType;
+    }
+
+    public void setSourceType(String sourceType) {
+        this.sourceType = sourceType;
+    }
+
+    public String getFetchKeyword() {
+        return fetchKeyword;
+    }
+
+    public void setFetchKeyword(String fetchKeyword) {
+        this.fetchKeyword = fetchKeyword;
     }
 
     public Boolean getIsActive() {

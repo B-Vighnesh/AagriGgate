@@ -1,11 +1,12 @@
 package com.MyWebpage.register.login.news.service;
 
-import com.MyWebpage.register.login.news.dto.SavedNewsResponse;
+import com.MyWebpage.register.login.news.dto.response.SavedNewsResponse;
 import com.MyWebpage.register.login.news.enums.NewsCategory;
 import org.springframework.data.domain.Page;
 
 public interface SavedNewsService {
-    void saveNews(Long userId, Long newsId);
+
+    SavedNewsResponse saveNews(Long userId, Long newsId);
 
     void unsaveNews(Long userId, Long newsId);
 

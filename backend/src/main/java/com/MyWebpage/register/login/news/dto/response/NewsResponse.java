@@ -1,27 +1,23 @@
-package com.MyWebpage.register.login.news.dto;
-
-import com.MyWebpage.register.login.news.enums.NewsCategory;
-import com.MyWebpage.register.login.news.enums.NewsStatus;
-import com.MyWebpage.register.login.news.enums.NewsType;
-
-import java.time.LocalDateTime;
+package com.MyWebpage.register.login.news.dto.response;
 
 public class NewsResponse {
+
     private Long id;
     private String title;
     private String summary;
     private String sourceName;
     private String sourceUrl;
     private String imageUrl;
-    private NewsCategory category;
-    private NewsType newsType;
+    private String category;
+    private String newsType;
     private String language;
     private Boolean isImportant;
     private String uploadedBy;
-    private NewsStatus status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String status;
+    private Integer reportCount;
     private Boolean isSaved;
+    private String createdAt;
+    private String updatedAt;
 
     public Long getId() {
         return id;
@@ -71,19 +67,19 @@ public class NewsResponse {
         this.imageUrl = imageUrl;
     }
 
-    public NewsCategory getCategory() {
+    public String getCategory() {
         return category;
     }
 
-    public void setCategory(NewsCategory category) {
+    public void setCategory(String category) {
         this.category = category;
     }
 
-    public NewsType getNewsType() {
+    public String getNewsType() {
         return newsType;
     }
 
-    public void setNewsType(NewsType newsType) {
+    public void setNewsType(String newsType) {
         this.newsType = newsType;
     }
 
@@ -111,28 +107,20 @@ public class NewsResponse {
         this.uploadedBy = uploadedBy;
     }
 
-    public NewsStatus getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(NewsStatus status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public Integer getReportCount() {
+        return reportCount;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setReportCount(Integer reportCount) {
+        this.reportCount = reportCount;
     }
 
     public Boolean getIsSaved() {
@@ -141,5 +129,21 @@ public class NewsResponse {
 
     public void setIsSaved(Boolean saved) {
         isSaved = saved;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
