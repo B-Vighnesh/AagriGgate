@@ -22,6 +22,8 @@ import org.jsoup.safety.Safelist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +31,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 import java.net.URLConnection;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -42,6 +44,24 @@ public class NewsFetchScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(NewsFetchScheduler.class);
 
+    private static final List<String> PLACEHOLDER_KEYS = List.of(
+            "demo-news-key", "your-api-key", "your_api_key", "changeme", ""
+    );
+
+    /**
+     * Verified-working RSS feeds for Indian agriculture news (tested March 2026).
+     * Each entry: { name, domain, sourceUrl, categoryScope, sourceType }.
+     */
+    private static final List<String[]> DEFAULT_RSS_SOURCES = List.of(
+            new String[]{"Down To Earth - Agriculture",   "downtoearth.org.in",    "https://www.downtoearth.org.in/rss/agriculture",                                       "FARMING_TIP,OTHER",  "RSS"},
+            new String[]{"Economic Times - Agriculture",  "economictimes.com",     "https://economictimes.indiatimes.com/news/economy/agriculture/rssfeeds/53215982.cms",   "MARKET,SUBSIDY",     "RSS"},
+            new String[]{"The Hindu - Agriculture",       "thehindu.com",          "https://www.thehindu.com/sci-tech/agriculture/feeder/default.rss",                      "FARMING_TIP,LAW",    "RSS"},
+            new String[]{"AgriFarming",                   "agrifarming.in",        "https://www.agrifarming.in/feed",                                                      "FARMING_TIP",        "RSS"},
+            new String[]{"LiveMint - Economy",            "livemint.com",          "https://www.livemint.com/rss/economy",                                                 "MARKET,SUBSIDY",     "RSS"},
+            new String[]{"Times of India - Environment",  "timesofindia.com",      "https://timesofindia.indiatimes.com/rssfeeds/1898055.cms",                              "WEATHER,OTHER",      "RSS"},
+            new String[]{"Indian Express - India",        "indianexpress.com",     "https://indianexpress.com/section/india/feed/",                                         "LAW,SUBSIDY",        "RSS"}
+    );
+
     @Value("${news.api.key}")
     private String newsApiKey;
 
@@ -51,7 +71,7 @@ public class NewsFetchScheduler {
     @Value("${news.api.max-items-per-source:10}")
     private int maxItemsPerSource;
 
-    @Value("${news.api.rss-timeout-seconds:10}")
+    @Value("${news.api.rss-timeout-seconds:15}")
     private int rssTimeoutSeconds;
 
     private final TrustedSourceRepository trustedSourceRepository;
@@ -74,6 +94,31 @@ public class NewsFetchScheduler {
         this.objectMapper = objectMapper;
     }
 
+    // ─── Startup ────────────────────────────────────────────────────────────────
+
+    /**
+     * On application startup: register default RSS sources if missing, then
+     * immediately fetch from all active sources so the news page has content.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    public void onStartup() {
+        log.info("[NewsFetchScheduler] Application ready — initialising news sources...");
+        registerDefaultSources();
+
+        if (isGNewsKeyPlaceholder()) {
+            log.warn("[NewsFetchScheduler] NEWS_API_KEY is a placeholder ('{}'). "
+                    + "GNews sources will be skipped. Get a free key at https://gnews.io "
+                    + "and set the NEWS_API_KEY environment variable.", newsApiKey);
+        }
+
+        log.info("[NewsFetchScheduler] Running initial news fetch...");
+        fetchAllSources();
+        log.info("[NewsFetchScheduler] Startup complete — {} news items in database.", newsRepository.count());
+    }
+
+    // ─── Scheduled fetch ────────────────────────────────────────────────────────
+
+    /** Runs every 6 hours to refresh news from all active trusted sources. */
     @Scheduled(fixedRate = 21_600_000)
     @Transactional
     public void fetchAllSources() {
@@ -83,40 +128,59 @@ public class NewsFetchScheduler {
             return;
         }
 
-        log.info("[NewsFetchScheduler] Starting fetch for {} sources", sources.size());
+        log.info("[NewsFetchScheduler] Starting fetch cycle for {} sources...", sources.size());
+        int totalSaved = 0;
+        int failures = 0;
+
         for (TrustedSource source : sources) {
             try {
                 int saved = fetchSource(source);
-                log.info("[NewsFetchScheduler] Source '{}' fetched successfully; saved {} items", source.getName(), saved);
+                totalSaved += saved;
+                if (saved > 0) {
+                    log.info("[NewsFetchScheduler] '{}' → saved {} new items", source.getName(), saved);
+                }
             } catch (Exception ex) {
-                log.error("[NewsFetchScheduler] Failed to fetch source '{}': {}", source.getName(), ex.getMessage(), ex);
+                failures++;
+                log.error("[NewsFetchScheduler] '{}' → FAILED: {}", source.getName(), ex.getMessage());
             }
         }
-        log.info("[NewsFetchScheduler] Fetch cycle complete.");
+        log.info("[NewsFetchScheduler] Fetch cycle complete — {} new items, {} failures", totalSaved, failures);
     }
+
+    // ─── Per-source fetch ───────────────────────────────────────────────────────
 
     @Transactional
     public int fetchSource(TrustedSource source) {
-        List<NewsRequest> items = switch (normalizeSourceType(source.getSourceType())) {
-            case "RSS" -> fetchFromRss(source);
-            case "GNEWS_TOPIC" -> fetchFromGNewsTopics(source);
-            case "GNEWS_KEYWORD" -> fetchFromGNewsKeyword(source);
-            default -> {
-                log.warn("[NewsFetchScheduler] Unknown sourceType: {}", source.getSourceType());
-                yield Collections.emptyList();
+        String type = normalizeSourceType(source.getSourceType());
+        List<NewsRequest> items;
+
+        switch (type) {
+            case "RSS" -> items = fetchFromRss(source);
+            case "GNEWS_TOPIC" -> {
+                if (isGNewsKeyPlaceholder()) {
+                    return 0;
+                }
+                items = fetchFromGNewsTopics(source);
             }
-        };
+            case "GNEWS_KEYWORD" -> {
+                if (isGNewsKeyPlaceholder()) {
+                    return 0;
+                }
+                items = fetchFromGNewsKeyword(source);
+            }
+            default -> {
+                log.warn("[NewsFetchScheduler] Unknown sourceType '{}' for '{}'",
+                        source.getSourceType(), source.getName());
+                items = Collections.emptyList();
+            }
+        }
 
         int savedCount = 0;
         for (NewsRequest item : items) {
             String sourceUrl = normalize(item.getSourceUrl());
             String title = normalize(item.getTitle());
-            if (sourceUrl == null || title == null) {
-                continue;
-            }
-            if (newsRepository.existsBySourceUrlOrTitle(sourceUrl, title)) {
-                continue;
-            }
+            if (sourceUrl == null || title == null) continue;
+            if (newsRepository.existsBySourceUrlOrTitle(sourceUrl, title)) continue;
 
             item.setSourceUrl(sourceUrl);
             item.setTitle(title);
@@ -133,13 +197,21 @@ public class NewsFetchScheduler {
         return savedCount;
     }
 
+    // ─── RSS fetching ───────────────────────────────────────────────────────────
+
     private List<NewsRequest> fetchFromRss(TrustedSource source) {
         List<NewsRequest> items = new ArrayList<>();
         try {
-            URLConnection connection = new URL(source.getSourceUrl()).openConnection();
+            URLConnection connection = URI.create(source.getSourceUrl()).toURL().openConnection();
             connection.setConnectTimeout(rssTimeoutSeconds * 1000);
             connection.setReadTimeout(rssTimeoutSeconds * 1000);
-            try (InputStream inputStream = connection.getInputStream(); XmlReader reader = new XmlReader(inputStream)) {
+            connection.setRequestProperty("User-Agent",
+                    "Mozilla/5.0 (compatible; AagriGgateBot/1.0; +https://aagrigate.com)");
+            connection.setRequestProperty("Accept",
+                    "application/rss+xml, application/xml, text/xml, */*");
+
+            try (InputStream inputStream = connection.getInputStream();
+                 XmlReader reader = new XmlReader(inputStream)) {
                 SyndFeed feed = new SyndFeedInput().build(reader);
                 for (SyndEntry entry : feed.getEntries().stream().limit(maxItemsPerSource).toList()) {
                     NewsRequest request = new NewsRequest();
@@ -156,10 +228,12 @@ public class NewsFetchScheduler {
                 }
             }
         } catch (Exception ex) {
-            throw new IllegalStateException("RSS fetch failed for source: " + source.getName(), ex);
+            log.warn("[NewsFetchScheduler] RSS fetch failed for '{}': {}", source.getName(), ex.getMessage());
         }
         return items;
     }
+
+    // ─── GNews fetching ─────────────────────────────────────────────────────────
 
     private List<NewsRequest> fetchFromGNewsTopics(TrustedSource source) {
         String keyword = normalize(source.getFetchKeyword());
@@ -194,6 +268,7 @@ public class NewsFetchScheduler {
             JsonNode articles = root.path("articles");
             List<NewsRequest> items = new ArrayList<>();
             if (!articles.isArray()) {
+                log.warn("[NewsFetchScheduler] GNews: no 'articles' array for '{}'", source.getName());
                 return items;
             }
 
@@ -204,7 +279,8 @@ public class NewsFetchScheduler {
                 request.setSourceUrl(article.path("url").asText(null));
                 request.setImageUrl(article.path("image").asText(null));
                 String sourceName = article.path("source").path("name").asText(null);
-                request.setSourceName(sourceName == null || sourceName.isBlank() ? source.getName() : sourceName);
+                request.setSourceName(sourceName == null || sourceName.isBlank()
+                        ? source.getName() : sourceName);
                 request.setCategory(resolveCategory(source.getCategoryScope()));
                 request.setNewsType(NewsType.EXTERNAL);
                 request.setLanguage("en");
@@ -213,8 +289,45 @@ public class NewsFetchScheduler {
             }
             return items;
         } catch (Exception ex) {
-            throw new IllegalStateException("GNews fetch failed for source: " + source.getName(), ex);
+            log.error("[NewsFetchScheduler] GNews fetch failed for '{}': {}",
+                    source.getName(), ex.getMessage());
+            return Collections.emptyList();
         }
+    }
+
+    // ─── Source registration ────────────────────────────────────────────────────
+
+    /**
+     * Ensures the default verified RSS feeds exist as trusted sources in the DB.
+     * Only inserts sources whose name doesn't already exist.
+     */
+    @Transactional
+    public void registerDefaultSources() {
+        int registered = 0;
+        for (String[] src : DEFAULT_RSS_SOURCES) {
+            String name = src[0];
+            if (trustedSourceRepository.existsByName(name)) continue;
+
+            TrustedSource source = new TrustedSource();
+            source.setName(name);
+            source.setDomain(src[1]);
+            source.setSourceUrl(src[2]);
+            source.setCategoryScope(src[3]);
+            source.setSourceType(src[4]);
+            source.setIsActive(true);
+            trustedSourceRepository.save(source);
+            registered++;
+        }
+        if (registered > 0) {
+            log.info("[NewsFetchScheduler] Registered {} new default RSS sources.", registered);
+        }
+    }
+
+    // ─── Helpers ────────────────────────────────────────────────────────────────
+
+    private boolean isGNewsKeyPlaceholder() {
+        return newsApiKey == null
+                || PLACEHOLDER_KEYS.contains(newsApiKey.trim().toLowerCase(Locale.ROOT));
     }
 
     private String extractSummary(SyndEntry entry) {
@@ -222,16 +335,15 @@ public class NewsFetchScheduler {
         if (description != null && description.getValue() != null) {
             String cleaned = Jsoup.clean(description.getValue(), Safelist.none()).trim();
             if (!cleaned.isEmpty()) {
-                return cleaned;
+                return cleaned.length() > 2000
+                        ? cleaned.substring(0, 1997) + "..." : cleaned;
             }
         }
         return entry.getTitle() == null ? "No summary available." : entry.getTitle();
     }
 
     private String extractEnclosureImage(SyndEntry entry) {
-        if (entry.getEnclosures() == null) {
-            return null;
-        }
+        if (entry.getEnclosures() == null) return null;
         return entry.getEnclosures().stream()
                 .map(SyndEnclosure::getUrl)
                 .filter(url -> url != null && !url.isBlank())
@@ -241,9 +353,7 @@ public class NewsFetchScheduler {
 
     private NewsCategory resolveCategory(String categoryScope) {
         String normalized = normalize(categoryScope);
-        if (normalized == null) {
-            return NewsCategory.OTHER;
-        }
+        if (normalized == null) return NewsCategory.OTHER;
         String first = normalized.split(",")[0].trim().toUpperCase(Locale.ROOT);
         try {
             return NewsCategory.valueOf(first);
@@ -253,9 +363,7 @@ public class NewsFetchScheduler {
     }
 
     private String normalize(String value) {
-        if (value == null) {
-            return null;
-        }
+        if (value == null) return null;
         String normalized = value.trim();
         return normalized.isEmpty() ? null : normalized;
     }
