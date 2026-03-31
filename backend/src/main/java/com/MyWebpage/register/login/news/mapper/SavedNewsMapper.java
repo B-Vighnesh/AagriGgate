@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter;
 @Component
 public class SavedNewsMapper {
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private final NewsMapper newsMapper;
 

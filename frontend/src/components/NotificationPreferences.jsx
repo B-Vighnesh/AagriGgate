@@ -7,7 +7,7 @@ import { getPreferences, resetPreferences, setPreference } from '../lib/notifica
 
 const LABELS = {
   NEWS_IMPORTANT: {
-    title: 'Important News & Alerts',
+    title: 'Important News',
     description: 'Get a one-time ping when a major advisory or policy update is published.',
   },
   REQUEST_RECEIVED: {

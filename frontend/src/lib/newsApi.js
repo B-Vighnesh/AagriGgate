@@ -12,6 +12,7 @@ export const getNews = (params = {}) => {
   if (params.language) searchParams.set('language', params.language);
   if (params.isImportant) searchParams.set('isImportant', 'true');
   if (params.keyword?.trim()) searchParams.set('keyword', params.keyword.trim());
+  if (params.dateRange && params.dateRange !== 'ALL') searchParams.set('dateRange', params.dateRange);
   searchParams.set('page', String(params.page ?? 0));
   searchParams.set('size', String(params.size ?? 10));
   searchParams.set('sortBy', params.sortBy || 'newest');
@@ -21,16 +22,19 @@ export const getNews = (params = {}) => {
 export const getNewsById = (id) =>
   unwrap(requestJson(`/news/${id}`, { method: 'GET' }));
 
-export const reportNews = (newsId, reason) =>
-  unwrap(requestJson(`/news/${newsId}/report`, {
-    method: 'POST',
-    body: JSON.stringify({ reason }),
-  }));
+// LEVEL 2 — Report feature disabled for Level 1 release
+// Uncomment when content moderation workflow is implemented
+// export const reportNews = (newsId, reason) =>
+//   unwrap(requestJson(`/news/${newsId}/report`, {
+//     method: 'POST',
+//     body: JSON.stringify({ reason }),
+//   }));
 
 export const getSavedNews = (params = {}) => {
   const searchParams = new URLSearchParams();
   if (params.category) searchParams.set('category', params.category);
   if (params.keyword?.trim()) searchParams.set('keyword', params.keyword.trim());
+  if (params.dateRange && params.dateRange !== 'ALL') searchParams.set('dateRange', params.dateRange);
   searchParams.set('page', String(params.page ?? 0));
   searchParams.set('size', String(params.size ?? 10));
   return unwrap(requestJson(`/news/saved?${searchParams.toString()}`, { method: 'GET' }));

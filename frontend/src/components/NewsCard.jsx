@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import '@fortawesome/fontawesome-free/css/all.min.css';
 import '../assets/NewsCard.css';
-import Button from './common/Button';
-import Card from './common/Card';
+import { formatNewsDate } from '../lib/dateUtils';
 
 const CATEGORY_LABELS = {
   SUBSIDY: 'Subsidy',
@@ -14,17 +12,32 @@ const CATEGORY_LABELS = {
   OTHER: 'Other',
 };
 
-const REPORT_OPTIONS = ['Fake News', 'Wrong Category', 'Outdated', 'Other'];
+function getCategoryIcon(category) {
+  const icons = {
+    SUBSIDY: '🌾',
+    LOAN: '🏦',
+    LAW: '⚖️',
+    WEATHER: '🌦️',
+    MARKET: '📊',
+    FARMING_TIP: '🌱',
+    OTHER: '📰',
+  };
+  return icons[category] || '📰';
+}
 
-function formatDate(value) {
-  if (!value) return 'Unknown date';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(date);
+function BookmarkIcon({ filled }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="news-card-bookmark-icon">
+      <path
+        d="M7 4.75h10a1 1 0 0 1 1 1v14.09l-6-3.55-6 3.55V5.75a1 1 0 0 1 1-1Z"
+        fill={filled ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 export default function NewsCard({
@@ -32,15 +45,13 @@ export default function NewsCard({
   isSaved = false,
   onSave,
   onUnsave,
-  onReport,
   showSaveButton = true,
 }) {
-  const [reportOpen, setReportOpen] = useState(false);
-  const [reportReason, setReportReason] = useState(REPORT_OPTIONS[0]);
-  const [reporting, setReporting] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
 
   const category = news?.category || 'OTHER';
   const type = news?.newsType || 'EXTERNAL';
+  const categoryClass = category.toLowerCase();
 
   const handleOpen = () => {
     if (news?.sourceUrl) {
@@ -50,6 +61,7 @@ export default function NewsCard({
 
   const handleSaveClick = (event) => {
     event.stopPropagation();
+    event.preventDefault();
     if (isSaved) {
       onUnsave?.(news);
       return;
@@ -57,24 +69,9 @@ export default function NewsCard({
     onSave?.(news);
   };
 
-  const handleReportSubmit = async (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (!onReport) return;
-    setReporting(true);
-    try {
-      await onReport(news, reportReason);
-      setReportOpen(false);
-    } catch {
-      // Page-level toast handles the visible error state.
-    } finally {
-      setReporting(false);
-    }
-  };
-
   return (
-    <Card
-      className={`news-card news-card--${category.toLowerCase()}`}
+    <article
+      className={`news-card ${news?.isImportant ? 'is-important' : ''}`}
       onClick={handleOpen}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -85,88 +82,70 @@ export default function NewsCard({
       role="button"
       tabIndex={0}
     >
-      {news?.imageUrl ? (
-        <img src={news.imageUrl} alt={news.title} className="news-card__image" />
-      ) : (
-        <div className={`news-card__placeholder news-card__placeholder--${category.toLowerCase()}`}>
-          <span>{CATEGORY_LABELS[category] || 'News'}</span>
-        </div>
-      )}
+      <div className="news-card-image-wrap">
+        {news?.imageUrl && !imageFailed ? (
+          <img
+            src={news.imageUrl}
+            alt={news?.title || 'News'}
+            className="news-card-image"
+            loading="lazy"
+            onError={() => setImageFailed(true)}
+          />
+        ) : null}
+        {!news?.imageUrl || imageFailed ? (
+          <div className={`news-card-image-placeholder cat-${categoryClass}`}>
+            <span className="news-card-category-icon">{getCategoryIcon(category)}</span>
+          </div>
+        ) : null}
+      </div>
 
-      <div className="news-card__body">
-        <div className="news-card__badges">
-          <span className={`news-card__badge news-card__badge--${category.toLowerCase()}`}>
-            {CATEGORY_LABELS[category] || category}
+      <div className="news-card-body">
+        <div className="news-card-badge-row">
+          <span className={`news-card-badge news-card-badge-category badge-${categoryClass}`}>
+            {CATEGORY_LABELS[category] || 'News'}
           </span>
-          {news?.isImportant ? <span className="news-card__badge news-card__badge--important">Important</span> : null}
-          <span className="news-card__badge news-card__badge--type">{type}</span>
+          {news?.isImportant ? (
+            <span className="news-card-badge news-card-badge-important">
+              <span className="news-card-important-dot" />
+              IMPORTANT
+            </span>
+          ) : null}
+          <span className={`news-card-badge news-card-badge-type ${String(type).toLowerCase()}`}>{type}</span>
         </div>
 
-        <h3 className="news-card__title">{news?.title}</h3>
-        <p className="news-card__summary">{news?.summary}</p>
+        <div className="news-card-content">
+          <h3 className="news-card-title">{news?.title}</h3>
+          <p className="news-card-summary">{news?.summary || 'No summary available.'}</p>
+        </div>
 
-        <div className="news-card__footer">
-          <div className="news-card__meta">
-            <span>{news?.sourceName || 'AagriGgate'}</span>
-            <span>{formatDate(news?.createdAt)}</span>
+        <div className="news-card-footer">
+          <div className="news-card-meta">
+            <span className={`news-card-source-dot cat-${categoryClass}`} />
+            <span className="news-card-source-name">{news?.sourceName || 'AagriGgate'}</span>
+            <span className="news-card-meta-separator">·</span>
+            <span className="news-card-date">{formatNewsDate(news?.createdAt)}</span>
           </div>
 
           {showSaveButton ? (
-            <Button
-              variant={isSaved ? 'accent' : 'outline'}
-              size="sm"
-              className="news-card__save"
+            <button
+              type="button"
+              className={`news-card-bookmark ${isSaved ? 'is-saved' : ''}`}
               onClick={handleSaveClick}
+              aria-label={isSaved ? 'Remove from saved news' : 'Save news'}
             >
-              <i className={`${isSaved ? 'fa-solid' : 'fa-regular'} fa-bookmark`} aria-hidden="true" />
-              <span>{isSaved ? 'Saved' : 'Save'}</span>
-            </Button>
+              <BookmarkIcon filled={isSaved} />
+            </button>
           ) : null}
         </div>
 
-        <div className="news-card__report">
-          <button
-            type="button"
-            className="news-card__report-link"
-            onClick={(event) => {
-              event.stopPropagation();
-              setReportOpen((prev) => !prev);
-            }}
-          >
-            Report
-          </button>
+        {/* LEVEL 2 — Report feature disabled for Level 1 release */}
+        {/* Uncomment when content moderation workflow is implemented */}
+        {/*
+        <div className="news-card-report">
+          <span>Report</span>
         </div>
-
-        {reportOpen ? (
-          <form
-            className="news-card__report-form"
-            onSubmit={handleReportSubmit}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <label htmlFor={`report-${news?.id}`}>Reason</label>
-            <select
-              id={`report-${news?.id}`}
-              value={reportReason}
-              onChange={(event) => setReportReason(event.target.value)}
-            >
-              {REPORT_OPTIONS.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-            <div className="news-card__report-actions">
-              <Button type="submit" size="sm" loading={reporting}>Submit</Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => setReportOpen(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        ) : null}
+        */}
       </div>
-    </Card>
+    </article>
   );
 }

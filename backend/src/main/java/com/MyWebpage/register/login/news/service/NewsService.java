@@ -4,6 +4,7 @@ import com.MyWebpage.register.login.news.dto.request.NewsRequest;
 import com.MyWebpage.register.login.news.dto.request.TrustedSourceRequest;
 import com.MyWebpage.register.login.news.dto.response.NewsResponse;
 import com.MyWebpage.register.login.news.entity.TrustedSource;
+import com.MyWebpage.register.login.news.enums.DateRange;
 import com.MyWebpage.register.login.news.enums.NewsCategory;
 import com.MyWebpage.register.login.news.enums.NewsStatus;
 import com.MyWebpage.register.login.news.enums.NewsType;
@@ -19,6 +20,7 @@ public interface NewsService {
             String language,
             Boolean isImportant,
             String keyword,
+            DateRange dateRange,
             Long currentUserId,
             int page,
             int size,
@@ -37,7 +39,9 @@ public interface NewsService {
 
     NewsResponse restoreNews(Long id);
 
-    void reportNews(Long newsId, String reason);
+// LEVEL 2 — Report feature disabled for Level 1 release
+// Uncomment when content moderation workflow is implemented
+//    void reportNews(Long newsId, String reason);
 
     Page<NewsResponse> getAdminNews(
             NewsStatus status,

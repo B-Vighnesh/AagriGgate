@@ -2,9 +2,11 @@ package com.MyWebpage.register.login.news.service;
 
 import com.MyWebpage.register.login.exception.AlreadySavedException;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
+import com.MyWebpage.register.login.news.cache.NewsCacheService;
 import com.MyWebpage.register.login.news.dto.response.SavedNewsResponse;
 import com.MyWebpage.register.login.news.entity.News;
 import com.MyWebpage.register.login.news.entity.SavedNews;
+import com.MyWebpage.register.login.news.enums.DateRange;
 import com.MyWebpage.register.login.news.enums.NewsCategory;
 import com.MyWebpage.register.login.news.enums.NewsStatus;
 import com.MyWebpage.register.login.news.mapper.SavedNewsMapper;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 
@@ -26,15 +29,18 @@ public class SavedNewsServiceImpl implements SavedNewsService {
     private final SavedNewsRepository savedNewsRepository;
     private final NewsRepository newsRepository;
     private final SavedNewsMapper savedNewsMapper;
+    private final NewsCacheService newsCacheService;
 
     public SavedNewsServiceImpl(
             SavedNewsRepository savedNewsRepository,
             NewsRepository newsRepository,
-            SavedNewsMapper savedNewsMapper
+            SavedNewsMapper savedNewsMapper,
+            NewsCacheService newsCacheService
     ) {
         this.savedNewsRepository = savedNewsRepository;
         this.newsRepository = newsRepository;
         this.savedNewsMapper = savedNewsMapper;
+        this.newsCacheService = newsCacheService;
     }
 
     @Override
@@ -50,7 +56,9 @@ public class SavedNewsServiceImpl implements SavedNewsService {
         SavedNews savedNews = new SavedNews();
         savedNews.setUserId(userId);
         savedNews.setNews(news);
-        return savedNewsMapper.toResponse(savedNewsRepository.save(savedNews));
+        SavedNewsResponse response = savedNewsMapper.toResponse(savedNewsRepository.save(savedNews));
+        newsCacheService.evictFeedCache();
+        return response;
     }
 
     @Override
@@ -59,15 +67,17 @@ public class SavedNewsServiceImpl implements SavedNewsService {
         SavedNews savedNews = savedNewsRepository.findByUserIdAndNews_Id(userId, newsId)
                 .orElseThrow(() -> new ResourceNotFoundException("Saved news not found for news ID: " + newsId));
         savedNewsRepository.delete(savedNews);
+        newsCacheService.evictFeedCache();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SavedNewsResponse> getSavedNews(Long userId, NewsCategory category, String keyword, int page, int size) {
+    public Page<SavedNewsResponse> getSavedNews(Long userId, NewsCategory category, String keyword, DateRange dateRange, int page, int size) {
         List<SavedNews> savedItems = savedNewsRepository.findAllByUserIdOrderByCreatedAtDesc(userId).stream()
                 .filter(item -> item.getNews() != null && item.getNews().getStatus() == NewsStatus.ACTIVE)
                 .filter(item -> category == null || item.getNews().getCategory() == category)
                 .filter(item -> matchesKeyword(item, keyword))
+                .filter(item -> matchesDateRange(item.getNews(), dateRange))
                 .toList();
 
         int safePage = Math.max(page, 0);
@@ -102,5 +112,23 @@ public class SavedNewsServiceImpl implements SavedNewsService {
 
     private boolean contains(String value, String keyword) {
         return value != null && value.toLowerCase(Locale.ROOT).contains(keyword);
+    }
+
+    private boolean matchesDateRange(News news, DateRange dateRange) {
+        if (dateRange == null || dateRange == DateRange.ALL || news.getCreatedAt() == null) {
+            return true;
+        }
+
+        LocalDateTime now = LocalDateTime.now(com.MyWebpage.register.login.news.util.NewsTime.IST);
+        LocalDateTime createdAt = news.getCreatedAt();
+
+        return switch (dateRange) {
+            case TODAY -> !createdAt.isBefore(now.toLocalDate().atStartOfDay()) && !createdAt.isAfter(now);
+            case YESTERDAY -> !createdAt.isBefore(now.toLocalDate().minusDays(1).atStartOfDay())
+                    && createdAt.isBefore(now.toLocalDate().atStartOfDay());
+            case LAST_7_DAYS -> !createdAt.isBefore(now.minusDays(7)) && !createdAt.isAfter(now);
+            case LAST_30_DAYS -> !createdAt.isBefore(now.minusDays(30)) && !createdAt.isAfter(now);
+            case ALL -> true;
+        };
     }
 }
