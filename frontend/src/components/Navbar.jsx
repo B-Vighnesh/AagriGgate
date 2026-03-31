@@ -13,7 +13,7 @@ import {
 } from '../lib/notificationApi';
 
 function navByRole(role) {
-  const base = [{ label: 'Home', to: '/' }, { label: 'News & Alerts', to: '/news' }];
+  const base = [{ label: 'Home', to: '/' }, { label: 'News', to: '/news' }];
   if (!role) return [...base, { label: 'Login', to: '/login' }, { label: 'Register', to: '/register' }];
 
   if (role === 'farmer') {

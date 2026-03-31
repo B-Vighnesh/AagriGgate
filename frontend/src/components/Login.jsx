@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
@@ -17,6 +17,7 @@ function normalizeRole(role) {
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loginMode, setLoginMode] = useState('password');
   const [principal, setPrincipal] = useState('');
   const [password, setPassword] = useState('');
@@ -26,6 +27,7 @@ export default function Login() {
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [alreadyIn, setAlreadyIn] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+  const loginMessage = location.state?.message || '';
 
   useEffect(() => {
     const validateExistingSession = async () => {
@@ -139,6 +141,7 @@ export default function Login() {
       <Card className="auth-card">
         <h1>Login to AagriGgate</h1>
         <p>Sign in with your account credentials. We will take you to the right dashboard automatically.</p>
+        {loginMessage ? <p className="auth-inline-message">{loginMessage}</p> : null}
 
         <div className="segmented">
           <button

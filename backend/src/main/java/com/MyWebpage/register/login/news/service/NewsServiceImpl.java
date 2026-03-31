@@ -4,11 +4,13 @@ import com.MyWebpage.register.login.exception.DuplicateNewsException;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
+import com.MyWebpage.register.login.news.cache.NewsCacheService;
 import com.MyWebpage.register.login.news.dto.request.NewsRequest;
 import com.MyWebpage.register.login.news.dto.request.TrustedSourceRequest;
 import com.MyWebpage.register.login.news.dto.response.NewsResponse;
 import com.MyWebpage.register.login.news.entity.News;
 import com.MyWebpage.register.login.news.entity.TrustedSource;
+import com.MyWebpage.register.login.news.enums.DateRange;
 import com.MyWebpage.register.login.news.enums.NewsCategory;
 import com.MyWebpage.register.login.news.enums.NewsStatus;
 import com.MyWebpage.register.login.news.enums.NewsType;
@@ -16,10 +18,11 @@ import com.MyWebpage.register.login.news.mapper.NewsMapper;
 import com.MyWebpage.register.login.news.repository.NewsRepository;
 import com.MyWebpage.register.login.news.repository.SavedNewsRepository;
 import com.MyWebpage.register.login.news.repository.TrustedSourceRepository;
-import com.MyWebpage.register.login.news.scheduler.NewsFetchScheduler;
+import com.MyWebpage.register.login.news.scheduler.NewsIngestionScheduler;
 import com.MyWebpage.register.login.notification.enums.NotificationType;
 import com.MyWebpage.register.login.notification.service.NotificationService;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -28,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -43,7 +47,8 @@ public class NewsServiceImpl implements NewsService {
     private final TrustedSourceRepository trustedSourceRepository;
     private final NotificationService notificationService;
     private final FarmerRepo farmerRepo;
-    private final NewsFetchScheduler newsFetchScheduler;
+    private final NewsIngestionScheduler newsFetchScheduler;
+    private final NewsCacheService newsCacheService;
 
     public NewsServiceImpl(
             NewsRepository newsRepository,
@@ -52,7 +57,8 @@ public class NewsServiceImpl implements NewsService {
             TrustedSourceRepository trustedSourceRepository,
             NotificationService notificationService,
             FarmerRepo farmerRepo,
-            NewsFetchScheduler newsFetchScheduler
+            NewsIngestionScheduler newsFetchScheduler,
+            NewsCacheService newsCacheService
     ) {
         this.newsRepository = newsRepository;
         this.newsMapper = newsMapper;
@@ -61,23 +67,29 @@ public class NewsServiceImpl implements NewsService {
         this.notificationService = notificationService;
         this.farmerRepo = farmerRepo;
         this.newsFetchScheduler = newsFetchScheduler;
+        this.newsCacheService = newsCacheService;
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(
+            value = "news-feed",
+            key = "T(com.MyWebpage.register.login.news.cache.NewsCacheKeys).feedKey(#p6, #p0, #p1, #p5, #p3, #p4, #p7, #p8, #p9)"
+    )
     public Page<NewsResponse> getAllNews(
             NewsCategory category,
             NewsType newsType,
             String language,
             Boolean isImportant,
             String keyword,
+            DateRange dateRange,
             Long currentUserId,
             int page,
             int size,
             String sortBy
     ) {
         var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50), resolveSort(sortBy));
-        Page<News> newsPage = newsRepository.findAll(buildSpecification(NewsStatus.ACTIVE, category, newsType, language, isImportant, keyword), pageable);
+        Page<News> newsPage = newsRepository.findAll(buildSpecification(NewsStatus.ACTIVE, category, newsType, language, isImportant, keyword, dateRange), pageable);
         Set<Long> savedIds = loadSavedIds(currentUserId, newsPage.getContent().stream().map(News::getId).toList());
         return newsPage.map(news -> newsMapper.toResponse(news, savedIds.contains(news.getId())));
     }
@@ -87,7 +99,7 @@ public class NewsServiceImpl implements NewsService {
     public NewsResponse getNewsById(Long id, Long currentUserId) {
         News news = newsRepository.findByIdAndStatus(id, NewsStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("News not found with ID: " + id));
-        boolean isSaved = currentUserId != null && savedNewsRepository.existsByUserIdAndNews_Id(currentUserId, id);
+        boolean isSaved = savedNewsRepository.existsByUserIdAndNews_Id(currentUserId, id);
         return newsMapper.toResponse(news, isSaved);
     }
 
@@ -106,6 +118,7 @@ public class NewsServiceImpl implements NewsService {
         news.setUploadedBy(normalizeUploadedBy(uploadedBy));
         News saved = newsRepository.save(news);
         notifyImportantNews(saved);
+        newsCacheService.evictFeedCache();
         return newsMapper.toResponse(saved, false);
     }
 
@@ -133,7 +146,9 @@ public class NewsServiceImpl implements NewsService {
         request.setSourceUrl(sourceUrl);
         request.setTitle(title);
         newsMapper.updateEntity(existing, request);
-        return newsMapper.toResponse(newsRepository.save(existing), false);
+        NewsResponse response = newsMapper.toResponse(newsRepository.save(existing), false);
+        newsCacheService.evictFeedCache();
+        return response;
     }
 
     @Override
@@ -142,6 +157,7 @@ public class NewsServiceImpl implements NewsService {
         News news = requireNews(id);
         news.setStatus(NewsStatus.DELETED);
         newsRepository.save(news);
+        newsCacheService.evictFeedCache();
     }
 
     @Override
@@ -150,6 +166,7 @@ public class NewsServiceImpl implements NewsService {
         News news = requireNews(id);
         news.setStatus(NewsStatus.ARCHIVED);
         newsRepository.save(news);
+        newsCacheService.evictFeedCache();
     }
 
     @Override
@@ -157,9 +174,14 @@ public class NewsServiceImpl implements NewsService {
     public NewsResponse restoreNews(Long id) {
         News news = requireNews(id);
         news.setStatus(NewsStatus.ACTIVE);
-        return newsMapper.toResponse(newsRepository.save(news), false);
+        NewsResponse response = newsMapper.toResponse(newsRepository.save(news), false);
+        newsCacheService.evictFeedCache();
+        return response;
     }
 
+// LEVEL 2 — Report feature disabled for Level 1 release
+// Uncomment when content moderation workflow is implemented
+/*
     @Override
     @Transactional
     public void reportNews(Long newsId, String reason) {
@@ -171,6 +193,7 @@ public class NewsServiceImpl implements NewsService {
         }
         newsRepository.save(news);
     }
+*/
 
     @Override
     @Transactional(readOnly = true)
@@ -184,7 +207,7 @@ public class NewsServiceImpl implements NewsService {
             String sortBy
     ) {
         var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50), resolveSort(sortBy));
-        return newsRepository.findAll(buildSpecification(status, category, newsType, null, null, keyword), pageable)
+        return newsRepository.findAll(buildSpecification(status, category, newsType, null, null, keyword, null), pageable)
                 .map(newsMapper::toResponse);
     }
 
@@ -225,7 +248,11 @@ public class NewsServiceImpl implements NewsService {
     public int triggerTrustedSourceFetch(Long id) {
         TrustedSource source = trustedSourceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trusted source not found with ID: " + id));
-        return newsFetchScheduler.fetchSource(source);
+        try {
+            return newsFetchScheduler.fetchSource(source);
+        } catch (Exception exception) {
+            throw new IllegalStateException("Trusted source fetch failed for source ID: " + id, exception);
+        }
     }
 
     private Specification<News> buildSpecification(
@@ -234,7 +261,8 @@ public class NewsServiceImpl implements NewsService {
             NewsType newsType,
             String language,
             Boolean isImportant,
-            String keyword
+            String keyword,
+            DateRange dateRange
     ) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -261,18 +289,46 @@ public class NewsServiceImpl implements NewsService {
                         cb.like(cb.lower(cb.coalesce(root.get("sourceName"), "")), likeValue)
                 ));
             }
+            applyDateRangeFilter(dateRange, predicates, root.get("createdAt"), cb);
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 
     private Set<Long> loadSavedIds(Long currentUserId, List<Long> newsIds) {
-        if (currentUserId == null || newsIds.isEmpty()) {
+        if (newsIds.isEmpty()) {
             return java.util.Collections.emptySet();
         }
         Set<Long> savedIds = new HashSet<>();
         savedNewsRepository.findByUserIdAndNews_IdIn(currentUserId, newsIds)
                 .forEach(saved -> savedIds.add(saved.getNews().getId()));
         return savedIds;
+    }
+
+    private void applyDateRangeFilter(
+            DateRange dateRange,
+            List<Predicate> predicates,
+            jakarta.persistence.criteria.Path<LocalDateTime> createdAtPath,
+            jakarta.persistence.criteria.CriteriaBuilder cb
+    ) {
+        if (dateRange == null || dateRange == DateRange.ALL) {
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now(com.MyWebpage.register.login.news.util.NewsTime.IST);
+        LocalDateTime from = switch (dateRange) {
+            case TODAY -> now.toLocalDate().atStartOfDay();
+            case YESTERDAY -> now.toLocalDate().minusDays(1).atStartOfDay();
+            case LAST_7_DAYS -> now.minusDays(7);
+            case LAST_30_DAYS -> now.minusDays(30);
+            case ALL -> null;
+        };
+        LocalDateTime to = switch (dateRange) {
+            case YESTERDAY -> now.toLocalDate().atStartOfDay();
+            default -> now;
+        };
+        if (from != null) {
+            predicates.add(cb.between(createdAtPath, from, to));
+        }
     }
 
     private News requireNews(Long id) {

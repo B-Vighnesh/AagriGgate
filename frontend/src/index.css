@@ -1336,6 +1336,17 @@ a {
   color: var(--color-muted);
 }
 
+.auth-inline-message {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid #cfe2d8;
+  border-radius: 10px;
+  background: #eef7f1;
+  color: var(--color-primary-dark);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
 .form {
   display: grid;
   gap: 10px;

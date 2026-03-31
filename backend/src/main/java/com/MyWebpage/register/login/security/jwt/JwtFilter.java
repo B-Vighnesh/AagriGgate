@@ -26,13 +26,13 @@ public class JwtFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             try {
                 String token = authHeader.substring(7);
-                Long farmerId = jwtService.extractFarmerId(token);
+                Long principalId = jwtService.extractSubjectId(token);
 
-                if (farmerId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (principalId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     String role = jwtService.extractRole(token);
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
-                                    farmerId,
+                                    principalId,
                                     null,
                                     List.of(new SimpleGrantedAuthority("ROLE_" + role))
                             );

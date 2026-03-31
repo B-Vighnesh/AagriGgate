@@ -1,5 +1,7 @@
 package com.MyWebpage.register.login.news.scheduler;
 
+import com.MyWebpage.register.login.news.cache.NewsCacheService;
+import com.MyWebpage.register.login.news.config.NewsApiProperties;
 import com.MyWebpage.register.login.news.dto.request.NewsRequest;
 import com.MyWebpage.register.login.news.entity.News;
 import com.MyWebpage.register.login.news.entity.TrustedSource;
@@ -9,6 +11,8 @@ import com.MyWebpage.register.login.news.enums.NewsType;
 import com.MyWebpage.register.login.news.mapper.NewsMapper;
 import com.MyWebpage.register.login.news.repository.NewsRepository;
 import com.MyWebpage.register.login.news.repository.TrustedSourceRepository;
+import com.MyWebpage.register.login.news.service.ApiQuotaLogService;
+import com.MyWebpage.register.login.news.util.NewsTime;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rometools.rome.feed.synd.SyndContent;
@@ -17,11 +21,20 @@ import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
+import org.jdom2.Element;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -32,66 +45,108 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
-@Component
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
+@Deprecated
 public class NewsFetchScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(NewsFetchScheduler.class);
+
+    private static final Set<String> KNOWN_BROKEN_IMAGE_DOMAINS = Set.of(
+            "pbs.twimg.com",
+            "static.toiimg.com"
+    );
 
     private static final List<String> PLACEHOLDER_KEYS = List.of(
             "demo-news-key", "your-api-key", "your_api_key", "changeme", ""
     );
 
-    /**
-     * Verified-working RSS feeds for Indian agriculture news (tested March 2026).
-     * Each entry: { name, domain, sourceUrl, categoryScope, sourceType }.
-     */
-    private static final List<String[]> DEFAULT_RSS_SOURCES = List.of(
-            new String[]{"Down To Earth - Agriculture",   "downtoearth.org.in",    "https://www.downtoearth.org.in/rss/agriculture",                                       "FARMING_TIP,OTHER",  "RSS"},
-            new String[]{"Economic Times - Agriculture",  "economictimes.com",     "https://economictimes.indiatimes.com/news/economy/agriculture/rssfeeds/53215982.cms",   "MARKET,SUBSIDY",     "RSS"},
-            new String[]{"The Hindu - Agriculture",       "thehindu.com",          "https://www.thehindu.com/sci-tech/agriculture/feeder/default.rss",                      "FARMING_TIP,LAW",    "RSS"},
-            new String[]{"AgriFarming",                   "agrifarming.in",        "https://www.agrifarming.in/feed",                                                      "FARMING_TIP",        "RSS"},
-            new String[]{"LiveMint - Economy",            "livemint.com",          "https://www.livemint.com/rss/economy",                                                 "MARKET,SUBSIDY",     "RSS"},
-            new String[]{"Times of India - Environment",  "timesofindia.com",      "https://timesofindia.indiatimes.com/rssfeeds/1898055.cms",                              "WEATHER,OTHER",      "RSS"},
-            new String[]{"Indian Express - India",        "indianexpress.com",     "https://indianexpress.com/section/india/feed/",                                         "LAW,SUBSIDY",        "RSS"}
+    private static final List<String[]> CANONICAL_SOURCES = List.of(
+            new String[]{"PIB Agriculture", "pib.gov.in", "https://www.pib.gov.in/rssfeed.aspx?mincode=2", "SUBSIDY,LAW", "RSS", null},
+            new String[]{"Krishi Jagran", "krishijagran.com", "https://krishijagran.com/feed/", "FARMING_TIP,MARKET", "RSS", null},
+            new String[]{"AgriFarming", "agrifarming.in", "https://www.agrifarming.in/feed", "FARMING_TIP", "RSS", null},
+            new String[]{"Kisan Rath", "kisanrath.in", "https://www.kisanrath.in/feed", "MARKET,SUBSIDY", "RSS", null},
+            new String[]{"GNews: kisan subsidy", "gnews.io", "https://gnews.io/api/v4/search", "SUBSIDY,LOAN", "GNEWS_KEYWORD", "kisan subsidy"},
+            new String[]{"GNews: mandi price", "gnews.io", "https://gnews.io/api/v4/search", "MARKET", "GNEWS_KEYWORD", "mandi price"},
+            new String[]{"GNews: agriculture law", "gnews.io", "https://gnews.io/api/v4/search", "LAW", "GNEWS_KEYWORD", "agriculture law"},
+            new String[]{"GNews: crop weather", "gnews.io", "https://gnews.io/api/v4/search", "WEATHER", "GNEWS_KEYWORD", "crop weather"},
+            new String[]{"GNews: farm loan", "gnews.io", "https://gnews.io/api/v4/search", "LOAN", "GNEWS_KEYWORD", "farm loan"},
+            new String[]{"GNews: agri scheme", "gnews.io", "https://gnews.io/api/v4/search", "SUBSIDY", "GNEWS_KEYWORD", "agri scheme"}
     );
 
-    @Value("${news.api.key}")
-    private String newsApiKey;
+    private static final List<String[]> DEFAULT_RSS_SOURCES = CANONICAL_SOURCES;
 
-    @Value("${news.api.gnews-url}")
-    private String gnewsBaseUrl;
-
-    @Value("${news.api.max-items-per-source:10}")
-    private int maxItemsPerSource;
-
-    @Value("${news.api.rss-timeout-seconds:15}")
-    private int rssTimeoutSeconds;
-
+    private final NewsApiProperties newsApiProperties;
+    private final String newsApiKey;
+    private final String gnewsBaseUrl;
+    private final int maxItemsPerSource;
+    private final int rssTimeoutSeconds;
     private final TrustedSourceRepository trustedSourceRepository;
     private final NewsRepository newsRepository;
     private final NewsMapper newsMapper;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final ExecutorService newsExecutorService;
+    private final ApiQuotaLogService apiQuotaLogService;
+    private final NewsCacheService newsCacheService;
+    private final NewsSchedulerState newsSchedulerState;
+    private final Tracer tracer;
+    private final MeterRegistry meterRegistry;
+    private final CircuitBreaker circuitBreaker;
+    private final Retry retry;
 
     public NewsFetchScheduler(
+            NewsApiProperties newsApiProperties,
             TrustedSourceRepository trustedSourceRepository,
             NewsRepository newsRepository,
             NewsMapper newsMapper,
             RestTemplate restTemplate,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            ExecutorService newsExecutorService,
+            ApiQuotaLogService apiQuotaLogService,
+            NewsCacheService newsCacheService,
+            NewsSchedulerState newsSchedulerState,
+            Tracer tracer,
+            MeterRegistry meterRegistry
     ) {
+        this.newsApiProperties = newsApiProperties;
+        this.newsApiKey = newsApiProperties.getKey();
+        this.gnewsBaseUrl = newsApiProperties.getGnewsUrl();
+        this.maxItemsPerSource = newsApiProperties.getMaxItemsPerSource();
+        this.rssTimeoutSeconds = newsApiProperties.getRssTimeoutSeconds();
         this.trustedSourceRepository = trustedSourceRepository;
         this.newsRepository = newsRepository;
         this.newsMapper = newsMapper;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.newsExecutorService = newsExecutorService;
+        this.apiQuotaLogService = apiQuotaLogService;
+        this.newsCacheService = newsCacheService;
+        this.newsSchedulerState = newsSchedulerState;
+        this.tracer = tracer;
+        this.meterRegistry = meterRegistry;
+        this.circuitBreaker = CircuitBreaker.of("news-fetch", CircuitBreakerConfig.custom()
+                .failureRateThreshold(50)
+                .waitDurationInOpenState(Duration.ofSeconds(60))
+                .slidingWindowSize(10)
+                .build());
+        this.retry = Retry.of("news-fetch", RetryConfig.custom()
+                .maxAttempts(3)
+                .intervalFunction(io.github.resilience4j.core.IntervalFunction.ofExponentialBackoff(1000L, 2.0d))
+                .build());
     }
 
     // ─── Startup ────────────────────────────────────────────────────────────────
@@ -103,7 +158,7 @@ public class NewsFetchScheduler {
     @EventListener(ApplicationReadyEvent.class)
     public void onStartup() {
         log.info("[NewsFetchScheduler] Application ready — initialising news sources...");
-        registerDefaultSources();
+        registerCanonicalSources();
 
         if (isGNewsKeyPlaceholder()) {
             log.warn("[NewsFetchScheduler] NEWS_API_KEY is a placeholder ('{}'). "
@@ -301,6 +356,11 @@ public class NewsFetchScheduler {
      * Ensures the default verified RSS feeds exist as trusted sources in the DB.
      * Only inserts sources whose name doesn't already exist.
      */
+    @Transactional
+    public void registerCanonicalSources() {
+        registerDefaultSources();
+    }
+
     @Transactional
     public void registerDefaultSources() {
         int registered = 0;

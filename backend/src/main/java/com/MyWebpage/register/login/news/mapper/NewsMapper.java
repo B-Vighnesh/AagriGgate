@@ -13,8 +13,7 @@ import java.time.format.DateTimeFormatter;
 @Component
 public class NewsMapper {
 
-    private static final DateTimeFormatter CREATED_FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy");
-    private static final DateTimeFormatter UPDATED_FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
+    private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     public NewsResponse toResponse(News news, boolean isSaved) {
         NewsResponse response = new NewsResponse();
@@ -32,8 +31,8 @@ public class NewsMapper {
         response.setStatus(news.getStatus() == null ? null : news.getStatus().name());
         response.setReportCount(news.getReportCount());
         response.setIsSaved(isSaved);
-        response.setCreatedAt(format(news.getCreatedAt(), CREATED_FORMATTER));
-        response.setUpdatedAt(format(news.getUpdatedAt(), UPDATED_FORMATTER));
+        response.setCreatedAt(format(news.getCreatedAt()));
+        response.setUpdatedAt(format(news.getUpdatedAt()));
         return response;
     }
 
@@ -83,7 +82,7 @@ public class NewsMapper {
         return page.map(news -> toResponse(news, isSaved));
     }
 
-    private String format(LocalDateTime value, DateTimeFormatter formatter) {
-        return value == null ? null : value.format(formatter);
+    private String format(LocalDateTime value) {
+        return value == null ? null : value.format(ISO_FORMATTER);
     }
 }

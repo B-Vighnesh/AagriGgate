@@ -14,28 +14,56 @@ spring:
     baseline-version: 0
 
 jwt:
-  secret: ${JWT_SECRET:YWFncmlnZ2F0ZS1sZXZlbC0xLW5ld3Mtc2VjcmV0LWtleS0yMDI2LTAzLTMwLWFhZ3JpZ2dhdGU=}
+  secret: ${JWT_SECRET}
 
 weather:
   api:
     url: ${WEATHER_API_URL:https://api.weatherapi.com/v1/current.json}
-    key: ${WEATHER_API_KEY:demo-weather-key}
+    key: ${WEATHER_API_KEY}
 
 market:
   api:
     url: ${MARKET_API_URL:https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24}
-    key: ${MARKET_API_KEY:demo-market-key}
+    key: ${MARKET_API_KEY}
 
 news:
   api:
-    key: ${NEWS_API_KEY:63a3f1fd8c9c25b008ebe112c5946a00}
-    gnews-url: https://gnews.io/api/v4
-    rss-timeout-seconds: 10
-    max-items-per-source: 10
+    key: ${NEWS_API_KEY}
+    gnews-url: ${GNEWS_API_URL:https://gnews.io/api/v4}
+    rss-timeout-seconds: 15
+    gnews-timeout-seconds: 5
+    max-items-per-source: 100
+    scheduler-cron: ${NEWS_SCHEDULER_CRON:0 0 */6 * * *}
+    cleanup-cron: ${NEWS_CLEANUP_CRON:0 0 2 * * *}
+    quota-reset-cron: ${NEWS_QUOTA_RESET_CRON:0 0 0 * * *}
+    retention-days: 90
+    scheduler-enabled: ${NEWS_SCHEDULER_ENABLED:true}
+    gnews-enabled: ${NEWS_GNEWS_ENABLED:true}
+    executor-pool-size: 5
+    gnews-daily-limit: 90
+    cache-ttl-seconds: 120
+    healthy-within-hours: 7
+    stale-within-hours: 13
 
 admin:
-  username: ${ADMIN_USERNAME:admin}
-  password: ${ADMIN_PASSWORD:admin123}
+  username: ${ADMIN_USERNAME}
+  password: ${ADMIN_PASSWORD}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: always
+  tracing:
+    sampling:
+      probability: 1.0
+
+logging:
+  level:
+    root: INFO
 
 server:
   port: 8080

@@ -2,6 +2,7 @@ package com.MyWebpage.register.login.news.controller;
 
 import com.MyWebpage.register.login.common.ApiResponse;
 import com.MyWebpage.register.login.news.dto.response.SavedNewsResponse;
+import com.MyWebpage.register.login.news.enums.DateRange;
 import com.MyWebpage.register.login.news.enums.NewsCategory;
 import com.MyWebpage.register.login.news.service.SavedNewsService;
 import org.springframework.data.domain.Page;
@@ -30,11 +31,12 @@ public class SavedNewsController {
             Authentication authentication,
             @RequestParam(required = false) NewsCategory category,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) DateRange dateRange,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Long userId = Long.parseLong(authentication.getName());
-        Page<SavedNewsResponse> data = savedNewsService.getSavedNews(userId, category, keyword, page, size);
+        Page<SavedNewsResponse> data = savedNewsService.getSavedNews(userId, category, keyword, dateRange, page, size);
         return ResponseEntity.ok(ApiResponse.success("Saved news fetched", data));
     }
 
