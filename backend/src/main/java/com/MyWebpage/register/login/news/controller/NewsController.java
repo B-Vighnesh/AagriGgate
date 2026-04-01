@@ -39,7 +39,7 @@ public class NewsController {
             @RequestParam(required = false) DateRange dateRange,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy
+            @RequestParam(defaultValue = "newest") String sortBy
     ) {
         Long currentUserId = extractCurrentUserId(request);
         Page<NewsResponse> data = newsService.getAllNews(category, newsType, language, isImportant, keyword, dateRange, currentUserId, page, size, sortBy);

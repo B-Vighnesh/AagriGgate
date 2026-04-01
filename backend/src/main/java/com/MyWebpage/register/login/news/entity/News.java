@@ -34,6 +34,7 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_news_category", columnList = "category"),
                 @Index(name = "idx_news_news_type", columnList = "news_type"),
                 @Index(name = "idx_news_is_important", columnList = "is_important"),
+                @Index(name = "idx_news_published_at", columnList = "published_at"),
                 @Index(name = "idx_news_created_at", columnList = "created_at"),
                 @Index(name = "idx_news_language", columnList = "language"),
                 @Index(name = "idx_news_status", columnList = "status")
@@ -62,6 +63,9 @@ public class News {
 
     @Column(name = "image_url", length = 1000)
     private String imageUrl;
+
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
@@ -152,6 +156,14 @@ public class News {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public LocalDateTime getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(LocalDateTime publishedAt) {
+        this.publishedAt = publishedAt;
     }
 
     public NewsCategory getCategory() {

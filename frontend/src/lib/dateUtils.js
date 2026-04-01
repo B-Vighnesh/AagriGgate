@@ -55,7 +55,7 @@ export function groupNewsByDate(items) {
 
   const groups = new Map();
   for (const item of items) {
-    const label = getDateGroupLabel(item.createdAt);
+    const label = getDateGroupLabel(item.publishedAt || item.createdAt);
     if (!groups.has(label)) {
       groups.set(label, []);
     }

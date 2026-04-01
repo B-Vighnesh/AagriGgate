@@ -113,7 +113,7 @@ public class SavedNewsServiceImpl implements SavedNewsService {
         }
 
         LocalDateTime now = LocalDateTime.now(com.MyWebpage.register.login.news.util.NewsTime.IST);
-        LocalDateTime createdAt = news.getCreatedAt();
+        LocalDateTime createdAt = news.getPublishedAt() != null ? news.getPublishedAt() : news.getCreatedAt();
 
         return switch (dateRange) {
             case TODAY -> !createdAt.isBefore(now.toLocalDate().atStartOfDay()) && !createdAt.isAfter(now);

@@ -95,7 +95,6 @@ export default function NewsCard({
               alt={news?.title || 'News'}
               className={`news-card-image ${imageLoaded ? 'is-loaded' : ''}`}
               loading="lazy"
-              crossOrigin="anonymous"
               onLoad={() => setImageLoaded(true)}
               onError={() => setImageFailed(true)}
             />
@@ -132,7 +131,7 @@ export default function NewsCard({
             <span className={`news-card-source-dot cat-${categoryClass}`} />
             <span className="news-card-source-name">{news?.sourceName || 'AagriGgate'}</span>
             <span className="news-card-meta-separator">·</span>
-            <span className="news-card-date">{formatNewsDate(news?.createdAt)}</span>
+            <span className="news-card-date">{formatNewsDate(news?.publishedAt || news?.createdAt)}</span>
           </div>
 
           {showSaveButton ? (

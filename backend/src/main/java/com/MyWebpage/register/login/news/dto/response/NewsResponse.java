@@ -16,6 +16,7 @@ public class NewsResponse {
     private String status;
     private Integer reportCount;
     private Boolean isSaved;
+    private String publishedAt;
     private String createdAt;
     private String updatedAt;
 
@@ -129,6 +130,14 @@ public class NewsResponse {
 
     public void setIsSaved(Boolean saved) {
         isSaved = saved;
+    }
+
+    public String getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(String publishedAt) {
+        this.publishedAt = publishedAt;
     }
 
     public String getCreatedAt() {

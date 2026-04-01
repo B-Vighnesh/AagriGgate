@@ -46,9 +46,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -287,6 +292,7 @@ public class NewsIngestionScheduler {
                  XmlReader reader = new XmlReader(inputStream)) {
                 SyndFeed feed = new SyndFeedInput().build(reader);
                 for (SyndEntry entry : feed.getEntries().stream().limit(newsApiProperties.getMaxItemsPerSource()).toList()) {
+                    System.out.println("hiiiiiiiiiiiiiiiiiiiiiiiiii"+entry);
                     NewsRequest request = new NewsRequest();
                     request.setTitle(entry.getTitle());
                     request.setSummary(extractSummary(entry));
@@ -297,6 +303,7 @@ public class NewsIngestionScheduler {
                     request.setNewsType(NewsType.EXTERNAL);
                     request.setLanguage("en");
                     request.setIsImportant(false);
+                    request.setPublishedAt(extractPublishedAt(entry));
                     items.add(request);
                 }
             }
@@ -363,6 +370,7 @@ public class NewsIngestionScheduler {
                 request.setNewsType(NewsType.EXTERNAL);
                 request.setLanguage("en");
                 request.setIsImportant(false);
+                request.setPublishedAt(extractPublishedAt(article.path("publishedAt").asText(null)));
                 items.add(request);
             }
             return items;
@@ -576,5 +584,33 @@ public class NewsIngestionScheduler {
 
     private String normalizeSourceType(String value) {
         return value == null ? "" : value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private LocalDateTime extractPublishedAt(SyndEntry entry) {
+        Date publishedDate = entry.getPublishedDate();
+        if (publishedDate == null) {
+            return null;
+        }
+        return LocalDateTime.ofInstant(publishedDate.toInstant(), NewsTime.IST);
+    }
+
+    private LocalDateTime extractPublishedAt(String value) {
+        String normalized = normalize(value);
+        if (normalized == null) {
+            return null;
+        }
+        try {
+            return OffsetDateTime.parse(normalized).atZoneSameInstant(ZoneId.of("Asia/Kolkata")).toLocalDateTime();
+        } catch (Exception ignored) {
+        }
+        try {
+            return ZonedDateTime.parse(normalized).withZoneSameInstant(ZoneId.of("Asia/Kolkata")).toLocalDateTime();
+        } catch (Exception ignored) {
+        }
+        try {
+            return LocalDateTime.ofInstant(Instant.parse(normalized), NewsTime.IST);
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 }
