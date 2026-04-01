@@ -31,6 +31,7 @@ public class NewsMapper {
         response.setStatus(news.getStatus() == null ? null : news.getStatus().name());
         response.setReportCount(news.getReportCount());
         response.setIsSaved(isSaved);
+        response.setPublishedAt(format(news.getPublishedAt()));
         response.setCreatedAt(format(news.getCreatedAt()));
         response.setUpdatedAt(format(news.getUpdatedAt()));
         return response;
@@ -51,6 +52,7 @@ public class NewsMapper {
         news.setNewsType(request.getNewsType());
         news.setLanguage(request.getLanguage() == null || request.getLanguage().isBlank() ? "en" : request.getLanguage().trim().toLowerCase());
         news.setIsImportant(Boolean.TRUE.equals(request.getIsImportant()));
+        news.setPublishedAt(request.getPublishedAt());
         news.setStatus(NewsStatus.ACTIVE);
         news.setReportCount(0);
         return news;
@@ -68,6 +70,9 @@ public class NewsMapper {
             existing.setSourceUrl(request.getSourceUrl());
         }
         existing.setImageUrl(request.getImageUrl());
+        if (request.getPublishedAt() != null) {
+            existing.setPublishedAt(request.getPublishedAt());
+        }
         if (request.getCategory() != null) {
             existing.setCategory(request.getCategory());
         }

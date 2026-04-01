@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.URL;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 
 public class NewsRequest {
 
@@ -41,6 +42,8 @@ public class NewsRequest {
     private String language;
 
     private Boolean isImportant;
+
+    private LocalDateTime publishedAt;
 
     public String getTitle() {
         return title;
@@ -114,6 +117,14 @@ public class NewsRequest {
         isImportant = important;
     }
 
+    public LocalDateTime getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(LocalDateTime publishedAt) {
+        this.publishedAt = publishedAt;
+    }
+
     @AssertTrue(message = "imageUrl must be a valid URL")
     public boolean isImageUrlValid() {
         if (imageUrl == null || imageUrl.isBlank()) {
@@ -139,6 +150,7 @@ public class NewsRequest {
                 ", newsType=" + newsType +
                 ", language='" + language + '\'' +
                 ", isImportant=" + isImportant +
+                ", publishedAt=" + publishedAt +
                 '}';
     }
 }

@@ -273,7 +273,7 @@ public class NewsServiceImpl implements NewsService {
                         cb.like(cb.lower(cb.coalesce(root.get("sourceName"), "")), likeValue)
                 ));
             }
-            applyDateRangeFilter(dateRange, predicates, root.get("createdAt"), cb);
+            applyDateRangeFilter(dateRange, predicates, root, cb);
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
@@ -291,7 +291,7 @@ public class NewsServiceImpl implements NewsService {
     private void applyDateRangeFilter(
             DateRange dateRange,
             List<Predicate> predicates,
-            jakarta.persistence.criteria.Path<LocalDateTime> createdAtPath,
+            jakarta.persistence.criteria.Root<News> root,
             jakarta.persistence.criteria.CriteriaBuilder cb
     ) {
         if (dateRange == null || dateRange == DateRange.ALL) {
@@ -311,7 +311,13 @@ public class NewsServiceImpl implements NewsService {
             default -> now;
         };
         if (from != null) {
-            predicates.add(cb.between(createdAtPath, from, to));
+            predicates.add(cb.or(
+                    cb.between(root.get("publishedAt"), from, to),
+                    cb.and(
+                            cb.isNull(root.get("publishedAt")),
+                            cb.between(root.get("createdAt"), from, to)
+                    )
+            ));
         }
     }
 
@@ -322,9 +328,15 @@ public class NewsServiceImpl implements NewsService {
 
     private Sort resolveSort(String sortBy) {
         if ("oldest".equalsIgnoreCase(sortBy)) {
-            return Sort.by(Sort.Direction.ASC, "createdAt");
+            return Sort.by(
+                    Sort.Order.asc("publishedAt").nullsLast(),
+                    Sort.Order.asc("createdAt")
+            );
         }
-        return Sort.by(Sort.Direction.DESC, "createdAt");
+        return Sort.by(
+                Sort.Order.desc("publishedAt").nullsLast(),
+                Sort.Order.desc("createdAt")
+        );
     }
 
     private void applyTrustedSource(TrustedSource source, TrustedSourceRequest request) {
