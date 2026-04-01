@@ -402,8 +402,12 @@ export default function News() {
         <div className="news-header">
           <div className="news-header-top">
             <div className="news-header-copy">
-              <h1>News</h1>
-              <p>Stay updated with agriculture news, schemes, and alerts</p>
+              <h1>{activeTab === 'saved' ? 'Saved News' : 'News'}</h1>
+              <p>
+                {activeTab === 'saved'
+                  ? 'Your bookmarked agriculture news and alerts in one place'
+                  : 'Stay updated with agriculture news, schemes, and alerts'}
+              </p>
             </div>
 
             <div className="news-tab-group" role="tablist" aria-label="News tabs">
