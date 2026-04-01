@@ -56,10 +56,6 @@ public class NewsApiProperties {
     private int gnewsDailyLimit = 90;
 
     @Min(1)
-    @Max(240)
-    private int cacheTtlSeconds = 120;
-
-    @Min(1)
     @Max(24)
     private int healthyWithinHours = 7;
 
@@ -176,14 +172,6 @@ public class NewsApiProperties {
 
     public void setGnewsDailyLimit(int gnewsDailyLimit) {
         this.gnewsDailyLimit = gnewsDailyLimit;
-    }
-
-    public int getCacheTtlSeconds() {
-        return cacheTtlSeconds;
-    }
-
-    public void setCacheTtlSeconds(int cacheTtlSeconds) {
-        this.cacheTtlSeconds = cacheTtlSeconds;
     }
 
     public int getHealthyWithinHours() {
