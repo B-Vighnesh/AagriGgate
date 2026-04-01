@@ -1,5 +1,6 @@
 package com.MyWebpage.register.login.otp;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class OtpCleanupService {
 
     // Periodically purge expired OTP rows so stale records do not accumulate.
     @Scheduled(cron = "0 */15 * * * *")
+    @Transactional
     public void cleanupExpiredOtps() {
         LocalDateTime now = LocalDateTime.now();
         registrationOtpRepository.deleteByExpiryTimeBefore(now);

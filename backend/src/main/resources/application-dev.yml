@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/app}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -13,14 +13,19 @@ spring:
       hibernate:
         format_sql: true
 
+  security:
+    user:
+      name: ${APP_SECURITY_USER:vighnesh}
+      password: ${APP_SECURITY_PASSWORD:v123}
+
   flyway:
     enabled: false
 
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${EMAIL_USERNAME}
-    password: ${EMAIL_PASSWORD}
+    username: ${EMAIL_USERNAME:webappfarmer@gmail.com}
+    password: ${EMAIL_PASSWORD:syoz atph yahs vfts}
     properties:
       mail:
         smtp:
