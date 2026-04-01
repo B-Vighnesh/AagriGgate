@@ -99,13 +99,18 @@ public class NewsServiceImpl implements NewsService {
     public NewsResponse createNews(NewsRequest request, String uploadedBy) {
         String sourceUrl = normalizeRequired(request.getSourceUrl(), "sourceUrl");
         String title = normalizeRequired(request.getTitle(), "title");
-        if (newsRepository.existsBySourceUrlOrTitle(sourceUrl, title)) {
-            throw new DuplicateNewsException("News already exists with the same source URL or title");
+        String sourceUrlHash = News.buildSourceUrlHash(title, sourceUrl);
+        if (sourceUrlHash == null) {
+            throw new IllegalArgumentException("Unable to build deduplication hash for news");
+        }
+        if (newsRepository.existsBySourceUrlHash(sourceUrlHash)) {
+            throw new DuplicateNewsException("News already exists with the same title and source URL");
         }
 
         request.setSourceUrl(sourceUrl);
         request.setTitle(title);
         News news = newsMapper.toEntity(request);
+        news.setSourceUrlHash(sourceUrlHash);
         news.setUploadedBy(normalizeUploadedBy(uploadedBy));
         News saved = newsRepository.save(news);
         notifyImportantNews(saved);
@@ -120,22 +125,22 @@ public class NewsServiceImpl implements NewsService {
 
         String sourceUrl = normalizeRequired(request.getSourceUrl(), "sourceUrl");
         String title = normalizeRequired(request.getTitle(), "title");
+        String sourceUrlHash = News.buildSourceUrlHash(title, sourceUrl);
 
-        newsRepository.findBySourceUrl(sourceUrl)
+        if (sourceUrlHash == null) {
+            throw new IllegalArgumentException("Unable to build deduplication hash for news");
+        }
+
+        newsRepository.findBySourceUrlHash(sourceUrlHash)
                 .filter(news -> !news.getId().equals(id))
                 .ifPresent(news -> {
-                    throw new DuplicateNewsException("News already exists with the same source URL");
-                });
-
-        newsRepository.findByTitle(title)
-                .filter(news -> !news.getId().equals(id))
-                .ifPresent(news -> {
-                    throw new DuplicateNewsException("News already exists with the same title");
+                    throw new DuplicateNewsException("News already exists with the same title and source URL");
                 });
 
         request.setSourceUrl(sourceUrl);
         request.setTitle(title);
         newsMapper.updateEntity(existing, request);
+        existing.setSourceUrlHash(sourceUrlHash);
         return newsMapper.toResponse(newsRepository.save(existing), false);
     }
 

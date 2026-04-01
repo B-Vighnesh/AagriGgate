@@ -14,15 +14,9 @@ import java.util.Optional;
 
 public interface NewsRepository extends JpaRepository<News, Long>, JpaSpecificationExecutor<News> {
 
-    boolean existsBySourceUrl(String sourceUrl);
+    boolean existsBySourceUrlHash(String sourceUrlHash);
 
-    boolean existsByTitle(String title);
-
-    boolean existsBySourceUrlOrTitle(String sourceUrl, String title);
-
-    Optional<News> findBySourceUrl(String sourceUrl);
-
-    Optional<News> findByTitle(String title);
+    Optional<News> findBySourceUrlHash(String sourceUrlHash);
 
     Optional<News> findByIdAndStatus(Long id, NewsStatus status);
 

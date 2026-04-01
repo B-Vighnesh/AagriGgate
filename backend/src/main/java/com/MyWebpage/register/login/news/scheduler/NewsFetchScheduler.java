@@ -236,11 +236,14 @@ public class NewsFetchScheduler {
             String sourceUrl = normalize(item.getSourceUrl());
             String title = normalize(item.getTitle());
             if (sourceUrl == null || title == null) continue;
-            if (newsRepository.existsBySourceUrlOrTitle(sourceUrl, title)) continue;
+            String sourceUrlHash = News.buildSourceUrlHash(title, sourceUrl);
+            if (sourceUrlHash == null) continue;
+            if (newsRepository.existsBySourceUrlHash(sourceUrlHash)) continue;
 
             item.setSourceUrl(sourceUrl);
             item.setTitle(title);
             News news = newsMapper.toEntity(item);
+            news.setSourceUrlHash(sourceUrlHash);
             news.setUploadedBy("SOURCE");
             news.setNewsType(NewsType.EXTERNAL);
             news.setStatus(NewsStatus.ACTIVE);

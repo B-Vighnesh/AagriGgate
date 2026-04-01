@@ -27,7 +27,6 @@ import java.time.LocalDateTime;
 @Table(
         name = "news",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_news_title", columnNames = "title"),
                 @UniqueConstraint(name = "uk_news_source_url_hash", columnNames = "source_url_hash")
         },
         indexes = {
@@ -249,12 +248,25 @@ public class News {
     @PrePersist
     @PreUpdate
     private void syncSourceUrlHash() {
-        if (sourceUrl != null && !sourceUrl.isBlank()) {
-            this.sourceUrlHash = sha256(sourceUrl.trim());
+        String dedupInput = buildDedupInput(title, sourceUrl);
+        if (dedupInput != null) {
+            this.sourceUrlHash = sha256(dedupInput);
         }
     }
 
-    private String sha256(String value) {
+    public static String buildSourceUrlHash(String title, String sourceUrl) {
+        String dedupInput = buildDedupInput(title, sourceUrl);
+        return dedupInput == null ? null : sha256(dedupInput);
+    }
+
+    private static String buildDedupInput(String title, String sourceUrl) {
+        if (title == null || title.isBlank() || sourceUrl == null || sourceUrl.isBlank()) {
+            return null;
+        }
+        return title.trim().toLowerCase() + "|" + sourceUrl.trim().toLowerCase();
+    }
+
+    private static String sha256(String value) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] bytes = digest.digest(value.getBytes(StandardCharsets.UTF_8));
