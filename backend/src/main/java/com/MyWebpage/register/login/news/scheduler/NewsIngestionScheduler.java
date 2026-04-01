@@ -292,7 +292,7 @@ public class NewsIngestionScheduler {
                  XmlReader reader = new XmlReader(inputStream)) {
                 SyndFeed feed = new SyndFeedInput().build(reader);
                 for (SyndEntry entry : feed.getEntries().stream().limit(newsApiProperties.getMaxItemsPerSource()).toList()) {
-                    System.out.println("hiiiiiiiiiiiiiiiiiiiiiiiiii"+entry);
+//                    System.out.println("hiiiiiiiiiiiiiiiiiiiiiiiiii"+entry);
                     NewsRequest request = new NewsRequest();
                     request.setTitle(entry.getTitle());
                     request.setSummary(extractSummary(entry));
