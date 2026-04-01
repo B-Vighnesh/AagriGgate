@@ -126,4 +126,19 @@ public class NewsRequest {
             return false;
         }
     }
+
+    @Override
+    public String toString() {
+        return "NewsRequest{" +
+                "title='" + title + '\'' +
+                ", summary='" + summary + '\'' +
+                ", sourceName='" + sourceName + '\'' +
+                ", sourceUrl='" + sourceUrl + '\'' +
+                ", imageUrl='" + imageUrl + '\'' +
+                ", category=" + category +
+                ", newsType=" + newsType +
+                ", language='" + language + '\'' +
+                ", isImportant=" + isImportant +
+                '}';
+    }
 }

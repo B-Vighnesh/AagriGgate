@@ -4,7 +4,6 @@ import com.MyWebpage.register.login.exception.DuplicateNewsException;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
-import com.MyWebpage.register.login.news.cache.NewsCacheService;
 import com.MyWebpage.register.login.news.dto.request.NewsRequest;
 import com.MyWebpage.register.login.news.dto.request.TrustedSourceRequest;
 import com.MyWebpage.register.login.news.dto.response.NewsResponse;
@@ -22,7 +21,6 @@ import com.MyWebpage.register.login.news.scheduler.NewsIngestionScheduler;
 import com.MyWebpage.register.login.notification.enums.NotificationType;
 import com.MyWebpage.register.login.notification.service.NotificationService;
 import jakarta.persistence.criteria.Predicate;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -48,8 +46,6 @@ public class NewsServiceImpl implements NewsService {
     private final NotificationService notificationService;
     private final FarmerRepo farmerRepo;
     private final NewsIngestionScheduler newsFetchScheduler;
-    private final NewsCacheService newsCacheService;
-
     public NewsServiceImpl(
             NewsRepository newsRepository,
             NewsMapper newsMapper,
@@ -57,8 +53,7 @@ public class NewsServiceImpl implements NewsService {
             TrustedSourceRepository trustedSourceRepository,
             NotificationService notificationService,
             FarmerRepo farmerRepo,
-            NewsIngestionScheduler newsFetchScheduler,
-            NewsCacheService newsCacheService
+            NewsIngestionScheduler newsFetchScheduler
     ) {
         this.newsRepository = newsRepository;
         this.newsMapper = newsMapper;
@@ -67,15 +62,10 @@ public class NewsServiceImpl implements NewsService {
         this.notificationService = notificationService;
         this.farmerRepo = farmerRepo;
         this.newsFetchScheduler = newsFetchScheduler;
-        this.newsCacheService = newsCacheService;
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(
-            value = "news-feed",
-            key = "T(com.MyWebpage.register.login.news.cache.NewsCacheKeys).feedKey(#p6, #p0, #p1, #p5, #p3, #p4, #p7, #p8, #p9)"
-    )
     public Page<NewsResponse> getAllNews(
             NewsCategory category,
             NewsType newsType,
@@ -119,7 +109,6 @@ public class NewsServiceImpl implements NewsService {
         news.setUploadedBy(normalizeUploadedBy(uploadedBy));
         News saved = newsRepository.save(news);
         notifyImportantNews(saved);
-        newsCacheService.evictFeedCache();
         return newsMapper.toResponse(saved, false);
     }
 
@@ -147,9 +136,7 @@ public class NewsServiceImpl implements NewsService {
         request.setSourceUrl(sourceUrl);
         request.setTitle(title);
         newsMapper.updateEntity(existing, request);
-        NewsResponse response = newsMapper.toResponse(newsRepository.save(existing), false);
-        newsCacheService.evictFeedCache();
-        return response;
+        return newsMapper.toResponse(newsRepository.save(existing), false);
     }
 
     @Override
@@ -158,7 +145,6 @@ public class NewsServiceImpl implements NewsService {
         News news = requireNews(id);
         news.setStatus(NewsStatus.DELETED);
         newsRepository.save(news);
-        newsCacheService.evictFeedCache();
     }
 
     @Override
@@ -167,7 +153,6 @@ public class NewsServiceImpl implements NewsService {
         News news = requireNews(id);
         news.setStatus(NewsStatus.ARCHIVED);
         newsRepository.save(news);
-        newsCacheService.evictFeedCache();
     }
 
     @Override
@@ -175,9 +160,7 @@ public class NewsServiceImpl implements NewsService {
     public NewsResponse restoreNews(Long id) {
         News news = requireNews(id);
         news.setStatus(NewsStatus.ACTIVE);
-        NewsResponse response = newsMapper.toResponse(newsRepository.save(news), false);
-        newsCacheService.evictFeedCache();
-        return response;
+        return newsMapper.toResponse(newsRepository.save(news), false);
     }
 
 // TODO: Report feature temporarily disabled — to be re-enabled in future release.

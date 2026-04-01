@@ -1,6 +1,5 @@
 package com.MyWebpage.register.login.news.scheduler;
 
-import com.MyWebpage.register.login.news.cache.NewsCacheService;
 import com.MyWebpage.register.login.news.config.NewsApiProperties;
 import com.MyWebpage.register.login.news.dto.request.NewsRequest;
 import com.MyWebpage.register.login.news.entity.News;
@@ -101,7 +100,6 @@ public class NewsFetchScheduler {
     private final ObjectMapper objectMapper;
     private final ExecutorService newsExecutorService;
     private final ApiQuotaLogService apiQuotaLogService;
-    private final NewsCacheService newsCacheService;
     private final NewsSchedulerState newsSchedulerState;
     private final Tracer tracer;
     private final MeterRegistry meterRegistry;
@@ -117,7 +115,6 @@ public class NewsFetchScheduler {
             ObjectMapper objectMapper,
             ExecutorService newsExecutorService,
             ApiQuotaLogService apiQuotaLogService,
-            NewsCacheService newsCacheService,
             NewsSchedulerState newsSchedulerState,
             Tracer tracer,
             MeterRegistry meterRegistry
@@ -134,7 +131,6 @@ public class NewsFetchScheduler {
         this.objectMapper = objectMapper;
         this.newsExecutorService = newsExecutorService;
         this.apiQuotaLogService = apiQuotaLogService;
-        this.newsCacheService = newsCacheService;
         this.newsSchedulerState = newsSchedulerState;
         this.tracer = tracer;
         this.meterRegistry = meterRegistry;

@@ -1,6 +1,5 @@
 package com.MyWebpage.register.login.news.scheduler;
 
-import com.MyWebpage.register.login.news.cache.NewsCacheService;
 import com.MyWebpage.register.login.news.config.NewsApiProperties;
 import com.MyWebpage.register.login.news.dto.request.NewsRequest;
 import com.MyWebpage.register.login.news.entity.News;
@@ -90,7 +89,6 @@ public class NewsIngestionScheduler {
     private final ObjectMapper objectMapper;
     private final ExecutorService newsExecutorService;
     private final ApiQuotaLogService apiQuotaLogService;
-    private final NewsCacheService newsCacheService;
     private final NewsSchedulerState newsSchedulerState;
     private final Tracer tracer;
     private final MeterRegistry meterRegistry;
@@ -106,7 +104,6 @@ public class NewsIngestionScheduler {
             ObjectMapper objectMapper,
             ExecutorService newsExecutorService,
             ApiQuotaLogService apiQuotaLogService,
-            NewsCacheService newsCacheService,
             NewsSchedulerState newsSchedulerState,
             Tracer tracer,
             MeterRegistry meterRegistry
@@ -119,7 +116,6 @@ public class NewsIngestionScheduler {
         this.objectMapper = objectMapper;
         this.newsExecutorService = newsExecutorService;
         this.apiQuotaLogService = apiQuotaLogService;
-        this.newsCacheService = newsCacheService;
         this.newsSchedulerState = newsSchedulerState;
         this.tracer = tracer;
         this.meterRegistry = meterRegistry;
@@ -170,9 +166,6 @@ public class NewsIngestionScheduler {
                 Future<Integer> future = newsExecutorService.submit(() -> fetchSource(source));
                 int saved = future.get();
                 successCount++;
-                if (saved > 0) {
-                    newsCacheService.evictFeedCache();
-                }
             } catch (Exception exception) {
                 failureCount++;
                 if (isQuotaExceeded(exception)) {
@@ -208,6 +201,7 @@ public class NewsIngestionScheduler {
             int dedupedCount = 0;
 
             for (NewsRequest item : fetchedItems) {
+                System.out.println("Hellooooooooo"+item);
                 String sourceUrl = normalize(item.getSourceUrl());
                 String title = normalize(item.getTitle());
                 if (sourceUrl == null || title == null) {

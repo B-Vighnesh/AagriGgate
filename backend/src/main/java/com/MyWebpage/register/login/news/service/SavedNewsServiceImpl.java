@@ -2,7 +2,6 @@ package com.MyWebpage.register.login.news.service;
 
 import com.MyWebpage.register.login.exception.AlreadySavedException;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
-import com.MyWebpage.register.login.news.cache.NewsCacheService;
 import com.MyWebpage.register.login.news.dto.response.SavedNewsResponse;
 import com.MyWebpage.register.login.news.entity.News;
 import com.MyWebpage.register.login.news.entity.SavedNews;
@@ -29,18 +28,15 @@ public class SavedNewsServiceImpl implements SavedNewsService {
     private final SavedNewsRepository savedNewsRepository;
     private final NewsRepository newsRepository;
     private final SavedNewsMapper savedNewsMapper;
-    private final NewsCacheService newsCacheService;
 
     public SavedNewsServiceImpl(
             SavedNewsRepository savedNewsRepository,
             NewsRepository newsRepository,
-            SavedNewsMapper savedNewsMapper,
-            NewsCacheService newsCacheService
+            SavedNewsMapper savedNewsMapper
     ) {
         this.savedNewsRepository = savedNewsRepository;
         this.newsRepository = newsRepository;
         this.savedNewsMapper = savedNewsMapper;
-        this.newsCacheService = newsCacheService;
     }
 
     @Override
@@ -56,9 +52,7 @@ public class SavedNewsServiceImpl implements SavedNewsService {
         SavedNews savedNews = new SavedNews();
         savedNews.setUserId(userId);
         savedNews.setNews(news);
-        SavedNewsResponse response = savedNewsMapper.toResponse(savedNewsRepository.save(savedNews));
-        newsCacheService.evictFeedCache();
-        return response;
+        return savedNewsMapper.toResponse(savedNewsRepository.save(savedNews));
     }
 
     @Override
@@ -67,7 +61,6 @@ public class SavedNewsServiceImpl implements SavedNewsService {
         SavedNews savedNews = savedNewsRepository.findByUserIdAndNews_Id(userId, newsId)
                 .orElseThrow(() -> new ResourceNotFoundException("Saved news not found for news ID: " + newsId));
         savedNewsRepository.delete(savedNews);
-        newsCacheService.evictFeedCache();
     }
 
     @Override
