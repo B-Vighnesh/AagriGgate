@@ -1,8 +1,20 @@
 import { requestJson } from './api';
 
+/**
+ * Unwraps the API response envelope.
+ * Intercepts 403 Forbidden so the UI can display a meaningful access-denied message.
+ */
 const unwrap = async (promise) => {
-  const response = await promise;
-  return response?.data ?? response;
+  try {
+    const response = await promise;
+    return response?.data ?? response;
+  } catch (error) {
+    // Provide a user-friendly message when the backend returns 403 (role mismatch)
+    if (error?.status === 403) {
+      throw new Error('You do not have permission to access news. Please contact support.');
+    }
+    throw error;
+  }
 };
 
 export const getNews = (params = {}) => {
@@ -22,8 +34,7 @@ export const getNews = (params = {}) => {
 export const getNewsById = (id) =>
   unwrap(requestJson(`/news/${id}`, { method: 'GET' }));
 
-// LEVEL 2 — Report feature disabled for Level 1 release
-// Uncomment when content moderation workflow is implemented
+// TODO: Report feature temporarily disabled — to be re-enabled in future release.
 // export const reportNews = (newsId, reason) =>
 //   unwrap(requestJson(`/news/${newsId}/report`, {
 //     method: 'POST',

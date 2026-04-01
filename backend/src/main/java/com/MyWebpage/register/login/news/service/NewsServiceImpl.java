@@ -88,7 +88,8 @@ public class NewsServiceImpl implements NewsService {
             int size,
             String sortBy
     ) {
-        var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50), resolveSort(sortBy));
+        // Page size cap raised from 50 → 100 to support production-scale news feeds
+        var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), resolveSort(sortBy));
         Page<News> newsPage = newsRepository.findAll(buildSpecification(NewsStatus.ACTIVE, category, newsType, language, isImportant, keyword, dateRange), pageable);
         Set<Long> savedIds = loadSavedIds(currentUserId, newsPage.getContent().stream().map(News::getId).toList());
         return newsPage.map(news -> newsMapper.toResponse(news, savedIds.contains(news.getId())));
@@ -179,8 +180,7 @@ public class NewsServiceImpl implements NewsService {
         return response;
     }
 
-// LEVEL 2 — Report feature disabled for Level 1 release
-// Uncomment when content moderation workflow is implemented
+// TODO: Report feature temporarily disabled — to be re-enabled in future release.
 /*
     @Override
     @Transactional
@@ -206,7 +206,8 @@ public class NewsServiceImpl implements NewsService {
             int size,
             String sortBy
     ) {
-        var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50), resolveSort(sortBy));
+        // Page size cap raised from 50 → 100 to support production-scale admin views
+        var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), resolveSort(sortBy));
         return newsRepository.findAll(buildSpecification(status, category, newsType, null, null, keyword, null), pageable)
                 .map(newsMapper::toResponse);
     }

@@ -39,8 +39,7 @@ public interface NewsService {
 
     NewsResponse restoreNews(Long id);
 
-// LEVEL 2 — Report feature disabled for Level 1 release
-// Uncomment when content moderation workflow is implemented
+// TODO: Report feature temporarily disabled — to be re-enabled in future release.
 //    void reportNews(Long newsId, String reason);
 
     Page<NewsResponse> getAdminNews(
