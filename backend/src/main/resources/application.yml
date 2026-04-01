@@ -31,7 +31,7 @@ news:
     key: ${NEWS_API_KEY:63a3f1fd8c9c25b008ebe112c5946a00}
     gnews-url: https://gnews.io/api/v4
     rss-timeout-seconds: 10
-    max-items-per-source: 10
+    max-items-per-source: 100
 
 admin:
   username: ${ADMIN_USERNAME:admin}
