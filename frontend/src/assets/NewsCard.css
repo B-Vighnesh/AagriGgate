@@ -33,6 +33,28 @@
   height: 100%;
   display: block;
   object-fit: cover;
+  /* Task 6: Start invisible; fade in when loaded */
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.news-card-image.is-loaded {
+  opacity: 1;
+}
+
+/* Task 6: Shimmer placeholder while image loads */
+.news-card-image-shimmer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: newsCardShimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes newsCardShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .news-card-image-placeholder {

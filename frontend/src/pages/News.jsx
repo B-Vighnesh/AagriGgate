@@ -5,6 +5,7 @@ import NewsCard from '../components/NewsCard';
 import Button from '../components/common/Button';
 import Toast from '../components/common/Toast';
 import { isLoggedIn } from '../lib/auth';
+import { groupNewsByDate } from '../lib/dateUtils';
 import { getNews, getSavedNews, saveNews, unsaveNews } from '../lib/newsApi';
 
 const PAGE_SIZE = 10;
@@ -172,7 +173,7 @@ export default function News() {
         setIsAuthorized(false);
         navigate('/login', {
           replace: true,
-          state: { message: 'Please log in to read news and alerts.' },
+          state: { message: 'Please log in to read news.' },
         });
         return;
       }
@@ -227,6 +228,10 @@ export default function News() {
         });
       } catch (error) {
         if (!active) return;
+        // Task 1: Gracefully handle 403 Forbidden (unauthorized role)
+        if (error?.status === 403) {
+          showToast('You do not have permission to access news.', 'error');
+        }
         setAllState({
           items: [],
           totalPages: 0,
@@ -267,6 +272,10 @@ export default function News() {
         });
       } catch (error) {
         if (!active) return;
+        // Task 1: Gracefully handle 403 Forbidden (unauthorized role)
+        if (error?.status === 403) {
+          showToast('You do not have permission to view saved news.', 'error');
+        }
         setSavedState({
           items: [],
           totalPages: 0,
@@ -491,18 +500,24 @@ export default function News() {
 
             {!currentState.loading && !currentState.error && currentItems.length > 0 ? (
               <>
-                <div className="news-grid">
-                  {currentItems.map((item) => (
-                    <NewsCard
-                      key={item.id}
-                      news={item}
-                      isSaved={activeTab === 'all' ? Boolean(item.isSaved) : true}
-                      onSave={handleSave}
-                      onUnsave={handleUnsave}
-                      showSaveButton
-                    />
-                  ))}
-                </div>
+                {/* Task 4: Date-based grouping — group news under Today / Yesterday / Date headers */}
+                {groupNewsByDate(currentItems).map((group) => (
+                  <div key={group.label} className="news-date-group">
+                    <h2 className="news-date-group-label">{group.label}</h2>
+                    <div className="news-grid">
+                      {group.items.map((item) => (
+                        <NewsCard
+                          key={item.id}
+                          news={item}
+                          isSaved={activeTab === 'all' ? Boolean(item.isSaved) : true}
+                          onSave={handleSave}
+                          onUnsave={handleUnsave}
+                          showSaveButton
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
 
                 <div className="news-pagination">
                   {currentState.totalPages > 1 ? (

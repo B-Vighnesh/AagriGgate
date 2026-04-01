@@ -473,15 +473,20 @@ public class NewsIngestionScheduler {
     }
 
     private String extractImageFromEntry(SyndEntry entry) {
+        // 1. Check enclosures (standard RSS image attachment)
         if (entry.getEnclosures() != null && !entry.getEnclosures().isEmpty()) {
             String url = entry.getEnclosures().get(0).getUrl();
             if (url != null && !url.isBlank()) {
                 return sanitizeImageUrl(url);
             }
         }
+        // 2. Check foreign markup for media:content and media:thumbnail
         if (entry.getForeignMarkup() != null) {
             for (Element element : entry.getForeignMarkup()) {
-                if ("content".equals(element.getName()) && "media".equals(element.getNamespacePrefix())) {
+                String prefix = element.getNamespacePrefix();
+                String name = element.getName();
+                // media:content or media:thumbnail — both carry a "url" attribute
+                if ("media".equals(prefix) && ("content".equals(name) || "thumbnail".equals(name))) {
                     String url = element.getAttributeValue("url");
                     if (url != null && !url.isBlank()) {
                         return sanitizeImageUrl(url);
@@ -489,15 +494,40 @@ public class NewsIngestionScheduler {
                 }
             }
         }
+        // 3. Fallback: try to extract the first <img> src from the description HTML
+        SyndContent description = entry.getDescription();
+        if (description != null && description.getValue() != null) {
+            String html = description.getValue();
+            try {
+                org.jsoup.nodes.Document doc = Jsoup.parse(html);
+                org.jsoup.nodes.Element img = doc.selectFirst("img[src]");
+                if (img != null) {
+                    String src = img.attr("abs:src");
+                    if (src.isBlank()) {
+                        src = img.attr("src");
+                    }
+                    if (!src.isBlank()) {
+                        return sanitizeImageUrl(src);
+                    }
+                }
+            } catch (Exception ignored) {
+                // HTML parsing failure is non-critical; skip image extraction
+            }
+        }
         return null;
     }
 
     private String sanitizeImageUrl(String imageUrl) {
-        if (imageUrl == null || imageUrl.isBlank() || imageUrl.startsWith("http://")) {
+        if (imageUrl == null || imageUrl.isBlank()) {
             return null;
         }
+        // Task 6: Attempt to upgrade http → https instead of discarding
+        String url = imageUrl.trim();
+        if (url.startsWith("http://")) {
+            url = "https://" + url.substring(7);
+        }
         try {
-            URI uri = new URI(imageUrl);
+            URI uri = new URI(url);
             String host = uri.getHost();
             if (host == null) {
                 return null;
@@ -507,7 +537,7 @@ public class NewsIngestionScheduler {
                     return null;
                 }
             }
-            return imageUrl;
+            return url;
         } catch (URISyntaxException exception) {
             return null;
         }

@@ -27,7 +27,7 @@ public class NewsApiProperties {
     private int gnewsTimeoutSeconds = 5;
 
     @Min(1)
-    @Max(100)
+    @Max(200)
     private int maxItemsPerSource = 100;
 
     @NotBlank

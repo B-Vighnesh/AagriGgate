@@ -48,6 +48,7 @@ export default function NewsCard({
   showSaveButton = true,
 }) {
   const [imageFailed, setImageFailed] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const category = news?.category || 'OTHER';
   const type = news?.newsType || 'EXTERNAL';
@@ -84,13 +85,21 @@ export default function NewsCard({
     >
       <div className="news-card-image-wrap">
         {news?.imageUrl && !imageFailed ? (
-          <img
-            src={news.imageUrl}
-            alt={news?.title || 'News'}
-            className="news-card-image"
-            loading="lazy"
-            onError={() => setImageFailed(true)}
-          />
+          <>
+            {/* Shimmer placeholder shown while image loads */}
+            {!imageLoaded ? (
+              <div className="news-card-image-shimmer" />
+            ) : null}
+            <img
+              src={news.imageUrl}
+              alt={news?.title || 'News'}
+              className={`news-card-image ${imageLoaded ? 'is-loaded' : ''}`}
+              loading="lazy"
+              crossOrigin="anonymous"
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageFailed(true)}
+            />
+          </>
         ) : null}
         {!news?.imageUrl || imageFailed ? (
           <div className={`news-card-image-placeholder cat-${categoryClass}`}>
@@ -138,8 +147,7 @@ export default function NewsCard({
           ) : null}
         </div>
 
-        {/* LEVEL 2 — Report feature disabled for Level 1 release */}
-        {/* Uncomment when content moderation workflow is implemented */}
+        {/* TODO: Report feature temporarily disabled — to be re-enabled in future release. */}
         {/*
         <div className="news-card-report">
           <span>Report</span>
