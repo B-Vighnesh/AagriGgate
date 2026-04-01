@@ -212,7 +212,11 @@ public class NewsIngestionScheduler {
                 if (sourceUrl == null || title == null) {
                     continue;
                 }
-                if (newsRepository.existsBySourceUrlOrTitle(sourceUrl, title)) {
+                String sourceUrlHash = News.buildSourceUrlHash(title, sourceUrl);
+                if (sourceUrlHash == null) {
+                    continue;
+                }
+                if (newsRepository.existsBySourceUrlHash(sourceUrlHash)) {
                     dedupedCount++;
                     continue;
                 }
@@ -221,6 +225,7 @@ public class NewsIngestionScheduler {
                 item.setTitle(title);
                 item.setImageUrl(sanitizeImageUrl(item.getImageUrl()));
                 News news = newsMapper.toEntity(item);
+                news.setSourceUrlHash(sourceUrlHash);
                 news.setUploadedBy("SOURCE");
                 news.setNewsType(NewsType.EXTERNAL);
                 news.setStatus(NewsStatus.ACTIVE);
