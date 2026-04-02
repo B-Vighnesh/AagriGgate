@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,7 +64,14 @@ public class SavedMarketServiceImpl implements SavedMarketService {
     @Override
     @Transactional(readOnly = true)
     public Page<SavedMarketResponse> getAll(Long userId, int page, int size) {
-        return savedMarketRepository.findByUserId(userId, PageRequest.of(page, size))
+        return savedMarketRepository.findByUserId(
+                        userId,
+                        PageRequest.of(
+                                page,
+                                size,
+                                Sort.by(Sort.Order.desc("savedAt"), Sort.Order.desc("id"))
+                        )
+                )
                 .map(SavedMarketResponse::from);
     }
 

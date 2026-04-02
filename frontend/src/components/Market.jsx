@@ -220,7 +220,7 @@ export default function Market() {
       setToDate(queryToDate);
       const message = 'Date range is limited to 7 days from the start date. Showing the first allowed 7-day window.';
       setError(message);
-      if (manual) showToast(message, 'info', 10000);
+      showToast(message, 'info', 10000);
     }
 
     if (append) {
@@ -398,7 +398,9 @@ export default function Market() {
         });
       }
       showToast('Saved successfully.', 'success');
-      fetchSavedData(0, false);
+      if (showSaved) {
+        fetchSavedData(0, false);
+      }
     } catch {
       showToast('Server busy. Try again.', 'error');
     }
@@ -426,7 +428,9 @@ export default function Market() {
         return next;
       });
       showToast('Removed from saved.', 'success');
-      fetchSavedData(0, false);
+      if (showSaved) {
+        fetchSavedData(0, false);
+      }
     } catch {
       showToast('Server busy. Try again.', 'error');
     }
