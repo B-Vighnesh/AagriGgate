@@ -9,4 +9,6 @@ public interface SavedMarketService {
     Page<SavedMarketResponse> getAll(Long userId, int page, int size);
 
     void delete(Long userId, Long id);
+
+    long deleteAll(Long userId);
 }

@@ -13,4 +13,6 @@ public interface SavedMarketRepository extends JpaRepository<SavedMarket, Long> 
     Optional<SavedMarket> findByIdAndUserId(Long id, Long userId);
 
     Optional<SavedMarket> findByUserIdAndMarket_Id(Long userId, Long marketId);
+
+    long deleteByUserId(Long userId);
 }

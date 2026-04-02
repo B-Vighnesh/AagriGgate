@@ -27,3 +27,9 @@ export const deleteSavedMarketData = async (id) => {
     method: 'DELETE',
   });
 };
+
+export const deleteAllSavedMarketData = async () => {
+  return apiFetch('/saved-market', {
+    method: 'DELETE',
+  });
+};

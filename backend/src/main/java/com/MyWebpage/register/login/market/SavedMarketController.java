@@ -51,4 +51,11 @@ public class SavedMarketController {
         savedMarketService.delete(userId, id);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAllMarketData(Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        savedMarketService.deleteAll(userId);
+        return ResponseEntity.noContent().build();
+    }
 }
