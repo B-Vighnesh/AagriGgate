@@ -213,6 +213,8 @@
 .news-content {
   display: grid;
   gap: 16px;
+  margin-top:80px;
+
 }
 
 .news-panel {
