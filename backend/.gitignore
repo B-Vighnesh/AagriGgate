@@ -42,3 +42,8 @@ startup.err
 other
 other/
 /other/
+
+
+#startup
+startup.err
+startup.out
