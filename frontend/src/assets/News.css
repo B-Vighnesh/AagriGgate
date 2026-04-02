@@ -30,6 +30,16 @@
   backdrop-filter: blur(10px);
 }
 
+/* ── Mobile: Collapsible filter section ─────────────────────────── */
+
+.news-filter-toggle {
+  display: none;
+}
+
+.news-filter-collapsible {
+  display: none;
+}
+
 .news-header-top {
   display: flex;
   align-items: flex-start;
@@ -203,6 +213,8 @@
 .news-content {
   display: grid;
   gap: 16px;
+  margin-top:80px;
+
 }
 
 .news-panel {
@@ -401,6 +413,63 @@
   font-size: 13px;
 }
 
+/* ── Infinite scroll sentinel & loading indicator ──────────────── */
+
+.news-scroll-sentinel {
+  height: 1px;
+  width: 100%;
+}
+
+.news-infinite-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px;
+}
+
+.news-infinite-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #2d7a3a;
+  border-radius: 50%;
+  animation: newsInfiniteSpin 0.7s linear infinite;
+}
+
+.news-infinite-loader span {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.news-end-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px 16px;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.news-end-indicator::before,
+.news-end-indicator::after {
+  content: "";
+  flex: 1;
+  max-width: 60px;
+  height: 1px;
+  background: #d1d5db;
+}
+
+@keyframes newsInfiniteSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ── Task 4: Date-based group headers ──────────────────────────────── */
 
 .news-date-group {
@@ -512,8 +581,10 @@
     gap: 14px;
   }
 
+  /* ── KEY FIX: Remove sticky on mobile so filters don't overlay content ── */
   .news-header {
-    top: 66px;
+    position: relative;
+    top: auto;
     padding: 12px 12px 10px;
     border-radius: 14px;
     gap: 10px;
@@ -558,6 +629,76 @@
     padding: 8px 14px;
     min-height: 36px;
     font-size: 12px;
+  }
+
+  /* ── Collapsible filter toggle on mobile ── */
+  .news-filter-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .news-filter-toggle:hover {
+    background: #f9fafb;
+    box-shadow: none;
+  }
+
+  .news-filter-toggle.is-active {
+    background: #f0faf2;
+    border-color: #2d7a3a;
+    color: #2d7a3a;
+  }
+
+  .news-filter-toggle-icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.25s ease;
+  }
+
+  .news-filter-toggle.is-active .news-filter-toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  .news-filter-toggle-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #2d7a3a;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .news-filter-collapsible {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease;
+  }
+
+  .news-filter-collapsible.is-open {
+    grid-template-rows: 1fr;
+  }
+
+  .news-filter-collapsible-inner {
+    overflow: hidden;
+  }
+
+  .news-filter-collapsible-inner .news-filter-bar {
+    padding-top: 10px;
   }
 
   .news-filter-bar,
@@ -630,23 +771,17 @@
     height: 160px;
   }
 
+  /* ── Hide desktop pagination, use infinite scroll on mobile ── */
   .news-pagination-desktop {
     display: none;
   }
 
-  .news-pagination-mobile {
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
-    gap: 10px;
+  .news-pagination {
+    display: none;
   }
 
-  .news-pagination-mobile span {
-    flex: 1;
-    text-align: center;
-    color: #6b7280;
-    font-size: 13px;
-    font-weight: 600;
+  .news-pagination-mobile {
+    display: none;
   }
 
   .news-page-button {
@@ -702,6 +837,11 @@
   }
 
   .news-pagination-summary {
+    font-size: 12px;
+  }
+
+  .news-filter-toggle {
+    min-height: 38px;
     font-size: 12px;
   }
 }

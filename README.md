@@ -151,29 +151,89 @@ AagriGgate is a full-stack agriculture marketplace that connects farmers and buy
 
 <div align="center">
 
-### Backend
+> **A modern, enterprise-grade full-stack architecture built for reliability, performance, and scale.**
 
-| Technology | Badge |
-|:-----------|:------|
-| Java 21 | [![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/) |
-| Spring Boot 3.3.4 | [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-6DB33F?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot) |
-| Spring Security | [![Spring Security](https://img.shields.io/badge/Spring%20Security-✓-6DB33F?style=flat-square&logo=springsecurity&logoColor=white)](https://spring.io/projects/spring-security) |
-| Spring Data JPA | [![JPA](https://img.shields.io/badge/Spring%20Data%20JPA-✓-6DB33F?style=flat-square&logo=spring&logoColor=white)](https://spring.io/projects/spring-data-jpa) |
-| Hibernate | [![Hibernate](https://img.shields.io/badge/Hibernate-ORM-59666C?style=flat-square&logo=hibernate&logoColor=white)](https://hibernate.org/) |
-| JWT | [![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)](https://jwt.io/) |
-| Maven | [![Maven](https://img.shields.io/badge/Maven-Build-C71A36?style=flat-square&logo=apachemaven&logoColor=white)](https://maven.apache.org/) |
-| MySQL (Dev) | [![MySQL](https://img.shields.io/badge/MySQL-Local%20Dev-4479A1?style=flat-square&logo=mysql&logoColor=white)](https://www.mysql.com/) |
-| PostgreSQL (Prod) | [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Production-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/) |
-| Spring Mail | [![Spring Mail](https://img.shields.io/badge/Spring%20Mail-✓-6DB33F?style=flat-square&logo=gmail&logoColor=white)](https://docs.spring.io/spring-framework/reference/integration/email.html) |
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│                         🌐  CLIENT LAYER                              │
+│       React 18  ·  Vite  ·  React Router  ·  Axios  ·  CSS3          │
+├───────────────────────────────────────────────────────────────────────┤
+│                       🔀  API GATEWAY                                 │
+│             REST API  ·  JWT Auth  ·  CORS  ·  HTTPS                  │
+├───────────────────────────────────────────────────────────────────────┤
+│                      ⚙️   SERVICE LAYER                               │
+│        Spring Boot 3.3.4  ·  Spring Security  ·  Spring Mail          │
+├───────────────────────────────────────────────────────────────────────┤
+│                      💾  PERSISTENCE LAYER                            │
+│         Spring Data JPA  ·  Hibernate ORM  ·  HikariCP                │
+├───────────────────────────────────────────────────────────────────────┤
+│                      🗄️   DATABASE LAYER                              │
+│          MySQL (Development)  ·  PostgreSQL (Production)              │
+├───────────────────────────────────────────────────────────────────────┤
+│                      🚀  DEPLOYMENT                                   │
+│            Docker  ·  Render  ·  Maven  ·  npm                        │
+└───────────────────────────────────────────────────────────────────────┘
+```
 
-### Frontend
+</div>
 
-| Technology | Badge |
-|:-----------|:------|
-| React 18 | [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/) |
-| Vite | [![Vite](https://img.shields.io/badge/Vite-Build%20Tool-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/) |
-| React Router DOM | [![React Router](https://img.shields.io/badge/React%20Router%20DOM-✓-CA4245?style=flat-square&logo=reactrouter&logoColor=white)](https://reactrouter.com/) |
-| CSS | [![CSS](https://img.shields.io/badge/CSS-Styling-1572B6?style=flat-square&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS) |
+---
+
+### ⚙️ Backend Core
+
+| Technology | Version | Badge | Role |
+|:-----------|:--------|:------|:-----|
+| Java | 21 (LTS) | [![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/) | Primary language with virtual threads, pattern matching, and modern APIs |
+| Spring Boot | 3.3.4 | [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-6DB33F?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot) | Application framework with auto-configuration, embedded Tomcat, and actuator |
+| Maven | 3.9+ | [![Maven](https://img.shields.io/badge/Maven-Build-C71A36?style=flat-square&logo=apachemaven&logoColor=white)](https://maven.apache.org/) | Build tool, dependency management, and lifecycle management |
+
+### 🔐 Security & Auth
+
+| Technology | Badge | Role |
+|:-----------|:------|:-----|
+| Spring Security | [![Spring Security](https://img.shields.io/badge/Spring%20Security-✓-6DB33F?style=flat-square&logo=springsecurity&logoColor=white)](https://spring.io/projects/spring-security) | Authentication filters, role-based authorization, and CORS configuration |
+| JSON Web Tokens | [![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)](https://jwt.io/) | Stateless session management with signed token verification |
+| Spring Mail + OTP | [![Spring Mail](https://img.shields.io/badge/Spring%20Mail-OTP-6DB33F?style=flat-square&logo=gmail&logoColor=white)](https://docs.spring.io/spring-framework/reference/integration/email.html) | Email-based OTP generation and verification for secure onboarding |
+
+### 💾 Data & Persistence
+
+| Technology | Badge | Role |
+|:-----------|:------|:-----|
+| Spring Data JPA | [![JPA](https://img.shields.io/badge/Spring%20Data%20JPA-✓-6DB33F?style=flat-square&logo=spring&logoColor=white)](https://spring.io/projects/spring-data-jpa) | Repository abstraction, query derivation, and pagination support |
+| Hibernate ORM | [![Hibernate](https://img.shields.io/badge/Hibernate-6.x-59666C?style=flat-square&logo=hibernate&logoColor=white)](https://hibernate.org/) | Object-relational mapping, lazy loading, and schema generation |
+| MySQL | [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql&logoColor=white)](https://www.mysql.com/) | Local development database |
+| PostgreSQL | [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/) | Production database on Render with managed backups |
+
+### 🎨 Frontend Core
+
+| Technology | Version | Badge | Role |
+|:-----------|:--------|:------|:-----|
+| React | 18 | [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/) | Component-based UI with hooks, context API, and concurrent features |
+| Vite | Latest | [![Vite](https://img.shields.io/badge/Vite-⚡_Fast-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/) | Lightning-fast HMR, optimized builds, and native ESM dev server |
+| React Router DOM | 6.x | [![React Router](https://img.shields.io/badge/React%20Router-6-CA4245?style=flat-square&logo=reactrouter&logoColor=white)](https://reactrouter.com/) | Client-side routing with protected routes and role-based navigation |
+| Axios | Latest | [![Axios](https://img.shields.io/badge/Axios-HTTP-5A29E4?style=flat-square&logo=axios&logoColor=white)](https://axios-http.com/) | HTTP client with interceptors for JWT injection and error handling |
+
+### 🖌 UI & Styling
+
+| Technology | Badge | Role |
+|:-----------|:------|:-----|
+| CSS3 | [![CSS3](https://img.shields.io/badge/CSS3-Modules-1572B6?style=flat-square&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS) | Custom design system with CSS variables, responsive grid, and animations |
+| Google Fonts | [![Fonts](https://img.shields.io/badge/Google%20Fonts-Segoe%20UI-4285F4?style=flat-square&logo=googlefonts&logoColor=white)](https://fonts.google.com/) | Typography with fallback to system font stack |
+| Responsive Design | [![Responsive](https://img.shields.io/badge/Responsive-Mobile_First-00C853?style=flat-square&logo=googlechrome&logoColor=white)](#) | Progressive breakpoints at 480px, 767px, 920px, and 1199px |
+
+### 🚀 DevOps & Infrastructure
+
+| Technology | Badge | Role |
+|:-----------|:------|:-----|
+| Docker | [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/) | Backend containerization with optimized multi-stage builds |
+| Render | [![Render](https://img.shields.io/badge/Render-Cloud-46E3B7?style=flat-square&logo=render&logoColor=white)](https://render.com/) | Production hosting with auto-deploy from main branch |
+| GitHub Actions | [![Actions](https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions) | Continuous integration and automated workflows |
+
+<div align="center">
+
+---
+
+> 💡 **Why this stack?** Every choice prioritizes **developer productivity**, **type safety**, and **production reliability**. Spring Boot + React is battle-tested at scale, while Vite and JPA keep the development loop fast and the data access clean.
 
 </div>
 
