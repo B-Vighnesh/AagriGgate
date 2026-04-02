@@ -5,22 +5,25 @@ export const getMarketPrice = async ({ crop, state, district, arrivalDate }) => 
   params.append('crop', crop);
   if (state) params.append('state', state);
   if (district) params.append('district', district);
-  if (arrivalDate) params.append('arrivalDate', arrivalDate);
-  return requestJson(`/market-price?${params.toString()}`);
+  if (arrivalDate) {
+    params.append('fromDate', arrivalDate);
+    params.append('toDate', arrivalDate);
+  }
+  return requestJson(`/market?${params.toString()}`);
 };
 
 export const getSavedMarketData = async ({ page = 0, size = 100 }) =>
-  requestJson(`/saved-market-data?page=${page}&size=${size}`);
+  requestJson(`/saved-market?page=${page}&size=${size}`);
 
 export const saveMarketData = async (body) => {
-  return apiFetch('/saved-market-data', {
+  return apiFetch('/saved-market', {
     method: 'POST',
     body: JSON.stringify(body),
   });
 };
 
 export const deleteSavedMarketData = async (id) => {
-  return apiFetch(`/saved-market-data/${id}`, {
+  return apiFetch(`/saved-market/${id}`, {
     method: 'DELETE',
   });
 };

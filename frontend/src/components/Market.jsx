@@ -9,12 +9,6 @@ import { deleteSavedMarketData, getMarketPrice, getSavedMarketData, saveMarketDa
 import commodities from './commodities';
 import statesAndDistricts from './statesAndDistricts';
 
-function toGovDate(dateString) {
-  if (!dateString || !dateString.includes('-')) return '';
-  const [yyyy, mm, dd] = dateString.split('-');
-  return `${dd}-${mm}-${yyyy}`;
-}
-
 function fmtPrice(value) {
   if (value === null || value === undefined || value === '') return '-';
   return `Rs ${value}`;
@@ -77,10 +71,12 @@ export default function Market() {
   const role = getRole();
   const farmerId = getFarmerId();
 
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const defaultDate = yesterday.toISOString().slice(0, 10);
 
   const [commodity, setCommodity] = useState('Tomato');
-  const [arrivalDate, setArrivalDate] = useState(todayIso);
+  const [arrivalDate, setArrivalDate] = useState(defaultDate);
   const [state, setState] = useState('');
   const [district, setDistrict] = useState('');
 
@@ -102,7 +98,10 @@ export default function Market() {
   const districts = useMemo(() => statesAndDistricts[state] || [], [state]);
   const savedDistricts = useMemo(() => statesAndDistricts[filterState] || [], [filterState]);
 
-  const savedKeySet = useMemo(() => new Set(savedData.map((item) => marketRecordKey(item))), [savedData]);
+  const savedMarketIds = useMemo(
+    () => new Set(savedData.map((item) => String(item.marketId)).filter(Boolean)),
+    [savedData],
+  );
 
   const stats = useMemo(() => {
     const modal = marketData.map((item) => Number(item.Modal_Price)).filter((n) => !Number.isNaN(n));
@@ -155,14 +154,12 @@ export default function Market() {
     setLoading(true);
     setError('');
 
-    const queryDate = toGovDate(arrivalDate);
-
     try {
       const response = await getMarketPrice({
         crop: commodity,
         state,
         district,
-        arrivalDate: queryDate,
+        arrivalDate,
       });
       const records = response.data || [];
       console.log(records);
@@ -218,7 +215,7 @@ export default function Market() {
   const handleSave = async (item) => {
     try {
       const body = { ...item };
-      const res = await saveMarketData(body);
+      const res = await saveMarketData({ marketId: item.id });
       if (!res.ok) {
         showToast('Unable to save this record.', 'error');
         return;
@@ -270,7 +267,7 @@ export default function Market() {
                 id="arrivalDate"
                 type="date"
                 value={arrivalDate}
-                max={todayIso}
+                max={defaultDate}
                 onChange={(e) => setArrivalDate(e.target.value)}
               />
             </div>
@@ -350,7 +347,7 @@ export default function Market() {
               <PriceCard
                 key={`${marketRecordKey(item)}-${index}`}
                 item={item}
-                isSaved={savedKeySet.has(marketRecordKey(item))}
+                isSaved={savedMarketIds.has(String(item.id))}
                 onSave={handleSave}
                 onDelete={handleDelete}
               />
@@ -360,7 +357,7 @@ export default function Market() {
 
         {!loading && !error && marketData.length === 0 && state && district && (
           <Card className="market-empty">
-            No data found for {commodity} in {district}, {state} on {toGovDate(arrivalDate)}.
+            No data found for {commodity} in {district}, {state} on {arrivalDate}.
           </Card>
         )}
 
