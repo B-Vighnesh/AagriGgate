@@ -1,4 +1,6 @@
 spring:
+  config:
+      import: optional:file:backend/.env[.properties],optional:file:.env[.properties]
   application:
     name: aagrigate
   profiles:
