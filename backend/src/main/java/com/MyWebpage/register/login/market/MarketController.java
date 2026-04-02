@@ -30,6 +30,13 @@ public class MarketController {
             @RequestParam(required = false) BigDecimal priceMin,
             @RequestParam(required = false) BigDecimal priceMax
     ) {
+        if (crop == null || crop.isBlank()) {
+            throw new IllegalArgumentException("crop parameter is required");
+        }
+        if (state == null || state.isBlank()) {
+            throw new IllegalArgumentException("state parameter is required");
+        }
+
         LocalDate resolvedFrom = fromDate;
         LocalDate resolvedTo = toDate;
         if (arrivalDate != null && resolvedFrom == null && resolvedTo == null) {
