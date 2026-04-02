@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Modal from './Modal';
 import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
@@ -50,7 +51,7 @@ function StatCard({ title, value, description, tone = 'primary' }) {
   );
 }
 
-function PriceCard({ item, isSaved, onSave, onDelete }) {
+function PriceCard({ item, isSaved, deleteId, onSave, onDelete }) {
   return (
     <Card className="market-price-card">
       <div className="market-price-card__head">
@@ -74,7 +75,7 @@ function PriceCard({ item, isSaved, onSave, onDelete }) {
       {!isSaved ? (
         <Button variant="outline" className="full-width" onClick={() => onSave(item)}>Save</Button>
       ) : (
-        <Button variant="danger" className="full-width" onClick={() => onDelete(item.id)}>Remove Saved</Button>
+        <Button variant="danger" className="full-width" onClick={() => onDelete(deleteId)}>Remove Saved</Button>
       )}
     </Card>
   );
@@ -105,11 +106,13 @@ export default function Market() {
   const [error, setError] = useState('');
   const [showSaved, setShowSaved] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [removeAllStep, setRemoveAllStep] = useState(0);
   const [marketPage, setMarketPage] = useState(0);
   const [hasMoreMarketData, setHasMoreMarketData] = useState(false);
   const [activeQuery, setActiveQuery] = useState(null);
   const [savedPage, setSavedPage] = useState(0);
   const [hasMoreSavedData, setHasMoreSavedData] = useState(false);
+  const [savedMarketLookup, setSavedMarketLookup] = useState({});
 
   const [filterCommodity, setFilterCommodity] = useState('');
   const [filterState, setFilterState] = useState('');
@@ -120,14 +123,12 @@ export default function Market() {
   const autoFetchTimerRef = useRef(null);
   const loadMoreRef = useRef(null);
   const loadMoreSavedRef = useRef(null);
+  const toastTimerRef = useRef(null);
 
   const districts = useMemo(() => statesAndDistricts[state] || [], [state]);
   const savedDistricts = useMemo(() => statesAndDistricts[filterState] || [], [filterState]);
 
-  const savedMarketIds = useMemo(
-    () => new Set(savedData.map((item) => String(item.marketId)).filter(Boolean)),
-    [savedData],
-  );
+  const savedMarketIds = useMemo(() => new Set(Object.keys(savedMarketLookup)), [savedMarketLookup]);
 
   const stats = useMemo(() => {
     const modal = marketData.map((item) => Number(item.Modal_Price)).filter((n) => !Number.isNaN(n));
@@ -156,9 +157,10 @@ export default function Market() {
     });
   }, [savedData, filterCommodity, filterState, filterDistrict, minPrice, maxPrice]);
 
-  const showToast = (message, type = 'info') => {
+  const showToast = (message, type = 'info', durationMs = 2500) => {
+    clearTimeout(toastTimerRef.current);
     setToast({ message, type });
-    setTimeout(() => setToast({ message: '', type: 'info' }), 2500);
+    toastTimerRef.current = setTimeout(() => setToast({ message: '', type: 'info' }), durationMs);
   };
 
   const fetchSavedData = useCallback(async (nextPage = 0, append = false) => {
@@ -174,9 +176,20 @@ export default function Market() {
     try {
       const pageData = await getSavedMarketData({ page: nextPage, size: PAGE_SIZE });
       const content = pageData?.content || [];
+      const nextLookupEntries = (Array.isArray(content) ? content : [])
+        .filter((item) => item?.marketId && item?.id)
+        .map((item) => [String(item.marketId), item.id]);
+
       setSavedPage(pageData?.number ?? nextPage);
-      setHasMoreSavedData(Boolean(pageData?.hasNext));
+      setHasMoreSavedData(pageData?.last === false || ((pageData?.number ?? 0) + 1 < (pageData?.totalPages ?? 0)));
       setSavedData((prev) => (append ? [...prev, ...content] : (Array.isArray(content) ? content : [])));
+      setSavedMarketLookup((prev) => {
+        const nextLookup = append ? { ...prev } : {};
+        nextLookupEntries.forEach(([marketId, savedId]) => {
+          nextLookup[marketId] = savedId;
+        });
+        return nextLookup;
+      });
     } catch {
       // ignore saved fetch errors silently
     } finally {
@@ -207,7 +220,7 @@ export default function Market() {
       setToDate(queryToDate);
       const message = 'Date range is limited to 7 days from the start date. Showing the first allowed 7-day window.';
       setError(message);
-      if (manual) showToast(message, 'info');
+      if (manual) showToast(message, 'info', 10000);
     }
 
     if (append) {
@@ -286,6 +299,7 @@ export default function Market() {
   useEffect(() => {
     return () => {
       clearTimeout(autoFetchTimerRef.current);
+      clearTimeout(toastTimerRef.current);
     };
   }, []);
 
@@ -372,6 +386,17 @@ export default function Market() {
         showToast('Unable to save this record.', 'error');
         return;
       }
+      const saved = await res.json().catch(() => null);
+      setSavedMarketLookup((prev) => ({
+        ...prev,
+        [String(item.id)]: saved?.id ?? prev[String(item.id)] ?? item.id,
+      }));
+      if (saved?.id) {
+        setSavedData((prev) => {
+          const exists = prev.some((entry) => entry.id === saved.id);
+          return exists ? prev : [saved, ...prev];
+        });
+      }
       showToast('Saved successfully.', 'success');
       fetchSavedData(0, false);
     } catch {
@@ -380,12 +405,26 @@ export default function Market() {
   };
 
   const handleDelete = async (id) => {
+    if (!id) {
+      showToast('Unable to identify saved item.', 'error');
+      return;
+    }
     try {
       const res = await deleteSavedMarketData(id);
       if (!res.ok) {
         showToast('Unable to delete saved item.', 'error');
         return;
       }
+      setSavedData((prev) => prev.filter((item) => item.id !== id));
+      setSavedMarketLookup((prev) => {
+        const next = { ...prev };
+        Object.keys(next).forEach((marketId) => {
+          if (next[marketId] === id) {
+            delete next[marketId];
+          }
+        });
+        return next;
+      });
       showToast('Removed from saved.', 'success');
       fetchSavedData(0, false);
     } catch {
@@ -394,13 +433,6 @@ export default function Market() {
   };
 
   const handleDeleteAllSaved = async () => {
-    if (!window.confirm('Remove all saved market data?')) {
-      return;
-    }
-    if (!window.confirm('This will permanently remove all saved market data. Are you absolutely sure?')) {
-      return;
-    }
-
     try {
       const res = await deleteAllSavedMarketData();
       if (!res.ok) {
@@ -410,6 +442,8 @@ export default function Market() {
       setSavedData([]);
       setSavedPage(0);
       setHasMoreSavedData(false);
+      setSavedMarketLookup({});
+      setRemoveAllStep(0);
       showToast('All saved market data removed.', 'success');
     } catch {
       showToast('Server busy. Try again.', 'error');
@@ -538,6 +572,7 @@ export default function Market() {
                       key={`${marketRecordKey(item)}-${index}`}
                       item={item}
                       isSaved={savedMarketIds.has(String(item.id))}
+                      deleteId={savedMarketLookup[String(item.id)]}
                       onSave={handleSave}
                       onDelete={handleDelete}
                     />
@@ -619,7 +654,7 @@ export default function Market() {
                 <Button variant="outline" onClick={() => setShowSaved(false)}>
                   Back To Market
                 </Button>
-                <Button variant="danger" onClick={handleDeleteAllSaved} disabled={savedData.length === 0}>
+                <Button variant="danger" onClick={() => setRemoveAllStep(1)} disabled={savedData.length === 0}>
                   Remove All
                 </Button>
               </div>
@@ -636,7 +671,7 @@ export default function Market() {
               <>
                 <div className="market-grid">
                   {filteredSavedData.map((item, index) => (
-                    <PriceCard key={`${item.id || marketRecordKey(item)}-${index}`} item={item} isSaved onDelete={handleDelete} />
+                    <PriceCard key={`${item.id || marketRecordKey(item)}-${index}`} item={item} isSaved deleteId={item.id} onDelete={handleDelete} />
                   ))}
                 </div>
                 {hasMoreSavedData && <div ref={loadMoreSavedRef} style={{ height: '1px' }} />}
@@ -656,6 +691,34 @@ export default function Market() {
         )}
       </div>
 
+      <Modal
+        isOpen={removeAllStep === 1}
+        title="Remove All Saved Data"
+        message="This will remove every saved market record from your account. You can’t undo this action."
+        onClose={() => setRemoveAllStep(0)}
+        secondaryAction={{
+          label: 'Cancel',
+          onClick: () => setRemoveAllStep(0),
+        }}
+        primaryAction={{
+          label: 'Continue',
+          onClick: () => setRemoveAllStep(2),
+        }}
+      />
+      <Modal
+        isOpen={removeAllStep === 2}
+        title="Final Confirmation"
+        message="Please confirm once more. All saved market data will be permanently deleted."
+        onClose={() => setRemoveAllStep(0)}
+        secondaryAction={{
+          label: 'Back',
+          onClick: () => setRemoveAllStep(1),
+        }}
+        primaryAction={{
+          label: 'Delete All',
+          onClick: handleDeleteAllSaved,
+        }}
+      />
       <Toast message={toast.message} type={toast.type} />
     </section>
   );

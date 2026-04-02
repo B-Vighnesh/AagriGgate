@@ -1,7 +1,7 @@
 import React from 'react';
 import '../assets/Modal.css';
 
-const Modal = ({ isOpen, title, message, onClose }) => {
+const Modal = ({ isOpen, title, message, onClose, primaryAction, secondaryAction }) => {
   if (!isOpen) return null;
 
   return (
@@ -9,9 +9,22 @@ const Modal = ({ isOpen, title, message, onClose }) => {
       <div className="modal-container">
         <h3>{title}</h3>
         <p>{message}</p>
-        <button onClick={onClose} className="modal-close-btn">
-          Close
-        </button> 
+        <div className="modal-actions">
+          {secondaryAction ? (
+            <button onClick={secondaryAction.onClick} className="modal-btn modal-btn--secondary" type="button">
+              {secondaryAction.label}
+            </button>
+          ) : null}
+          {primaryAction ? (
+            <button onClick={primaryAction.onClick} className="modal-btn modal-btn--primary" type="button">
+              {primaryAction.label}
+            </button>
+          ) : (
+            <button onClick={onClose} className="modal-btn modal-btn--primary" type="button">
+              Close
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
