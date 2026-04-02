@@ -10,6 +10,7 @@ import commodities from './commodities';
 import statesAndDistricts from './statesAndDistricts';
 
 const MAX_RANGE_DAYS = 7;
+const PAGE_SIZE = 20;
 
 function fmtPrice(value) {
   if (value === null || value === undefined || value === '') return '-';
@@ -92,9 +93,13 @@ export default function Market() {
   const [marketData, setMarketData] = useState([]);
   const [savedData, setSavedData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
   const [showSaved, setShowSaved] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [marketPage, setMarketPage] = useState(0);
+  const [hasMoreMarketData, setHasMoreMarketData] = useState(false);
+  const [activeQuery, setActiveQuery] = useState(null);
 
   const [filterCommodity, setFilterCommodity] = useState('');
   const [filterState, setFilterState] = useState('');
@@ -103,6 +108,7 @@ export default function Market() {
   const [maxPrice, setMaxPrice] = useState('');
 
   const autoFetchTimerRef = useRef(null);
+  const loadMoreRef = useRef(null);
 
   const districts = useMemo(() => statesAndDistricts[state] || [], [state]);
   const savedDistricts = useMemo(() => statesAndDistricts[filterState] || [], [filterState]);
@@ -154,7 +160,7 @@ export default function Market() {
     }
   }, [farmerId]);
 
-  const fetchMarketData = useCallback(async (manual = false) => {
+  const fetchMarketData = useCallback(async (manual = false, nextPage = 0, append = false) => {
     if (!state || !district || !commodity || !fromDate || !toDate) {
       if (manual) setError('Please select commodity, state, district, from date and to date.');
       return;
@@ -178,30 +184,50 @@ export default function Market() {
       if (manual) showToast(message, 'info');
     }
 
-    setLoading(true);
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+      setMarketData([]);
+      setMarketPage(0);
+      setHasMoreMarketData(false);
+    }
     if (rangeDays <= MAX_RANGE_DAYS - 1) {
       setError('');
     }
 
-    try {
-      const response = await getMarketPrice({
-        crop: commodity,
-        state,
-        district,
-        fromDate: queryFromDate,
-        toDate: queryToDate,
-      });
-      const records = response.data || [];
-      console.log(records);
+    const query = {
+      crop: commodity,
+      state,
+      district,
+      fromDate: queryFromDate,
+      toDate: queryToDate,
+    };
 
-      setMarketData(records);
-      if (manual) showToast(`Loaded ${records.length} records.`, 'success');
+    try {
+      const response = await getMarketPrice({ ...query, page: nextPage, size: PAGE_SIZE });
+      const payload = response.data || {};
+      const records = payload.items || [];
+
+      setActiveQuery(query);
+      setMarketPage(payload.page ?? nextPage);
+      setHasMoreMarketData(Boolean(payload.hasNext));
+      setMarketData((prev) => (append ? [...prev, ...records] : records));
+      if (manual) {
+        showToast(`Loaded ${payload.totalElements ?? records.length} records.`, 'success');
+      }
     } catch (err) {
-      setMarketData([]);
+      if (!append) {
+        setMarketData([]);
+      }
       setError('Unable to fetch market data right now. Please try again.');
       if (manual) showToast('Unable to fetch market prices.', 'error');
     } finally {
-      setLoading(false);
+      if (append) {
+        setLoadingMore(false);
+      } else {
+        setLoading(false);
+      }
     }
   }, [state, district, commodity, fromDate, toDate]);
 
@@ -236,6 +262,25 @@ export default function Market() {
       clearTimeout(autoFetchTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasMoreMarketData || loading || loadingMore || !activeQuery) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (!entry?.isIntersecting) {
+        return;
+      }
+      fetchMarketData(false, marketPage + 1, true);
+    }, {
+      rootMargin: '200px 0px',
+    });
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [activeQuery, fetchMarketData, hasMoreMarketData, loading, loadingMore, marketPage]);
 
   const handleStateChange = (nextState) => {
     setState(nextState);
@@ -383,17 +428,26 @@ export default function Market() {
         )}
 
         {!loading && marketData.length > 0 && (
-          <div className="market-grid">
-            {marketData.map((item, index) => (
-              <PriceCard
-                key={`${marketRecordKey(item)}-${index}`}
-                item={item}
-                isSaved={savedMarketIds.has(String(item.id))}
-                onSave={handleSave}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+          <>
+            <div className="market-grid">
+              {marketData.map((item, index) => (
+                <PriceCard
+                  key={`${marketRecordKey(item)}-${index}`}
+                  item={item}
+                  isSaved={savedMarketIds.has(String(item.id))}
+                  onSave={handleSave}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+            {hasMoreMarketData && <div ref={loadMoreRef} style={{ height: '1px' }} />}
+            {loadingMore && (
+              <div className="market-loading">
+                <div className="ui-spinner" />
+                <span>Loading more prices...</span>
+              </div>
+            )}
+          </>
         )}
 
         {!loading && !error && marketData.length === 0 && state && district && (

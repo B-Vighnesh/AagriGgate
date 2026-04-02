@@ -2,6 +2,7 @@ package com.MyWebpage.register.login.market;
 
 import com.MyWebpage.register.login.news.util.NewsTime;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,7 +22,7 @@ public class MarketQueryService {
         this.marketRepository = marketRepository;
     }
 
-    public List<MarketResultResponse> search(MarketSearchRequest request) {
+    public MarketSearchResponse search(MarketSearchRequest request, int page, int size) {
         LocalDate yesterday = LocalDate.now(NewsTime.IST).minusDays(1);
         LocalDate fromDate = request.fromDate();
         LocalDate toDate = request.toDate();
@@ -64,9 +65,12 @@ public class MarketQueryService {
             return cb.and(predicates.toArray(Predicate[]::new));
         };
 
+        int resolvedPage = Math.max(page, 0);
+        int resolvedSize = Math.min(Math.max(size, 1), 50);
+
         PageRequest pageRequest = PageRequest.of(
-                0,
-                20,
+                resolvedPage,
+                resolvedSize,
                 Sort.by(
                         Sort.Order.desc("modalPrice"),
                         Sort.Order.desc("arrivalDate"),
@@ -75,9 +79,15 @@ public class MarketQueryService {
                 )
         );
 
-        return marketRepository.findAll(specification, pageRequest)
-                .stream()
-                .map(MarketResultResponse::from)
-                .toList();
+        Page<Market> resultPage = marketRepository.findAll(specification, pageRequest);
+
+        return new MarketSearchResponse(
+                resultPage.stream().map(MarketResultResponse::from).toList(),
+                resultPage.getNumber(),
+                resultPage.getSize(),
+                resultPage.getTotalElements(),
+                resultPage.getTotalPages(),
+                resultPage.hasNext()
+        );
     }
 }
