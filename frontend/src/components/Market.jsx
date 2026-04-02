@@ -5,7 +5,7 @@ import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
-import { deleteSavedMarketData, getMarketPrice, getSavedMarketData, saveMarketData } from '../api/marketApi';
+import { deleteAllSavedMarketData, deleteSavedMarketData, getMarketPrice, getSavedMarketData, saveMarketData } from '../api/marketApi';
 import commodities from './commodities';
 import statesAndDistricts from './statesAndDistricts';
 
@@ -94,12 +94,16 @@ export default function Market() {
   const [savedData, setSavedData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadingSaved, setLoadingSaved] = useState(false);
+  const [loadingMoreSaved, setLoadingMoreSaved] = useState(false);
   const [error, setError] = useState('');
   const [showSaved, setShowSaved] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [marketPage, setMarketPage] = useState(0);
   const [hasMoreMarketData, setHasMoreMarketData] = useState(false);
   const [activeQuery, setActiveQuery] = useState(null);
+  const [savedPage, setSavedPage] = useState(0);
+  const [hasMoreSavedData, setHasMoreSavedData] = useState(false);
 
   const [filterCommodity, setFilterCommodity] = useState('');
   const [filterState, setFilterState] = useState('');
@@ -109,6 +113,7 @@ export default function Market() {
 
   const autoFetchTimerRef = useRef(null);
   const loadMoreRef = useRef(null);
+  const loadMoreSavedRef = useRef(null);
 
   const districts = useMemo(() => statesAndDistricts[state] || [], [state]);
   const savedDistricts = useMemo(() => statesAndDistricts[filterState] || [], [filterState]);
@@ -150,13 +155,30 @@ export default function Market() {
     setTimeout(() => setToast({ message: '', type: 'info' }), 2500);
   };
 
-  const fetchSavedData = useCallback(async () => {
+  const fetchSavedData = useCallback(async (nextPage = 0, append = false) => {
+    if (append) {
+      setLoadingMoreSaved(true);
+    } else {
+      setLoadingSaved(true);
+      setSavedData([]);
+      setSavedPage(0);
+      setHasMoreSavedData(false);
+    }
+
     try {
-      const pageData = await getSavedMarketData({ page: 0, size: 500 });
+      const pageData = await getSavedMarketData({ page: nextPage, size: PAGE_SIZE });
       const content = pageData?.content || [];
-      setSavedData(Array.isArray(content) ? content : []);
+      setSavedPage(pageData?.number ?? nextPage);
+      setHasMoreSavedData(Boolean(pageData?.hasNext));
+      setSavedData((prev) => (append ? [...prev, ...content] : (Array.isArray(content) ? content : [])));
     } catch {
       // ignore saved fetch errors silently
+    } finally {
+      if (append) {
+        setLoadingMoreSaved(false);
+      } else {
+        setLoadingSaved(false);
+      }
     }
   }, [farmerId]);
 
@@ -244,7 +266,7 @@ export default function Market() {
 
   useEffect(() => {
     if (role === 'buyer' || !token || !farmerId) return;
-    fetchSavedData();
+    fetchSavedData(0, false);
   }, [role, token, farmerId, fetchSavedData]);
 
   useEffect(() => {
@@ -282,6 +304,25 @@ export default function Market() {
     return () => observer.disconnect();
   }, [activeQuery, fetchMarketData, hasMoreMarketData, loading, loadingMore, marketPage]);
 
+  useEffect(() => {
+    if (!showSaved || !loadMoreSavedRef.current || !hasMoreSavedData || loadingSaved || loadingMoreSaved) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (!entry?.isIntersecting) {
+        return;
+      }
+      fetchSavedData(savedPage + 1, true);
+    }, {
+      rootMargin: '200px 0px',
+    });
+
+    observer.observe(loadMoreSavedRef.current);
+    return () => observer.disconnect();
+  }, [fetchSavedData, hasMoreSavedData, loadingMoreSaved, loadingSaved, savedPage, showSaved]);
+
   const handleStateChange = (nextState) => {
     setState(nextState);
     setDistrict('');
@@ -295,7 +336,7 @@ export default function Market() {
         return;
       }
       showToast('Saved successfully.', 'success');
-      fetchSavedData();
+      fetchSavedData(0, false);
     } catch {
       showToast('Server busy. Try again.', 'error');
     }
@@ -309,7 +350,30 @@ export default function Market() {
         return;
       }
       showToast('Removed from saved.', 'success');
-      fetchSavedData();
+      fetchSavedData(0, false);
+    } catch {
+      showToast('Server busy. Try again.', 'error');
+    }
+  };
+
+  const handleDeleteAllSaved = async () => {
+    if (!window.confirm('Remove all saved market data?')) {
+      return;
+    }
+    if (!window.confirm('This will permanently remove all saved market data. Are you absolutely sure?')) {
+      return;
+    }
+
+    try {
+      const res = await deleteAllSavedMarketData();
+      if (!res.ok) {
+        showToast('Unable to remove all saved data.', 'error');
+        return;
+      }
+      setSavedData([]);
+      setSavedPage(0);
+      setHasMoreSavedData(false);
+      showToast('All saved market data removed.', 'success');
     } catch {
       showToast('Server busy. Try again.', 'error');
     }
@@ -320,143 +384,145 @@ export default function Market() {
       <ValidateToken token={token} />
       <div className="ag-container">
         <header className="market-header">
-          <h1>Market Prices</h1>
-          <p>Market prices from stored mandi data with up to 7 days of history.</p>
+          <h1>{showSaved ? 'Saved Market Data' : 'Market Prices'}</h1>
+          <p>{showSaved ? 'Your saved market records with filters and scroll pagination.' : 'Market prices from stored mandi data with up to 7 days of history.'}</p>
         </header>
 
-        <Card className="market-filter-card">
-          <div className="market-filter-grid">
-            <div className="market-field">
-              <label htmlFor="commodity">Commodity</label>
-              <select id="commodity" value={commodity} onChange={(e) => setCommodity(e.target.value)}>
-                {commodities.map((item) => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="market-field">
-              <label htmlFor="fromDate">From Date</label>
-              <input
-                id="fromDate"
-                type="date"
-                value={fromDate}
-                max={defaultDate}
-                onChange={(e) => setFromDate(e.target.value)}
-              />
-            </div>
-
-            <div className="market-field">
-              <label htmlFor="toDate">To Date</label>
-              <input
-                id="toDate"
-                type="date"
-                value={toDate}
-                max={defaultDate}
-                min={fromDate}
-                onChange={(e) => setToDate(e.target.value)}
-              />
-            </div>
-
-            <div className="market-field">
-              <label htmlFor="state">State</label>
-              <select id="state" value={state} onChange={(e) => handleStateChange(e.target.value)}>
-                <option value="">Select State</option>
-                {Object.keys(statesAndDistricts).map((item) => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="market-field">
-              <label htmlFor="district">District</label>
-              <select
-                id="district"
-                value={district}
-                disabled={!state}
-                onChange={(e) => setDistrict(e.target.value)}
-              >
-                <option value="">Select District</option>
-                {districts.map((item) => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="market-actions">
-            <Button onClick={() => fetchMarketData(true)} disabled={!state || !district || !commodity || !fromDate || !toDate}>
-              Fetch Prices
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowSaved((prev) => !prev);
-                if (!showSaved) fetchSavedData();
-              }}
-            >
-              {showSaved ? 'Hide Saved' : 'Saved Data'}
-            </Button>
-          </div>
-        </Card>
-
-        {error && <p className="market-error">{error}</p>}
-
-        {!loading && (stats.average || stats.lowest || stats.highest) && (
-          <div className="market-stats-grid">
-            <StatCard title="Average (Modal)" value={fmtPrice(stats.average)} tone="primary" />
-            <StatCard
-              title="Lowest Available"
-              value={fmtPrice(stats.lowest?.price)}
-              description={stats.lowest?.market || ''}
-              tone="success"
-            />
-            <StatCard
-              title="Highest Available"
-              value={fmtPrice(stats.highest?.price)}
-              description={stats.highest?.market || ''}
-              tone="warning"
-            />
-          </div>
-        )}
-
-        {loading && (
-          <div className="market-loading">
-            <div className="ui-spinner ui-spinner--lg" />
-            <span>Fetching market data...</span>
-          </div>
-        )}
-
-        {!loading && marketData.length > 0 && (
+        {!showSaved ? (
           <>
-            <div className="market-grid">
-              {marketData.map((item, index) => (
-                <PriceCard
-                  key={`${marketRecordKey(item)}-${index}`}
-                  item={item}
-                  isSaved={savedMarketIds.has(String(item.id))}
-                  onSave={handleSave}
-                  onDelete={handleDelete}
+            <Card className="market-filter-card">
+              <div className="market-filter-grid">
+                <div className="market-field">
+                  <label htmlFor="commodity">Commodity</label>
+                  <select id="commodity" value={commodity} onChange={(e) => setCommodity(e.target.value)}>
+                    {commodities.map((item) => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="market-field">
+                  <label htmlFor="fromDate">From Date</label>
+                  <input
+                    id="fromDate"
+                    type="date"
+                    value={fromDate}
+                    max={defaultDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                  />
+                </div>
+
+                <div className="market-field">
+                  <label htmlFor="toDate">To Date</label>
+                  <input
+                    id="toDate"
+                    type="date"
+                    value={toDate}
+                    max={defaultDate}
+                    min={fromDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                  />
+                </div>
+
+                <div className="market-field">
+                  <label htmlFor="state">State</label>
+                  <select id="state" value={state} onChange={(e) => handleStateChange(e.target.value)}>
+                    <option value="">Select State</option>
+                    {Object.keys(statesAndDistricts).map((item) => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="market-field">
+                  <label htmlFor="district">District</label>
+                  <select
+                    id="district"
+                    value={district}
+                    disabled={!state}
+                    onChange={(e) => setDistrict(e.target.value)}
+                  >
+                    <option value="">Select District</option>
+                    {districts.map((item) => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="market-actions">
+                <Button onClick={() => fetchMarketData(true)} disabled={!state || !district || !commodity || !fromDate || !toDate}>
+                  Fetch Prices
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowSaved(true);
+                    fetchSavedData(0, false);
+                  }}
+                >
+                  Saved Data
+                </Button>
+              </div>
+            </Card>
+
+            {error && <p className="market-error">{error}</p>}
+
+            {!loading && (stats.average || stats.lowest || stats.highest) && (
+              <div className="market-stats-grid">
+                <StatCard title="Average (Modal)" value={fmtPrice(stats.average)} tone="primary" />
+                <StatCard
+                  title="Lowest Available"
+                  value={fmtPrice(stats.lowest?.price)}
+                  description={stats.lowest?.market || ''}
+                  tone="success"
                 />
-              ))}
-            </div>
-            {hasMoreMarketData && <div ref={loadMoreRef} style={{ height: '1px' }} />}
-            {loadingMore && (
-              <div className="market-loading">
-                <div className="ui-spinner" />
-                <span>Loading more prices...</span>
+                <StatCard
+                  title="Highest Available"
+                  value={fmtPrice(stats.highest?.price)}
+                  description={stats.highest?.market || ''}
+                  tone="warning"
+                />
               </div>
             )}
+
+            {loading && (
+              <div className="market-loading">
+                <div className="ui-spinner ui-spinner--lg" />
+                <span>Fetching market data...</span>
+              </div>
+            )}
+
+            {!loading && marketData.length > 0 && (
+              <>
+                <div className="market-grid">
+                  {marketData.map((item, index) => (
+                    <PriceCard
+                      key={`${marketRecordKey(item)}-${index}`}
+                      item={item}
+                      isSaved={savedMarketIds.has(String(item.id))}
+                      onSave={handleSave}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+                {hasMoreMarketData && <div ref={loadMoreRef} style={{ height: '1px' }} />}
+                {loadingMore && (
+                  <div className="market-loading">
+                    <div className="ui-spinner" />
+                    <span>Loading more prices...</span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {!loading && !error && marketData.length === 0 && state && district && (
+              <Card className="market-empty">
+                No data found for {commodity} in {district}, {state} from {fromDate} to {toDate}.
+              </Card>
+            )}
           </>
-        )}
-
-        {!loading && !error && marketData.length === 0 && state && district && (
-          <Card className="market-empty">
-            No data found for {commodity} in {district}, {state} from {fromDate} to {toDate}.
-          </Card>
-        )}
-
-        {showSaved && (
+        ) : (
           <section className="market-saved">
             <div className="market-saved__head">
               <h2>Saved Market Data</h2>
@@ -511,15 +577,42 @@ export default function Market() {
                   <input id="maxPrice" type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="0" />
                 </div>
               </div>
+
+              <div className="market-actions">
+                <Button variant="outline" onClick={() => setShowSaved(false)}>
+                  Back To Market
+                </Button>
+                <Button variant="danger" onClick={handleDeleteAllSaved} disabled={savedData.length === 0}>
+                  Remove All
+                </Button>
+              </div>
             </Card>
 
-            {filteredSavedData.length > 0 ? (
-              <div className="market-grid">
-                {filteredSavedData.map((item, index) => (
-                  <PriceCard key={`${item.id || marketRecordKey(item)}-${index}`} item={item} isSaved onDelete={handleDelete} />
-                ))}
+            {loadingSaved && (
+              <div className="market-loading">
+                <div className="ui-spinner ui-spinner--lg" />
+                <span>Loading saved data...</span>
               </div>
-            ) : (
+            )}
+
+            {!loadingSaved && filteredSavedData.length > 0 ? (
+              <>
+                <div className="market-grid">
+                  {filteredSavedData.map((item, index) => (
+                    <PriceCard key={`${item.id || marketRecordKey(item)}-${index}`} item={item} isSaved onDelete={handleDelete} />
+                  ))}
+                </div>
+                {hasMoreSavedData && <div ref={loadMoreSavedRef} style={{ height: '1px' }} />}
+                {loadingMoreSaved && (
+                  <div className="market-loading">
+                    <div className="ui-spinner" />
+                    <span>Loading more saved data...</span>
+                  </div>
+                )}
+              </>
+            ) : null}
+
+            {!loadingSaved && filteredSavedData.length === 0 && (
               <Card className="market-empty">No saved data found for selected filters.</Card>
             )}
           </section>

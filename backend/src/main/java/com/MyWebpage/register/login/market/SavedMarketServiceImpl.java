@@ -75,4 +75,12 @@ public class SavedMarketServiceImpl implements SavedMarketService {
         savedMarketRepository.delete(savedMarket);
         logger.info("Saved market deleted: {}", id);
     }
+
+    @Override
+    @Transactional
+    public long deleteAll(Long userId) {
+        long deleted = savedMarketRepository.deleteByUserId(userId);
+        logger.info("Deleted {} saved market rows for user {}", deleted, userId);
+        return deleted;
+    }
 }
