@@ -72,7 +72,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/notifications/**").hasAnyRole("BUYER", "SELLER")
                         .requestMatchers("/api/v1/buyers/me", "/api/v1/buyers/*").hasAnyRole("SELLER", "BUYER")
                         .requestMatchers("/api/v1/buyers/**", "/api/v1/buyer/approach/**", "/api/v1/users/favorites/**", "/api/v1/cart/**", "/api/v1/crops/*/favorite").hasRole("BUYER")
-                        .requestMatchers("/api/v1/farmers/**", "/api/v1/crops/farmer/**", "/api/v1/seller/approach/**", "/api/v1/saved-market-data/**", "/api/v1/market-price/**", "/api/v1/weather/**").hasRole("SELLER")
+                        .requestMatchers(
+                                "/api/v1/farmers/**",
+                                "/api/v1/crops/farmer/**",
+                                "/api/v1/seller/approach/**",
+                                "/api/v1/saved-market/**",
+                                "/api/v1/saved-market-data/**",
+                                "/api/v1/market/**",
+                                "/api/v1/market-price/**",
+                                "/api/v1/weather/**"
+                        ).hasRole("SELLER")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
