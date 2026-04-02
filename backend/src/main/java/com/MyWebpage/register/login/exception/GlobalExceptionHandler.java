@@ -6,6 +6,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -24,6 +25,12 @@ public class GlobalExceptionHandler {
                 .map(err -> err.getField() + " " + err.getDefaultMessage())
                 .orElse("Validation error");
         return ResponseEntity.badRequest().body(ApiResponse.failure(message, null));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMissingRequestParameter(MissingServletRequestParameterException ex) {
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.failure(ex.getParameterName() + " parameter is required", null));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
