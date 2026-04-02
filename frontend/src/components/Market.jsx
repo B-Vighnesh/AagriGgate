@@ -23,6 +23,12 @@ function diffInDays(start, end) {
   return Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
 }
 
+function addDays(dateString, days) {
+  const date = new Date(dateString);
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 function marketRecordKey(item) {
   return [
     item?.Commodity || '',
@@ -197,11 +203,9 @@ export default function Market() {
     let queryToDate = toDate;
     const rangeDays = diffInDays(fromDate, toDate);
     if (rangeDays > MAX_RANGE_DAYS - 1) {
-      queryFromDate = new Date(queryToDate);
-      queryFromDate.setDate(queryFromDate.getDate() - (MAX_RANGE_DAYS - 1));
-      queryFromDate = queryFromDate.toISOString().slice(0, 10);
-      setFromDate(queryFromDate);
-      const message = 'Date range is limited to 7 days. Showing the latest allowed 7-day window.';
+      queryToDate = addDays(queryFromDate, MAX_RANGE_DAYS - 1);
+      setToDate(queryToDate);
+      const message = 'Date range is limited to 7 days from the start date. Showing the first allowed 7-day window.';
       setError(message);
       if (manual) showToast(message, 'info');
     }
@@ -286,7 +290,7 @@ export default function Market() {
   }, []);
 
   useEffect(() => {
-    if (!loadMoreRef.current || !hasMoreMarketData || loading || loadingMore || !activeQuery) {
+    if (!loadMoreRef.current || !hasMoreMarketData || loading || loadingMore || !activeQuery || showSaved) {
       return undefined;
     }
 
@@ -302,7 +306,7 @@ export default function Market() {
 
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
-  }, [activeQuery, fetchMarketData, hasMoreMarketData, loading, loadingMore, marketPage]);
+  }, [activeQuery, fetchMarketData, hasMoreMarketData, loading, loadingMore, marketPage, showSaved]);
 
   useEffect(() => {
     if (!showSaved || !loadMoreSavedRef.current || !hasMoreSavedData || loadingSaved || loadingMoreSaved) {
@@ -322,6 +326,39 @@ export default function Market() {
     observer.observe(loadMoreSavedRef.current);
     return () => observer.disconnect();
   }, [fetchSavedData, hasMoreSavedData, loadingMoreSaved, loadingSaved, savedPage, showSaved]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
+      if (!nearBottom) {
+        return;
+      }
+
+      if (!showSaved && hasMoreMarketData && !loading && !loadingMore && activeQuery) {
+        fetchMarketData(false, marketPage + 1, true);
+      }
+
+      if (showSaved && hasMoreSavedData && !loadingSaved && !loadingMoreSaved) {
+        fetchSavedData(savedPage + 1, true);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [
+    activeQuery,
+    fetchMarketData,
+    fetchSavedData,
+    hasMoreMarketData,
+    hasMoreSavedData,
+    loading,
+    loadingMore,
+    loadingMoreSaved,
+    loadingSaved,
+    marketPage,
+    savedPage,
+    showSaved,
+  ]);
 
   const handleStateChange = (nextState) => {
     setState(nextState);

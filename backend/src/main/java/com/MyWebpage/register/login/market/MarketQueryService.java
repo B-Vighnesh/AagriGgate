@@ -37,10 +37,10 @@ public class MarketQueryService {
         }
 
         if (fromDate.isAfter(toDate)) {
-            fromDate = toDate;
+            toDate = fromDate;
         }
         if (ChronoUnit.DAYS.between(fromDate, toDate) > 6) {
-            fromDate = toDate.minusDays(6);
+            toDate = fromDate.plusDays(6);
         }
 
         LocalDate finalFromDate = fromDate;
