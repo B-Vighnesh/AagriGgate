@@ -1,6 +1,6 @@
 import { clearAuth } from './auth';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 const DEFAULT_TIMEOUT_MS = 15000;
 
 export class ApiError extends Error {
@@ -47,6 +47,10 @@ async function parseErrorResponse(response) {
 }
 
 export async function apiFetch(path, options = {}) {
+  if (!API_BASE_URL) {
+    throw new ApiError('VITE_API_BASE_URL is not configured.', 500);
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
