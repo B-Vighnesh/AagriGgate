@@ -138,9 +138,6 @@ public class NewsIngestionScheduler {
     @EventListener(ApplicationReadyEvent.class)
     public void onStartup() {
         registerCanonicalSources();
-        if (newsApiProperties.isSchedulerEnabled()) {
-            fetchAllSources();
-        }
     }
 
     @Scheduled(cron = "${news.api.scheduler-cron}")

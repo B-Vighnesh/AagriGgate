@@ -19,7 +19,7 @@ public class MandiIngestionScheduler {
         this.mandiIngestionService = mandiIngestionService;
     }
 
-    @Scheduled(cron = "${market.api.ingestion-cron:0 0 9 * * *}", zone = "Asia/Kolkata")
+    @Scheduled(cron = "${market.api.ingestion-cron}", zone = "Asia/Kolkata")
     public void ingestYesterday() {
         LocalDate yesterday = LocalDate.now(NewsTime.IST).minusDays(1);
         int totalRows = 0;
