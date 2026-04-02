@@ -9,9 +9,17 @@ import { deleteSavedMarketData, getMarketPrice, getSavedMarketData, saveMarketDa
 import commodities from './commodities';
 import statesAndDistricts from './statesAndDistricts';
 
+const MAX_RANGE_DAYS = 7;
+
 function fmtPrice(value) {
   if (value === null || value === undefined || value === '') return '-';
   return `Rs ${value}`;
+}
+
+function diffInDays(start, end) {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  return Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
 }
 
 function marketRecordKey(item) {
@@ -76,7 +84,8 @@ export default function Market() {
   const defaultDate = yesterday.toISOString().slice(0, 10);
 
   const [commodity, setCommodity] = useState('Tomato');
-  const [arrivalDate, setArrivalDate] = useState(defaultDate);
+  const [fromDate, setFromDate] = useState(defaultDate);
+  const [toDate, setToDate] = useState(defaultDate);
   const [state, setState] = useState('');
   const [district, setDistrict] = useState('');
 
@@ -146,20 +155,41 @@ export default function Market() {
   }, [farmerId]);
 
   const fetchMarketData = useCallback(async (manual = false) => {
-    if (!state || !district || !commodity || !arrivalDate) {
-      if (manual) setError('Please select commodity, state, district and arrival date.');
+    if (!state || !district || !commodity || !fromDate || !toDate) {
+      if (manual) setError('Please select commodity, state, district, from date and to date.');
+      return;
+    }
+    if (fromDate > toDate) {
+      setError('From date cannot be after to date.');
+      if (manual) showToast('From date cannot be after to date.', 'error');
       return;
     }
 
+    let queryFromDate = fromDate;
+    let queryToDate = toDate;
+    const rangeDays = diffInDays(fromDate, toDate);
+    if (rangeDays > MAX_RANGE_DAYS - 1) {
+      queryFromDate = new Date(queryToDate);
+      queryFromDate.setDate(queryFromDate.getDate() - (MAX_RANGE_DAYS - 1));
+      queryFromDate = queryFromDate.toISOString().slice(0, 10);
+      setFromDate(queryFromDate);
+      const message = 'Date range is limited to 7 days. Showing the latest allowed 7-day window.';
+      setError(message);
+      if (manual) showToast(message, 'info');
+    }
+
     setLoading(true);
-    setError('');
+    if (rangeDays <= MAX_RANGE_DAYS - 1) {
+      setError('');
+    }
 
     try {
       const response = await getMarketPrice({
         crop: commodity,
         state,
         district,
-        arrivalDate,
+        fromDate: queryFromDate,
+        toDate: queryToDate,
       });
       const records = response.data || [];
       console.log(records);
@@ -173,7 +203,7 @@ export default function Market() {
     } finally {
       setLoading(false);
     }
-  }, [state, district, commodity, arrivalDate]);
+  }, [state, district, commodity, fromDate, toDate]);
 
   useEffect(() => {
     if (!role) {
@@ -192,14 +222,14 @@ export default function Market() {
   }, [role, token, farmerId, fetchSavedData]);
 
   useEffect(() => {
-    if (!state || !district || !commodity || !arrivalDate) return;
+    if (!state || !district || !commodity || !fromDate || !toDate) return;
     clearTimeout(autoFetchTimerRef.current);
     autoFetchTimerRef.current = setTimeout(() => {
       fetchMarketData(false);
     }, 600);
 
     return () => clearTimeout(autoFetchTimerRef.current);
-  }, [state, district, commodity, arrivalDate, fetchMarketData]);
+  }, [state, district, commodity, fromDate, toDate, fetchMarketData]);
 
   useEffect(() => {
     return () => {
@@ -214,7 +244,6 @@ export default function Market() {
 
   const handleSave = async (item) => {
     try {
-      const body = { ...item };
       const res = await saveMarketData({ marketId: item.id });
       if (!res.ok) {
         showToast('Unable to save this record.', 'error');
@@ -247,7 +276,7 @@ export default function Market() {
       <div className="ag-container">
         <header className="market-header">
           <h1>Market Prices</h1>
-          <p>Live commodity prices from government data (auto-refresh enabled).</p>
+          <p>Market prices from stored mandi data with up to 7 days of history.</p>
         </header>
 
         <Card className="market-filter-card">
@@ -262,13 +291,25 @@ export default function Market() {
             </div>
 
             <div className="market-field">
-              <label htmlFor="arrivalDate">Arrival Date</label>
+              <label htmlFor="fromDate">From Date</label>
               <input
-                id="arrivalDate"
+                id="fromDate"
                 type="date"
-                value={arrivalDate}
+                value={fromDate}
                 max={defaultDate}
-                onChange={(e) => setArrivalDate(e.target.value)}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+            </div>
+
+            <div className="market-field">
+              <label htmlFor="toDate">To Date</label>
+              <input
+                id="toDate"
+                type="date"
+                value={toDate}
+                max={defaultDate}
+                min={fromDate}
+                onChange={(e) => setToDate(e.target.value)}
               />
             </div>
 
@@ -299,7 +340,7 @@ export default function Market() {
           </div>
 
           <div className="market-actions">
-            <Button onClick={() => fetchMarketData(true)} disabled={!state || !district || !commodity || !arrivalDate}>
+            <Button onClick={() => fetchMarketData(true)} disabled={!state || !district || !commodity || !fromDate || !toDate}>
               Fetch Prices
             </Button>
             <Button
@@ -357,7 +398,7 @@ export default function Market() {
 
         {!loading && !error && marketData.length === 0 && state && district && (
           <Card className="market-empty">
-            No data found for {commodity} in {district}, {state} on {arrivalDate}.
+            No data found for {commodity} in {district}, {state} from {fromDate} to {toDate}.
           </Card>
         )}
 
