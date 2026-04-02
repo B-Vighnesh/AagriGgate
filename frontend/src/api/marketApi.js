@@ -1,12 +1,14 @@
 import { apiFetch, requestJson } from '../lib/api';
 
-export const getMarketPrice = async ({ crop, state, district, fromDate, toDate }) => {
+export const getMarketPrice = async ({ crop, state, district, fromDate, toDate, page = 0, size = 20 }) => {
   const params = new URLSearchParams();
   params.append('crop', crop);
   if (state) params.append('state', state);
   if (district) params.append('district', district);
   if (fromDate) params.append('fromDate', fromDate);
   if (toDate) params.append('toDate', toDate);
+  params.append('page', String(page));
+  params.append('size', String(size));
   return requestJson(`/market?${params.toString()}`);
 };
 

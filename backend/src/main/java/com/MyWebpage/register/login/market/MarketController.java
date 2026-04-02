@@ -28,7 +28,9 @@ public class MarketController {
             @RequestParam(required = false) LocalDate toDate,
             @RequestParam(required = false) LocalDate arrivalDate,
             @RequestParam(required = false) BigDecimal priceMin,
-            @RequestParam(required = false) BigDecimal priceMax
+            @RequestParam(required = false) BigDecimal priceMax,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
     ) {
         if (crop == null || crop.isBlank()) {
             throw new IllegalArgumentException("crop parameter is required");
@@ -54,7 +56,7 @@ public class MarketController {
                         resolvedTo,
                         priceMin,
                         priceMax
-                ))
+                ), page, size)
         );
     }
 }
