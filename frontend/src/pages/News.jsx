@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/News.css';
 import NewsCard from '../components/NewsCard';
@@ -9,6 +9,7 @@ import { groupNewsByDate } from '../lib/dateUtils';
 import { getNews, getSavedNews, saveNews, unsaveNews } from '../lib/newsApi';
 
 const PAGE_SIZE = 10;
+const MOBILE_BREAKPOINT = 768;
 
 const DATE_RANGES = [
   { value: 'ALL', label: 'All' },
@@ -52,6 +53,23 @@ const initialSavedState = {
   error: '',
 };
 
+/* ── Utility: check if viewport is mobile ────────────────────────── */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT,
+  );
+
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const handler = (event) => setIsMobile(event.matches);
+    mql.addEventListener('change', handler);
+    setIsMobile(mql.matches);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
+
+  return isMobile;
+}
+
 function NewsIllustration() {
   return (
     <svg viewBox="0 0 240 180" aria-hidden="true" className="news-empty-illustration">
@@ -86,6 +104,35 @@ function SearchIcon() {
     <svg viewBox="0 0 24 24" aria-hidden="true" className="news-filter-search-icon">
       <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
       <path d="m16 16 4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function FilterIcon() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true" className="news-filter-toggle-icon">
+      <path
+        d="M3 5h14M5 10h10M7 15h6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true" className="news-filter-toggle-icon">
+      <path
+        d="M5 7.5 10 12.5 15 7.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -139,6 +186,9 @@ function buildPaginationItems(totalPages, currentPage) {
 export default function News() {
   const navigate = useNavigate();
   const toastTimerRef = useRef(null);
+  const sentinelRef = useRef(null);
+  const isMobile = useIsMobile();
+
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
@@ -153,6 +203,22 @@ export default function News() {
   const [allState, setAllState] = useState(initialFeedState);
   const [savedState, setSavedState] = useState(initialSavedState);
   const [toast, setToast] = useState({ message: '', type: 'info' });
+
+  /* ── Mobile-only state ─────────────────────────────────────────── */
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [mobileAccumulated, setMobileAccumulated] = useState([]);
+  const [mobileLoadingMore, setMobileLoadingMore] = useState(false);
+  const [mobileReachedEnd, setMobileReachedEnd] = useState(false);
+
+  /* Count active filters for the badge */
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (debouncedSearch) count += 1;
+    if (category) count += 1;
+    if (newsType && activeTab === 'all') count += 1;
+    if (importantOnly && activeTab === 'all') count += 1;
+    return count;
+  }, [debouncedSearch, category, newsType, importantOnly, activeTab]);
 
   const showToast = (message, type = 'info') => {
     window.clearTimeout(toastTimerRef.current);
@@ -194,17 +260,27 @@ export default function News() {
     return () => window.clearTimeout(timer);
   }, [search]);
 
+  /* ── Reset pagination & accumulated items when filters change ─── */
   useEffect(() => {
     setAllPage(0);
     setSavedPage(0);
+    setMobileAccumulated([]);
+    setMobileReachedEnd(false);
   }, [debouncedSearch, category, newsType, importantOnly, dateRange, activeTab]);
 
+  /* ── Fetch "All News" tab ──────────────────────────────────────── */
   useEffect(() => {
     if (!isAuthorized || activeTab !== 'all') return undefined;
     let active = true;
 
     (async () => {
-      setAllState((previous) => ({ ...previous, loading: true, error: '' }));
+      const isFirstPage = allPage === 0;
+      if (isFirstPage) {
+        setAllState((previous) => ({ ...previous, loading: true, error: '' }));
+      } else {
+        setMobileLoadingMore(true);
+      }
+
       try {
         const data = await getNews({
           category,
@@ -219,16 +295,32 @@ export default function News() {
         });
         if (!active) return;
         const content = Array.isArray(data?.content) ? data.content : [];
+        const totalPages = Number(data?.totalPages || 0);
+        const totalElements = Number(data?.totalElements || content.length);
+
         setAllState({
           items: content,
-          totalPages: Number(data?.totalPages || 0),
-          totalElements: Number(data?.totalElements || content.length),
+          totalPages,
+          totalElements,
           loading: false,
           error: '',
         });
+
+        /* Accumulate for mobile infinite scroll */
+        if (isMobile) {
+          setMobileAccumulated((prev) => {
+            if (isFirstPage) return content;
+            /* Deduplicate by id */
+            const existingIds = new Set(prev.map((item) => item.id));
+            const newItems = content.filter((item) => !existingIds.has(item.id));
+            return [...prev, ...newItems];
+          });
+          if (allPage >= totalPages - 1) {
+            setMobileReachedEnd(true);
+          }
+        }
       } catch (error) {
         if (!active) return;
-        // Task 1: Gracefully handle 403 Forbidden (unauthorized role)
         if (error?.status === 403) {
           showToast('You do not have permission to access news.', 'error');
         }
@@ -239,20 +331,29 @@ export default function News() {
           loading: false,
           error: error.message || 'Failed to load news. Please try again.',
         });
+      } finally {
+        setMobileLoadingMore(false);
       }
     })();
 
     return () => {
       active = false;
     };
-  }, [isAuthorized, activeTab, category, newsType, importantOnly, debouncedSearch, dateRange, allPage, reloadKey]);
+  }, [isAuthorized, activeTab, category, newsType, importantOnly, debouncedSearch, dateRange, allPage, reloadKey, isMobile]);
 
+  /* ── Fetch "Saved" tab ─────────────────────────────────────────── */
   useEffect(() => {
     if (!isAuthorized || activeTab !== 'saved') return undefined;
 
     let active = true;
     (async () => {
-      setSavedState((previous) => ({ ...previous, loading: true, error: '' }));
+      const isFirstPage = savedPage === 0;
+      if (isFirstPage) {
+        setSavedState((previous) => ({ ...previous, loading: true, error: '' }));
+      } else {
+        setMobileLoadingMore(true);
+      }
+
       try {
         const data = await getSavedNews({
           category,
@@ -263,16 +364,32 @@ export default function News() {
         });
         if (!active) return;
         const content = Array.isArray(data?.content) ? data.content : [];
+        const totalPages = Number(data?.totalPages || 0);
+        const totalElements = Number(data?.totalElements || content.length);
+
         setSavedState({
           items: content,
-          totalPages: Number(data?.totalPages || 0),
-          totalElements: Number(data?.totalElements || content.length),
+          totalPages,
+          totalElements,
           loading: false,
           error: '',
         });
+
+        /* Accumulate for mobile infinite scroll */
+        if (isMobile) {
+          setMobileAccumulated((prev) => {
+            const mapped = content.map((item) => item.news).filter(Boolean);
+            if (isFirstPage) return mapped;
+            const existingIds = new Set(prev.map((item) => item.id));
+            const newItems = mapped.filter((item) => !existingIds.has(item.id));
+            return [...prev, ...newItems];
+          });
+          if (savedPage >= totalPages - 1) {
+            setMobileReachedEnd(true);
+          }
+        }
       } catch (error) {
         if (!active) return;
-        // Task 1: Gracefully handle 403 Forbidden (unauthorized role)
         if (error?.status === 403) {
           showToast('You do not have permission to view saved news.', 'error');
         }
@@ -283,19 +400,58 @@ export default function News() {
           loading: false,
           error: error.message || 'Failed to load saved news. Please try again.',
         });
+      } finally {
+        setMobileLoadingMore(false);
       }
     })();
 
     return () => {
       active = false;
     };
-  }, [isAuthorized, activeTab, category, debouncedSearch, dateRange, savedPage, reloadKey]);
+  }, [isAuthorized, activeTab, category, debouncedSearch, dateRange, savedPage, reloadKey, isMobile]);
+
+  /* ── Infinite scroll observer (mobile only) ────────────────────── */
+  const handleInfiniteScroll = useCallback(() => {
+    if (!isMobile || mobileLoadingMore || mobileReachedEnd) return;
+    const currentState = activeTab === 'all' ? allState : savedState;
+    if (currentState.loading || currentState.error) return;
+
+    const currentPage = activeTab === 'all' ? allPage : savedPage;
+    if (currentPage >= currentState.totalPages - 1) return;
+
+    if (activeTab === 'all') {
+      setAllPage((prev) => prev + 1);
+    } else {
+      setSavedPage((prev) => prev + 1);
+    }
+  }, [isMobile, mobileLoadingMore, mobileReachedEnd, activeTab, allState, savedState, allPage, savedPage]);
+
+  useEffect(() => {
+    if (!isMobile || !sentinelRef.current) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          handleInfiniteScroll();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [isMobile, handleInfiniteScroll]);
 
   const handleSave = async (news) => {
     setAllState((previous) => ({
       ...previous,
       items: previous.items.map((item) => (item.id === news.id ? { ...item, isSaved: true } : item)),
     }));
+
+    /* Also update accumulated list */
+    setMobileAccumulated((prev) =>
+      prev.map((item) => (item.id === news.id ? { ...item, isSaved: true } : item)),
+    );
 
     try {
       await saveNews(news.id);
@@ -305,6 +461,9 @@ export default function News() {
         ...previous,
         items: previous.items.map((item) => (item.id === news.id ? { ...item, isSaved: false } : item)),
       }));
+      setMobileAccumulated((prev) =>
+        prev.map((item) => (item.id === news.id ? { ...item, isSaved: false } : item)),
+      );
       showToast(error.message || 'Failed to save news.', 'error');
     }
   };
@@ -325,6 +484,7 @@ export default function News() {
         ...previous,
         items: previous.items.map((item) => (item.id === news.id ? { ...item, isSaved: false } : item)),
       }));
+      setMobileAccumulated((prev) => prev.filter((item) => item.id !== news.id));
 
       try {
         await unsaveNews(news.id);
@@ -352,6 +512,9 @@ export default function News() {
       ...previous,
       items: previous.items.map((item) => (item.id === news.id ? { ...item, isSaved: false } : item)),
     }));
+    setMobileAccumulated((prev) =>
+      prev.map((item) => (item.id === news.id ? { ...item, isSaved: false } : item)),
+    );
     try {
       await unsaveNews(news.id);
       showToast('Removed from saved', 'info');
@@ -360,6 +523,9 @@ export default function News() {
         ...previous,
         items: previous.items.map((item) => (item.id === news.id ? { ...item, isSaved: true } : item)),
       }));
+      setMobileAccumulated((prev) =>
+        prev.map((item) => (item.id === news.id ? { ...item, isSaved: true } : item)),
+      );
       showToast(error.message || 'Failed to remove saved news.', 'error');
     }
   };
@@ -373,18 +539,27 @@ export default function News() {
     setDateRange('ALL');
     setAllPage(0);
     setSavedPage(0);
+    setMobileAccumulated([]);
+    setMobileReachedEnd(false);
   };
 
   const handleRetry = () => {
     setReloadKey((value) => value + 1);
+    setMobileAccumulated([]);
+    setMobileReachedEnd(false);
   };
 
   const currentState = activeTab === 'all' ? allState : savedState;
   const currentPage = activeTab === 'all' ? allPage : savedPage;
   const setCurrentPage = activeTab === 'all' ? setAllPage : setSavedPage;
-  const currentItems = activeTab === 'all'
+
+  /* Desktop: current page items. Mobile: accumulated items. */
+  const desktopItems = activeTab === 'all'
     ? currentState.items
     : currentState.items.map((item) => item.news).filter(Boolean);
+
+  const displayItems = isMobile ? mobileAccumulated : desktopItems;
+
   const paginationItems = useMemo(
     () => buildPaginationItems(currentState.totalPages, currentPage),
     [currentState.totalPages, currentPage],
@@ -395,6 +570,45 @@ export default function News() {
   if (!isAuthorized) {
     return null;
   }
+
+  /* ── Filter bar JSX (shared between mobile collapsible & desktop inline) ── */
+  const filterBarJSX = (
+    <div className={`news-filter-bar ${activeTab === 'saved' ? 'is-saved' : ''}`}>
+      <label className="news-filter-search" htmlFor="news-search">
+        <SearchIcon />
+        <input
+          id="news-search"
+          type="search"
+          placeholder={activeTab === 'all' ? 'Search news...' : 'Search saved articles...'}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      </label>
+
+      <select value={category} onChange={(event) => setCategory(event.target.value)}>
+        {CATEGORY_OPTIONS.map(([value, label]) => (
+          <option key={value || 'all'} value={value}>{label}</option>
+        ))}
+      </select>
+
+      {activeTab === 'all' ? (
+        <>
+          <select value={newsType} onChange={(event) => setNewsType(event.target.value)}>
+            {TYPE_OPTIONS.map(([value, label]) => (
+              <option key={value || 'all'} value={value}>{label}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className={`news-important-toggle ${importantOnly ? 'is-active' : ''}`}
+            onClick={() => setImportantOnly((value) => !value)}
+          >
+            Important Only
+          </button>
+        </>
+      ) : null}
+    </div>
+  );
 
   return (
     <section className="news-page">
@@ -440,42 +654,36 @@ export default function News() {
               </button>
             ))}
           </div>
+          {/* ── Filters: Collapsible on mobile, inline on desktop ─── */}
+          {isMobile ? (
+            <>
+              <button
+                type="button"
+                className={`news-filter-toggle ${filtersOpen ? 'is-active' : ''}`}
+                onClick={() => setFiltersOpen((v) => !v)}
+                aria-expanded={filtersOpen}
+                aria-controls="news-mobile-filters"
+              >
+                <FilterIcon />
+                Filters
+                {activeFilterCount > 0 ? (
+                  <span className="news-filter-toggle-badge">{activeFilterCount}</span>
+                ) : null}
+                <ChevronDownIcon />
+              </button>
 
-          <div className={`news-filter-bar ${activeTab === 'saved' ? 'is-saved' : ''}`}>
-            <label className="news-filter-search" htmlFor="news-search">
-              <SearchIcon />
-              <input
-                id="news-search"
-                type="search"
-                placeholder={activeTab === 'all' ? 'Search news...' : 'Search saved articles...'}
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </label>
-
-            <select value={category} onChange={(event) => setCategory(event.target.value)}>
-              {CATEGORY_OPTIONS.map(([value, label]) => (
-                <option key={value || 'all'} value={value}>{label}</option>
-              ))}
-            </select>
-
-            {activeTab === 'all' ? (
-              <>
-                <select value={newsType} onChange={(event) => setNewsType(event.target.value)}>
-                  {TYPE_OPTIONS.map(([value, label]) => (
-                    <option key={value || 'all'} value={value}>{label}</option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className={`news-important-toggle ${importantOnly ? 'is-active' : ''}`}
-                  onClick={() => setImportantOnly((value) => !value)}
-                >
-                  Important Only
-                </button>
-              </>
-            ) : null}
-          </div>
+              <div
+                id="news-mobile-filters"
+                className={`news-filter-collapsible ${filtersOpen ? 'is-open' : ''}`}
+              >
+                <div className="news-filter-collapsible-inner">
+                  {filterBarJSX}
+                </div>
+              </div>
+            </>
+          ) : (
+            filterBarJSX
+          )}
         </div>
 
         <div className="news-content">
@@ -502,10 +710,10 @@ export default function News() {
               </div>
             ) : null}
 
-            {!currentState.loading && !currentState.error && currentItems.length > 0 ? (
+            {!currentState.loading && !currentState.error && displayItems.length > 0 ? (
               <>
                 {/* Task 4: Date-based grouping — group news under Today / Yesterday / Date headers */}
-                {groupNewsByDate(currentItems).map((group) => (
+                {groupNewsByDate(displayItems).map((group) => (
                   <div key={group.label} className="news-date-group">
                     <h2 className="news-date-group-label">{group.label}</h2>
                     <div className="news-grid">
@@ -523,9 +731,33 @@ export default function News() {
                   </div>
                 ))}
 
-                <div className="news-pagination">
-                  {currentState.totalPages > 1 ? (
-                    <>
+                {/* ── Mobile: infinite scroll sentinel & loading ────── */}
+                {isMobile ? (
+                  <>
+                    {mobileLoadingMore ? (
+                      <div className="news-infinite-loader">
+                        <div className="news-infinite-spinner" />
+                        <span>Loading more articles…</span>
+                      </div>
+                    ) : null}
+
+                    {mobileReachedEnd && displayItems.length > 0 ? (
+                      <div className="news-end-indicator">
+                        You've seen all {currentState.totalElements} articles
+                      </div>
+                    ) : null}
+
+                    {/* Invisible sentinel triggers next page load */}
+                    {!mobileReachedEnd ? (
+                      <div ref={sentinelRef} className="news-scroll-sentinel" />
+                    ) : null}
+                  </>
+                ) : null}
+
+                {/* ── Desktop: traditional pagination (unchanged) ──── */}
+                {!isMobile ? (
+                  <div className="news-pagination">
+                    {currentState.totalPages > 1 ? (
                       <div className="news-pagination-desktop">
                         <button
                           type="button"
@@ -562,37 +794,17 @@ export default function News() {
                           &gt;
                         </button>
                       </div>
+                    ) : null}
 
-                      <div className="news-pagination-mobile">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={currentPage === 0}
-                          onClick={() => setCurrentPage((page) => Math.max(page - 1, 0))}
-                        >
-                          &lt; Previous
-                        </Button>
-                        <span>Page {currentPage + 1} of {Math.max(currentState.totalPages, 1)}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={currentPage >= currentState.totalPages - 1}
-                          onClick={() => setCurrentPage((page) => Math.min(page + 1, currentState.totalPages - 1))}
-                        >
-                          Next &gt;
-                        </Button>
-                      </div>
-                    </>
-                  ) : null}
-
-                  <p className="news-pagination-summary">
-                    Showing {showingFrom}-{showingTo} of {currentState.totalElements} articles
-                  </p>
-                </div>
+                    <p className="news-pagination-summary">
+                      Showing {showingFrom}-{showingTo} of {currentState.totalElements} articles
+                    </p>
+                  </div>
+                ) : null}
               </>
             ) : null}
 
-            {!currentState.loading && !currentState.error && currentItems.length === 0 ? (
+            {!currentState.loading && !currentState.error && displayItems.length === 0 ? (
               activeTab === 'saved' ? (
                 <div className="news-state news-state-empty">
                   <SavedIllustration />
