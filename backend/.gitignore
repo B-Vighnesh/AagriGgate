@@ -34,6 +34,11 @@ build/
 startup.out
 startup.err
 
+# Environment files
+.env
+.env.*
+!.env.example
+
 other
 other/
 /other/
