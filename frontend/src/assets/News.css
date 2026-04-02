@@ -4,11 +4,14 @@
   background:
     radial-gradient(circle at top left, rgba(45, 122, 58, 0.08), transparent 22%),
     linear-gradient(180deg, #f7faf8 0%, #eef5f1 100%);
+  overflow-x: hidden;
 }
 
 .news-page .ag-container {
   display: grid;
   gap: 20px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .news-header {
@@ -86,6 +89,7 @@
   overflow-x: auto;
   padding-bottom: 2px;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .news-date-strip::-webkit-scrollbar {
@@ -182,6 +186,7 @@
   padding: 8px 16px;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .news-important-toggle:hover {
@@ -208,7 +213,7 @@
 
 .news-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 20px;
 }
 
@@ -461,11 +466,15 @@
   }
 }
 
+/* ── Desktop / large tablet ──────────────────────────────────────── */
+
 @media (max-width: 1199px) {
   .news-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ── Tablet ──────────────────────────────────────────────────────── */
 
 @media (max-width: 920px) {
   .news-header-top {
@@ -485,45 +494,140 @@
   .news-filter-search {
     grid-column: 1 / -1;
   }
+
+  .news-important-toggle {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
 }
+
+/* ── Mobile ──────────────────────────────────────────────────────── */
 
 @media (max-width: 767px) {
   .news-page {
-    padding-top: 14px;
+    padding: 14px 0 32px;
+  }
+
+  .news-page .ag-container {
+    gap: 14px;
   }
 
   .news-header {
     top: 66px;
-    padding: 14px 14px 12px;
-    border-radius: 16px;
+    padding: 12px 12px 10px;
+    border-radius: 14px;
+    gap: 10px;
   }
 
   .news-header-copy h1 {
-    font-size: 24px;
+    font-size: 22px;
+  }
+
+  .news-header-copy p {
+    font-size: 13px;
   }
 
   .news-tab-group {
     width: 100%;
-    justify-content: space-between;
+    justify-content: stretch;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .news-tab-group::-webkit-scrollbar {
+    display: none;
   }
 
   .news-tab {
     flex: 1;
     text-align: center;
+    padding: 10px 8px;
+    font-size: 13px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .news-date-strip {
+    gap: 8px;
+  }
+
+  .news-date-pill {
+    padding: 8px 14px;
+    min-height: 36px;
+    font-size: 12px;
   }
 
   .news-filter-bar,
   .news-filter-bar.is-saved {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .news-filter-bar select,
+  .news-filter-search input {
+    height: 44px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  .news-filter-bar select {
+    padding: 10px 14px;
+  }
+
+  .news-filter-search input {
+    padding: 10px 14px 10px 38px;
+  }
+
+  .news-important-toggle {
+    min-height: 44px;
+    width: 100%;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    padding: 10px 16px;
   }
 
   .news-grid {
     grid-template-columns: 1fr;
+    gap: 14px;
   }
 
   .news-error-banner {
     flex-direction: column;
     align-items: stretch;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+
+  .news-state {
+    min-height: 280px;
+    padding: 24px 16px;
+    border-radius: 14px;
+  }
+
+  .news-state h2 {
+    font-size: 20px;
+  }
+
+  .news-state p {
+    font-size: 13px;
+  }
+
+  .news-empty-illustration {
+    width: 160px;
+  }
+
+  .news-skeleton-card {
+    min-height: 340px;
+  }
+
+  .news-skeleton-image {
+    height: 160px;
   }
 
   .news-pagination-desktop {
@@ -543,5 +647,61 @@
     color: #6b7280;
     font-size: 13px;
     font-weight: 600;
+  }
+
+  .news-page-button {
+    width: 44px;
+    height: 44px;
+    font-size: 15px;
+  }
+
+  .news-date-group-label {
+    font-size: 13px;
+    gap: 8px;
+  }
+}
+
+/* ── Small mobile ────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .news-page {
+    padding: 10px 0 24px;
+  }
+
+  .news-header {
+    padding: 10px 10px 8px;
+    border-radius: 12px;
+    gap: 8px;
+  }
+
+  .news-header-copy h1 {
+    font-size: 20px;
+  }
+
+  .news-tab {
+    font-size: 12px;
+    padding: 8px 6px;
+  }
+
+  .news-date-pill {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  .news-grid {
+    gap: 12px;
+  }
+
+  .news-state {
+    min-height: 220px;
+    padding: 20px 12px;
+  }
+
+  .news-state h2 {
+    font-size: 18px;
+  }
+
+  .news-pagination-summary {
+    font-size: 12px;
   }
 }
