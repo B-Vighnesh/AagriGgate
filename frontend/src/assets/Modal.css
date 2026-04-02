@@ -13,20 +13,46 @@
 
 .modal-container {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
+  padding: 24px;
+  border-radius: 14px;
   text-align: center;
-  width: 300px;
+  width: min(92vw, 380px);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
 }
 
-.modal-container button{
-  margin-top: 20px;
-  margin-left:0;
-  padding: 10px 20px;
-  background-color:#2a9d8f;
-  color: white;
+.modal-container h3 {
+  margin: 0 0 10px;
+}
+
+.modal-container p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.modal-btn {
+  min-width: 110px;
+  padding: 10px 18px;
   border: none;
-  border-radius: 4px;
+  border-radius: 999px;
   cursor: pointer;
+  font-weight: 600;
+}
+
+.modal-btn--primary {
+  background-color: #2a9d8f;
+  color: white;
+}
+
+.modal-btn--secondary {
+  background-color: #e2e8f0;
+  color: #0f172a;
 }
 
