@@ -37,4 +37,3 @@ logging:
   level:
     org.springframework: DEBUG
     com.MyWebpage: DEBUG
-m
