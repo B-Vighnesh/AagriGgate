@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../assets/NewsCard.css';
 import { formatNewsDate } from '../lib/dateUtils';
 
@@ -53,11 +53,28 @@ export default function NewsCard({
   const category = news?.category || 'OTHER';
   const type = news?.newsType || 'EXTERNAL';
   const categoryClass = category.toLowerCase();
+  const articleUrl = typeof news?.sourceUrl === 'string' ? news.sourceUrl.trim() : '';
+  const hasArticleUrl = articleUrl.length > 0;
+
+  useEffect(() => {
+    if (!hasArticleUrl) {
+      console.warn('NewsCard missing sourceUrl', {
+        id: news?.id,
+        title: news?.title,
+      });
+    }
+  }, [hasArticleUrl, news?.id, news?.title]);
 
   const handleOpen = () => {
-    if (news?.sourceUrl) {
-      window.open(news.sourceUrl, '_blank', 'noopener,noreferrer');
+    if (!hasArticleUrl) {
+      console.warn('NewsCard link unavailable', {
+        id: news?.id,
+        title: news?.title,
+      });
+      return;
     }
+
+    window.open(articleUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleSaveClick = (event) => {
@@ -73,15 +90,16 @@ export default function NewsCard({
   return (
     <article
       className={`news-card ${news?.isImportant ? 'is-important' : ''}`}
-      onClick={handleOpen}
-      onKeyDown={(event) => {
+      onClick={hasArticleUrl ? handleOpen : undefined}
+      onKeyDown={hasArticleUrl ? (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           handleOpen();
         }
-      }}
-      role="button"
-      tabIndex={0}
+      } : undefined}
+      role={hasArticleUrl ? 'button' : undefined}
+      tabIndex={hasArticleUrl ? 0 : -1}
+      aria-disabled={!hasArticleUrl}
     >
       <div className="news-card-image-wrap">
         {news?.imageUrl && !imageFailed ? (
@@ -117,6 +135,9 @@ export default function NewsCard({
               <span className="news-card-important-dot" />
               IMPORTANT
             </span>
+          ) : null}
+          {!hasArticleUrl ? (
+            <span className="news-card-badge">Link unavailable</span>
           ) : null}
           <span className={`news-card-badge news-card-badge-type ${String(type).toLowerCase()}`}>{type}</span>
         </div>

@@ -17,13 +17,39 @@ const unwrap = async (promise) => {
   }
 };
 
+const appendEnumParam = (searchParams, key, value) => {
+  if (value == null) {
+    return;
+  }
+
+  const normalized = String(value).trim();
+  if (!normalized || normalized.toUpperCase() === 'ALL') {
+    return;
+  }
+
+  searchParams.set(key, normalized);
+};
+
+const appendTextParam = (searchParams, key, value) => {
+  if (value == null) {
+    return;
+  }
+
+  const normalized = String(value).trim();
+  if (!normalized) {
+    return;
+  }
+
+  searchParams.set(key, normalized);
+};
+
 export const getNews = (params = {}) => {
   const searchParams = new URLSearchParams();
-  if (params.category) searchParams.set('category', params.category);
-  if (params.newsType) searchParams.set('newsType', params.newsType);
+  appendEnumParam(searchParams, 'category', params.category);
+  appendEnumParam(searchParams, 'newsType', params.newsType);
   if (params.language) searchParams.set('language', params.language);
   if (params.isImportant) searchParams.set('isImportant', 'true');
-  if (params.keyword?.trim()) searchParams.set('keyword', params.keyword.trim());
+  appendTextParam(searchParams, 'keyword', params.keyword);
   if (params.dateRange && params.dateRange !== 'ALL') searchParams.set('dateRange', params.dateRange);
   searchParams.set('page', String(params.page ?? 0));
   searchParams.set('size', String(params.size ?? 10));
@@ -43,8 +69,8 @@ export const getNewsById = (id) =>
 
 export const getSavedNews = (params = {}) => {
   const searchParams = new URLSearchParams();
-  if (params.category) searchParams.set('category', params.category);
-  if (params.keyword?.trim()) searchParams.set('keyword', params.keyword.trim());
+  appendEnumParam(searchParams, 'category', params.category);
+  appendTextParam(searchParams, 'keyword', params.keyword);
   if (params.dateRange && params.dateRange !== 'ALL') searchParams.set('dateRange', params.dateRange);
   searchParams.set('page', String(params.page ?? 0));
   searchParams.set('size', String(params.size ?? 10));

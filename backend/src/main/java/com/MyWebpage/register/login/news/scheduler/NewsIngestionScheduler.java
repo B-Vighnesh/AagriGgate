@@ -42,6 +42,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
@@ -67,6 +68,7 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 public class NewsIngestionScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(NewsIngestionScheduler.class);
+    private static final int ARTICLE_URL_TIMEOUT_MS = 3000;
 
     private static final Set<String> KNOWN_BROKEN_IMAGE_DOMAINS = Set.of(
             "pbs.twimg.com",
@@ -74,16 +76,25 @@ public class NewsIngestionScheduler {
     );
 
     private static final List<String[]> CANONICAL_SOURCES = List.of(
-            new String[]{"PIB Agriculture", "pib.gov.in", "https://www.pib.gov.in/rssfeed.aspx?mincode=2", "SUBSIDY,LAW", "RSS", null},
-            new String[]{"Krishi Jagran", "krishijagran.com", "https://krishijagran.com/feed/", "FARMING_TIP,MARKET", "RSS", null},
-            new String[]{"AgriFarming", "agrifarming.in", "https://www.agrifarming.in/feed", "FARMING_TIP", "RSS", null},
-            new String[]{"Kisan Rath", "kisanrath.in", "https://www.kisanrath.in/feed", "MARKET,SUBSIDY", "RSS", null},
-            new String[]{"GNews: kisan subsidy", "gnews.io", "https://gnews.io/api/v4/search", "SUBSIDY,LOAN", "GNEWS_KEYWORD", "kisan subsidy"},
-            new String[]{"GNews: mandi price", "gnews.io", "https://gnews.io/api/v4/search", "MARKET", "GNEWS_KEYWORD", "mandi price"},
-            new String[]{"GNews: agriculture law", "gnews.io", "https://gnews.io/api/v4/search", "LAW", "GNEWS_KEYWORD", "agriculture law"},
-            new String[]{"GNews: crop weather", "gnews.io", "https://gnews.io/api/v4/search", "WEATHER", "GNEWS_KEYWORD", "crop weather"},
-            new String[]{"GNews: farm loan", "gnews.io", "https://gnews.io/api/v4/search", "LOAN", "GNEWS_KEYWORD", "farm loan"},
-            new String[]{"GNews: agri scheme", "gnews.io", "https://gnews.io/api/v4/search", "SUBSIDY", "GNEWS_KEYWORD", "agri scheme"}
+            new String[]{"PIB Agriculture", "pib.gov.in", "https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3", "SUBSIDY,LAW,LOAN", "RSS", null},
+            new String[]{"Krishi Jagran", "hindi.krishijagran.com", "https://hindi.krishijagran.com/feed", "FARMING_TIP,SUBSIDY,MARKET", "RSS", null},
+            new String[]{"AgriFarming", "agrifarming.in", "https://www.agrifarming.in/feed", "FARMING_TIP,MARKET", "RSS", null},
+            new String[]{"ICAR News", "icar.org.in", "https://icar.org.in/rss.xml", "LAW,FARMING_TIP,SUBSIDY", "RSS", null},
+            new String[]{"GNews - Kisan Subsidy", "gnews.io", "https://gnews.io/api/v4/search", "SUBSIDY", "GNEWS_KEYWORD", "kisan subsidy scheme india"},
+            new String[]{"GNews - Mandi Price", "gnews.io", "https://gnews.io/api/v4/search", "MARKET", "GNEWS_KEYWORD", "mandi price crop india today"},
+            new String[]{"GNews - Agriculture Law India", "gnews.io", "https://gnews.io/api/v4/search", "LAW", "GNEWS_KEYWORD", "agriculture law policy india farmer"},
+            new String[]{"GNews - Crop Weather Alert", "gnews.io", "https://gnews.io/api/v4/search", "WEATHER", "GNEWS_KEYWORD", "crop weather alert flood drought india"},
+            new String[]{"GNews - Farm Loan Kisan", "gnews.io", "https://gnews.io/api/v4/search", "LOAN", "GNEWS_KEYWORD", "kisan credit card farm loan india"},
+            new String[]{"GNews - Agri Scheme India", "gnews.io", "https://gnews.io/api/v4/search", "SUBSIDY,LOAN", "GNEWS_KEYWORD", "agri scheme government india farmer 2024"}
+    );
+
+    private static final List<NewsCategory> CATEGORY_MATCH_ORDER = List.of(
+            NewsCategory.SUBSIDY,
+            NewsCategory.LOAN,
+            NewsCategory.LAW,
+            NewsCategory.WEATHER,
+            NewsCategory.MARKET,
+            NewsCategory.FARMING_TIP
     );
 
     private final NewsApiProperties newsApiProperties;
@@ -203,12 +214,18 @@ public class NewsIngestionScheduler {
             int dedupedCount = 0;
 
             for (NewsRequest item : fetchedItems) {
-                System.out.println("Hellooooooooo"+item);
-                String sourceUrl = normalize(item.getSourceUrl());
                 String title = normalize(item.getTitle());
-                if (sourceUrl == null || title == null) {
+                if (title == null) {
                     continue;
                 }
+
+                String sourceUrl = validateArticleUrl(item.getSourceUrl(), source, title);
+                if (sourceUrl == null) {
+                    continue;
+                }
+
+                NewsCategory category = resolveCategory(source.getCategoryScope(), title, item.getSummary());
+                NewsType resolvedNewsType = resolveFetchedNewsType(category);
                 String sourceUrlHash = News.buildSourceUrlHash(title, sourceUrl);
                 if (sourceUrlHash == null) {
                     continue;
@@ -220,11 +237,14 @@ public class NewsIngestionScheduler {
 
                 item.setSourceUrl(sourceUrl);
                 item.setTitle(title);
+                item.setCategory(category);
+                item.setNewsType(resolvedNewsType);
                 item.setImageUrl(sanitizeImageUrl(item.getImageUrl()));
                 News news = newsMapper.toEntity(item);
                 news.setSourceUrlHash(sourceUrlHash);
                 news.setUploadedBy("SOURCE");
-                news.setNewsType(NewsType.EXTERNAL);
+                news.setCategory(category);
+                news.setNewsType(resolvedNewsType);
                 news.setStatus(NewsStatus.ACTIVE);
                 newsRepository.save(news);
                 savedCount++;
@@ -301,8 +321,6 @@ public class NewsIngestionScheduler {
                     request.setSourceUrl(entry.getLink());
                     request.setImageUrl(extractImageFromEntry(entry));
                     request.setSourceName(source.getName());
-                    request.setCategory(resolveCategory(source.getCategoryScope()));
-                    request.setNewsType(NewsType.EXTERNAL);
                     request.setLanguage("en");
                     request.setIsImportant(false);
                     request.setPublishedAt(extractPublishedAt(entry));
@@ -368,8 +386,6 @@ public class NewsIngestionScheduler {
                 request.setSourceUrl(article.path("url").asText(null));
                 request.setImageUrl(article.path("image").asText(null));
                 request.setSourceName(article.path("source").path("name").asText(source.getName()));
-                request.setCategory(resolveCategory(source.getCategoryScope()));
-                request.setNewsType(NewsType.EXTERNAL);
                 request.setLanguage("en");
                 request.setIsImportant(false);
                 request.setPublishedAt(extractPublishedAt(article.path("publishedAt").asText(null)));
@@ -547,17 +563,152 @@ public class NewsIngestionScheduler {
         }
     }
 
-    private NewsCategory resolveCategory(String categoryScope) {
+    private String validateArticleUrl(String sourceUrl, TrustedSource source, String title) {
+        String normalizedUrl = normalize(sourceUrl);
+        if (normalizedUrl == null) {
+            logInvalidArticleUrl("missing_article_url", source, title, sourceUrl, null);
+            return null;
+        }
+
+        try {
+            URI uri = URI.create(normalizedUrl);
+            String scheme = uri.getScheme();
+            if (scheme == null || uri.getHost() == null || (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme))) {
+                logInvalidArticleUrl("invalid_article_url", source, title, normalizedUrl, "URL must start with http/https");
+                return null;
+            }
+        } catch (Exception exception) {
+            logInvalidArticleUrl("invalid_article_url", source, title, normalizedUrl, exception.getMessage());
+            return null;
+        }
+
+        if (!isArticleUrlReachable(normalizedUrl, source, title)) {
+            return null;
+        }
+        return normalizedUrl;
+    }
+
+    private boolean isArticleUrlReachable(String articleUrl, TrustedSource source, String title) {
+        HttpURLConnection connection = null;
+        try {
+            connection = (HttpURLConnection) URI.create(articleUrl).toURL().openConnection();
+            connection.setInstanceFollowRedirects(true);
+            connection.setRequestMethod("HEAD");
+            connection.setConnectTimeout(ARTICLE_URL_TIMEOUT_MS);
+            connection.setReadTimeout(ARTICLE_URL_TIMEOUT_MS);
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; AagriGgateBot/1.0)");
+            connection.connect();
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode >= 400) {
+                logInvalidArticleUrl("unreachable_article_url", source, title, articleUrl, "HEAD status " + responseCode);
+                return false;
+            }
+            return true;
+        } catch (Exception exception) {
+            logInvalidArticleUrl("unreachable_article_url", source, title, articleUrl, exception.getMessage());
+            return false;
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    private void logInvalidArticleUrl(String event, TrustedSource source, String title, String articleUrl, String errorMessage) {
+        log.warn(
+                "news.scheduler.article_url_invalid",
+                keyValue("event", event),
+                keyValue("sourceId", source.getId()),
+                keyValue("sourceName", source.getName()),
+                keyValue("articleTitle", title),
+                keyValue("articleUrl", articleUrl),
+                keyValue("errorMessage", errorMessage),
+                keyValue("timestamp", LocalDateTime.now(NewsTime.IST).toString())
+        );
+    }
+
+    private NewsCategory resolveCategory(String categoryScope, String title, String summary) {
+        List<NewsCategory> scopedCategories = parseCategoryScope(categoryScope);
+        if (scopedCategories.isEmpty()) {
+            return NewsCategory.OTHER;
+        }
+        if (scopedCategories.size() == 1) {
+            return scopedCategories.get(0);
+        }
+
+        String searchableContent = buildSearchableContent(title, summary);
+        for (NewsCategory category : CATEGORY_MATCH_ORDER) {
+            if (scopedCategories.contains(category) && matchesCategoryKeyword(searchableContent, category)) {
+                return category;
+            }
+        }
+        return NewsCategory.OTHER;
+    }
+
+    private List<NewsCategory> parseCategoryScope(String categoryScope) {
         String normalized = normalize(categoryScope);
         if (normalized == null) {
-            return NewsCategory.OTHER;
+            return Collections.emptyList();
         }
-        String first = normalized.split(",")[0].trim().toUpperCase(Locale.ROOT);
-        try {
-            return NewsCategory.valueOf(first);
-        } catch (IllegalArgumentException exception) {
-            return NewsCategory.OTHER;
+
+        List<NewsCategory> categories = new ArrayList<>();
+        for (String token : normalized.split(",")) {
+            String candidate = normalize(token);
+            if (candidate == null) {
+                continue;
+            }
+            try {
+                categories.add(NewsCategory.valueOf(candidate.toUpperCase(Locale.ROOT)));
+            } catch (IllegalArgumentException exception) {
+                log.warn(
+                        "news.scheduler.invalid_category_scope",
+                        keyValue("event", "invalid_category_scope"),
+                        keyValue("categoryScope", categoryScope),
+                        keyValue("invalidCategory", candidate),
+                        keyValue("timestamp", LocalDateTime.now(NewsTime.IST).toString())
+                );
+            }
         }
+        return categories;
+    }
+
+    private String buildSearchableContent(String title, String summary) {
+        String normalizedTitle = normalize(title);
+        String normalizedSummary = normalize(summary);
+        if (normalizedTitle == null && normalizedSummary == null) {
+            return "";
+        }
+        return ((normalizedTitle == null ? "" : normalizedTitle) + " " + (normalizedSummary == null ? "" : normalizedSummary))
+                .toLowerCase(Locale.ROOT);
+    }
+
+    private boolean matchesCategoryKeyword(String searchableContent, NewsCategory category) {
+        if (searchableContent.isBlank()) {
+            return false;
+        }
+        for (String keyword : keywordsFor(category)) {
+            if (searchableContent.contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<String> keywordsFor(NewsCategory category) {
+        return switch (category) {
+            case SUBSIDY -> List.of("subsidy", "scheme", "yojana", "pm-kisan", "benefit", "free", "incentive");
+            case LOAN -> List.of("loan", "credit", "kcc", "kisan credit", "interest", "finance");
+            case LAW -> List.of("law", "policy", "regulation", "act", "bill", "amendment", "notification", "gazette");
+            case WEATHER -> List.of("rain", "flood", "drought", "cyclone", "monsoon", "heat wave", "imd", "weather");
+            case MARKET -> List.of("mandi", "price", "rate", "msp", "market", "commodity", "wholesale");
+            case FARMING_TIP -> List.of("tip", "technique", "crop", "harvest", "sow", "irrigation", "fertilizer", "pesticide", "organic");
+            case OTHER -> Collections.emptyList();
+        };
+    }
+
+    private NewsType resolveFetchedNewsType(NewsCategory category) {
+        return category == NewsCategory.WEATHER ? NewsType.WEATHER : NewsType.EXTERNAL;
     }
 
     private boolean isGnewsSource(TrustedSource source) {

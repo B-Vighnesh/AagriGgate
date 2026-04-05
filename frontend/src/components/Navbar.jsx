@@ -12,13 +12,15 @@ import {
   markAsRead,
 } from '../lib/notificationApi';
 
-function navByRole(role) {
-  const base = [{ label: 'Home', to: '/' }, { label: 'News', to: '/news' }];
-  if (!role) return [...base, { label: 'Login', to: '/login' }, { label: 'Register', to: '/register' }];
+function navByRole(role, loggedIn) {
+  const base = [{ label: 'Home', to: '/' }];
+  const signedInItems = loggedIn ? [{ label: 'News', to: '/news' }] : [];
+  if (!role) return [...base, ...signedInItems, { label: 'Login', to: '/login' }, { label: 'Register', to: '/register' }];
 
   if (role === 'farmer') {
     return [
       ...base,
+      ...signedInItems,
       { label: 'Market', to: '/market' },
       { label: 'Weather', to: '/weather' },
       { label: 'Browse Crops', to: '/view-all-crops' },
@@ -31,6 +33,7 @@ function navByRole(role) {
 
   return [
     ...base,
+    ...signedInItems,
     { label: 'Browse Crops', to: '/view-all-crops' },
     { label: 'Favorites', to: '/favorites' },
     { label: 'Cart', to: '/cart' },
@@ -155,7 +158,7 @@ export default function Navbar() {
     };
   }, [drawerOpen]);
 
-  const items = navByRole(role);
+  const items = navByRole(role, loggedIn);
   const isActive = (to) => (to === '/' ? location.pathname === '/' : location.pathname.startsWith(to));
   const relativeTimeFormatter = useMemo(
     () => new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),

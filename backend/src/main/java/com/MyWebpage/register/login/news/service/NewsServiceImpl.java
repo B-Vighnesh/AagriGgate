@@ -21,6 +21,8 @@ import com.MyWebpage.register.login.news.scheduler.NewsIngestionScheduler;
 import com.MyWebpage.register.login.notification.enums.NotificationType;
 import com.MyWebpage.register.login.notification.service.NotificationService;
 import jakarta.persistence.criteria.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -38,6 +40,8 @@ import java.util.Set;
 
 @Service
 public class NewsServiceImpl implements NewsService {
+
+    private static final Logger log = LoggerFactory.getLogger(NewsServiceImpl.class);
 
     private final NewsRepository newsRepository;
     private final NewsMapper newsMapper;
@@ -79,8 +83,11 @@ public class NewsServiceImpl implements NewsService {
             String sortBy
     ) {
         // Page size cap raised from 50 → 100 to support production-scale news feeds
+        String normalizedLanguage = normalizeOptional(language);
+        String normalizedKeyword = normalizeOptional(keyword);
+        logActiveFilters("news.feed.request", NewsStatus.ACTIVE, category, newsType, normalizedLanguage, isImportant, normalizedKeyword, dateRange, page, size, sortBy);
         var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), resolveSort(sortBy));
-        Page<News> newsPage = newsRepository.findAll(buildSpecification(NewsStatus.ACTIVE, category, newsType, language, isImportant, keyword, dateRange), pageable);
+        Page<News> newsPage = newsRepository.findAll(buildSpecification(NewsStatus.ACTIVE, category, newsType, normalizedLanguage, isImportant, normalizedKeyword, dateRange), pageable);
         Set<Long> savedIds = loadSavedIds(currentUserId, newsPage.getContent().stream().map(News::getId).toList());
         return newsPage.map(news -> newsMapper.toResponse(news, savedIds.contains(news.getId())));
     }
@@ -195,8 +202,10 @@ public class NewsServiceImpl implements NewsService {
             String sortBy
     ) {
         // Page size cap raised from 50 → 100 to support production-scale admin views
+        String normalizedKeyword = normalizeOptional(keyword);
+        logActiveFilters("news.admin.request", status, category, newsType, null, null, normalizedKeyword, null, page, size, sortBy);
         var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), resolveSort(sortBy));
-        return newsRepository.findAll(buildSpecification(status, category, newsType, null, null, keyword, null), pageable)
+        return newsRepository.findAll(buildSpecification(status, category, newsType, null, null, normalizedKeyword, null), pageable)
                 .map(newsMapper::toResponse);
     }
 
@@ -255,26 +264,28 @@ public class NewsServiceImpl implements NewsService {
     ) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+            String normalizedLanguage = normalizeOptional(language);
+            String normalizedKeyword = normalizeOptional(keyword);
             if (status != null) {
                 predicates.add(cb.equal(root.get("status"), status));
             }
             if (category != null) {
-                predicates.add(cb.equal(root.get("category"), category));
+                predicates.add(root.get("category").as(NewsCategory.class).in(category));
             }
             if (newsType != null) {
-                predicates.add(cb.equal(root.get("newsType"), newsType));
+                predicates.add(root.get("newsType").as(NewsType.class).in(newsType));
             }
-            if (language != null && !language.isBlank()) {
-                predicates.add(cb.equal(cb.lower(root.get("language")), language.trim().toLowerCase(Locale.ROOT)));
+            if (normalizedLanguage != null) {
+                predicates.add(cb.equal(cb.lower(root.get("language")), normalizedLanguage.toLowerCase(Locale.ROOT)));
             }
             if (Boolean.TRUE.equals(isImportant)) {
                 predicates.add(cb.isTrue(root.get("isImportant")));
             }
-            if (keyword != null && !keyword.isBlank()) {
-                String likeValue = "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
+            if (normalizedKeyword != null) {
+                String likeValue = "%" + normalizedKeyword.toLowerCase(Locale.ROOT) + "%";
                 predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("title")), likeValue),
-                        cb.like(cb.lower(root.get("summary")), likeValue),
+                        cb.like(cb.lower(cb.coalesce(root.get("title"), "")), likeValue),
+                        cb.like(cb.lower(cb.coalesce(root.get("summary"), "")), likeValue),
                         cb.like(cb.lower(cb.coalesce(root.get("sourceName"), "")), likeValue)
                 ));
             }
@@ -390,6 +401,39 @@ public class NewsServiceImpl implements NewsService {
     private String normalizeUploadedBy(String value) {
         String normalized = normalizeOptional(value);
         return normalized == null ? "SYSTEM" : normalized.toUpperCase(Locale.ROOT);
+    }
+
+    private void logActiveFilters(
+            String event,
+            NewsStatus status,
+            NewsCategory category,
+            NewsType newsType,
+            String language,
+            Boolean isImportant,
+            String keyword,
+            DateRange dateRange,
+            int page,
+            int size,
+            String sortBy
+    ) {
+        if (!log.isDebugEnabled()) {
+            return;
+        }
+
+        log.debug(
+                "{} status={} resolvedCategory={} resolvedNewsType={} language={} isImportant={} keyword={} dateRange={} page={} size={} sortBy={}",
+                event,
+                status,
+                category,
+                newsType,
+                language,
+                isImportant,
+                keyword,
+                dateRange,
+                Math.max(page, 0),
+                Math.min(Math.max(size, 1), 100),
+                sortBy
+        );
     }
 
     private String normalizeCategoryScope(String value) {

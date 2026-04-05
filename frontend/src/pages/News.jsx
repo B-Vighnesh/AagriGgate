@@ -187,6 +187,8 @@ export default function News() {
   const navigate = useNavigate();
   const toastTimerRef = useRef(null);
   const sentinelRef = useRef(null);
+  const allPageResetPendingRef = useRef(false);
+  const savedPageResetPendingRef = useRef(false);
   const isMobile = useIsMobile();
 
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -262,21 +264,55 @@ export default function News() {
 
   /* ── Reset pagination & accumulated items when filters change ─── */
   useEffect(() => {
+    allPageResetPendingRef.current = true;
+    savedPageResetPendingRef.current = true;
     setAllPage(0);
     setSavedPage(0);
     setMobileAccumulated([]);
+    setMobileLoadingMore(false);
     setMobileReachedEnd(false);
+
+    if (activeTab === 'all') {
+      setAllState((previous) => ({
+        ...previous,
+        items: [],
+        totalPages: 0,
+        totalElements: 0,
+        loading: true,
+        error: '',
+      }));
+      return;
+    }
+
+    setSavedState((previous) => ({
+      ...previous,
+      items: [],
+      totalPages: 0,
+      totalElements: 0,
+      loading: true,
+      error: '',
+    }));
   }, [debouncedSearch, category, newsType, importantOnly, dateRange, activeTab]);
 
   /* ── Fetch "All News" tab ──────────────────────────────────────── */
   useEffect(() => {
     if (!isAuthorized || activeTab !== 'all') return undefined;
+    if (allPageResetPendingRef.current && allPage !== 0) return undefined;
+
+    allPageResetPendingRef.current = false;
     let active = true;
 
     (async () => {
       const isFirstPage = allPage === 0;
       if (isFirstPage) {
-        setAllState((previous) => ({ ...previous, loading: true, error: '' }));
+        setAllState((previous) => ({
+          ...previous,
+          items: [],
+          totalPages: 0,
+          totalElements: 0,
+          loading: true,
+          error: '',
+        }));
       } else {
         setMobileLoadingMore(true);
       }
@@ -344,12 +380,21 @@ export default function News() {
   /* ── Fetch "Saved" tab ─────────────────────────────────────────── */
   useEffect(() => {
     if (!isAuthorized || activeTab !== 'saved') return undefined;
+    if (savedPageResetPendingRef.current && savedPage !== 0) return undefined;
 
+    savedPageResetPendingRef.current = false;
     let active = true;
     (async () => {
       const isFirstPage = savedPage === 0;
       if (isFirstPage) {
-        setSavedState((previous) => ({ ...previous, loading: true, error: '' }));
+        setSavedState((previous) => ({
+          ...previous,
+          items: [],
+          totalPages: 0,
+          totalElements: 0,
+          loading: true,
+          error: '',
+        }));
       } else {
         setMobileLoadingMore(true);
       }
