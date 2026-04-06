@@ -103,12 +103,12 @@ export default function Account() {
       { label: 'Market', to: '/market', note: 'Review mandi prices and AI-style analysis.' },
       { label: 'Requests', to: '/view-approach', note: 'Respond to incoming buyer interest in one place.' },
       { label: 'Weather', to: '/weather', note: 'Check local conditions before harvest or transport.' },
-      { label: 'Enquiry', to: '/enquiry', note: 'Reach support when you need a hand.' },
+      { label: 'Support', to: '/enquiry', note: 'Reach support when you need a hand.' },
     ]
     : [
       { label: 'Browse Crops', to: '/view-all-crops', note: 'Explore fresh listings from nearby farmers.' },
       { label: 'My Requests', to: '/view-approaches-user', note: 'Follow the crops you have approached so far.' },
-      { label: 'Enquiry', to: '/enquiry', note: 'Contact support for account or platform help.' },
+      { label: 'Support', to: '/enquiry', note: 'Contact support for account or platform help.' },
     ];
 
   return (
