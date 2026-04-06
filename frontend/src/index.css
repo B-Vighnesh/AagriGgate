@@ -143,6 +143,10 @@ a {
   font-weight: 600;
 }
 
+.site-nav__logout {
+  display: none;
+}
+
 .site-nav__link:hover {
   background: #e5f1eb;
 }
@@ -4415,6 +4419,22 @@ a {
     display: block;
     border: 1px solid transparent;
     margin-top: 2px;
+  }
+
+  .site-nav__logout {
+    display: inline-flex;
+    width: 100%;
+    margin-top: 10px;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #efc1c1;
+    border-radius: 10px;
+    background: #fff4f4;
+    color: #a13232;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
   }
 
   .brand__text {
