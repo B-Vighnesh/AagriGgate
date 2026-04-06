@@ -692,7 +692,7 @@ a {
 .section-title {
   margin: 0;
   font-size: 1.6rem;
-  color: var(--color-primary-dark);
+  color: white;
 }
 
 .section-subtitle {
@@ -1159,8 +1159,8 @@ a {
 .footer-grid {
   padding: 40px 0 28px;
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) repeat(4, minmax(120px, 1fr));
-  gap: 28px 22px;
+  grid-template-columns: minmax(260px, 1.45fr) repeat(4, minmax(120px, 0.7fr));
+  gap: 28px 26px;
   align-items: start;
 }
 
@@ -1209,6 +1209,7 @@ a {
   max-width: 360px;
   display: grid;
   gap: 10px;
+  align-content: start;
 }
 
 .footer-brand__eyebrow {
@@ -1233,6 +1234,8 @@ a {
 
 .footer-section {
   min-width: 0;
+  padding-top: 48px;
+  align-content: start;
 }
 
 .footer-section ul {
@@ -1297,7 +1300,7 @@ a {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
   font-size: 0.82rem;
   color: #cfe5da;
@@ -1306,22 +1309,36 @@ a {
 .footer-bottom__copyright {
   color: #cfe5da;
   margin-right: auto;
+  line-height: 1.5;
 }
 
 .footer-contact-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  min-height: 38px;
-  border-radius: 999px;
+  display: grid;
+  gap: 2px;
+  padding: 9px 14px;
+  min-height: 46px;
+  border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.05);
   color: #e5f7ef;
   font-size: 0.82rem;
   line-height: 1.2;
-  text-align: center;
+  text-align: left;
   word-break: break-word;
+}
+
+.footer-contact-pill__label {
+  color: #a9d3c2;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.footer-contact-pill__value {
+  color: #f1fcf7;
+  font-size: 0.86rem;
+  font-weight: 600;
 }
 
 .footer-contact-pill:hover {
@@ -5179,6 +5196,10 @@ a {
 
   .footer-brand {
     max-width: 100%;
+  }
+
+  .footer-section {
+    padding-top: 0;
   }
 
   .footer-section h4 {
