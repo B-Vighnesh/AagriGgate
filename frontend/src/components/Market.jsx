@@ -249,6 +249,7 @@ export default function Market() {
   const [savedMarketLookup, setSavedMarketLookup] = useState({});
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState('');
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [analytics, setAnalytics] = useState({
     priceTrend: [],
     heatmap: [],
@@ -432,7 +433,6 @@ export default function Market() {
     const rangeDays = diffInDays(fromDate, toDate);
     if (rangeDays > MAX_RANGE_DAYS - 1) {
       queryToDate = addDays(queryFromDate, MAX_RANGE_DAYS - 1);
-      setToDate(queryToDate);
       const message = 'Date range is limited to 7 days from the start date. Showing the first allowed 7-day window.';
       setError(message);
       showToast(message, 'info', 10000);
@@ -445,6 +445,15 @@ export default function Market() {
       setMarketData([]);
       setMarketPage(0);
       setHasMoreMarketData(false);
+      setShowAnalytics(false);
+      setAnalyticsError('');
+      setAnalytics({
+        priceTrend: [],
+        heatmap: [],
+        minMaxModalTrend: [],
+        arrivalVsPrice: [],
+        seasonalTrend: [],
+      });
     }
     if (rangeDays <= MAX_RANGE_DAYS - 1) {
       setError('');
@@ -467,9 +476,6 @@ export default function Market() {
       setMarketPage(payload.page ?? nextPage);
       setHasMoreMarketData(Boolean(payload.hasNext));
       setMarketData((prev) => (append ? [...prev, ...records] : records));
-      if (!append) {
-        fetchAnalytics(query);
-      }
       if (manual) {
         showToast(`Loaded ${payload.totalElements ?? records.length} records.`, 'success');
       }
@@ -486,7 +492,16 @@ export default function Market() {
         setLoading(false);
       }
     }
-  }, [state, district, commodity, fromDate, toDate, fetchAnalytics]);
+  }, [state, district, commodity, fromDate, toDate]);
+
+  const handleRunAnalysis = useCallback(async () => {
+    if (!activeQuery) {
+      showToast('Search market prices first, then run analysis.', 'info');
+      return;
+    }
+    setShowAnalytics(true);
+    await fetchAnalytics(activeQuery);
+  }, [activeQuery, fetchAnalytics]);
 
   useEffect(() => {
     if (!role) {
@@ -779,7 +794,19 @@ export default function Market() {
               </div>
             )}
 
-            {(activeQuery || analyticsLoading) && (
+            {!loading && activeQuery && !showAnalytics && (
+              <Card className="market-analysis-prompt">
+                <div>
+                  <h3>Ready for deeper insights?</h3>
+                  <p>We already fetched the market records. Run AI-style analysis to reveal trend lines, district heatmap, seasonal movement, and supply-price patterns.</p>
+                </div>
+                <Button onClick={handleRunAnalysis}>
+                  Do Analysis
+                </Button>
+              </Card>
+            )}
+
+            {showAnalytics && (
               <section className="market-analytics">
                 <div className="market-stats-grid market-stats-grid--analytics">
                   <StatCard

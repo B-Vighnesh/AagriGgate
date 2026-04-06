@@ -1643,6 +1643,29 @@ a {
   margin-bottom: 18px;
 }
 
+.market-analysis-prompt {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(234, 143, 68, 0.12), transparent 34%),
+    linear-gradient(160deg, #ffffff, #f7fbf8);
+  border: 1px solid rgba(27, 87, 61, 0.08);
+}
+
+.market-analysis-prompt h3 {
+  margin: 0;
+  color: var(--color-primary-dark);
+}
+
+.market-analysis-prompt p {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+  max-width: 760px;
+}
+
 .market-stats-grid--analytics {
   margin-bottom: 0;
 }
@@ -3876,6 +3899,11 @@ a {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .market-analysis-prompt {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .weather-metrics-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4013,6 +4041,10 @@ a {
   }
 
   .market-actions .ui-btn {
+    width: 100%;
+  }
+
+  .market-analysis-prompt .ui-btn {
     width: 100%;
   }
 
