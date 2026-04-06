@@ -48,9 +48,18 @@ export default function Footer() {
       <div className="footer-bottom-wrap">
         <div className="ag-container footer-bottom">
           <span className="footer-bottom__copyright">&copy; {year} AagriGgate. All rights reserved.</span>
-          <a href="mailto:webappfarmer@gmail.com" className="footer-contact-pill">webappfarmer@gmail.com</a>
-          <a href="tel:+918618402581" className="footer-contact-pill">+91 8618402581</a>
-          <span className="footer-contact-pill">Mangalore, Karnataka</span>
+          <a href="mailto:webappfarmer@gmail.com" className="footer-contact-pill">
+            <span className="footer-contact-pill__label">Email</span>
+            <span className="footer-contact-pill__value">webappfarmer@gmail.com</span>
+          </a>
+          <a href="tel:+918618402581" className="footer-contact-pill">
+            <span className="footer-contact-pill__label">Phone</span>
+            <span className="footer-contact-pill__value">+91 8618402581</span>
+          </a>
+          <span className="footer-contact-pill">
+            <span className="footer-contact-pill__label">Location</span>
+            <span className="footer-contact-pill__value">Mangalore, Karnataka</span>
+          </span>
         </div>
       </div>
     </footer>
