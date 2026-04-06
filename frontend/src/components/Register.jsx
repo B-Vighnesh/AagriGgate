@@ -7,7 +7,6 @@ import statesWithDistricts from './StatesWithDistricts';
 import { ApiError, requestJson } from '../lib/api';
 
 const INITIAL_FORM = {
-  username: '',
   email: '',
   firstName: '',
   lastName: '',
@@ -138,9 +137,6 @@ export default function Register() {
               </button>
             </div>
 
-            <label>Username</label>
-            <input value={form.username} onChange={(e) => updateField('username', e.target.value)} required />
-
             <label>First Name</label>
             <input value={form.firstName} onChange={(e) => updateField('firstName', e.target.value)} required />
 
@@ -175,6 +171,8 @@ export default function Register() {
                 <option key={district} value={district}>{district}</option>
               ))}
             </select>
+
+            <small className="auth-helper-text">Username will be generated automatically after registration.</small>
 
             <Button type="submit" loading={loading}>{loading ? 'Sending OTP...' : 'Send OTP'}</Button>
           </form>

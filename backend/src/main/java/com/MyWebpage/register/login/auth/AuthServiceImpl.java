@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Random;
 
 @Service
@@ -62,10 +63,7 @@ public class AuthServiceImpl implements AuthService {
         farmer.setRole(role);
 
         Long farmerId = farmerRepo.getNextUserSequence();
-        String generatedUsername = dto.getUsername();
-        if (generatedUsername == null || generatedUsername.isBlank()) {
-            generatedUsername = dto.getFirstName() + farmerId;
-        }
+        String generatedUsername = generateUsername(dto.getFirstName(), farmerId);
         farmer.setUsername(generatedUsername);
 
         farmer = farmerRepo.save(farmer);
@@ -209,5 +207,31 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("User not found");
         }
         return farmer;
+    }
+
+    private String generateUsername(String firstName, Long farmerId) {
+        String normalizedFirstName = normalizeNamePrefix(firstName);
+        String encodedId = Long.toString(farmerId, 36).toLowerCase(Locale.ROOT);
+
+        int maxPrefixLength = Math.max(0, 10 - encodedId.length());
+        String prefix = normalizedFirstName.substring(0, Math.min(normalizedFirstName.length(), maxPrefixLength));
+
+        String username = prefix + encodedId;
+        if (username.isEmpty()) {
+            return encodedId;
+        }
+        return username.length() <= 10 ? username : username.substring(0, 10);
+    }
+
+    private String normalizeNamePrefix(String firstName) {
+        if (firstName == null) {
+            return "ag";
+        }
+
+        String cleaned = firstName
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]", "");
+
+        return cleaned.isBlank() ? "ag" : cleaned;
     }
 }
