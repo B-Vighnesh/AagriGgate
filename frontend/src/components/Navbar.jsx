@@ -343,6 +343,21 @@ export default function Navbar() {
             </Link>
           ) : null}
 
+          {loggedIn ? (
+            <button
+              type="button"
+              className="header-logout-link"
+              aria-label="Logout"
+              title="Logout"
+              onClick={() => {
+                setMobileOpen(false);
+                navigate('/logout');
+              }}
+            >
+              <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" />
+            </button>
+          ) : null}
+
           <button
             ref={toggleRef}
             type="button"

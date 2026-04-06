@@ -142,16 +142,7 @@ export default function Account() {
                 <i className="fa-regular fa-pen-to-square" aria-hidden="true" />
                 <span>Edit</span>
               </Link>
-              <button
-                type="button"
-                className="account-icon-action account-icon-action--danger account-icon-action--desktop"
-                aria-label="Logout"
-                title="Logout"
-                onClick={onLogout}
-              >
-                <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" />
-                <span>Logout</span>
-              </button>
+              
             </div>
           </div>
 
