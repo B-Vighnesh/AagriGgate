@@ -143,6 +143,21 @@ a {
   font-weight: 600;
 }
 
+.site-nav__link--icon {
+  width: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.08rem;
+}
+
+.site-nav__icon {
+  line-height: 1;
+}
+
 .site-nav__link:hover {
   background: #e5f1eb;
 }
@@ -4394,6 +4409,13 @@ a {
     display: block;
     border: 1px solid transparent;
     margin-top: 2px;
+  }
+
+  .site-nav__link--icon {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 8px 11px;
+    min-height: 42px;
   }
 
   .brand__text {
