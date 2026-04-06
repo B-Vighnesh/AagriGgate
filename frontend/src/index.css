@@ -206,6 +206,28 @@ a {
   line-height: 1;
 }
 
+.header-logout-link {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  background: transparent;
+  color: #b43b3b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+}
+
+.header-logout-link:hover {
+  color: #8f2d2d;
+}
+
+.header-logout-link i {
+  font-size: 1.12rem;
+  line-height: 1;
+}
+
 .notification-bell__badge {
   position: absolute;
   top: -4px;
@@ -4744,6 +4766,10 @@ a {
 
   .brand__text {
     font-size: 1rem;
+  }
+
+  .header-logout-link {
+    display: none;
   }
 
   .account-hero {
