@@ -25,7 +25,7 @@ function navByRole(role) {
       { label: 'Add Crop', to: '/add-crop' },
       { label: 'My Crops', to: '/view-crop' },
       { label: 'Requests', to: '/view-approach' },
-      { label: 'Account', to: '/account' },
+      { label: 'Account', to: '/account', icon: '👤', iconOnly: true },
     ];
   }
 
@@ -35,7 +35,7 @@ function navByRole(role) {
     { label: 'Favorites', to: '/favorites' },
     { label: 'Cart', to: '/cart' },
     { label: 'My Requests', to: '/view-approaches-user' },
-    { label: 'Account', to: '/account' },
+    { label: 'Account', to: '/account', icon: '👤', iconOnly: true },
   ];
 }
 
@@ -210,9 +210,11 @@ export default function Navbar() {
                 key={item.to}
                 to={item.to}
                 onClick={() => setMobileOpen(false)}
-                className={`site-nav__link ${isActive(item.to) ? 'site-nav__link--active' : ''}`}
+                className={`site-nav__link ${item.iconOnly ? 'site-nav__link--icon' : ''} ${isActive(item.to) ? 'site-nav__link--active' : ''}`}
+                aria-label={item.label}
+                title={item.label}
               >
-                {item.label}
+                {item.iconOnly ? <span className="site-nav__icon" aria-hidden="true">{item.icon}</span> : item.label}
               </Link>
             ))}
           </nav>
