@@ -37,6 +37,13 @@ function fmtMonth(value) {
   return value.slice(0, 1).toUpperCase() + value.slice(1, 3);
 }
 
+function fmtAxisDate(value) {
+  if (!value) return '';
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return String(value).slice(5);
+  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+}
+
 function shiftDate(dateString, days) {
   const date = new Date(dateString);
   date.setDate(date.getDate() - days + 1);
@@ -85,13 +92,25 @@ function buildLinePoints(data, accessor, width, height, padding) {
   }).join(' ');
 }
 
-function LineChart({ data, lines, xKey, xFormatter = (value) => value }) {
-  const width = 700;
-  const height = 260;
+function getRangeExtremes(data, keys) {
+  const values = data.flatMap((item) => keys.map((key) => Number(item[key]))).filter((value) => !Number.isNaN(value));
+  if (!values.length) {
+    return { min: null, max: null };
+  }
+  return {
+    min: Math.min(...values),
+    max: Math.max(...values),
+  };
+}
+
+function LineChart({ data, lines, xKey, xFormatter = (value) => value, compact = false }) {
+  const width = compact ? 700 : 1080;
+  const height = compact ? 260 : 420;
   const padding = 28;
   const allValues = data.flatMap((item) => lines.map((line) => Number(item[line.key] ?? 0))).filter((value) => !Number.isNaN(value));
   const minValue = allValues.length ? Math.min(...allValues) : 0;
   const maxValue = allValues.length ? Math.max(...allValues) : 0;
+  const labelStep = data.length <= 10 ? 1 : Math.ceil(data.length / (compact ? 7 : 12));
 
   return (
     <div className="market-chart">
@@ -129,6 +148,9 @@ function LineChart({ data, lines, xKey, xFormatter = (value) => value }) {
             />
           ))}
           {data.map((item, index) => {
+            if (index !== 0 && index !== data.length - 1 && index % labelStep !== 0) {
+              return null;
+            }
             const x = data.length > 1 ? padding + (((width - padding * 2) / (data.length - 1)) * index) : width / 2;
             return (
               <text key={`${xKey}-${index}`} x={x} y={height - 8} textAnchor="middle" className="market-chart__label">
@@ -188,6 +210,7 @@ export default function MarketAnalytics() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [expandedChart, setExpandedChart] = useState(null);
   const [analytics, setAnalytics] = useState({
     priceTrend: [],
     heatmap: [],
@@ -205,6 +228,13 @@ export default function MarketAnalytics() {
     }, null);
     return { latestTrend, hottestDistrict, highestVolatility };
   }, [analytics]);
+
+  const sectionStats = useMemo(() => ({
+    priceTrend: getRangeExtremes(analytics.priceTrend, ['avgMinPrice', 'avgModalPrice', 'avgMaxPrice']),
+    minMaxModalTrend: getRangeExtremes(analytics.minMaxModalTrend, ['avgMinPrice', 'avgModalPrice', 'avgMaxPrice', 'volatility']),
+    arrivalVsPrice: getRangeExtremes(analytics.arrivalVsPrice, ['avgModalPrice']),
+    seasonalTrend: getRangeExtremes(analytics.seasonalTrend, ['avgMinPrice', 'avgModalPrice', 'avgMaxPrice']),
+  }), [analytics]);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -283,6 +313,10 @@ export default function MarketAnalytics() {
     if (key === 'toDate') setToDate(value);
   };
 
+  const openExpandedChart = (config) => {
+    setExpandedChart(config);
+  };
+
   if (!commodity || !state || !fromDate || !toDate) {
     return (
       <section className="page market-page">
@@ -312,6 +346,28 @@ export default function MarketAnalytics() {
             <Button variant="outline" onClick={() => navigate('/market')}>Back To Search</Button>
           </div>
         </header>
+
+        <Card className="market-analysis-hero">
+          <div className="market-analysis-hero__copy">
+            <span className="market-analysis-hero__eyebrow">Premium Insight Mode</span>
+            <h2>{commodity} intelligence for {district || state}</h2>
+            <p>Track price behavior like a market terminal: switch ranges, expand charts to full view, and scan the selected-window min/max before making a sell decision.</p>
+          </div>
+          <div className="market-analysis-hero__metrics">
+            <div>
+              <strong>{fromDate}</strong>
+              <span>Range start</span>
+            </div>
+            <div>
+              <strong>{toDate}</strong>
+              <span>Range end</span>
+            </div>
+            <div>
+              <strong>{activePreset}</strong>
+              <span>Active window</span>
+            </div>
+          </div>
+        </Card>
 
         <Card className="market-filter-card market-analysis-toolbar">
           <div className="market-analysis-summary">
@@ -396,11 +452,34 @@ export default function MarketAnalytics() {
             <AnalyticsSection
               title="1. Price Trend"
               subtitle="Stock-like view of average min, modal, and max price across the selected range."
+              actions={(
+                <div className="market-analytics-actions">
+                  <div className="market-range-stats">
+                    <span>Min Range: <strong>{fmtPrice(sectionStats.priceTrend.min)}</strong></span>
+                    <span>Max Range: <strong>{fmtPrice(sectionStats.priceTrend.max)}</strong></span>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => openExpandedChart({
+                    title: 'Price Trend',
+                    subtitle: 'Expanded view of average min, modal, and max price.',
+                    data: analytics.priceTrend,
+                    xKey: 'date',
+                    xFormatter: fmtAxisDate,
+                    lines: [
+                      { key: 'avgMinPrice', label: 'Min', color: '#1f7a53' },
+                      { key: 'avgModalPrice', label: 'Modal', color: '#2f5bd3' },
+                      { key: 'avgMaxPrice', label: 'Max', color: '#d16f28' },
+                    ],
+                    stats: sectionStats.priceTrend,
+                  })}>
+                    Full View
+                  </Button>
+                </div>
+              )}
             >
               <LineChart
                 data={analytics.priceTrend}
                 xKey="date"
-                xFormatter={(value) => String(value || '').slice(5)}
+                xFormatter={fmtAxisDate}
                 lines={[
                   { key: 'avgMinPrice', label: 'Min', color: '#1f7a53' },
                   { key: 'avgModalPrice', label: 'Modal', color: '#2f5bd3' },
@@ -419,11 +498,35 @@ export default function MarketAnalytics() {
             <AnalyticsSection
               title="3. Min / Max / Modal Trend"
               subtitle="Read spread movement and volatility like a broader technical price range chart."
+              actions={(
+                <div className="market-analytics-actions">
+                  <div className="market-range-stats">
+                    <span>Min Range: <strong>{fmtPrice(sectionStats.minMaxModalTrend.min)}</strong></span>
+                    <span>Max Range: <strong>{fmtPrice(sectionStats.minMaxModalTrend.max)}</strong></span>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => openExpandedChart({
+                    title: 'Min / Max / Modal Trend',
+                    subtitle: 'Expanded spread and volatility view.',
+                    data: analytics.minMaxModalTrend,
+                    xKey: 'date',
+                    xFormatter: fmtAxisDate,
+                    lines: [
+                      { key: 'avgMinPrice', label: 'Min', color: '#178d5f' },
+                      { key: 'avgModalPrice', label: 'Modal', color: '#315ec9' },
+                      { key: 'avgMaxPrice', label: 'Max', color: '#c9641e' },
+                      { key: 'volatility', label: 'Volatility', color: '#8d3fd1' },
+                    ],
+                    stats: sectionStats.minMaxModalTrend,
+                  })}>
+                    Full View
+                  </Button>
+                </div>
+              )}
             >
               <LineChart
                 data={analytics.minMaxModalTrend}
                 xKey="date"
-                xFormatter={(value) => String(value || '').slice(5)}
+                xFormatter={fmtAxisDate}
                 lines={[
                   { key: 'avgMinPrice', label: 'Min', color: '#178d5f' },
                   { key: 'avgModalPrice', label: 'Modal', color: '#315ec9' },
@@ -436,11 +539,34 @@ export default function MarketAnalytics() {
             <AnalyticsSection
               title="4. Arrival Vs Price"
               subtitle="Supply proxy versus price movement across the same selected trend range."
+              actions={(
+                <div className="market-analytics-actions">
+                  <div className="market-range-stats">
+                    <span>Min Price: <strong>{fmtPrice(sectionStats.arrivalVsPrice.min)}</strong></span>
+                    <span>Max Price: <strong>{fmtPrice(sectionStats.arrivalVsPrice.max)}</strong></span>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => openExpandedChart({
+                    title: 'Arrival Vs Price',
+                    subtitle: 'Expanded view of supply proxy versus modal price.',
+                    data: analytics.arrivalVsPrice,
+                    xKey: 'date',
+                    xFormatter: fmtAxisDate,
+                    lines: [
+                      { key: 'recordCount', label: 'Records', color: '#1f7a53' },
+                      { key: 'marketCount', label: 'Markets', color: '#d16f28' },
+                      { key: 'avgModalPrice', label: 'Modal Price', color: '#2f5bd3' },
+                    ],
+                    stats: sectionStats.arrivalVsPrice,
+                  })}>
+                    Full View
+                  </Button>
+                </div>
+              )}
             >
               <LineChart
                 data={analytics.arrivalVsPrice}
                 xKey="date"
-                xFormatter={(value) => String(value || '').slice(5)}
+                xFormatter={fmtAxisDate}
                 lines={[
                   { key: 'recordCount', label: 'Records', color: '#1f7a53' },
                   { key: 'marketCount', label: 'Markets', color: '#d16f28' },
@@ -452,6 +578,29 @@ export default function MarketAnalytics() {
             <AnalyticsSection
               title="5. Seasonal Trend"
               subtitle="Monthly average behavior for the selected analysis window."
+              actions={(
+                <div className="market-analytics-actions">
+                  <div className="market-range-stats">
+                    <span>Min Range: <strong>{fmtPrice(sectionStats.seasonalTrend.min)}</strong></span>
+                    <span>Max Range: <strong>{fmtPrice(sectionStats.seasonalTrend.max)}</strong></span>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => openExpandedChart({
+                    title: 'Seasonal Trend',
+                    subtitle: 'Expanded monthly average behavior.',
+                    data: analytics.seasonalTrend,
+                    xKey: 'monthName',
+                    xFormatter: (value) => fmtMonth(String(value || '')),
+                    lines: [
+                      { key: 'avgMinPrice', label: 'Min', color: '#1f7a53' },
+                      { key: 'avgModalPrice', label: 'Modal', color: '#2f5bd3' },
+                      { key: 'avgMaxPrice', label: 'Max', color: '#d16f28' },
+                    ],
+                    stats: sectionStats.seasonalTrend,
+                  })}>
+                    Full View
+                  </Button>
+                </div>
+              )}
             >
               <LineChart
                 data={analytics.seasonalTrend}
@@ -467,6 +616,32 @@ export default function MarketAnalytics() {
           </section>
         )}
       </div>
+      {expandedChart ? (
+        <div className="market-fullscreen-overlay" role="dialog" aria-modal="true">
+          <div className="market-fullscreen-card">
+            <div className="market-fullscreen-card__head">
+              <div>
+                <h2>{expandedChart.title}</h2>
+                <p>{expandedChart.subtitle}</p>
+              </div>
+              <div className="market-analytics-actions">
+                <div className="market-range-stats">
+                  <span>Min Range: <strong>{fmtPrice(expandedChart.stats?.min)}</strong></span>
+                  <span>Max Range: <strong>{fmtPrice(expandedChart.stats?.max)}</strong></span>
+                </div>
+                <Button variant="outline" onClick={() => setExpandedChart(null)}>Close</Button>
+              </div>
+            </div>
+            <LineChart
+              data={expandedChart.data}
+              xKey={expandedChart.xKey}
+              xFormatter={expandedChart.xFormatter}
+              lines={expandedChart.lines}
+              compact={false}
+            />
+          </div>
+        </div>
+      ) : null}
       <Toast message={toast.message} type={toast.type} />
     </section>
   );
