@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class FarmerRequestDTO {
-    @NotBlank
     private String username;
     @NotBlank
     @Size(min = 2, max = 50)
