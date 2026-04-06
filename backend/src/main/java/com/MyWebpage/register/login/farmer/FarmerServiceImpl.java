@@ -1,5 +1,6 @@
 package com.MyWebpage.register.login.farmer;
 
+import com.MyWebpage.register.login.common.ProfileUpdateValidator;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -25,21 +26,13 @@ public class FarmerServiceImpl implements FarmerService {
     public FarmerResponseDTO updateProfile(Long farmerId, FarmerUpdateDTO dto) {
         Farmer existingFarmer = farmerRepo.findById(farmerId).orElseThrow(() -> new RuntimeException("Farmer not found"));
 
-        if (dto.getFirstName() != null) {
-            existingFarmer.setFirstName(dto.getFirstName());
-        }
-        if (dto.getLastName() != null) {
-            existingFarmer.setLastName(dto.getLastName());
-        }
-        if (dto.getPhoneNo() != null) {
-            existingFarmer.setPhoneNo(dto.getPhoneNo());
-        }
-        if (dto.getState() != null) {
-            existingFarmer.setState(dto.getState());
-        }
-        if (dto.getVillage() != null) {
-            existingFarmer.setDistrict(dto.getVillage());
-        }
+        existingFarmer.setFirstName(ProfileUpdateValidator.requirePersonName(dto.getFirstName(), "firstName"));
+        existingFarmer.setLastName(ProfileUpdateValidator.normalizeOptionalPersonName(dto.getLastName(), "lastName"));
+        existingFarmer.setPhoneNo(ProfileUpdateValidator.requirePhone(dto.getPhoneNo()));
+        existingFarmer.setDob(ProfileUpdateValidator.requireAdultDob(dto.getDob()));
+        existingFarmer.setState(ProfileUpdateValidator.requireState(dto.getState()));
+        existingFarmer.setDistrict(ProfileUpdateValidator.requireDistrict(dto.getDistrict()));
+        existingFarmer.setAadharNo(ProfileUpdateValidator.requireAadhar(dto.getAadharNo()));
 
         Farmer savedFarmer = farmerRepo.save(existingFarmer);
         return farmerMapper.toResponse(savedFarmer);
