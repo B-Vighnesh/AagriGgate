@@ -109,12 +109,13 @@ function LineChart({
   xKey,
   xFormatter = (value) => value,
   compact = false,
+  expanded = false,
   interactive = false,
   onPointSelect,
   selectedPointIndex = null,
 }) {
   const width = compact ? 700 : 1080;
-  const height = compact ? 260 : 420;
+  const height = compact ? 260 : (expanded ? 640 : 420);
   const padding = 28;
   const allValues = data.flatMap((item) => lines.map((line) => Number(item[line.key] ?? 0))).filter((value) => !Number.isNaN(value));
   const minValue = allValues.length ? Math.min(...allValues) : 0;
@@ -350,6 +351,22 @@ export default function MarketAnalytics() {
     }
     runAnalysis({ commodity, state, district, fromDate, toDate });
   }, [commodity, state, district, fromDate, toDate, runAnalysis]);
+
+  useEffect(() => {
+    if (!expandedChart) {
+      return undefined;
+    }
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, [expandedChart]);
 
   const applyPreset = (preset) => {
     if (!toDate) {
@@ -683,8 +700,8 @@ export default function MarketAnalytics() {
         )}
       </div>
       {expandedChart ? (
-        <div className="market-fullscreen-overlay" role="dialog" aria-modal="true">
-          <div className="market-fullscreen-card">
+        <div className="market-fullscreen-overlay" role="dialog" aria-modal="true" onClick={() => setExpandedChart(null)}>
+          <div className="market-fullscreen-card" onClick={(event) => event.stopPropagation()}>
             <div className="market-fullscreen-card__head">
               <div>
                 <h2>{expandedChart.title}</h2>
@@ -724,6 +741,7 @@ export default function MarketAnalytics() {
               xFormatter={expandedChart.xFormatter}
               lines={expandedChart.lines}
               compact={false}
+              expanded
               interactive
               selectedPointIndex={selectedExpandedPointIndex}
               onPointSelect={setSelectedExpandedPointIndex}
