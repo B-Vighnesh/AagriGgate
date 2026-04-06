@@ -1897,6 +1897,10 @@ a {
   overflow: visible;
 }
 
+.market-chart__svg--interactive {
+  cursor: crosshair;
+}
+
 .market-chart__tick,
 .market-chart__label {
   fill: #648173;
@@ -1985,6 +1989,52 @@ a {
 .market-fullscreen-card__head p {
   margin: 6px 0 0;
   color: var(--color-muted);
+}
+
+.market-point-detail {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f4faf7, #eef6f2);
+  border: 1px solid rgba(26, 90, 63, 0.08);
+}
+
+.market-point-detail strong {
+  display: block;
+  color: var(--color-primary-dark);
+  font-size: 1.02rem;
+}
+
+.market-point-detail small {
+  display: block;
+  margin-top: 10px;
+  color: var(--color-muted);
+}
+
+.market-point-detail__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin-top: 10px;
+}
+
+.market-point-detail__grid span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #fff;
+  color: #51695d;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.market-point-detail__grid i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
 }
 
 .market-price-card {

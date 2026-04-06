@@ -103,7 +103,16 @@ function getRangeExtremes(data, keys) {
   };
 }
 
-function LineChart({ data, lines, xKey, xFormatter = (value) => value, compact = false }) {
+function LineChart({
+  data,
+  lines,
+  xKey,
+  xFormatter = (value) => value,
+  compact = false,
+  interactive = false,
+  onPointSelect,
+  selectedPointIndex = null,
+}) {
   const width = compact ? 700 : 1080;
   const height = compact ? 260 : 420;
   const padding = 28;
@@ -111,6 +120,25 @@ function LineChart({ data, lines, xKey, xFormatter = (value) => value, compact =
   const minValue = allValues.length ? Math.min(...allValues) : 0;
   const maxValue = allValues.length ? Math.max(...allValues) : 0;
   const labelStep = data.length <= 10 ? 1 : Math.ceil(data.length / (compact ? 7 : 12));
+  const xPositionForIndex = (index) => (data.length > 1 ? padding + (((width - padding * 2) / (data.length - 1)) * index) : width / 2);
+  const yPositionForValue = (value) => {
+    const range = (maxValue - minValue) || 1;
+    return height - padding - ((((Number(value) || 0) - minValue) / range) * (height - padding * 2));
+  };
+
+  const selectNearestPoint = (event) => {
+    if (!interactive || !data.length || !onPointSelect) {
+      return;
+    }
+    const rect = event.currentTarget.getBoundingClientRect();
+    const relativeX = ((event.clientX - rect.left) / rect.width) * width;
+    const closestIndex = data.reduce((bestIndex, _, index) => {
+      const currentDistance = Math.abs(xPositionForIndex(index) - relativeX);
+      const bestDistance = Math.abs(xPositionForIndex(bestIndex) - relativeX);
+      return currentDistance < bestDistance ? index : bestIndex;
+    }, 0);
+    onPointSelect(closestIndex);
+  };
 
   return (
     <div className="market-chart">
@@ -123,7 +151,14 @@ function LineChart({ data, lines, xKey, xFormatter = (value) => value, compact =
         ))}
       </div>
       {data.length ? (
-        <svg viewBox={`0 0 ${width} ${height}`} className="market-chart__svg" role="img" aria-label="Market analytics chart">
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className={`market-chart__svg ${interactive ? 'market-chart__svg--interactive' : ''}`}
+          role="img"
+          aria-label="Market analytics chart"
+          onMouseMove={selectNearestPoint}
+          onClick={selectNearestPoint}
+        >
           <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#c8d8cd" strokeWidth="1.5" />
           <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="#c8d8cd" strokeWidth="1.5" />
           {[0, 0.5, 1].map((tick) => {
@@ -147,6 +182,35 @@ function LineChart({ data, lines, xKey, xFormatter = (value) => value, compact =
               strokeLinecap="round"
             />
           ))}
+          {interactive && selectedPointIndex !== null && data[selectedPointIndex] ? (
+            <g>
+              <line
+                x1={xPositionForIndex(selectedPointIndex)}
+                y1={padding}
+                x2={xPositionForIndex(selectedPointIndex)}
+                y2={height - padding}
+                stroke="#7aa38f"
+                strokeDasharray="6 6"
+              />
+              {lines.map((line) => {
+                const selectedValue = data[selectedPointIndex][line.key];
+                if (selectedValue === null || selectedValue === undefined || Number.isNaN(Number(selectedValue))) {
+                  return null;
+                }
+                return (
+                  <circle
+                    key={`${line.key}-selected`}
+                    cx={xPositionForIndex(selectedPointIndex)}
+                    cy={yPositionForValue(selectedValue)}
+                    r="5"
+                    fill={line.color}
+                    stroke="#fff"
+                    strokeWidth="2"
+                  />
+                );
+              })}
+            </g>
+          ) : null}
           {data.map((item, index) => {
             if (index !== 0 && index !== data.length - 1 && index % labelStep !== 0) {
               return null;
@@ -211,6 +275,7 @@ export default function MarketAnalytics() {
   const [error, setError] = useState('');
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [expandedChart, setExpandedChart] = useState(null);
+  const [selectedExpandedPointIndex, setSelectedExpandedPointIndex] = useState(null);
   const [analytics, setAnalytics] = useState({
     priceTrend: [],
     heatmap: [],
@@ -315,6 +380,7 @@ export default function MarketAnalytics() {
 
   const openExpandedChart = (config) => {
     setExpandedChart(config);
+    setSelectedExpandedPointIndex(config?.data?.length ? config.data.length - 1 : null);
   };
 
   if (!commodity || !state || !fromDate || !toDate) {
@@ -632,12 +698,35 @@ export default function MarketAnalytics() {
                 <Button variant="outline" onClick={() => setExpandedChart(null)}>Close</Button>
               </div>
             </div>
+            {selectedExpandedPointIndex !== null && expandedChart.data?.[selectedExpandedPointIndex] ? (
+              <div className="market-point-detail">
+                <strong>{expandedChart.xKey === 'monthName'
+                  ? fmtMonth(String(expandedChart.data[selectedExpandedPointIndex][expandedChart.xKey] || ''))
+                  : fmtAxisDate(expandedChart.data[selectedExpandedPointIndex][expandedChart.xKey])}
+                </strong>
+                <div className="market-point-detail__grid">
+                  {expandedChart.lines.map((line) => {
+                    const value = expandedChart.data[selectedExpandedPointIndex][line.key];
+                    return (
+                      <span key={line.key}>
+                        <i style={{ background: line.color }} />
+                        {line.label}: <b>{fmtCompactNumber(value)}</b>
+                      </span>
+                    );
+                  })}
+                </div>
+                <small>Click anywhere on the graph to inspect the nearest point.</small>
+              </div>
+            ) : null}
             <LineChart
               data={expandedChart.data}
               xKey={expandedChart.xKey}
               xFormatter={expandedChart.xFormatter}
               lines={expandedChart.lines}
               compact={false}
+              interactive
+              selectedPointIndex={selectedExpandedPointIndex}
+              onPointSelect={setSelectedExpandedPointIndex}
             />
           </div>
         </div>
