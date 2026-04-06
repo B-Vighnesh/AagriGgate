@@ -29,7 +29,6 @@ market:
     key: ${MARKET_API_KEY}
     ingest-on-startup: ${MARKET_API_INGEST_ON_STARTUP:false}
     startup-state: ${MARKET_API_STARTUP_STATE:Karnataka}
-    startup-district: ${MARKET_API_STARTUP_DISTRICT:Bangalore}
 
 news:
   api:
