@@ -2,6 +2,7 @@ package com.MyWebpage.register.login.market.ingestion;
 
 import com.MyWebpage.register.login.market.Market;
 import com.MyWebpage.register.login.market.MarketRepository;
+import com.MyWebpage.register.login.market.analytics.MarketAnalyticsService;
 import com.MyWebpage.register.login.news.util.NewsTime;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
@@ -24,15 +25,18 @@ public class MandiIngestionService {
     private final MandiApiClient mandiApiClient;
     private final MandiDataTransformer mandiDataTransformer;
     private final MarketRepository marketRepository;
+    private final MarketAnalyticsService marketAnalyticsService;
 
     public MandiIngestionService(
             MandiApiClient mandiApiClient,
             MandiDataTransformer mandiDataTransformer,
-            MarketRepository marketRepository
+            MarketRepository marketRepository,
+            MarketAnalyticsService marketAnalyticsService
     ) {
         this.mandiApiClient = mandiApiClient;
         this.mandiDataTransformer = mandiDataTransformer;
         this.marketRepository = marketRepository;
+        this.marketAnalyticsService = marketAnalyticsService;
     }
 
     @Transactional
@@ -42,6 +46,7 @@ public class MandiIngestionService {
         LocalDateTime createdAt = LocalDateTime.now(NewsTime.IST);
         markets.forEach(market -> market.setCreatedAt(createdAt));
         marketRepository.batchInsertIgnore(markets);
+        marketAnalyticsService.refreshSummary(state, district, date);
         log.info("Ingested {} market rows for state={} district={} date={}", markets.size(), state, district, date);
         return markets.size();
     }
