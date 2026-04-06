@@ -100,8 +100,8 @@ export default function Market() {
   const [commodity, setCommodity] = useState('Tomato');
   const [fromDate, setFromDate] = useState(defaultDate);
   const [toDate, setToDate] = useState(defaultDate);
-  const [state, setState] = useState('');
-  const [district, setDistrict] = useState('');
+  const [state, setState] = useState('Karnataka');
+  const [district, setDistrict] = useState('Bangalore');
 
   const [marketData, setMarketData] = useState([]);
   const [savedData, setSavedData] = useState([]);
