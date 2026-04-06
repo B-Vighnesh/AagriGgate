@@ -11,6 +11,7 @@ export default function Footer() {
     <footer className="site-footer">
       <div className="ag-container footer-grid">
         <div className="footer-brand">
+          <span className="footer-brand__eyebrow">Aagri Intelligence Platform</span>
           <h3>AagriGgate</h3>
           <p>Direct trade, smarter decisions, and transparent agriculture workflows in one platform.</p>
           <p className="footer-brand__note">Built to connect farmers and buyers with more clarity, less friction, and no hidden platform charges.</p>
@@ -44,11 +45,13 @@ export default function Footer() {
           </ul>
         </div>
       </div>
-      <div className="footer-bottom">
-        <span>&copy; {year} AagriGgate. All rights reserved.</span>
-        <span>webappfarmer@gmail.com</span>
-        <span>+91 8618402581</span>
-        <span>Mangalore, Karnataka</span>
+      <div className="footer-bottom-wrap">
+        <div className="ag-container footer-bottom">
+          <span className="footer-bottom__copyright">&copy; {year} AagriGgate. All rights reserved.</span>
+          <a href="mailto:webappfarmer@gmail.com" className="footer-contact-pill">webappfarmer@gmail.com</a>
+          <a href="tel:+918618402581" className="footer-contact-pill">+91 8618402581</a>
+          <span className="footer-contact-pill">Mangalore, Karnataka</span>
+        </div>
       </div>
     </footer>
   );
