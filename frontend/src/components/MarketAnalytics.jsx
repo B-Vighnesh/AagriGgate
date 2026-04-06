@@ -113,6 +113,7 @@ function LineChart({
   interactive = false,
   onPointSelect,
   selectedPointIndex = null,
+  hoveredPosition = null,
 }) {
   const width = compact ? 700 : 1080;
   const height = compact ? 260 : (expanded ? 640 : 420);
@@ -133,12 +134,17 @@ function LineChart({
     }
     const rect = event.currentTarget.getBoundingClientRect();
     const relativeX = ((event.clientX - rect.left) / rect.width) * width;
+    const relativeY = ((event.clientY - rect.top) / rect.height) * height;
     const closestIndex = data.reduce((bestIndex, _, index) => {
       const currentDistance = Math.abs(xPositionForIndex(index) - relativeX);
       const bestDistance = Math.abs(xPositionForIndex(bestIndex) - relativeX);
       return currentDistance < bestDistance ? index : bestIndex;
     }, 0);
-    onPointSelect(closestIndex);
+    onPointSelect({
+      index: closestIndex,
+      xPercent: ((event.clientX - rect.left) / rect.width) * 100,
+      yPercent: ((event.clientY - rect.top) / rect.height) * 100,
+    });
   };
 
   return (
@@ -152,78 +158,100 @@ function LineChart({
         ))}
       </div>
       {data.length ? (
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          className={`market-chart__svg ${interactive ? 'market-chart__svg--interactive' : ''}`}
-          role="img"
-          aria-label="Market analytics chart"
-          onMouseMove={selectNearestPoint}
-          onClick={selectNearestPoint}
-        >
-          <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#c8d8cd" strokeWidth="1.5" />
-          <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="#c8d8cd" strokeWidth="1.5" />
-          {[0, 0.5, 1].map((tick) => {
-            const y = height - padding - (tick * (height - padding * 2));
-            const value = minValue + ((maxValue - minValue) * tick);
-            return (
-              <g key={tick}>
-                <line x1={padding} y1={y} x2={width - padding} y2={y} stroke="#e4eee7" strokeDasharray="4 4" />
-                <text x={6} y={y + 4} className="market-chart__tick">{fmtCompactNumber(value)}</text>
-              </g>
-            );
-          })}
-          {lines.map((line) => (
-            <polyline
-              key={line.key}
-              fill="none"
-              stroke={line.color}
-              strokeWidth="3"
-              points={buildLinePoints(data, (item) => item[line.key], width, height, padding)}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-          ))}
-          {interactive && selectedPointIndex !== null && data[selectedPointIndex] ? (
-            <g>
-              <line
-                x1={xPositionForIndex(selectedPointIndex)}
-                y1={padding}
-                x2={xPositionForIndex(selectedPointIndex)}
-                y2={height - padding}
-                stroke="#7aa38f"
-                strokeDasharray="6 6"
+        <div className="market-chart__frame">
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            className={`market-chart__svg ${interactive ? 'market-chart__svg--interactive' : ''}`}
+            role="img"
+            aria-label="Market analytics chart"
+            onMouseMove={selectNearestPoint}
+            onClick={selectNearestPoint}
+          >
+            <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#c8d8cd" strokeWidth="1.5" />
+            <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="#c8d8cd" strokeWidth="1.5" />
+            {[0, 0.5, 1].map((tick) => {
+              const y = height - padding - (tick * (height - padding * 2));
+              const value = minValue + ((maxValue - minValue) * tick);
+              return (
+                <g key={tick}>
+                  <line x1={padding} y1={y} x2={width - padding} y2={y} stroke="#e4eee7" strokeDasharray="4 4" />
+                  <text x={6} y={y + 4} className="market-chart__tick">{fmtCompactNumber(value)}</text>
+                </g>
+              );
+            })}
+            {lines.map((line) => (
+              <polyline
+                key={line.key}
+                fill="none"
+                stroke={line.color}
+                strokeWidth="3"
+                points={buildLinePoints(data, (item) => item[line.key], width, height, padding)}
+                strokeLinejoin="round"
+                strokeLinecap="round"
               />
+            ))}
+            {interactive && selectedPointIndex !== null && data[selectedPointIndex] ? (
+              <g>
+                <line
+                  x1={xPositionForIndex(selectedPointIndex)}
+                  y1={padding}
+                  x2={xPositionForIndex(selectedPointIndex)}
+                  y2={height - padding}
+                  stroke="#7aa38f"
+                  strokeDasharray="6 6"
+                />
+                {lines.map((line) => {
+                  const selectedValue = data[selectedPointIndex][line.key];
+                  if (selectedValue === null || selectedValue === undefined || Number.isNaN(Number(selectedValue))) {
+                    return null;
+                  }
+                  return (
+                    <circle
+                      key={`${line.key}-selected`}
+                      cx={xPositionForIndex(selectedPointIndex)}
+                      cy={yPositionForValue(selectedValue)}
+                      r="5"
+                      fill={line.color}
+                      stroke="#fff"
+                      strokeWidth="2"
+                    />
+                  );
+                })}
+              </g>
+            ) : null}
+            {data.map((item, index) => {
+              if (index !== 0 && index !== data.length - 1 && index % labelStep !== 0) {
+                return null;
+              }
+              const x = data.length > 1 ? padding + (((width - padding * 2) / (data.length - 1)) * index) : width / 2;
+              return (
+                <text key={`${xKey}-${index}`} x={x} y={height - 8} textAnchor="middle" className="market-chart__label">
+                  {xFormatter(item[xKey])}
+                </text>
+              );
+            })}
+          </svg>
+          {interactive && hoveredPosition && selectedPointIndex !== null && data[selectedPointIndex] ? (
+            <div
+              className="market-chart__tooltip"
+              style={{
+                left: `${Math.min(Math.max(hoveredPosition.xPercent, 10), 84)}%`,
+                top: `${Math.min(Math.max(hoveredPosition.yPercent - 12, 10), 72)}%`,
+              }}
+            >
+              <strong>{xFormatter(data[selectedPointIndex][xKey])}</strong>
               {lines.map((line) => {
-                const selectedValue = data[selectedPointIndex][line.key];
-                if (selectedValue === null || selectedValue === undefined || Number.isNaN(Number(selectedValue))) {
-                  return null;
-                }
+                const value = data[selectedPointIndex][line.key];
                 return (
-                  <circle
-                    key={`${line.key}-selected`}
-                    cx={xPositionForIndex(selectedPointIndex)}
-                    cy={yPositionForValue(selectedValue)}
-                    r="5"
-                    fill={line.color}
-                    stroke="#fff"
-                    strokeWidth="2"
-                  />
+                  <span key={line.key}>
+                    <i style={{ background: line.color }} />
+                    {line.label}: <b>{fmtCompactNumber(value)}</b>
+                  </span>
                 );
               })}
-            </g>
+            </div>
           ) : null}
-          {data.map((item, index) => {
-            if (index !== 0 && index !== data.length - 1 && index % labelStep !== 0) {
-              return null;
-            }
-            const x = data.length > 1 ? padding + (((width - padding * 2) / (data.length - 1)) * index) : width / 2;
-            return (
-              <text key={`${xKey}-${index}`} x={x} y={height - 8} textAnchor="middle" className="market-chart__label">
-                {xFormatter(item[xKey])}
-              </text>
-            );
-          })}
-        </svg>
+        </div>
       ) : (
         <div className="market-analytics-empty">No analytics data available for this range.</div>
       )}
@@ -277,6 +305,7 @@ export default function MarketAnalytics() {
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [expandedChart, setExpandedChart] = useState(null);
   const [selectedExpandedPointIndex, setSelectedExpandedPointIndex] = useState(null);
+  const [hoveredPointPosition, setHoveredPointPosition] = useState(null);
   const [analytics, setAnalytics] = useState({
     priceTrend: [],
     heatmap: [],
@@ -398,6 +427,7 @@ export default function MarketAnalytics() {
   const openExpandedChart = (config) => {
     setExpandedChart(config);
     setSelectedExpandedPointIndex(config?.data?.length ? config.data.length - 1 : null);
+    setHoveredPointPosition({ xPercent: 82, yPercent: 20 });
   };
 
   if (!commodity || !state || !fromDate || !toDate) {
@@ -705,9 +735,8 @@ export default function MarketAnalytics() {
             <div className="market-fullscreen-card__head">
               <div>
                 <h2>{expandedChart.title}</h2>
-                <p>{expandedChart.subtitle}</p>
               </div>
-              <div className="market-analytics-actions">
+              <div className="market-fullscreen-card__actions">
                 <div className="market-range-stats">
                   <span>Min Range: <strong>{fmtPrice(expandedChart.stats?.min)}</strong></span>
                   <span>Max Range: <strong>{fmtPrice(expandedChart.stats?.max)}</strong></span>
@@ -715,26 +744,6 @@ export default function MarketAnalytics() {
                 <Button variant="outline" onClick={() => setExpandedChart(null)}>Close</Button>
               </div>
             </div>
-            {selectedExpandedPointIndex !== null && expandedChart.data?.[selectedExpandedPointIndex] ? (
-              <div className="market-point-detail">
-                <strong>{expandedChart.xKey === 'monthName'
-                  ? fmtMonth(String(expandedChart.data[selectedExpandedPointIndex][expandedChart.xKey] || ''))
-                  : fmtAxisDate(expandedChart.data[selectedExpandedPointIndex][expandedChart.xKey])}
-                </strong>
-                <div className="market-point-detail__grid">
-                  {expandedChart.lines.map((line) => {
-                    const value = expandedChart.data[selectedExpandedPointIndex][line.key];
-                    return (
-                      <span key={line.key}>
-                        <i style={{ background: line.color }} />
-                        {line.label}: <b>{fmtCompactNumber(value)}</b>
-                      </span>
-                    );
-                  })}
-                </div>
-                <small>Click anywhere on the graph to inspect the nearest point.</small>
-              </div>
-            ) : null}
             <LineChart
               data={expandedChart.data}
               xKey={expandedChart.xKey}
@@ -743,8 +752,12 @@ export default function MarketAnalytics() {
               compact={false}
               expanded
               interactive
+              hoveredPosition={hoveredPointPosition}
               selectedPointIndex={selectedExpandedPointIndex}
-              onPointSelect={setSelectedExpandedPointIndex}
+              onPointSelect={({ index, xPercent, yPercent }) => {
+                setSelectedExpandedPointIndex(index);
+                setHoveredPointPosition({ xPercent, yPercent });
+              }}
             />
           </div>
         </div>
