@@ -692,7 +692,7 @@ a {
 .section-title {
   margin: 0;
   font-size: 1.6rem;
-  color: white;
+  color: var(--color-primary-dark);
 }
 
 .section-subtitle {
