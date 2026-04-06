@@ -25,7 +25,6 @@ function navByRole(role) {
       { label: 'Add Crop', to: '/add-crop' },
       { label: 'My Crops', to: '/view-crop' },
       { label: 'Requests', to: '/view-approach' },
-      { label: 'Account', to: '/account', icon: '👤', iconOnly: true },
     ];
   }
 
@@ -35,7 +34,6 @@ function navByRole(role) {
     { label: 'Favorites', to: '/favorites' },
     { label: 'Cart', to: '/cart' },
     { label: 'My Requests', to: '/view-approaches-user' },
-    { label: 'Account', to: '/account', icon: '👤', iconOnly: true },
   ];
 }
 
@@ -210,11 +208,9 @@ export default function Navbar() {
                 key={item.to}
                 to={item.to}
                 onClick={() => setMobileOpen(false)}
-                className={`site-nav__link ${item.iconOnly ? 'site-nav__link--icon' : ''} ${isActive(item.to) ? 'site-nav__link--active' : ''}`}
-                aria-label={item.label}
-                title={item.label}
+                className={`site-nav__link ${isActive(item.to) ? 'site-nav__link--active' : ''}`}
               >
-                {item.iconOnly ? <span className="site-nav__icon" aria-hidden="true">{item.icon}</span> : item.label}
+                {item.label}
               </Link>
             ))}
           </nav>
@@ -296,6 +292,18 @@ export default function Navbar() {
                 </div>
               ) : null}
             </div>
+          ) : null}
+
+          {loggedIn ? (
+            <Link
+              to="/account"
+              className={`header-account-link ${isActive('/account') ? 'header-account-link--active' : ''}`}
+              aria-label="Account"
+              title="Account"
+              onClick={() => setMobileOpen(false)}
+            >
+              <i className="fa-regular fa-user" aria-hidden="true" />
+            </Link>
           ) : null}
 
           <button

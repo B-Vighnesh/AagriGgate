@@ -143,21 +143,6 @@ a {
   font-weight: 600;
 }
 
-.site-nav__link--icon {
-  width: 40px;
-  min-width: 40px;
-  min-height: 40px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.08rem;
-}
-
-.site-nav__icon {
-  line-height: 1;
-}
-
 .site-nav__link:hover {
   background: #e5f1eb;
 }
@@ -194,6 +179,27 @@ a {
 
 .notification-bell__button i {
   font-size: 1rem;
+}
+
+.header-account-link {
+  width: 42px;
+  height: 42px;
+  color: var(--color-primary-dark);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+}
+
+.header-account-link:hover,
+.header-account-link--active {
+  color: var(--color-primary);
+}
+
+.header-account-link i {
+  font-size: 1.4rem;
+  line-height: 1;
 }
 
 .notification-bell__badge {
@@ -4409,13 +4415,6 @@ a {
     display: block;
     border: 1px solid transparent;
     margin-top: 2px;
-  }
-
-  .site-nav__link--icon {
-    width: 100%;
-    justify-content: flex-start;
-    padding: 8px 11px;
-    min-height: 42px;
   }
 
   .brand__text {
