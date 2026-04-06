@@ -239,6 +239,15 @@ export default function Navbar() {
               </Link>
             ))}
             {loggedIn ? (
+              <Link
+                to="/enquiry"
+                className={`site-nav__utility ${isActive('/enquiry') ? 'site-nav__utility--active' : ''}`}
+                onClick={() => setMobileOpen(false)}
+              >
+                Support
+              </Link>
+            ) : null}
+            {loggedIn ? (
               <button
                 type="button"
                 className="site-nav__logout"
@@ -258,6 +267,7 @@ export default function Navbar() {
                 type="button"
                 className={`notification-bell__button ${drawerOpen ? 'notification-bell__button--active' : ''}`}
                 aria-label="Open notifications"
+                data-tooltip="Notifications"
                 aria-expanded={drawerOpen}
                 onClick={() => setDrawerOpen((prev) => !prev)}
               >
@@ -333,10 +343,22 @@ export default function Navbar() {
 
           {loggedIn ? (
             <Link
+              to="/enquiry"
+              className={`header-utility-link ${isActive('/enquiry') ? 'header-utility-link--active' : ''}`}
+              aria-label="Support"
+              data-tooltip="Support"
+              onClick={() => setMobileOpen(false)}
+            >
+              <i className="fa-regular fa-comments" aria-hidden="true" />
+            </Link>
+          ) : null}
+
+          {loggedIn ? (
+            <Link
               to="/account"
               className={`header-account-link ${isActive('/account') ? 'header-account-link--active' : ''}`}
               aria-label="Account"
-              title="Account"
+              data-tooltip="Account"
               onClick={() => setMobileOpen(false)}
             >
               <i className="fa-regular fa-user" aria-hidden="true" />
@@ -348,7 +370,7 @@ export default function Navbar() {
               type="button"
               className="header-logout-link"
               aria-label="Logout"
-              title="Logout"
+              data-tooltip="Logout"
               onClick={() => {
                 setMobileOpen(false);
                 navigate('/logout');
