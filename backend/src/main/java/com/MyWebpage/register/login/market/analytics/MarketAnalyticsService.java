@@ -1,6 +1,8 @@
 package com.MyWebpage.register.login.market.analytics;
 
 import com.MyWebpage.register.login.news.util.NewsTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -18,14 +20,18 @@ import java.util.TreeMap;
 @Service
 public class MarketAnalyticsService {
 
+    private static final Logger log = LoggerFactory.getLogger(MarketAnalyticsService.class);
+
     private final DailyCropPriceSummaryRepository summaryRepository;
 
     public MarketAnalyticsService(DailyCropPriceSummaryRepository summaryRepository) {
         this.summaryRepository = summaryRepository;
     }
 
-    public void refreshSummary(String state, String district, LocalDate date) {
-        summaryRepository.refreshForDistrictDate(state, district, date);
+    public int refreshSummary(String state, String district, LocalDate date) {
+        int rows = summaryRepository.refreshForDistrictDate(state, district, date);
+        log.info("Refreshed {} daily summary rows for state={} district={} date={}", rows, state, district, date);
+        return rows;
     }
 
     public List<MarketAnalyticsResponse.PriceTrendPoint> getPriceTrend(

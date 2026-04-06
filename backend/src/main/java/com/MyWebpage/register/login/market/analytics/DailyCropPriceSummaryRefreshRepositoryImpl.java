@@ -44,10 +44,10 @@ public class DailyCropPriceSummaryRefreshRepositoryImpl implements DailyCropPric
     }
 
     @Override
-    public void refreshForDistrictDate(String state, String district, LocalDate date) {
+    public int refreshForDistrictDate(String state, String district, LocalDate date) {
         jdbcTemplate.update(DELETE_SQL, date, state, district);
         LocalDateTime now = LocalDateTime.now();
-        jdbcTemplate.update(
+        return jdbcTemplate.update(
                 INSERT_SQL,
                 Timestamp.valueOf(now),
                 Timestamp.valueOf(now),
