@@ -1583,9 +1583,56 @@ a {
 
 .account-hero__actions {
   width: min(220px, 100%);
-  display: grid;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
   gap: 10px;
   flex-shrink: 0;
+}
+
+.account-icon-action {
+  width: 54px;
+  min-width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  border: 1px solid #d7e7df;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--color-primary-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 20px rgba(20, 74, 54, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.account-icon-action i {
+  font-size: 1.08rem;
+}
+
+.account-icon-action span {
+  display: none;
+}
+
+.account-icon-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(20, 74, 54, 0.1);
+}
+
+.account-icon-action--primary:hover {
+  border-color: #bfd9cc;
+  background: #f1faf6;
+}
+
+.account-icon-action--danger {
+  cursor: pointer;
+  color: #a33030;
+  border-color: #efc2c2;
+  background: #fff7f7;
+}
+
+.account-icon-action--danger:hover {
+  border-color: #e2a6a6;
+  background: #fff1f1;
 }
 
 .account-stats-grid {
@@ -1715,6 +1762,56 @@ a {
   background:
     radial-gradient(circle at top right, rgba(47, 154, 116, 0.1), transparent 28%),
     linear-gradient(180deg, #ffffff, #f3fbf7);
+}
+
+.account-settings-tile {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid #d6e6dd;
+  background:
+    radial-gradient(circle at top right, rgba(31, 111, 84, 0.08), transparent 26%),
+    linear-gradient(180deg, #ffffff, #f7fcf9);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.account-settings-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(20, 74, 54, 0.08);
+  border-color: #bfd9cc;
+}
+
+.account-settings-tile__icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: #eef7f2;
+  color: var(--color-primary-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.account-settings-tile__icon i {
+  font-size: 1rem;
+}
+
+.account-settings-tile__copy {
+  display: grid;
+  gap: 3px;
+}
+
+.account-settings-tile__copy strong {
+  color: var(--color-primary-dark);
+}
+
+.account-settings-tile__copy small {
+  color: var(--color-muted);
+  font-size: 0.84rem;
 }
 
 .quick-actions-grid {
@@ -4671,6 +4768,11 @@ a {
 
   .account-hero__actions {
     width: 100%;
+    justify-content: flex-start;
+  }
+
+  .account-icon-action--desktop {
+    display: none;
   }
 
   .account-stats-grid,
