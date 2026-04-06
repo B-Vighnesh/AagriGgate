@@ -9,12 +9,7 @@ import { getFarmerId, getRole, getToken } from '../lib/auth';
 import {
   deleteAllSavedMarketData,
   deleteSavedMarketData,
-  getMarketArrivalVsPrice,
-  getMarketHeatmap,
-  getMarketMinMaxModalTrend,
   getMarketPrice,
-  getMarketPriceTrend,
-  getMarketSeasonalTrend,
   getSavedMarketData,
   saveMarketData,
 } from '../api/marketApi';
@@ -27,16 +22,6 @@ const PAGE_SIZE = 20;
 function fmtPrice(value) {
   if (value === null || value === undefined || value === '') return '-';
   return `Rs ${value}`;
-}
-
-function fmtCompactNumber(value) {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) return '-';
-  return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(Number(value));
-}
-
-function fmtMonth(value) {
-  if (!value) return '';
-  return value.slice(0, 1).toUpperCase() + value.slice(1, 3);
 }
 
 function diffInDays(start, end) {
@@ -102,119 +87,6 @@ function PriceCard({ item, isSaved, deleteId, onSave, onDelete }) {
   );
 }
 
-function buildLinePoints(data, accessor, width, height, padding) {
-  const values = data.map((item) => Number(accessor(item) ?? 0));
-  if (!values.length) return { points: '', labels: [], min: 0, max: 0 };
-
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const stepX = data.length > 1 ? (width - padding * 2) / (data.length - 1) : 0;
-
-  const points = data.map((item, index) => {
-    const value = Number(accessor(item) ?? 0);
-    const x = padding + (stepX * index);
-    const y = height - padding - (((value - min) / range) * (height - padding * 2));
-    return `${x},${y}`;
-  }).join(' ');
-
-  return { points, min, max };
-}
-
-function AnalyticsSection({ title, subtitle, children, actions }) {
-  return (
-    <Card className="market-analytics-card">
-      <div className="market-analytics-card__head">
-        <div>
-          <h3>{title}</h3>
-          {subtitle ? <p>{subtitle}</p> : null}
-        </div>
-        {actions ? <div className="market-analytics-card__actions">{actions}</div> : null}
-      </div>
-      {children}
-    </Card>
-  );
-}
-
-function LineChart({ data, lines, xKey, xFormatter = (value) => value, yLabel = 'Price' }) {
-  const width = 640;
-  const height = 260;
-  const padding = 28;
-
-  const allValues = data.flatMap((item) => lines.map((line) => Number(item[line.key] ?? 0))).filter((value) => !Number.isNaN(value));
-  const minValue = allValues.length ? Math.min(...allValues) : 0;
-  const maxValue = allValues.length ? Math.max(...allValues) : 0;
-
-  return (
-    <div className="market-chart">
-      <div className="market-chart__legend">
-        {lines.map((line) => (
-          <span key={line.key}>
-            <i style={{ background: line.color }} />
-            {line.label}
-          </span>
-        ))}
-      </div>
-      {data.length ? (
-        <svg viewBox={`0 0 ${width} ${height}`} className="market-chart__svg" role="img" aria-label={yLabel}>
-          <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#c8d8cd" strokeWidth="1.5" />
-          <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="#c8d8cd" strokeWidth="1.5" />
-          {[0, 0.5, 1].map((tick) => {
-            const y = height - padding - (tick * (height - padding * 2));
-            const value = minValue + ((maxValue - minValue) * tick);
-            return (
-              <g key={tick}>
-                <line x1={padding} y1={y} x2={width - padding} y2={y} stroke="#e4eee7" strokeDasharray="4 4" />
-                <text x={6} y={y + 4} className="market-chart__tick">{fmtCompactNumber(value)}</text>
-              </g>
-            );
-          })}
-          {lines.map((line) => {
-            const { points } = buildLinePoints(data, (item) => item[line.key], width, height, padding);
-            return <polyline key={line.key} fill="none" stroke={line.color} strokeWidth="3" points={points} strokeLinejoin="round" strokeLinecap="round" />;
-          })}
-          {data.map((item, index) => {
-            const x = data.length > 1 ? padding + (((width - padding * 2) / (data.length - 1)) * index) : width / 2;
-            return (
-              <text key={`${xKey}-${index}`} x={x} y={height - 8} textAnchor="middle" className="market-chart__label">
-                {xFormatter(item[xKey])}
-              </text>
-            );
-          })}
-        </svg>
-      ) : (
-        <div className="market-analytics-empty">No analytics data available for this selection.</div>
-      )}
-    </div>
-  );
-}
-
-function HeatmapGrid({ items }) {
-  const prices = items.map((item) => Number(item.avgModalPrice ?? 0)).filter((value) => !Number.isNaN(value));
-  const min = prices.length ? Math.min(...prices) : 0;
-  const max = prices.length ? Math.max(...prices) : 0;
-  const range = max - min || 1;
-
-  return items.length ? (
-    <div className="market-heatmap-grid">
-      {items.map((item) => {
-        const value = Number(item.avgModalPrice ?? 0);
-        const intensity = Math.max(0, Math.min(1, (value - min) / range));
-        const background = `linear-gradient(135deg, rgba(30, 126, 93, ${0.18 + intensity * 0.45}), rgba(214, 112, 40, ${0.18 + intensity * 0.55}))`;
-        return (
-          <article key={item.district} className="market-heatmap-item" style={{ background }}>
-            <strong>{item.district}</strong>
-            <span>{fmtPrice(item.avgModalPrice)}</span>
-            <small>{item.marketCount} markets</small>
-          </article>
-        );
-      })}
-    </div>
-  ) : (
-    <div className="market-analytics-empty">No district heatmap data available.</div>
-  );
-}
-
 export default function Market() {
   const navigate = useNavigate();
   const token = getToken();
@@ -247,16 +119,6 @@ export default function Market() {
   const [savedPage, setSavedPage] = useState(0);
   const [hasMoreSavedData, setHasMoreSavedData] = useState(false);
   const [savedMarketLookup, setSavedMarketLookup] = useState({});
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
-  const [analyticsError, setAnalyticsError] = useState('');
-  const [showAnalytics, setShowAnalytics] = useState(false);
-  const [analytics, setAnalytics] = useState({
-    priceTrend: [],
-    heatmap: [],
-    minMaxModalTrend: [],
-    arrivalVsPrice: [],
-    seasonalTrend: [],
-  });
 
   const [filterCommodity, setFilterCommodity] = useState('');
   const [filterState, setFilterState] = useState('');
@@ -289,17 +151,6 @@ export default function Market() {
 
     return { average, lowest, highest };
   }, [marketData]);
-
-  const analyticsStats = useMemo(() => {
-    const latestTrend = analytics.priceTrend[analytics.priceTrend.length - 1] || null;
-    const hottestDistrict = analytics.heatmap[0] || null;
-    const highestVolatility = analytics.minMaxModalTrend.reduce((best, item) => {
-      if (!best) return item;
-      return Number(item.volatility || 0) > Number(best.volatility || 0) ? item : best;
-    }, null);
-
-    return { latestTrend, hottestDistrict, highestVolatility };
-  }, [analytics]);
 
   const filteredSavedData = useMemo(() => {
     return savedData.filter((item) => {
@@ -356,67 +207,6 @@ export default function Market() {
     }
   }, [farmerId]);
 
-  const fetchAnalytics = useCallback(async (query) => {
-    setAnalyticsLoading(true);
-    setAnalyticsError('');
-    try {
-      const [priceTrendRes, heatmapRes, minMaxModalRes, arrivalVsPriceRes, seasonalTrendRes] = await Promise.all([
-        getMarketPriceTrend({
-          commodity: query.crop,
-          state: query.state,
-          district: query.district,
-          fromDate: query.fromDate,
-          toDate: query.toDate,
-        }),
-        getMarketHeatmap({
-          commodity: query.crop,
-          state: query.state,
-          date: query.toDate,
-        }),
-        getMarketMinMaxModalTrend({
-          commodity: query.crop,
-          state: query.state,
-          district: query.district,
-          fromDate: query.fromDate,
-          toDate: query.toDate,
-        }),
-        getMarketArrivalVsPrice({
-          commodity: query.crop,
-          state: query.state,
-          district: query.district,
-          fromDate: query.fromDate,
-          toDate: query.toDate,
-        }),
-        getMarketSeasonalTrend({
-          commodity: query.crop,
-          state: query.state,
-          district: query.district,
-          fromDate: query.fromDate,
-          toDate: query.toDate,
-        }),
-      ]);
-
-      setAnalytics({
-        priceTrend: priceTrendRes?.data || [],
-        heatmap: heatmapRes?.data || [],
-        minMaxModalTrend: minMaxModalRes?.data || [],
-        arrivalVsPrice: arrivalVsPriceRes?.data || [],
-        seasonalTrend: seasonalTrendRes?.data || [],
-      });
-    } catch {
-      setAnalyticsError('Analytics are unavailable right now. Price search still works, but charts could not be loaded.');
-      setAnalytics({
-        priceTrend: [],
-        heatmap: [],
-        minMaxModalTrend: [],
-        arrivalVsPrice: [],
-        seasonalTrend: [],
-      });
-    } finally {
-      setAnalyticsLoading(false);
-    }
-  }, []);
-
   const fetchMarketData = useCallback(async (manual = false, nextPage = 0, append = false) => {
     if (!state || !district || !commodity || !fromDate || !toDate) {
       if (manual) setError('Please select commodity, state, district, from date and to date.');
@@ -445,15 +235,6 @@ export default function Market() {
       setMarketData([]);
       setMarketPage(0);
       setHasMoreMarketData(false);
-      setShowAnalytics(false);
-      setAnalyticsError('');
-      setAnalytics({
-        priceTrend: [],
-        heatmap: [],
-        minMaxModalTrend: [],
-        arrivalVsPrice: [],
-        seasonalTrend: [],
-      });
     }
     if (rangeDays <= MAX_RANGE_DAYS - 1) {
       setError('');
@@ -499,9 +280,18 @@ export default function Market() {
       showToast('Search market prices first, then run analysis.', 'info');
       return;
     }
-    setShowAnalytics(true);
-    await fetchAnalytics(activeQuery);
-  }, [activeQuery, fetchAnalytics]);
+    const params = new URLSearchParams({
+      commodity: activeQuery.crop,
+      state: activeQuery.state,
+      fromDate: activeQuery.fromDate,
+      toDate: activeQuery.toDate,
+      range: '1M',
+    });
+    if (activeQuery.district) {
+      params.set('district', activeQuery.district);
+    }
+    navigate(`/market/analytics?${params.toString()}`);
+  }, [activeQuery, navigate]);
 
   useEffect(() => {
     if (!role) {
@@ -794,7 +584,7 @@ export default function Market() {
               </div>
             )}
 
-            {!loading && activeQuery && !showAnalytics && (
+            {!loading && activeQuery && (
               <Card className="market-analysis-prompt">
                 <div>
                   <h3>Ready for deeper insights?</h3>
@@ -804,114 +594,6 @@ export default function Market() {
                   Do Analysis
                 </Button>
               </Card>
-            )}
-
-            {showAnalytics && (
-              <section className="market-analytics">
-                <div className="market-stats-grid market-stats-grid--analytics">
-                  <StatCard
-                    title="Latest Modal Trend"
-                    value={fmtPrice(analyticsStats.latestTrend?.avgModalPrice)}
-                    description={analyticsStats.latestTrend?.date || 'Waiting for analytics'}
-                    tone="primary"
-                  />
-                  <StatCard
-                    title="Best District Today"
-                    value={fmtPrice(analyticsStats.hottestDistrict?.avgModalPrice)}
-                    description={analyticsStats.hottestDistrict?.district || 'No district data yet'}
-                    tone="warning"
-                  />
-                  <StatCard
-                    title="Highest Volatility"
-                    value={fmtPrice(analyticsStats.highestVolatility?.volatility)}
-                    description={analyticsStats.highestVolatility?.date || 'No volatility data yet'}
-                    tone="success"
-                  />
-                </div>
-
-                {analyticsError ? <p className="market-error">{analyticsError}</p> : null}
-
-                {analyticsLoading ? (
-                  <div className="market-loading">
-                    <div className="ui-spinner ui-spinner--lg" />
-                    <span>Building analytics...</span>
-                  </div>
-                ) : (
-                  <div className="market-analytics-grid">
-                    <AnalyticsSection
-                      title="Price Trend"
-                      subtitle="Average min, modal, and max price across the selected date window."
-                    >
-                      <LineChart
-                        data={analytics.priceTrend}
-                        xKey="date"
-                        xFormatter={(value) => String(value || '').slice(5)}
-                        lines={[
-                          { key: 'avgMinPrice', label: 'Min', color: '#1f7a53' },
-                          { key: 'avgModalPrice', label: 'Modal', color: '#2f5bd3' },
-                          { key: 'avgMaxPrice', label: 'Max', color: '#d16f28' },
-                        ]}
-                      />
-                    </AnalyticsSection>
-
-                    <AnalyticsSection
-                      title="District Heatmap"
-                      subtitle={`Top districts in ${state || 'the selected state'} for ${commodity}.`}
-                    >
-                      <HeatmapGrid items={analytics.heatmap} />
-                    </AnalyticsSection>
-
-                    <AnalyticsSection
-                      title="Min / Max / Modal Trend"
-                      subtitle="Watch spread and volatility over time."
-                    >
-                      <LineChart
-                        data={analytics.minMaxModalTrend}
-                        xKey="date"
-                        xFormatter={(value) => String(value || '').slice(5)}
-                        lines={[
-                          { key: 'avgMinPrice', label: 'Min', color: '#178d5f' },
-                          { key: 'avgModalPrice', label: 'Modal', color: '#315ec9' },
-                          { key: 'avgMaxPrice', label: 'Max', color: '#c9641e' },
-                          { key: 'volatility', label: 'Volatility', color: '#8d3fd1' },
-                        ]}
-                      />
-                    </AnalyticsSection>
-
-                    <AnalyticsSection
-                      title="Arrival Vs Price"
-                      subtitle="Uses summary record count and market count as the current supply proxy."
-                    >
-                      <LineChart
-                        data={analytics.arrivalVsPrice}
-                        xKey="date"
-                        xFormatter={(value) => String(value || '').slice(5)}
-                        lines={[
-                          { key: 'recordCount', label: 'Records', color: '#1f7a53' },
-                          { key: 'marketCount', label: 'Markets', color: '#d16f28' },
-                          { key: 'avgModalPrice', label: 'Modal Price', color: '#2f5bd3' },
-                        ]}
-                      />
-                    </AnalyticsSection>
-
-                    <AnalyticsSection
-                      title="Seasonal Trend"
-                      subtitle="Monthly average pricing for the selected range."
-                    >
-                      <LineChart
-                        data={analytics.seasonalTrend}
-                        xKey="monthName"
-                        xFormatter={(value) => fmtMonth(String(value || ''))}
-                        lines={[
-                          { key: 'avgMinPrice', label: 'Min', color: '#1f7a53' },
-                          { key: 'avgModalPrice', label: 'Modal', color: '#2f5bd3' },
-                          { key: 'avgMaxPrice', label: 'Max', color: '#d16f28' },
-                        ]}
-                      />
-                    </AnalyticsSection>
-                  </div>
-                )}
-              </section>
             )}
 
             {loading && (
