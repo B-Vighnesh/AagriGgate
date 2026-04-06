@@ -46,8 +46,9 @@ public class MandiIngestionService {
         LocalDateTime createdAt = LocalDateTime.now(NewsTime.IST);
         markets.forEach(market -> market.setCreatedAt(createdAt));
         marketRepository.batchInsertIgnore(markets);
-        marketAnalyticsService.refreshSummary(state, district, date);
-        log.info("Ingested {} market rows for state={} district={} date={}", markets.size(), state, district, date);
+        int summaryRows = marketAnalyticsService.refreshSummary(state, district, date);
+        log.info("Ingested {} market rows and refreshed {} summary rows for state={} district={} date={}",
+                markets.size(), summaryRows, state, district, date);
         return markets.size();
     }
 }

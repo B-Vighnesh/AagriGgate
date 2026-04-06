@@ -4,5 +4,5 @@ import java.time.LocalDate;
 
 public interface DailyCropPriceSummaryRefreshRepository {
 
-    void refreshForDistrictDate(String state, String district, LocalDate date);
+    int refreshForDistrictDate(String state, String district, LocalDate date);
 }
