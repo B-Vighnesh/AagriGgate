@@ -13,12 +13,13 @@ import {
 } from '../lib/notificationApi';
 
 function navByRole(role) {
-  const base = [{ label: 'Home', to: '/' }, { label: 'News', to: '/news' }];
-  if (!role) return [...base, { label: 'Login', to: '/login' }, { label: 'Register', to: '/register' }];
+  const publicBase = [{ label: 'Home', to: '/' }];
+  const privateBase = [...publicBase, { label: 'News', to: '/news' }];
+  if (!role) return [...publicBase, { label: 'Login', to: '/login' }, { label: 'Register', to: '/register' }];
 
   if (role === 'farmer') {
     return [
-      ...base,
+      ...privateBase,
       { label: 'Market', to: '/market' },
       { label: 'Weather', to: '/weather' },
       { label: 'Browse Crops', to: '/view-all-crops' },
@@ -29,7 +30,7 @@ function navByRole(role) {
   }
 
   return [
-    ...base,
+    ...privateBase,
     { label: 'Browse Crops', to: '/view-all-crops' },
     { label: 'Favorites', to: '/favorites' },
     { label: 'Cart', to: '/cart' },
@@ -50,6 +51,8 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const drawerRef = useRef(null);
+  const mobileNavRef = useRef(null);
+  const toggleRef = useRef(null);
 
   const showToast = useCallback((message, type = 'info') => {
     setToast({ message, type });
@@ -153,6 +156,28 @@ export default function Navbar() {
     };
   }, [drawerOpen]);
 
+  useEffect(() => {
+    if (!mobileOpen) {
+      return undefined;
+    }
+
+    const handleOutsideMobileNav = (event) => {
+      const clickedInsideNav = mobileNavRef.current?.contains(event.target);
+      const clickedToggle = toggleRef.current?.contains(event.target);
+
+      if (!clickedInsideNav && !clickedToggle) {
+        setMobileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideMobileNav);
+    document.addEventListener('touchstart', handleOutsideMobileNav);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideMobileNav);
+      document.removeEventListener('touchstart', handleOutsideMobileNav);
+    };
+  }, [mobileOpen]);
+
   const items = navByRole(role);
   const isActive = (to) => (to === '/' ? location.pathname === '/' : location.pathname.startsWith(to));
   const relativeTimeFormatter = useMemo(
@@ -202,7 +227,7 @@ export default function Navbar() {
         </Link>
 
         <div className="site-header__actions">
-          <nav className={`site-nav ${mobileOpen ? 'site-nav--open' : ''}`}>
+          <nav ref={mobileNavRef} className={`site-nav ${mobileOpen ? 'site-nav--open' : ''}`}>
             {items.map((item) => (
               <Link
                 key={item.to}
@@ -213,6 +238,18 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+            {loggedIn ? (
+              <button
+                type="button"
+                className="site-nav__logout"
+                onClick={() => {
+                  setMobileOpen(false);
+                  navigate('/logout');
+                }}
+              >
+                Logout
+              </button>
+            ) : null}
           </nav>
 
           {loggedIn ? (
@@ -307,6 +344,7 @@ export default function Navbar() {
           ) : null}
 
           <button
+            ref={toggleRef}
             type="button"
             className="nav-toggle"
             aria-label="Toggle navigation"
