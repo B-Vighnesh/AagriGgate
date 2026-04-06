@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import Card from './common/Card';
 import Button from './common/Button';
 import ValidateToken from './ValidateToken';
@@ -132,9 +133,25 @@ export default function Account() {
             </div>
 
             <div className="account-hero__actions">
-              <Link to="/update-account" className="ui-btn ui-btn--primary text-center">Edit Profile</Link>
-              <Link to="/settings" className="ui-btn ui-btn--outline text-center">Settings</Link>
-              <Button variant="danger" onClick={onLogout}>Logout</Button>
+              <Link
+                to="/update-account"
+                className="account-icon-action account-icon-action--primary"
+                aria-label="Edit Profile"
+                title="Edit Profile"
+              >
+                <i className="fa-regular fa-pen-to-square" aria-hidden="true" />
+                <span>Edit</span>
+              </Link>
+              <button
+                type="button"
+                className="account-icon-action account-icon-action--danger account-icon-action--desktop"
+                aria-label="Logout"
+                title="Logout"
+                onClick={onLogout}
+              >
+                <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" />
+                <span>Logout</span>
+              </button>
             </div>
           </div>
 
@@ -185,6 +202,20 @@ export default function Account() {
           </div>
 
           <div className="account-side-stack">
+            <Card className="account-spotlight-card account-spotlight-card--soft">
+              <h3>Settings</h3>
+              <p>Manage your password, account preferences, and security settings from one focused place.</p>
+              <Link to="/settings" className="account-settings-tile">
+                <span className="account-settings-tile__icon" aria-hidden="true">
+                  <i className="fa-solid fa-gear" />
+                </span>
+                <span className="account-settings-tile__copy">
+                  <strong>Open Settings</strong>
+                  <small>Update your security and preferences</small>
+                </span>
+              </Link>
+            </Card>
+
             <Card className="account-spotlight-card">
               <h3>{isFarmer ? 'Seller Focus' : 'Buyer Focus'}</h3>
               <p>
