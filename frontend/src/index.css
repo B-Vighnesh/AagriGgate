@@ -147,6 +147,10 @@ a {
   display: none;
 }
 
+.site-nav__utility {
+  display: none;
+}
+
 .site-nav__link:hover {
   background: #e5f1eb;
 }
@@ -183,6 +187,64 @@ a {
 
 .notification-bell__button i {
   font-size: 1rem;
+}
+
+.notification-bell__button,
+.header-account-link,
+.header-logout-link,
+.header-utility-link {
+  position: relative;
+}
+
+.notification-bell__button::after,
+.header-account-link::after,
+.header-logout-link::after,
+.header-utility-link::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%) translateY(-4px);
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(18, 62, 49, 0.95);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 90;
+}
+
+.notification-bell__button:hover::after,
+.header-account-link:hover::after,
+.header-logout-link:hover::after,
+.header-utility-link:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.header-utility-link {
+  width: 42px;
+  height: 42px;
+  color: var(--color-primary-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+}
+
+.header-utility-link:hover,
+.header-utility-link--active {
+  color: var(--color-primary);
+}
+
+.header-utility-link i {
+  font-size: 1.18rem;
+  line-height: 1;
 }
 
 .header-account-link {
@@ -4764,11 +4826,42 @@ a {
     cursor: pointer;
   }
 
+  .site-nav__utility {
+    display: inline-flex;
+    width: 100%;
+    margin-top: 10px;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #cfe2d8;
+    border-radius: 10px;
+    background: #f7fcfa;
+    color: var(--color-primary-dark);
+    font-size: 0.92rem;
+    font-weight: 700;
+  }
+
+  .site-nav__utility--active {
+    background: #e8f4ee;
+    border-color: #b5d7c7;
+  }
+
   .brand__text {
     font-size: 1rem;
   }
 
   .header-logout-link {
+    display: none;
+  }
+
+  .header-utility-link {
+    display: none;
+  }
+
+  .notification-bell__button::after,
+  .header-account-link::after,
+  .header-logout-link::after,
+  .header-utility-link::after {
     display: none;
   }
 
