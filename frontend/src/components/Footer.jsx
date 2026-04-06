@@ -11,7 +11,7 @@ export default function Footer() {
     <footer className="site-footer">
       <div className="ag-container footer-grid">
         <div className="footer-brand">
-          <span className="footer-brand__eyebrow">Aagri Intelligence Platform</span>
+          <span className="footer-brand__eyebrow">AagriGgate Intelligence Platform</span>
           <h3>AagriGgate</h3>
           <p>Direct trade, smarter decisions, and transparent agriculture workflows in one platform.</p>
           <p className="footer-brand__note">Built to connect farmers and buyers with more clarity, less friction, and no hidden platform charges.</p>
