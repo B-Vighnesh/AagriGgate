@@ -3946,11 +3946,13 @@ a {
 
 /* Enquiry */
 .enquiry-page {
-  background: radial-gradient(circle at top left, #f7fff9, #e8f4ee);
+  background:
+    radial-gradient(circle at top left, rgba(47, 154, 116, 0.1), transparent 24%),
+    linear-gradient(180deg, #f3fbf7 0%, #e8f4ee 100%);
 }
 
 .enquiry-card {
-  width: min(760px, 96%);
+  width: min(1040px, 96%);
 }
 
 .enquiry-card h1 {
@@ -3964,9 +3966,83 @@ a {
   color: var(--color-muted);
 }
 
+.support-card {
+  background:
+    radial-gradient(circle at top right, rgba(234, 143, 68, 0.14), transparent 24%),
+    linear-gradient(135deg, #ffffff, #f5fbf8);
+}
+
+.support-back-row {
+  margin-bottom: 14px;
+}
+
+.support-back-row .link-back {
+  margin: 0;
+}
+
+.support-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 18px;
+  align-items: start;
+  margin-bottom: 14px;
+}
+
+.support-kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e8f4ee;
+  color: var(--color-primary-dark);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.support-hero__copy p {
+  max-width: 700px;
+  line-height: 1.7;
+}
+
+.support-topics {
+  display: grid;
+  gap: 10px;
+}
+
+.support-topic-card {
+  padding: 14px 15px;
+  border-radius: 16px;
+  border: 1px solid #d6e6dd;
+  background: rgba(255, 255, 255, 0.86);
+  display: grid;
+  gap: 5px;
+}
+
+.support-topic-card strong {
+  color: var(--color-primary-dark);
+}
+
+.support-topic-card span {
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.support-topic-card--active {
+  border-color: #b7d6c7;
+  background: #edf7f2;
+}
+
 .enquiry-form {
   display: grid;
   gap: 10px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid #d7e7df;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 14px 28px rgba(20, 74, 54, 0.05);
 }
 
 .enquiry-form label {
@@ -3975,18 +4051,31 @@ a {
   color: var(--color-primary-dark);
 }
 
+.enquiry-form select,
 .enquiry-form textarea {
   width: 100%;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 10px 12px;
   font-size: 0.92rem;
+  background: #fff;
+}
+
+.enquiry-form select {
+  min-height: 44px;
+}
+
+.enquiry-form textarea {
   resize: vertical;
 }
 
 .enquiry-success {
   text-align: center;
   padding: 14px 0;
+}
+
+.support-success {
+  padding: 34px 0 18px;
 }
 
 .enquiry-success h2 {
@@ -4708,6 +4797,10 @@ a {
     grid-template-columns: 1fr;
   }
 
+  .support-hero {
+    grid-template-columns: 1fr;
+  }
+
   .add-crop-grid--3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -5088,6 +5181,14 @@ a {
 
   .weather-metrics-grid {
     grid-template-columns: 1fr;
+  }
+
+  .support-topics {
+    grid-template-columns: 1fr;
+  }
+
+  .enquiry-form {
+    padding: 14px;
   }
 
   .add-crop-grid--2,

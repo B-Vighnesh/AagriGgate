@@ -52,7 +52,7 @@ export default function ContactUs() {
               ))}
             </div>
             <p className="contact-note">
-              If you are logged in, you can also use the <Link to="/enquiry">Enquiry page</Link>.
+              If you are logged in, you can also use the <Link to="/enquiry">Support page</Link>.
             </p>
           </Card>
 
