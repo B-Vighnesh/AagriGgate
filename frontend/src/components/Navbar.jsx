@@ -240,6 +240,15 @@ export default function Navbar() {
             ))}
             {loggedIn ? (
               <Link
+                to="/settings"
+                className={`site-nav__utility ${isActive('/settings') ? 'site-nav__utility--active' : ''}`}
+                onClick={() => setMobileOpen(false)}
+              >
+                Settings
+              </Link>
+            ) : null}
+            {loggedIn ? (
+              <Link
                 to="/enquiry"
                 className={`site-nav__utility ${isActive('/enquiry') ? 'site-nav__utility--active' : ''}`}
                 onClick={() => setMobileOpen(false)}
@@ -339,6 +348,18 @@ export default function Navbar() {
                 </div>
               ) : null}
             </div>
+          ) : null}
+
+          {loggedIn ? (
+            <Link
+              to="/settings"
+              className={`header-settings-link ${isActive('/settings') ? 'header-settings-link--active' : ''}`}
+              aria-label="Settings"
+              data-tooltip="Settings"
+              onClick={() => setMobileOpen(false)}
+            >
+              <i className="fa-solid fa-gear" aria-hidden="true" />
+            </Link>
           ) : null}
 
           {loggedIn ? (
