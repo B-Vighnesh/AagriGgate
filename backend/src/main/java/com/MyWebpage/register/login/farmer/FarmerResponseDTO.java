@@ -10,6 +10,15 @@ public class FarmerResponseDTO {
     private String state;
     private String role;
     private String district;
+    private String aadharNo;
+
+    public String getAadharNo() {
+        return aadharNo;
+    }
+
+    public void setAadharNo(String aadharNo) {
+        this.aadharNo = aadharNo;
+    }
 
     public String getDistrict() {
         return district;

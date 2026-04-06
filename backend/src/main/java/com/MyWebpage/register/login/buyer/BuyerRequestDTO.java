@@ -29,4 +29,6 @@ public class BuyerRequestDTO {
 
     private String dob;
 
+    private String aadharNo;
+
 }

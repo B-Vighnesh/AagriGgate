@@ -16,6 +16,7 @@ public class FarmerMapper {
         dto.setDistrict(farmer.getDistrict());
         dto.setRole(farmer.getRole());
         dto.setDob(farmer.getDob());
+        dto.setAadharNo(farmer.getAadharNo());
         return dto;
     }
 }

@@ -25,5 +25,8 @@ public class BuyerResponseDTO {
 
     private String dob;
 
+    private String aadharNo;
+
+
 
 }

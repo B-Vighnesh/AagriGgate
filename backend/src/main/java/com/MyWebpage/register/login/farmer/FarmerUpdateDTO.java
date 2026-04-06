@@ -4,8 +4,10 @@ public class FarmerUpdateDTO {
     private String firstName;
     private String lastName;
     private String phoneNo;
+    private String dob;
     private String state;
-    private String village;
+    private String district;
+    private String aadharNo;
 
     public String getFirstName() {
         return firstName;
@@ -31,6 +33,14 @@ public class FarmerUpdateDTO {
         this.phoneNo = phoneNo;
     }
 
+    public String getDob() {
+        return dob;
+    }
+
+    public void setDob(String dob) {
+        this.dob = dob;
+    }
+
     public String getState() {
         return state;
     }
@@ -39,11 +49,27 @@ public class FarmerUpdateDTO {
         this.state = state;
     }
 
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String district) {
+        this.district = district;
+    }
+
+    public String getAadharNo() {
+        return aadharNo;
+    }
+
+    public void setAadharNo(String aadharNo) {
+        this.aadharNo = aadharNo;
+    }
+
     public String getVillage() {
-        return village;
+        return district;
     }
 
     public void setVillage(String village) {
-        this.village = village;
+        this.district = village;
     }
 }

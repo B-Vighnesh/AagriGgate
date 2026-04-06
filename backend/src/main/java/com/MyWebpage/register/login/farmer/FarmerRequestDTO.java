@@ -27,6 +27,8 @@ public class FarmerRequestDTO {
 
     private String dob;
 
+    private String aadharNo;
+
     public String getDob() {
         return dob;
     }
@@ -57,4 +59,12 @@ public class FarmerRequestDTO {
     public void setState(String state) { this.state = state; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getAadharNo() {
+        return aadharNo;
+    }
+
+    public void setAadharNo(String aadharNo) {
+        this.aadharNo = aadharNo;
+    }
 }
