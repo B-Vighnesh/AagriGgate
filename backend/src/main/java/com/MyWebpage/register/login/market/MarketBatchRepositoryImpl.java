@@ -8,6 +8,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.List;
 import java.util.Locale;
@@ -47,6 +48,7 @@ public class MarketBatchRepositoryImpl implements MarketBatchRepository {
                 ps.setBigDecimal(9, market.getMinPrice());
                 ps.setBigDecimal(10, market.getMaxPrice());
                 ps.setBigDecimal(11, market.getModalPrice());
+                ps.setTimestamp(12, Timestamp.valueOf(market.getCreatedAt()));
             }
 
             @Override
@@ -71,15 +73,15 @@ public class MarketBatchRepositoryImpl implements MarketBatchRepository {
                 case "postgresql" -> """
                         INSERT INTO market (
                             state, district, market, commodity, commodity_code, variety, grade,
-                            arrival_date, min_price, max_price, modal_price
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            arrival_date, min_price, max_price, modal_price, created_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ON CONFLICT (state, district, market, commodity, variety, grade, arrival_date) DO NOTHING
                         """;
                 case "mysql", "mariadb" -> """
                         INSERT IGNORE INTO market (
                             state, district, market, commodity, commodity_code, variety, grade,
-                            arrival_date, min_price, max_price, modal_price
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            arrival_date, min_price, max_price, modal_price, created_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """;
                 default -> throw new IllegalStateException("Unsupported database for market ingestion: " + productName);
             };

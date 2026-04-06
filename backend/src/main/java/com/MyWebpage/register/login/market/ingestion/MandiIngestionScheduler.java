@@ -18,14 +18,11 @@ public class MandiIngestionScheduler {
 
     private final MandiIngestionService mandiIngestionService;
 
-    @Value("${market.api.ingest-on-startup:false}")
+    @Value("${market.api.ingest-on-startup}")
     private boolean ingestOnStartup;
 
     @Value("${market.api.startup-state:Karnataka}")
     private String startupState;
-
-    @Value("${market.api.startup-district:Bangalore}")
-    private String startupDistrict;
 
     public MandiIngestionScheduler(MandiIngestionService mandiIngestionService) {
         this.mandiIngestionService = mandiIngestionService;
@@ -56,13 +53,6 @@ public class MandiIngestionScheduler {
                 totalRows += rows;
                 System.out.println("[MARKET_STARTUP] Success. Processed rows=" + rows
                         + " for state=" + startupState + ", district=" + district + ", date=" + yesterday);
-                log.info(
-                        "Completed mandi startup ingestion for state={} district={} date={} rows={}",
-                        startupState,
-                        district,
-                        yesterday,
-                        rows
-                );
             } catch (Exception exception) {
                 System.out.println("[MARKET_STARTUP] Failed for state=" + startupState
                         + ", district=" + district + ", date=" + yesterday
