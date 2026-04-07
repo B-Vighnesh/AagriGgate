@@ -10,11 +10,14 @@ import com.MyWebpage.register.login.otp.OtpService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Collection;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -88,16 +91,22 @@ public class AuthController {
             Authentication authentication,
             @RequestBody ResetPasswordRequest request) {
         Long farmerId = Long.parseLong(authentication.getName());
-        authService.softDeleteAccount(farmerId, request.getCurrentPassword());
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        String role="";
+        for (GrantedAuthority authority : authorities) {
+             role= authority.getAuthority();
+        }
+        authService.softDeleteAccount(farmerId, request.getCurrentPassword(), role);
         return ResponseEntity.ok("Account deleted");
     }
 
-//    @PostMapping("/deactivate-account")
-//    public ResponseEntity<String> deactivateAccount(
-//            Authentication authentication,
-//            @RequestBody ResetPasswordRequest request) {
-//        Long farmerId = Long.parseLong(authentication.getName());
-//        authService.softDeleteAccount(farmerId, request.getCurrentPassword());
-//        return ResponseEntity.ok("Account deactivated");
-//    }
+    @Deprecated
+    @PostMapping("/deactivate-account")
+    public ResponseEntity<String> deactivateAccount(
+            Authentication authentication,
+            @RequestBody ResetPasswordRequest request) {
+        Long farmerId = Long.parseLong(authentication.getName());
+        authService.softDeleteAccount(farmerId, request.getCurrentPassword());
+        return ResponseEntity.ok("Account deactivated");
+    }
 }

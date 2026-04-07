@@ -1,11 +1,11 @@
 package com.MyWebpage.register.login.auth;
 
+import com.MyWebpage.register.login.approach.ApproachFarmerService;
+import com.MyWebpage.register.login.crop.CropService;
 import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
 import com.MyWebpage.register.login.otp.OtpLoginRequestDTO;
 import com.MyWebpage.register.login.otp.LoginOtp;
 import com.MyWebpage.register.login.farmer.Farmer;
-import com.MyWebpage.register.login.approach.ApproachFarmerRepo;
-import com.MyWebpage.register.login.crop.CropRepo;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.otp.LoginOtpRepository;
 import com.MyWebpage.register.login.security.jwt.JWTService;
@@ -29,9 +29,10 @@ import java.util.Random;
 public class AuthServiceImpl implements AuthService {
 
     private final FarmerRepo farmerRepo;
-    private final ApproachFarmerRepo approachFarmerRepository;
-    private final CropRepo cropRepo;
     private final LoginOtpRepository loginOtpRepository;
+
+    private final ApproachFarmerService approachFarmerService;
+    private final CropService cropService;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -169,9 +170,20 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public void deleteAccount(Long farmerId, String password) {
+
+    }
+
+    @Override
+    public void softDeleteAccount(Long farmerId, String password) {
+
+    }
+
+    @Deprecated
+    @Override
     public void deleteAccount(
             Long farmerId,
-            String password) {
+            String password, String role) {
 
         Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
         ensureAccountActive(farmer);
@@ -180,18 +192,13 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("Invalid password");
         }
 
-        if ("BUYER".equals(farmer.getRole())) {
-            approachFarmerRepository.deleteByUserId(farmerId);
-        } else if ("SELLER".equals(farmer.getRole())) {
-            approachFarmerRepository.deleteByFarmerId(farmerId);
-            cropRepo.deleteByFarmerId(farmerId);
-        }
-
+        approachFarmerService.deleteApproach(farmerId, role);
+        cropService.deleteCropByFarmerIdV2(farmerId);
         farmerRepo.delete(farmer);
     }
 
     @Override
-    public void softDeleteAccount(Long farmerId, String password) {
+    public void softDeleteAccount(Long farmerId, String password, String role) {
         Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
         ensureAccountActive(farmer);
 
@@ -201,6 +208,8 @@ public class AuthServiceImpl implements AuthService {
 
         farmer.setActive(false);
         farmer.setDeletedAt(LocalDateTime.now());
+        approachFarmerService.softDeleteApproach(farmerId, role);
+        cropService.softDeleteCropByFarmerIdV1(farmerId);
         farmerRepo.save(farmer);
     }
 

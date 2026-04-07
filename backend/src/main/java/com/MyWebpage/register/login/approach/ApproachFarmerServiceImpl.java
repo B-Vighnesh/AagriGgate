@@ -171,6 +171,24 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
         }
         return false;
     }
+    @Override
+    public boolean deleteApproach(Long farmerId, String role) {
+        if ("ROLE_BUYER".equals(role)){
+            approachFarmerRepository.deleteByUserId(farmerId);
+        } else if ("ROLE_SELLER".equals(role)) {
+            approachFarmerRepository.deleteByFarmerId(farmerId);
+        }
+        return false;
+    }
+    @Override
+    public boolean softDeleteApproach(Long farmerId, String role) {
+        if ("ROLE_BUYER".equals(role)){
+            approachFarmerRepository.deleteByUserId(farmerId);
+        } else if ("ROLE_SELLER".equals(role)) {
+            approachFarmerRepository.deleteByFarmerId(farmerId);
+        }
+        return false;
+    }
 
     @Override
     public boolean sendMail(ApproachFarmer approachFarmer) {

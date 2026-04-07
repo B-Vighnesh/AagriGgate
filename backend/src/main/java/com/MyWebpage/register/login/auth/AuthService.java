@@ -31,4 +31,10 @@ public interface AuthService {
             Long farmerId,
             String password);
 
+    @Deprecated
+    void deleteAccount(
+            Long farmerId,
+            String password, String role);
+
+    void softDeleteAccount(Long farmerId, String password, String role);
 }

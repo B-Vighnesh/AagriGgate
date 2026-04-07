@@ -125,6 +125,10 @@ public class CropServiceImpl implements CropService {
     public void deleteCropByFarmerIdV1(Long farmerId) {
         cropRepo.deleteByFarmerId(farmerId);
     }
+    @Override
+    public void softDeleteCropByFarmerIdV1(Long farmerId) {
+        cropRepo.deleteByFarmerId(farmerId);
+    }
 
     @Override
     public List<Crop> getCropsByNameV1(String cropName) {
