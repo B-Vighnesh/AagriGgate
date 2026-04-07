@@ -19,6 +19,8 @@ public interface ApproachFarmerService {
 
     boolean softDeleteApproach(Long farmerId, String role);
 
+    boolean softDeleteApproachByCropId(Long cropId);
+
     boolean sendMail(ApproachFarmer approachFarmer);
     boolean isApproachAccepted(Long userId, Long cropId);
 }

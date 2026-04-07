@@ -15,6 +15,8 @@ public class Enquiry {
     private String message;
 
     private LocalDateTime submittedAt = LocalDateTime.now();
+    private Boolean active = true;
+    private LocalDateTime deletedAt;
 
     public Enquiry() {
     }
@@ -56,5 +58,25 @@ public class Enquiry {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public boolean isActive() {
+        return Boolean.TRUE.equals(active);
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

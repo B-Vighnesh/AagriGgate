@@ -98,8 +98,9 @@ public class CartServiceImpl implements CartService {
             try {
                 Crop crop = requireAvailableCrop(item.getCropId(), buyerId);
                 validateRequestedQuantity(item.getQuantity(), crop);
-                if (approachFarmerRepo.existsByCropIdAndUserIdAndStatusIgnoreCase(item.getCropId(), buyerId, "Rejected")) {
-                    approachFarmerRepo.findByUserIdAndCropId(buyerId, item.getCropId()).ifPresent(approachFarmerRepo::delete);
+                if (approachFarmerRepo.existsByCropIdAndUserIdAndStatusIgnoreCaseAndActiveTrue(item.getCropId(), buyerId, "Rejected")) {
+                    approachFarmerRepo.findByUserIdAndCropIdAndActiveTrue(buyerId, item.getCropId())
+                            .ifPresent(existing -> approachFarmerRepo.softDeleteByApproachIdAndUserId(existing.getApproachId(), buyerId, LocalDateTime.now()));
                 }
                 ResponseEntity<String> response = approachFarmerService.createApproach(buyerId, item.getCropId(), item.getQuantity());
                 if (response.getStatusCode().is2xxSuccessful()) {
