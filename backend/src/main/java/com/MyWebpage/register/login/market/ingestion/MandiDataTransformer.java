@@ -1,6 +1,6 @@
 package com.MyWebpage.register.login.market.ingestion;
 
-import com.MyWebpage.register.login.market.Market;
+import com.MyWebpage.register.login.market.mandi.Market;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Component;
 

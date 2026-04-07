@@ -1,5 +1,6 @@
-package com.MyWebpage.register.login.market;
+package com.MyWebpage.register.login.market.saved;
 
+import com.MyWebpage.register.login.market.mandi.Market;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
