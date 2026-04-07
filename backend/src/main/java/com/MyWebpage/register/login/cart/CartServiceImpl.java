@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Transactional
 public class CartServiceImpl implements CartService {
 
     private final CartItemRepo cartItemRepo;
@@ -75,6 +77,15 @@ public class CartServiceImpl implements CartService {
         }
         cartItemRepo.delete(cartItem);
     }
+    @Override
+    public void removeFromCart(Long cropId) {
+        cartItemRepo.deleteByCropId(cropId);
+    }
+
+    @Override
+    public void removeCartItemsForFarmerCrops(Long farmerId) {
+        cartItemRepo.deleteByFarmerCropOwnerId(farmerId);
+    }
 
     @Override
     public Page<CartItemDTO> getCart(Long buyerId, String keyword, String type, String sortBy, int page, int size) {
@@ -123,6 +134,9 @@ public class CartServiceImpl implements CartService {
     private Crop requireAvailableCrop(Long cropId, Long buyerId) {
         Crop crop = cropRepo.findById(cropId)
                 .orElseThrow(() -> new ResourceNotFoundException("Crop not found"));
+        if (!crop.isActive() || crop.getDeletedAt() != null || crop.getFarmer() == null || !crop.getFarmer().isActive()) {
+            throw new ResourceNotFoundException("Crop not found");
+        }
         if (crop.getFarmer() != null && buyerId.equals(crop.getFarmer().getFarmerId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot add your own crop");
         }

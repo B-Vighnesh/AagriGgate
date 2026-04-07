@@ -1,15 +1,18 @@
 package com.MyWebpage.register.login.crop;
 
+import com.MyWebpage.register.login.cart.CartService;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.approach.ApproachFarmerService;
+import com.MyWebpage.register.login.favorite.FavoriteService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +24,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 
 @Service
+@Transactional
 public class CropServiceImpl implements CropService {
 
     private static final Logger logger = LoggerFactory.getLogger(CropServiceImpl.class);
@@ -29,12 +33,15 @@ public class CropServiceImpl implements CropService {
     private final FarmerRepo farmerRepo;
     private final CropMapper cropMapper;
     private final ApproachFarmerService approachFarmerService;
-
-    public CropServiceImpl(CropRepo cropRepo, FarmerRepo farmerRepo, CropMapper cropMapper, ApproachFarmerService approachFarmerService) {
+    private final FavoriteService favoriteService;
+    private final CartService cartService;
+    public CropServiceImpl(CropRepo cropRepo, FarmerRepo farmerRepo, CropMapper cropMapper, ApproachFarmerService approachFarmerService, FavoriteService favoriteService, CartService cartService) {
         this.cropRepo = cropRepo;
         this.farmerRepo = farmerRepo;
         this.cropMapper = cropMapper;
         this.approachFarmerService = approachFarmerService;
+        this.favoriteService = favoriteService;
+        this.cartService = cartService;
     }
 
     @Override
@@ -123,17 +130,23 @@ public class CropServiceImpl implements CropService {
     public void deleteCropByIdV1(Long farmerId, Long cropId) {
         requireOwnedCrop(cropId, farmerId);
         approachFarmerService.softDeleteApproachByCropId(cropId);
+        favoriteService.removeFavorite(cropId);
+        cartService.removeFromCart(cropId);
         cropRepo.softDeleteByIdAndFarmerId(cropId, farmerId, LocalDateTime.now());
     }
 
     @Override
     public void deleteCropByFarmerIdV1(Long farmerId) {
         approachFarmerService.softDeleteApproach(farmerId, "ROLE_SELLER");
+        favoriteService.removeFavoritesForFarmerCrops(farmerId);
+        cartService.removeCartItemsForFarmerCrops(farmerId);
         cropRepo.softDeleteByFarmerId(farmerId, LocalDateTime.now());
     }
     @Override
     public void softDeleteCropByFarmerIdV1(Long farmerId) {
         approachFarmerService.softDeleteApproach(farmerId, "ROLE_SELLER");
+        favoriteService.removeFavoritesForFarmerCrops(farmerId);
+        cartService.removeCartItemsForFarmerCrops(farmerId);
         cropRepo.softDeleteByFarmerId(farmerId, LocalDateTime.now());
     }
 
@@ -228,6 +241,8 @@ public class CropServiceImpl implements CropService {
         requireOwnedCrop(cropId, farmerId);
         logger.info("[v2] Deleting crop {}", cropId);
         approachFarmerService.softDeleteApproachByCropId(cropId);
+        favoriteService.removeFavorite(cropId);
+        cartService.removeFromCart(cropId);
         cropRepo.softDeleteByIdAndFarmerId(cropId, farmerId, LocalDateTime.now());
     }
 
@@ -235,6 +250,8 @@ public class CropServiceImpl implements CropService {
     public void deleteCropByFarmerIdV2(Long farmerId) {
         logger.info("[v2] Deleting all crops for farmer {}", farmerId);
         approachFarmerService.softDeleteApproach(farmerId, "ROLE_SELLER");
+        favoriteService.removeFavoritesForFarmerCrops(farmerId);
+        cartService.removeCartItemsForFarmerCrops(farmerId);
         cropRepo.softDeleteByFarmerId(farmerId, LocalDateTime.now());
     }
 

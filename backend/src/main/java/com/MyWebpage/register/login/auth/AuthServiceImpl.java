@@ -4,10 +4,16 @@ import com.MyWebpage.register.login.approach.ApproachFarmerService;
 import com.MyWebpage.register.login.auth.dto.AuthRequestDTO;
 import com.MyWebpage.register.login.auth.dto.AuthResponseDTO;
 import com.MyWebpage.register.login.auth.dto.OtpLoginRequestDTO;
+import com.MyWebpage.register.login.cart.CartItemRepo;
 import com.MyWebpage.register.login.crop.CropService;
 import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
+import com.MyWebpage.register.login.favorite.FavoriteRepo;
+import com.MyWebpage.register.login.market.saved.SavedMarketRepository;
+import com.MyWebpage.register.login.news.repository.SavedNewsRepository;
+import com.MyWebpage.register.login.notification.repository.NotificationRepository;
+import com.MyWebpage.register.login.notification.repository.UserNotificationPreferenceRepository;
 import com.MyWebpage.register.login.security.jwt.JWTService;
 import com.MyWebpage.register.login.common.EmailService;
 import com.MyWebpage.register.login.otp.OtpPurpose;
@@ -32,6 +38,12 @@ public class AuthServiceImpl implements AuthService {
 
     private final ApproachFarmerService approachFarmerService;
     private final CropService cropService;
+    private final CartItemRepo cartItemRepo;
+    private final FavoriteRepo favoriteRepo;
+    private final SavedNewsRepository savedNewsRepository;
+    private final NotificationRepository notificationRepository;
+    private final UserNotificationPreferenceRepository notificationPreferenceRepository;
+    private final SavedMarketRepository savedMarketRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -193,6 +205,12 @@ public class AuthServiceImpl implements AuthService {
 
         farmer.setActive(false);
         farmer.setDeletedAt(LocalDateTime.now());
+        cartItemRepo.deleteByBuyerId(farmerId);
+        favoriteRepo.deleteByBuyerId(farmerId);
+        savedNewsRepository.deleteByUserId(farmerId);
+        notificationRepository.deleteByUserId(farmerId);
+        notificationPreferenceRepository.deleteByUserId(farmerId);
+        savedMarketRepository.deleteByUserId(farmerId);
         approachFarmerService.softDeleteApproach(farmerId, role);
         cropService.softDeleteCropByFarmerIdV1(farmerId);
         farmerRepo.save(farmer);

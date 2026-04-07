@@ -139,8 +139,11 @@ public class CropController {
     public ResponseEntity<String> deleteCropByIdV1(
             @PathVariable Long cropId,
             Authentication authentication) {
+        System.out.println("hlooooooooooooooooooooooooooooooooooo11111111111111");
         Long farmerId = Long.parseLong(authentication.getName());
+        System.out.println("hlooooooooooooooooooooooooooooooooooo22222222222222222222");
         cropService.deleteCropByIdV1(farmerId, cropId);
+        System.out.println("hlooooooooooooooooooooooooooooooooooo33333333333333333");
         return ResponseEntity.ok("Crop deleted successfully");
     }
 
