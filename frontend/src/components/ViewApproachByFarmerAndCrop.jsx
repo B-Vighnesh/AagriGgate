@@ -34,6 +34,8 @@ export default function ViewApproachByFarmerAndCrop() {
     setTimeout(() => setToast({ message: '', type: 'info' }), 2800);
   };
 
+  const emptyFilterLabel = filterStatus === 'All' ? '' : `${filterStatus.toLowerCase()} `;
+
   const loadApproaches = async () => {
     setLoading(true);
     setError('');
@@ -148,7 +150,7 @@ export default function ViewApproachByFarmerAndCrop() {
 
         {!error && approaches.length === 0 ? (
           <Card className="approach-crop-empty">
-            <h3>No {filterStatus !== 'All' ? filterStatus.toLowerCase() : ''} requests</h3>
+            <h3>No {emptyFilterLabel}requests</h3>
           </Card>
         ) : null}
 

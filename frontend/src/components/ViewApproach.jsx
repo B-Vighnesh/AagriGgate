@@ -35,6 +35,8 @@ export default function ViewApproach() {
     setTimeout(() => setToast({ message: '', type: 'info' }), 2600);
   };
 
+  const emptyFilterLabel = filter === 'All' ? 'buyer' : filter.toLowerCase();
+
   const loadApproaches = async () => {
     setLoading(true);
     setError('');
@@ -149,11 +151,11 @@ export default function ViewApproach() {
 
         {!error && approaches.length === 0 ? (
           <Card className="view-approach-empty">
-            <h3>No {filter !== 'All' ? filter.toLowerCase() : 'buyer'} requests yet</h3>
+            <h3>No {emptyFilterLabel} requests</h3>
             <p>Requests from buyers will appear here after they approach one of your crops.</p>
             <p>Once a request arrives, you can review the buyer details, open the crop listing, and accept or reject the proposal from this page.</p>
             <div className="confirm-actions">
-              <Button variant="outline" onClick={() => navigate('/mycrop')}>View My Crops</Button>
+              <Button variant="outline" onClick={() => navigate('/view-crop')}>View My Crops</Button>
               <Button onClick={loadApproaches}>Refresh</Button>
             </div>
           </Card>
