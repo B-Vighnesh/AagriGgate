@@ -201,7 +201,10 @@ export default function Favorites() {
     <section className="page buyer-tools-page">
       <ValidateToken farmerId={farmerId} token={token} role={role} />
       <div className="ag-container">
+          <button className="link-back" onClick={() => navigate(-1)}>Back</button>
+
         <div className="buyer-tools-head">
+          
           <div>
             <h1>Favorites</h1>
             <p>Keep crop listings you want to revisit later.</p>
