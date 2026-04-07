@@ -13,28 +13,57 @@ import {
 } from '../lib/notificationApi';
 
 function navByRole(role) {
-  const publicBase = [{ label: 'Home', to: '/' }];
-  const privateBase = [...publicBase, { label: 'News', to: '/news' }];
-  if (!role) return [...publicBase, { label: 'Login', to: '/login' }, { label: 'Register', to: '/register' }];
+  if (!role) {
+    return [
+      { type: 'link', label: 'Home', to: '/' },
+      { type: 'link', label: 'Login', to: '/login' },
+      { type: 'link', label: 'Register', to: '/register' },
+    ];
+  }
+
+  const shared = [
+    { type: 'link', label: 'Home', to: '/' },
+    { type: 'link', label: 'Marketplace', to: '/view-all-crops' },
+    { type: 'link', label: 'Market Intelligence', to: '/market' },
+  ];
 
   if (role === 'farmer') {
     return [
-      ...privateBase,
-      { label: 'Market', to: '/market' },
-      { label: 'Weather', to: '/weather' },
-      { label: 'Browse Crops', to: '/view-all-crops' },
-      { label: 'Add Crop', to: '/add-crop' },
-      { label: 'My Crops', to: '/view-crop' },
-      { label: 'Requests', to: '/view-approach' },
+      ...shared,
+      {
+        type: 'dropdown',
+        label: 'Crops',
+        key: 'crops',
+        children: [
+          { label: 'Add Crops', to: '/add-crop' },
+          { label: 'My Crops', to: '/view-crop' },
+        ],
+      },
+      { type: 'link', label: 'Requests', to: '/view-approach' },
+      {
+        type: 'dropdown',
+        label: 'Insights',
+        key: 'insights',
+        children: [
+          { label: 'Weather', to: '/weather' },
+          { label: 'News', to: '/news' },
+        ],
+      },
     ];
   }
 
   return [
-    ...privateBase,
-    { label: 'Browse Crops', to: '/view-all-crops' },
-    { label: 'Favorites', to: '/favorites' },
-    { label: 'Cart', to: '/cart' },
-    { label: 'My Requests', to: '/view-approaches-user' },
+    { type: 'link', label: 'Home', to: '/' },
+    { type: 'link', label: 'Market Intelligence', to: '/market' },
+    { type: 'link', label: 'My Requests', to: '/view-approaches-user' },
+    {
+      type: 'dropdown',
+      label: 'Insights',
+      key: 'insights',
+      children: [
+        { label: 'Weather', to: '/weather' },
+      ],
+    },
   ];
 }
 
@@ -49,10 +78,12 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [openDropdownKey, setOpenDropdownKey] = useState('');
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const drawerRef = useRef(null);
   const mobileNavRef = useRef(null);
   const toggleRef = useRef(null);
+  const navRef = useRef(null);
 
   const showToast = useCallback((message, type = 'info') => {
     setToast({ message, type });
@@ -76,6 +107,7 @@ export default function Navbar() {
   useEffect(() => {
     setMobileOpen(false);
     setDrawerOpen(false);
+    setOpenDropdownKey('');
   }, [location.pathname]);
 
   useEffect(() => {
@@ -137,7 +169,7 @@ export default function Navbar() {
     return () => {
       active = false;
     };
-  }, [drawerOpen, loggedIn]);
+  }, [drawerOpen, loggedIn, showToast]);
 
   useEffect(() => {
     if (!drawerOpen) {
@@ -178,8 +210,26 @@ export default function Navbar() {
     };
   }, [mobileOpen]);
 
+  useEffect(() => {
+    if (!openDropdownKey || mobileOpen) {
+      return undefined;
+    }
+
+    const handleOutsideDesktopDropdown = (event) => {
+      if (navRef.current && !navRef.current.contains(event.target)) {
+        setOpenDropdownKey('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideDesktopDropdown);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideDesktopDropdown);
+    };
+  }, [openDropdownKey, mobileOpen]);
+
   const items = navByRole(role);
   const isActive = (to) => (to === '/' ? location.pathname === '/' : location.pathname.startsWith(to));
+  const isDropdownActive = (item) => item.children?.some((child) => isActive(child.to));
   const relativeTimeFormatter = useMemo(
     () => new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
     []
@@ -218,6 +268,10 @@ export default function Navbar() {
     }
   };
 
+  const toggleDropdown = (key) => {
+    setOpenDropdownKey((current) => (current === key ? '' : key));
+  };
+
   return (
     <header className="site-header">
       <div className="site-header__inner ag-container">
@@ -227,17 +281,65 @@ export default function Navbar() {
         </Link>
 
         <div className="site-header__actions">
-          <nav ref={mobileNavRef} className={`site-nav ${mobileOpen ? 'site-nav--open' : ''}`}>
-            {items.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileOpen(false)}
-                className={`site-nav__link ${isActive(item.to) ? 'site-nav__link--active' : ''}`}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav ref={(node) => { navRef.current = node; mobileNavRef.current = node; }} className={`site-nav ${mobileOpen ? 'site-nav--open' : ''}`}>
+              {items.map((item) => {
+                if (item.type === 'dropdown') {
+                  const isOpen = openDropdownKey === item.key;
+                  const active = isDropdownActive(item);
+                  return (
+                    <div
+                      key={item.key}
+                      className={`site-nav__dropdown ${isOpen ? 'site-nav__dropdown--open' : ''}`}
+                    onMouseEnter={() => {
+                      if (!mobileOpen) setOpenDropdownKey(item.key);
+                    }}
+                    onMouseLeave={() => {
+                      if (!mobileOpen) setOpenDropdownKey('');
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className={`site-nav__link site-nav__trigger ${active ? 'site-nav__link--active' : ''}`}
+                      onClick={() => {
+                        toggleDropdown(item.key);
+                      }}
+                    >
+                      <span>{item.label}</span>
+                      <i className="fa-solid fa-chevron-down" aria-hidden="true" />
+                    </button>
+                    <div className="site-nav__menu">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.to}
+                          to={child.to}
+                          onClick={() => {
+                            setMobileOpen(false);
+                            setOpenDropdownKey('');
+                          }}
+                          className={`site-nav__submenu-link ${isActive(child.to) ? 'site-nav__submenu-link--active' : ''}`}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => {
+                    setMobileOpen(false);
+                    setOpenDropdownKey('');
+                  }}
+                  className={`site-nav__link ${isActive(item.to) ? 'site-nav__link--active' : ''}`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
             {loggedIn ? (
               <Link
                 to="/settings"
@@ -245,15 +347,6 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
               >
                 Settings
-              </Link>
-            ) : null}
-            {loggedIn ? (
-              <Link
-                to="/enquiry"
-                className={`site-nav__utility ${isActive('/enquiry') ? 'site-nav__utility--active' : ''}`}
-                onClick={() => setMobileOpen(false)}
-              >
-                Support
               </Link>
             ) : null}
             {loggedIn ? (
@@ -352,6 +445,18 @@ export default function Navbar() {
 
           {loggedIn ? (
             <Link
+              to="/enquiry"
+              className={`header-support-link ${isActive('/enquiry') ? 'header-support-link--active' : ''}`}
+              aria-label="Support"
+              data-tooltip="Support"
+              onClick={() => setMobileOpen(false)}
+            >
+              <i className="fa-regular fa-circle-question" aria-hidden="true" />
+            </Link>
+          ) : null}
+
+          {loggedIn ? (
+            <Link
               to="/settings"
               className={`header-settings-link ${isActive('/settings') ? 'header-settings-link--active' : ''}`}
               aria-label="Settings"
@@ -359,18 +464,6 @@ export default function Navbar() {
               onClick={() => setMobileOpen(false)}
             >
               <i className="fa-solid fa-gear" aria-hidden="true" />
-            </Link>
-          ) : null}
-
-          {loggedIn ? (
-            <Link
-              to="/enquiry"
-              className={`header-utility-link ${isActive('/enquiry') ? 'header-utility-link--active' : ''}`}
-              aria-label="Support"
-              data-tooltip="Support"
-              onClick={() => setMobileOpen(false)}
-            >
-              <i className="fa-regular fa-circle-question" aria-hidden="true" />
             </Link>
           ) : null}
 
