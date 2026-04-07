@@ -22,7 +22,7 @@ public class OtpService {
         String normalizedPrincipal = normalizePrincipal(principal);
         String otp = generateOtp(DEFAULT_OTP_LENGTH);
         otpTokenRepository.deleteByPrincipalAndPurpose(normalizedPrincipal, purpose);
-
+        System.out.println("hlooooooooooooooo"+otpTokenRepository.findByPrincipalAndPurpose(normalizedPrincipal, purpose));
         OtpToken token = new OtpToken();
         token.setPrincipal(normalizedPrincipal);
         token.setPurpose(purpose);
