@@ -59,3 +59,9 @@ export const deleteAccount = async (currentPassword) =>
     method: 'DELETE',
     body: JSON.stringify({ currentPassword }),
   });
+
+export const deactivateAccount = async (currentPassword) =>
+  requestJson('/auth/deactivate-account', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword }),
+  });

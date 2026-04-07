@@ -27,4 +27,8 @@ public interface AuthService {
             Long farmerId,
             String password);
 
+    void softDeleteAccount(
+            Long farmerId,
+            String password);
+
 }

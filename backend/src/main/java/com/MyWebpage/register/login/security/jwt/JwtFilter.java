@@ -1,5 +1,6 @@
 package com.MyWebpage.register.login.security.jwt;
 
+import com.MyWebpage.register.login.farmer.FarmerRepo;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +19,8 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private JWTService jwtService;
+    @Autowired
+    private FarmerRepo farmerRepo;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -29,6 +32,11 @@ public class JwtFilter extends OncePerRequestFilter {
                 Long principalId = jwtService.extractSubjectId(token);
 
                 if (principalId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    var farmer = farmerRepo.findById(principalId).orElse(null);
+                    if (farmer == null || !farmer.isActive()) {
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
                     String role = jwtService.extractRole(token);
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
