@@ -325,6 +325,11 @@ export default function Navbar() {
     }, 1000);
   };
 
+  const handleAccountButtonClick = () => {
+    setMobileOpen(false);
+    setProfileMenuOpen((prev) => !prev);
+  };
+
   return (
     <header className="site-header">
       <div className="site-header__inner ag-container">
@@ -398,36 +403,6 @@ export default function Navbar() {
                 </Link>
               );
             })}
-            {loggedIn ? (
-              <Link
-                to="/enquiry"
-                className={`site-nav__utility ${isActive('/enquiry') ? 'site-nav__utility--active' : ''}`}
-                onClick={() => setMobileOpen(false)}
-              >
-                Support
-              </Link>
-            ) : null}
-            {loggedIn ? (
-              <Link
-                to="/settings"
-                className={`site-nav__utility ${isActive('/settings') ? 'site-nav__utility--active' : ''}`}
-                onClick={() => setMobileOpen(false)}
-              >
-                Settings
-              </Link>
-            ) : null}
-            {loggedIn ? (
-              <button
-                type="button"
-                className="site-nav__logout"
-                onClick={() => {
-                  setMobileOpen(false);
-                  navigate('/logout');
-                }}
-              >
-                Logout
-              </button>
-            ) : null}
           </nav>
 
           {loggedIn ? (
@@ -515,10 +490,10 @@ export default function Navbar() {
               <button
                 type="button"
                 className={`header-account-link ${profileMenuOpen ? 'header-account-link--active' : ''}`}
-                aria-label="Profile menu"
+                aria-label="Account"
                 data-tooltip="Account"
                 aria-expanded={profileMenuOpen}
-                onClick={() => setProfileMenuOpen((prev) => !prev)}
+                onClick={handleAccountButtonClick}
               >
                 <i className="fa-regular fa-user" aria-hidden="true" />
               </button>

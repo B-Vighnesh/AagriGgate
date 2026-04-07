@@ -5280,10 +5280,6 @@ a {
     display: none;
   }
 
-  .profile-menu__panel {
-    display: none;
-  }
-
   .account-hero {
     flex-direction: column;
   }
