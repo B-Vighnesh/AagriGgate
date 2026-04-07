@@ -7,12 +7,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 
 @Service
+@Transactional
 public class FavoriteServiceImpl implements FavoriteService {
 
     private final FavoriteRepo favoriteRepo;
@@ -30,6 +32,9 @@ public class FavoriteServiceImpl implements FavoriteService {
         }
         Crop crop = cropRepo.findById(cropId)
                 .orElseThrow(() -> new ResourceNotFoundException("Crop not found"));
+        if (!crop.isActive() || crop.getDeletedAt() != null || crop.getFarmer() == null || !crop.getFarmer().isActive()) {
+            throw new ResourceNotFoundException("Crop not found");
+        }
         Long ownerId = crop.getFarmer() != null ? crop.getFarmer().getFarmerId() : null;
         if (buyerId.equals(ownerId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot favorite your own crop");
@@ -44,6 +49,15 @@ public class FavoriteServiceImpl implements FavoriteService {
     @Override
     public void removeFavorite(Long buyerId, Long cropId) {
         favoriteRepo.findByBuyerIdAndCropId(buyerId, cropId).ifPresent(favoriteRepo::delete);
+    }
+    @Override
+    public void removeFavorite(Long cropId) {
+        favoriteRepo.deleteByCropId(cropId);
+    }
+
+    @Override
+    public void removeFavoritesForFarmerCrops(Long farmerId) {
+        favoriteRepo.deleteByFarmerCropOwnerId(farmerId);
     }
 
     @Override

@@ -7,4 +7,8 @@ public interface FavoriteService {
     void removeFavorite(Long buyerId, Long cropId);
     boolean isFavorite(Long buyerId, Long cropId);
     Page<FavoriteItemDTO> getFavorites(Long buyerId, String keyword, String type, String sortBy, int page, int size);
+
+    void removeFavorite(Long cropId);
+
+    void removeFavoritesForFarmerCrops(Long farmerId);
 }
