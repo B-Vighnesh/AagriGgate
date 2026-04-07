@@ -32,7 +32,7 @@ public class MyUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail));
 
         if (!farmer.isActive()) {
-            throw new DisabledException("Account is deactivated");
+            throw new DisabledException("Account not found");
         }
 
         return new UserPrincipal(farmer);
