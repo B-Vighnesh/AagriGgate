@@ -16,9 +16,9 @@ public class CropCleanupService {
 
     @Scheduled(fixedRate = 600000)
     public void deleteSoldCrops() {
-        int deleted = cropRepo.deleteSoldCrops();
+        int deleted = cropRepo.softDeleteSoldCrops(java.time.LocalDateTime.now());
         if (deleted > 0) {
-            logger.info("Deleted {} sold crop(s) during scheduled cleanup", deleted);
+            logger.info("Soft deleted {} sold crop(s) during scheduled cleanup", deleted);
         }
     }
 }

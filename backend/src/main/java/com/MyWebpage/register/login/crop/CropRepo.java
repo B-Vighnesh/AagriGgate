@@ -10,13 +10,27 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Repository
 public interface CropRepo extends JpaRepository<Crop,Long> {
-    @Query("SELECT c FROM Crop c WHERE c.farmer.farmerId = :farmerId ORDER BY c.cropID DESC")
+    @Query("""
+            SELECT c FROM Crop c
+            WHERE c.farmer.farmerId = :farmerId
+              AND c.active = true
+              AND c.deletedAt IS NULL
+              AND c.farmer.active = true
+            ORDER BY c.cropID DESC
+            """)
     List<Crop> findByFarmerId(@Param("farmerId") Long farmerId);
 
-    @Query("SELECT c FROM Crop c WHERE c.farmer.farmerId = :farmerId")
+    @Query("""
+            SELECT c FROM Crop c
+            WHERE c.farmer.farmerId = :farmerId
+              AND c.active = true
+              AND c.deletedAt IS NULL
+              AND c.farmer.active = true
+            """)
     Page<Crop> findPageByFarmerId(@Param("farmerId") Long farmerId, Pageable pageable);
 
     @Query(
@@ -48,6 +62,9 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                     )
                     FROM Crop c
                     WHERE (:farmerId IS NULL OR c.farmer.farmerId = :farmerId)
+                      AND c.active = true
+                      AND c.deletedAt IS NULL
+                      AND c.farmer.active = true
                       AND (:keyword IS NULL
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%')))
                       AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
@@ -65,6 +82,9 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             countQuery = """
                     SELECT COUNT(c) FROM Crop c
                     WHERE (:farmerId IS NULL OR c.farmer.farmerId = :farmerId)
+                      AND c.active = true
+                      AND c.deletedAt IS NULL
+                      AND c.farmer.active = true
                       AND (:keyword IS NULL
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%')))
                       AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
@@ -122,6 +142,9 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             )
             FROM Crop c
             WHERE c.cropID = :cropId
+              AND c.active = true
+              AND c.deletedAt IS NULL
+              AND c.farmer.active = true
             """)
     CropViewDTO findCropViewById(@Param("cropId") Long cropId, @Param("currentUserId") Long currentUserId);
 
@@ -149,6 +172,9 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                     )
                     FROM Crop c
                     WHERE (:farmerId IS NULL OR c.farmer.farmerId = :farmerId)
+                      AND c.active = true
+                      AND c.deletedAt IS NULL
+                      AND c.farmer.active = true
                       AND (:keyword IS NULL
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%')))
                       AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
@@ -166,6 +192,9 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             countQuery = """
                     SELECT COUNT(c) FROM Crop c
                     WHERE (:farmerId IS NULL OR c.farmer.farmerId = :farmerId)
+                      AND c.active = true
+                      AND c.deletedAt IS NULL
+                      AND c.farmer.active = true
                       AND (:keyword IS NULL
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%')))
                       AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
@@ -217,12 +246,29 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             )
             FROM Crop c
             WHERE c.cropID = :cropId
+              AND c.active = true
+              AND c.deletedAt IS NULL
+              AND c.farmer.active = true
             """)
     CropResponseDTO findCropResponseById(@Param("cropId") Long cropId);
 
-    List<Crop> findByCropName(String cropName);
+    @Query("""
+            SELECT c FROM Crop c
+            WHERE c.cropName = :cropName
+              AND c.active = true
+              AND c.deletedAt IS NULL
+              AND c.farmer.active = true
+            """)
+    List<Crop> findByCropName(@Param("cropName") String cropName);
 
-    Page<Crop> findByCropNameContaining(String keyword, Pageable pageable);
+    @Query("""
+            SELECT c FROM Crop c
+            WHERE lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
+              AND c.active = true
+              AND c.deletedAt IS NULL
+              AND c.farmer.active = true
+            """)
+    Page<Crop> findByCropNameContaining(@Param("keyword") String keyword, Pageable pageable);
 
     @Query(
             value = """
@@ -248,23 +294,57 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                     )
                     FROM Crop c
                     WHERE lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
+                      AND c.active = true
+                      AND c.deletedAt IS NULL
+                      AND c.farmer.active = true
                     """,
             countQuery = """
                     SELECT COUNT(c) FROM Crop c
                     WHERE lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
+                      AND c.active = true
+                      AND c.deletedAt IS NULL
+                      AND c.farmer.active = true
                     """
     )
     Page<CropResponseDTO> searchCropResponses(@Param("keyword") String keyword, Pageable pageable);
 
     @Transactional
     @Modifying
-    @Query("DELETE FROM Crop c WHERE c.farmer.farmerId = :farmerId")
-    void deleteByFarmerId(@Param("farmerId") Long farmerId);
+    @Query("""
+            UPDATE Crop c
+            SET c.active = false, c.deletedAt = :deletedAt
+            WHERE c.farmer.farmerId = :farmerId
+              AND c.active = true
+            """)
+    int softDeleteByFarmerId(@Param("farmerId") Long farmerId, @Param("deletedAt") LocalDateTime deletedAt);
 
     @Transactional
     @Modifying
-    @Query("DELETE FROM Crop c WHERE lower(coalesce(c.status, '')) = 'sold'")
-    int deleteSoldCrops();
+    @Query("""
+            UPDATE Crop c
+            SET c.active = false, c.deletedAt = :deletedAt
+            WHERE c.cropID = :cropId
+              AND c.farmer.farmerId = :farmerId
+              AND c.active = true
+            """)
+    int softDeleteByIdAndFarmerId(@Param("cropId") Long cropId, @Param("farmerId") Long farmerId, @Param("deletedAt") LocalDateTime deletedAt);
 
-    Crop findByCropID(Long productId);
+    @Transactional
+    @Modifying
+    @Query("""
+            UPDATE Crop c
+            SET c.active = false, c.deletedAt = :deletedAt
+            WHERE lower(coalesce(c.status, '')) = 'sold'
+              AND c.active = true
+            """)
+    int softDeleteSoldCrops(@Param("deletedAt") LocalDateTime deletedAt);
+
+    @Query("""
+            SELECT c FROM Crop c
+            WHERE c.cropID = :productId
+              AND c.active = true
+              AND c.deletedAt IS NULL
+              AND c.farmer.active = true
+            """)
+    Crop findByCropID(@Param("productId") Long productId);
 }

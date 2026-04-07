@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,10 +48,13 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                 return new ResponseEntity<>("This crop is already sold.", HttpStatus.BAD_REQUEST);
             }
             Long farmerId = crop.getFarmer().getFarmerId();
+            if (!crop.isActive() || crop.getDeletedAt() != null || crop.getFarmer() == null || !crop.getFarmer().isActive()) {
+                return new ResponseEntity<>("Crop is not available.", HttpStatus.BAD_REQUEST);
+            }
 
-            boolean isPending = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatus(
+            boolean isPending = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatusAndActiveTrue(
                     farmerId, cropId, userId, "pending");
-            boolean isAccepted = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatus(
+            boolean isAccepted = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatusAndActiveTrue(
                     farmerId, cropId, userId, "Accepted");
 
             if (isPending) {
@@ -68,6 +72,9 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                     .orElseThrow(() -> new RuntimeException("Farmer not found with ID: " + farmerId));
             Farmer user = farmerRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+            if (!farmer.isActive() || !user.isActive()) {
+                return new ResponseEntity<>("User not found.", HttpStatus.BAD_REQUEST);
+            }
 
             if (farmerId.equals(userId)) {
                 return new ResponseEntity<>("You cannot approach your own crop.", HttpStatus.BAD_REQUEST);
@@ -87,6 +94,8 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             approachFarmer.setUserEmail(user.getEmail());
             approachFarmer.setRequestedQuantity(normalizeRequestedQuantity(requestedQuantity, crop));
             approachFarmer.setStatus("pending");
+            approachFarmer.setActive(true);
+            approachFarmer.setDeletedAt(null);
 
             approachFarmerRepository.save(approachFarmer);
             logger.info("Approach created: {}", approachFarmer.getApproachId());
@@ -165,7 +174,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     public boolean deleteApproach(Long approachId, Long userId) {
         Optional<ApproachFarmer> optionalApproach = approachFarmerRepository.findById(approachId);
         if (optionalApproach.isPresent() && userId.equals(optionalApproach.get().getUserId())) {
-            approachFarmerRepository.deleteById(approachId);
+            approachFarmerRepository.softDeleteByApproachIdAndUserId(approachId, userId, LocalDateTime.now());
             logger.info("Approach deleted: {}", approachId);
             return true;
         }
@@ -174,20 +183,26 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     @Override
     public boolean deleteApproach(Long farmerId, String role) {
         if ("ROLE_BUYER".equals(role)){
-            approachFarmerRepository.deleteByUserId(farmerId);
+            approachFarmerRepository.softDeleteByUserId(farmerId, LocalDateTime.now());
         } else if ("ROLE_SELLER".equals(role)) {
-            approachFarmerRepository.deleteByFarmerId(farmerId);
+            approachFarmerRepository.softDeleteByFarmerId(farmerId, LocalDateTime.now());
         }
         return false;
     }
     @Override
     public boolean softDeleteApproach(Long farmerId, String role) {
         if ("ROLE_BUYER".equals(role)){
-            approachFarmerRepository.deleteByUserId(farmerId);
+            approachFarmerRepository.softDeleteByUserId(farmerId, LocalDateTime.now());
         } else if ("ROLE_SELLER".equals(role)) {
-            approachFarmerRepository.deleteByFarmerId(farmerId);
+            approachFarmerRepository.softDeleteByFarmerId(farmerId, LocalDateTime.now());
         }
         return false;
+    }
+
+    @Override
+    public boolean softDeleteApproachByCropId(Long cropId) {
+        approachFarmerRepository.softDeleteByCropId(cropId, LocalDateTime.now());
+        return true;
     }
 
     @Override
@@ -209,7 +224,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     @Override
     public boolean isApproachAccepted(Long userId, Long cropId) {
         try {
-            return approachFarmerRepository.existsByCropIdAndUserIdAndStatus(cropId, userId, "Accepted");
+            return approachFarmerRepository.existsByCropIdAndUserIdAndStatusAndActiveTrue(cropId, userId, "Accepted");
         } catch (Exception e) {
             throw new RuntimeException("Error occurred while checking the approach status: " + e.getMessage(), e);
         }

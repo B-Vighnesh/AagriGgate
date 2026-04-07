@@ -10,6 +10,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class AdminServiceImpl implements AdminService {
 
@@ -32,13 +34,12 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public Page<Enquiry> getAllEnquiries(int page, int size) {
-        return enquiryRepository.findAll(PageRequest.of(page, size));
+        return enquiryRepository.findByActiveTrue(PageRequest.of(page, size));
     }
 
     @Override
     public ResponseEntity<String> deleteEnquiry(Long id) {
-        if (enquiryRepository.existsById(id)) {
-            enquiryRepository.deleteById(id);
+        if (enquiryRepository.softDeleteById(id, LocalDateTime.now()) > 0) {
             logger.info("Enquiry deleted: {}", id);
             return ResponseEntity.ok("Enquiry deleted successfully!");
         }

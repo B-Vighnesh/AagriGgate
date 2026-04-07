@@ -1,6 +1,8 @@
 package com.MyWebpage.register.login.approach;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "approach_farmer")
 public class ApproachFarmer {
@@ -25,6 +27,8 @@ public class ApproachFarmer {
 
     private boolean accept;
     private String status;
+    private Boolean active = true;
+    private LocalDateTime deletedAt;
 
     public String getStatus() {
         return status;
@@ -145,5 +149,25 @@ public class ApproachFarmer {
 
     public void setRequestedQuantity(Double requestedQuantity) {
         this.requestedQuantity = requestedQuantity;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public boolean isActive() {
+        return Boolean.TRUE.equals(active);
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

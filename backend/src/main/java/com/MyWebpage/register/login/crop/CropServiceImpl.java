@@ -3,6 +3,7 @@ package com.MyWebpage.register.login.crop;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
+import com.MyWebpage.register.login.approach.ApproachFarmerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -14,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -26,11 +28,13 @@ public class CropServiceImpl implements CropService {
     private final CropRepo cropRepo;
     private final FarmerRepo farmerRepo;
     private final CropMapper cropMapper;
+    private final ApproachFarmerService approachFarmerService;
 
-    public CropServiceImpl(CropRepo cropRepo, FarmerRepo farmerRepo, CropMapper cropMapper) {
+    public CropServiceImpl(CropRepo cropRepo, FarmerRepo farmerRepo, CropMapper cropMapper, ApproachFarmerService approachFarmerService) {
         this.cropRepo = cropRepo;
         this.farmerRepo = farmerRepo;
         this.cropMapper = cropMapper;
+        this.approachFarmerService = approachFarmerService;
     }
 
     @Override
@@ -118,16 +122,19 @@ public class CropServiceImpl implements CropService {
     @Override
     public void deleteCropByIdV1(Long farmerId, Long cropId) {
         requireOwnedCrop(cropId, farmerId);
-        cropRepo.deleteById(cropId);
+        approachFarmerService.softDeleteApproachByCropId(cropId);
+        cropRepo.softDeleteByIdAndFarmerId(cropId, farmerId, LocalDateTime.now());
     }
 
     @Override
     public void deleteCropByFarmerIdV1(Long farmerId) {
-        cropRepo.deleteByFarmerId(farmerId);
+        approachFarmerService.softDeleteApproach(farmerId, "ROLE_SELLER");
+        cropRepo.softDeleteByFarmerId(farmerId, LocalDateTime.now());
     }
     @Override
     public void softDeleteCropByFarmerIdV1(Long farmerId) {
-        cropRepo.deleteByFarmerId(farmerId);
+        approachFarmerService.softDeleteApproach(farmerId, "ROLE_SELLER");
+        cropRepo.softDeleteByFarmerId(farmerId, LocalDateTime.now());
     }
 
     @Override
@@ -220,13 +227,15 @@ public class CropServiceImpl implements CropService {
     public void deleteCropByIdV2(Long farmerId, Long cropId) {
         requireOwnedCrop(cropId, farmerId);
         logger.info("[v2] Deleting crop {}", cropId);
-        cropRepo.deleteById(cropId);
+        approachFarmerService.softDeleteApproachByCropId(cropId);
+        cropRepo.softDeleteByIdAndFarmerId(cropId, farmerId, LocalDateTime.now());
     }
 
     @Override
     public void deleteCropByFarmerIdV2(Long farmerId) {
         logger.info("[v2] Deleting all crops for farmer {}", farmerId);
-        cropRepo.deleteByFarmerId(farmerId);
+        approachFarmerService.softDeleteApproach(farmerId, "ROLE_SELLER");
+        cropRepo.softDeleteByFarmerId(farmerId, LocalDateTime.now());
     }
 
     @Override
@@ -245,6 +254,9 @@ public class CropServiceImpl implements CropService {
     private Crop requireOwnedCrop(Long cropId, Long farmerId) {
         Crop existing = cropRepo.findById(cropId)
                 .orElseThrow(() -> new ResourceNotFoundException("Crop not found with ID: " + cropId));
+        if (!existing.isActive() || existing.getDeletedAt() != null || existing.getFarmer() == null || !existing.getFarmer().isActive()) {
+            throw new ResourceNotFoundException("Crop not found with ID: " + cropId);
+        }
         Long ownerId = existing.getFarmer() != null ? existing.getFarmer().getFarmerId() : null;
         if (!farmerId.equals(ownerId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this crop");
