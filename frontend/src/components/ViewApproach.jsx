@@ -25,6 +25,7 @@ export default function ViewApproach() {
   const [filter, setFilter] = useState('All');
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
   const [buyerLoading, setBuyerLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
@@ -51,9 +52,11 @@ export default function ViewApproach() {
       });
       setApproaches(Array.isArray(data?.content) ? data.content : []);
       setTotalPages(Number(data?.totalPages || 0));
+      setTotalElements(Number(data?.totalElements || 0));
     } catch (err) {
       setApproaches([]);
       setTotalPages(0);
+      setTotalElements(0);
       if ([204, 400, 404].includes(err?.status)) {
         setError('');
       } else {
@@ -120,6 +123,12 @@ export default function ViewApproach() {
           <div>
             <h1>Buying Proposals</h1>
             <p>Manage buyer requests for your crops.</p>
+            {!error && approaches.length > 0 ? (
+              <p className="view-all-pagination__info">
+                Showing {approaches.length} request{approaches.length !== 1 ? 's' : ''}
+                {totalElements ? ` | ${totalElements} total` : ''}
+              </p>
+            ) : null}
           </div>
           <select value={filter} onChange={(event) => { setPage(0); setFilter(event.target.value); }}>
             <option value="All">All</option>
