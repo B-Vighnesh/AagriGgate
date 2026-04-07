@@ -49,5 +49,5 @@ public class BuyerServiceImpl implements BuyerService {
         return buyerMapper.toDTO(buyer);
     }
 
-    
+
 }
