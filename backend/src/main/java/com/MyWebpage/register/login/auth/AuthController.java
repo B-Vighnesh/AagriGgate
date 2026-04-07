@@ -88,16 +88,16 @@ public class AuthController {
             Authentication authentication,
             @RequestBody ResetPasswordRequest request) {
         Long farmerId = Long.parseLong(authentication.getName());
-        authService.deleteAccount(farmerId, request.getCurrentPassword());
+        authService.softDeleteAccount(farmerId, request.getCurrentPassword());
         return ResponseEntity.ok("Account deleted");
     }
 
-    @PostMapping("/deactivate-account")
-    public ResponseEntity<String> deactivateAccount(
-            Authentication authentication,
-            @RequestBody ResetPasswordRequest request) {
-        Long farmerId = Long.parseLong(authentication.getName());
-        authService.softDeleteAccount(farmerId, request.getCurrentPassword());
-        return ResponseEntity.ok("Account deactivated");
-    }
+//    @PostMapping("/deactivate-account")
+//    public ResponseEntity<String> deactivateAccount(
+//            Authentication authentication,
+//            @RequestBody ResetPasswordRequest request) {
+//        Long farmerId = Long.parseLong(authentication.getName());
+//        authService.softDeleteAccount(farmerId, request.getCurrentPassword());
+//        return ResponseEntity.ok("Account deactivated");
+//    }
 }

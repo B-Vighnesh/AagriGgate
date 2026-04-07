@@ -6,7 +6,7 @@ import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { apiFetch } from '../lib/api';
 import { clearAuth, getFarmerId, getRole, getToken } from '../lib/auth';
-import { deactivateAccount as requestDeactivateAccount } from '../api/authApi';
+// import { deactivateAccount as requestDeactivateAccount } from '../api/authApi';
 
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 
@@ -26,7 +26,7 @@ export default function Settings() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteMode, setDeleteMode] = useState('hard');
+  // const [deleteMode, setDeleteMode] = useState('hard');
 
   const [toast, setToast] = useState({ message: '', type: 'info' });
 
@@ -87,9 +87,7 @@ export default function Settings() {
   const deleteAccount = async () => {
     setDeleteLoading(true);
     try {
-      if (deleteMode === 'soft') {
-        await requestDeactivateAccount(deletePassword);
-      } else {
+      
         const response = await apiFetch('/auth/delete-account', {
           method: 'DELETE',
           body: JSON.stringify({ currentPassword: deletePassword }),
@@ -104,9 +102,8 @@ export default function Settings() {
           }
           throw new Error(message);
         }
-      }
       clearAuth();
-      showToast(deleteMode === 'soft' ? 'Account deactivated.' : 'Account deleted.', 'success');
+      showToast('Account deleted.', 'success');
       setTimeout(() => navigate('/register'), 900);
     } catch (err) {
       showToast(err.message || 'Server busy. Try again.', 'error');
@@ -233,29 +230,11 @@ export default function Settings() {
               <div className="settings-card__head">
                 <div>
                   <h2>Danger Zone</h2>
-                  <p>Deactivate your account temporarily or permanently delete it if you no longer need it.</p>
+                  <p>Deleting your account is permanent and cannot be undone.</p>
                 </div>
               </div>
-              <div className="settings-danger-actions">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setDeleteMode('soft');
-                    setShowDeleteModal(true);
-                  }}
-                >
-                  Deactivate Account
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => {
-                    setDeleteMode('hard');
-                    setShowDeleteModal(true);
-                  }}
-                >
-                  Delete My Account
-                </Button>
-              </div>
+               <Button variant="danger" onClick={() => setShowDeleteModal(true)}>Delete My Account</Button>
+              
             </Card>
           </div>
         </div>
@@ -264,11 +243,9 @@ export default function Settings() {
       {showDeleteModal && (
         <div className="confirm-overlay">
           <Card className="confirm-card">
-            <h3>{deleteMode === 'soft' ? 'Deactivate Account' : 'Delete Account'}</h3>
+            <h3>Delete Account</h3>
             <p>
-              {deleteMode === 'soft'
-                ? 'Enter current password to deactivate your account. You will be signed out and the account will no longer be able to log in.'
-                : 'Enter current password to confirm permanent deletion.'}
+              Enter current password to confirm permanent deletion.
             </p>
             <input
               type="password"
@@ -277,22 +254,9 @@ export default function Settings() {
               placeholder="Current password"
             />
             <div className="confirm-actions">
-              <Button
-                variant={deleteMode === 'soft' ? 'outline' : 'danger'}
-                loading={deleteLoading}
-                onClick={deleteAccount}
-              >
-                {deleteMode === 'soft' ? 'Deactivate' : 'Delete'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setDeleteMode('hard');
-                }}
-              >
-                Cancel
-              </Button>
+              <Button variant="danger" loading={deleteLoading} onClick={deleteAccount}>Delete</Button>
+              <Button variant="outline" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+              
             </div>
           </Card>
         </div>

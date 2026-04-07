@@ -230,7 +230,7 @@ public class AuthServiceImpl implements AuthService {
 
     private void ensureAccountActive(Farmer farmer) {
         if (!farmer.isActive()) {
-            throw new IllegalArgumentException("Account is deactivated");
+            throw new IllegalArgumentException("Account is not found");
         }
     }
 
