@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.market;
+package com.MyWebpage.register.login.market.mandi;
 
 import com.MyWebpage.register.login.common.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;

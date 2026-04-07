@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.market;
+package com.MyWebpage.register.login.market.saved;
 
 public class SaveMarketRequest {
 

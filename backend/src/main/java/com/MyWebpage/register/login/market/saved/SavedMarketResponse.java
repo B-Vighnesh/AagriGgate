@@ -1,13 +1,18 @@
-package com.MyWebpage.register.login.market;
+package com.MyWebpage.register.login.market.saved;
 
+import com.MyWebpage.register.login.market.mandi.Market;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-public class MarketResultResponse {
+public class SavedMarketResponse {
 
     private Long id;
+    private Long marketId;
+    private String note;
+    private LocalDateTime savedAt;
 
     @JsonProperty("State")
     private String state;
@@ -42,25 +47,41 @@ public class MarketResultResponse {
     @JsonProperty("Modal_Price")
     private BigDecimal modalPrice;
 
-    public static MarketResultResponse from(Market market) {
-        MarketResultResponse response = new MarketResultResponse();
-        response.id = market.getId();
-        response.state = market.getState();
-        response.district = market.getDistrict();
-        response.market = market.getMarketName();
-        response.commodity = market.getCommodity();
-        response.commodityCode = market.getCommodityCode();
-        response.variety = market.getVariety();
-        response.grade = market.getGrade();
-        response.arrivalDate = market.getArrivalDate();
-        response.minPrice = market.getMinPrice();
-        response.maxPrice = market.getMaxPrice();
-        response.modalPrice = market.getModalPrice();
+    public static SavedMarketResponse from(SavedMarket savedMarket) {
+        Market marketEntity = savedMarket.getMarket();
+        SavedMarketResponse response = new SavedMarketResponse();
+        response.id = savedMarket.getId();
+        response.marketId = marketEntity.getId();
+        response.note = savedMarket.getNote();
+        response.savedAt = savedMarket.getSavedAt();
+        response.state = marketEntity.getState();
+        response.district = marketEntity.getDistrict();
+        response.market = marketEntity.getMarketName();
+        response.commodity = marketEntity.getCommodity();
+        response.commodityCode = marketEntity.getCommodityCode();
+        response.variety = marketEntity.getVariety();
+        response.grade = marketEntity.getGrade();
+        response.arrivalDate = marketEntity.getArrivalDate();
+        response.minPrice = marketEntity.getMinPrice();
+        response.maxPrice = marketEntity.getMaxPrice();
+        response.modalPrice = marketEntity.getModalPrice();
         return response;
     }
 
     public Long getId() {
         return id;
+    }
+
+    public Long getMarketId() {
+        return marketId;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public LocalDateTime getSavedAt() {
+        return savedAt;
     }
 
     public String getState() {

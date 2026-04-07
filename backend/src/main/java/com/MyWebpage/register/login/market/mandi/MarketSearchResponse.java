@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.market;
+package com.MyWebpage.register.login.market.mandi;
 
 import java.util.List;
 

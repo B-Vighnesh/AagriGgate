@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.market;
+package com.MyWebpage.register.login.market.mandi;
 
 import com.MyWebpage.register.login.news.util.NewsTime;
 import jakarta.persistence.criteria.Predicate;
