@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
+@Deprecated
+// Legacy repository kept only as a migration reference. Universal OTP now uses OtpTokenRepository.
 public interface LoginOtpRepository extends JpaRepository<LoginOtp, Long> {
 
     Optional<LoginOtp> findTopByFarmerIdOrderByIdDesc(Long farmerId);

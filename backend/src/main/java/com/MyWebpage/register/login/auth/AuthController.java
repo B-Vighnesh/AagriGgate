@@ -6,6 +6,7 @@ import com.MyWebpage.register.login.otp.SendLoginOtpRequestDTO;
 import com.MyWebpage.register.login.otp.VerifyOtpRequestDTO;
 import com.MyWebpage.register.login.passwordreset.ResetPasswordRequest;
 import com.MyWebpage.register.login.common.EmailService;
+import com.MyWebpage.register.login.otp.OtpPurpose;
 import com.MyWebpage.register.login.otp.OtpService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,21 +31,14 @@ public class AuthController {
 
     @PostMapping("/register/send-otp")
     public ResponseEntity<String> sendRegistrationOtp(@RequestBody FarmerRequestDTO dto) {
-        int otp = emailService.sendRegistrationOtpEmail(dto.getEmail(), dto.getFirstName(), dto.getUsername());
-        otpService.storeOtp(dto.getEmail(), otp);
+        String otp = otpService.issueOtp(dto.getEmail(), OtpPurpose.REGISTRATION);
+        emailService.sendRegistrationOtpEmail(dto.getEmail(), dto.getFirstName(), dto.getUsername(), otp);
         return ResponseEntity.ok("OTP sent");
     }
 
     @PostMapping("/register/verify-otp")
     public ResponseEntity<String> verifyRegistrationOtp(@RequestBody VerifyOtpRequestDTO dto) {
-        int otpValue;
-        try {
-            otpValue = Integer.parseInt(dto.getOtp());
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Invalid OTP format");
-        }
-
-        boolean verified = otpService.verifyOtp(dto.getEmail(), otpValue);
+        boolean verified = otpService.verifyOtp(dto.getEmail(), OtpPurpose.REGISTRATION, dto.getOtp());
         if (!verified) {
             throw new IllegalArgumentException("Invalid OTP");
         }
