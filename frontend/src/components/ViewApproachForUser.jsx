@@ -5,6 +5,7 @@ import { apiFetch, requestJson } from '../lib/api';
 import ValidateToken from './ValidateToken';
 import Button from './common/Button';
 import Card from './common/Card';
+import Modal from './Modal';
 import Toast from './common/Toast';
 
 const STATUS_CLASS = {
@@ -26,6 +27,8 @@ export default function ViewApproachForUser() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [withdrawLoading, setWithdrawLoading] = useState(null);
+  const [pendingWithdraw, setPendingWithdraw] = useState(null);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -80,12 +83,15 @@ export default function ViewApproachForUser() {
 
   const handleWithdraw = async (approachId) => {
     try {
+      setWithdrawLoading(approachId);
       const response = await apiFetch(`/buyer/approach/delete/${approachId}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to withdraw request.');
       setApproaches((prev) => prev.filter((item) => item.approachId !== approachId));
       showToast('Request withdrawn.', 'success');
     } catch (requestError) {
       showToast(requestError.message || 'Server busy. Please try again.', 'error');
+    } finally {
+      setWithdrawLoading(null);
     }
   };
 
@@ -156,8 +162,14 @@ export default function ViewApproachForUser() {
                   </Button>
 
                   {(item.status || '').toLowerCase() === 'pending' && (
-                    <Button variant="danger" size="sm" onClick={() => handleWithdraw(item.approachId)}>
-                      Withdraw
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => setPendingWithdraw({ approachId: item.approachId, step: 1 })}
+                      loading={withdrawLoading === item.approachId}
+                      disabled={withdrawLoading !== null}
+                    >
+                      {withdrawLoading === item.approachId ? 'Withdrawing...' : 'Withdraw'}
                     </Button>
                   )}
                 </div>
@@ -188,6 +200,41 @@ export default function ViewApproachForUser() {
           </div>
         ) : null}
       </div>
+
+      <Modal
+        isOpen={pendingWithdraw?.step === 1}
+        title="Withdraw Request"
+        message="This pending request will be withdrawn from the farmer."
+        onClose={() => setPendingWithdraw(null)}
+        secondaryAction={{
+          label: 'Cancel',
+          onClick: () => setPendingWithdraw(null),
+        }}
+        primaryAction={{
+          label: 'Continue',
+          onClick: () => setPendingWithdraw((prev) => prev ? { ...prev, step: 2 } : prev),
+        }}
+      />
+      <Modal
+        isOpen={pendingWithdraw?.step === 2}
+        title="Final Confirmation"
+        message="Please confirm once more. This request will be permanently withdrawn."
+        onClose={() => setPendingWithdraw(null)}
+        secondaryAction={{
+          label: 'Back',
+          onClick: () => setPendingWithdraw((prev) => prev ? { ...prev, step: 1 } : prev),
+        }}
+        primaryAction={{
+          label: 'Withdraw Request',
+          onClick: async () => {
+            const approachId = pendingWithdraw?.approachId;
+            setPendingWithdraw(null);
+            if (approachId) {
+              await handleWithdraw(approachId);
+            }
+          },
+        }}
+      />
 
       <Toast message={toast.message} type={toast.type} />
     </section>
