@@ -370,7 +370,7 @@ export default function Navbar() {
               data-tooltip="Support"
               onClick={() => setMobileOpen(false)}
             >
-              <i className="fa-regular fa-comments" aria-hidden="true" />
+              <i className="fa-regular fa-circle-question" aria-hidden="true" />
             </Link>
           ) : null}
 
