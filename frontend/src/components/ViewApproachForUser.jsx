@@ -32,6 +32,8 @@ export default function ViewApproachForUser() {
     setTimeout(() => setToast({ message: '', type: 'info' }), 3000);
   };
 
+  const emptyFilterLabel = filter === 'All' ? 'approach' : filter.toLowerCase();
+
   useEffect(() => {
     if (!role) {
       navigate('/login');
@@ -116,7 +118,7 @@ export default function ViewApproachForUser() {
 
         {(error || approaches.length === 0) && (
           <Card className="user-requests-empty">
-            <h3>{error || `No ${filter !== 'All' ? filter.toLowerCase() : 'approach'} requests yet`}</h3>
+            <h3>{error || `No ${emptyFilterLabel} requests`}</h3>
             <p>
               {error
                 ? 'We could not load your requests right now. Please try again or browse crops to send a new request.'
