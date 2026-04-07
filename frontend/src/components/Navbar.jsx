@@ -79,11 +79,15 @@ export default function Navbar() {
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [openDropdownKey, setOpenDropdownKey] = useState('');
+  const [hoverLockedDropdownKey, setHoverLockedDropdownKey] = useState('');
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const drawerRef = useRef(null);
   const mobileNavRef = useRef(null);
   const toggleRef = useRef(null);
   const navRef = useRef(null);
+  const profileMenuRef = useRef(null);
+  const dropdownCloseTimeoutRef = useRef(null);
 
   const showToast = useCallback((message, type = 'info') => {
     setToast({ message, type });
@@ -108,7 +112,15 @@ export default function Navbar() {
     setMobileOpen(false);
     setDrawerOpen(false);
     setOpenDropdownKey('');
+    setHoverLockedDropdownKey('');
+    setProfileMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => () => {
+    if (dropdownCloseTimeoutRef.current) {
+      window.clearTimeout(dropdownCloseTimeoutRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     if (!loggedIn) {
@@ -187,6 +199,23 @@ export default function Navbar() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [drawerOpen]);
+
+  useEffect(() => {
+    if (!profileMenuOpen) {
+      return undefined;
+    }
+
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [profileMenuOpen]);
 
   useEffect(() => {
     if (!mobileOpen) {
@@ -269,7 +298,31 @@ export default function Navbar() {
   };
 
   const toggleDropdown = (key) => {
-    setOpenDropdownKey((current) => (current === key ? '' : key));
+    setOpenDropdownKey((current) => {
+      if (current === key) {
+        setHoverLockedDropdownKey(key);
+        return '';
+      }
+
+      setHoverLockedDropdownKey('');
+      return key;
+    });
+  };
+
+  const clearDropdownCloseTimeout = () => {
+    if (dropdownCloseTimeoutRef.current) {
+      window.clearTimeout(dropdownCloseTimeoutRef.current);
+      dropdownCloseTimeoutRef.current = null;
+    }
+  };
+
+  const scheduleDropdownClose = () => {
+    clearDropdownCloseTimeout();
+    dropdownCloseTimeoutRef.current = window.setTimeout(() => {
+      setOpenDropdownKey('');
+      setHoverLockedDropdownKey('');
+      dropdownCloseTimeoutRef.current = null;
+    }, 1000);
   };
 
   return (
@@ -291,10 +344,15 @@ export default function Navbar() {
                       key={item.key}
                       className={`site-nav__dropdown ${isOpen ? 'site-nav__dropdown--open' : ''}`}
                     onMouseEnter={() => {
-                      if (!mobileOpen) setOpenDropdownKey(item.key);
+                      clearDropdownCloseTimeout();
+                      if (!mobileOpen && hoverLockedDropdownKey !== item.key) {
+                        setOpenDropdownKey(item.key);
+                      }
                     }}
                     onMouseLeave={() => {
-                      if (!mobileOpen) setOpenDropdownKey('');
+                      if (!mobileOpen) {
+                        scheduleDropdownClose();
+                      }
                     }}
                   >
                     <button
@@ -453,54 +511,58 @@ export default function Navbar() {
           ) : null}
 
           {loggedIn ? (
-            <Link
-              to="/enquiry"
-              className={`header-support-link ${isActive('/enquiry') ? 'header-support-link--active' : ''}`}
-              aria-label="Support"
-              data-tooltip="Support"
-              onClick={() => setMobileOpen(false)}
-            >
-              <i className="fa-regular fa-circle-question" aria-hidden="true" />
-            </Link>
-          ) : null}
+            <div className="profile-menu" ref={profileMenuRef}>
+              <button
+                type="button"
+                className={`header-account-link ${profileMenuOpen ? 'header-account-link--active' : ''}`}
+                aria-label="Profile menu"
+                data-tooltip="Account"
+                aria-expanded={profileMenuOpen}
+                onClick={() => setProfileMenuOpen((prev) => !prev)}
+              >
+                <i className="fa-regular fa-user" aria-hidden="true" />
+              </button>
 
-          {loggedIn ? (
-            <Link
-              to="/settings"
-              className={`header-settings-link ${isActive('/settings') ? 'header-settings-link--active' : ''}`}
-              aria-label="Settings"
-              data-tooltip="Settings"
-              onClick={() => setMobileOpen(false)}
-            >
-              <i className="fa-solid fa-gear" aria-hidden="true" />
-            </Link>
-          ) : null}
-
-          {loggedIn ? (
-            <Link
-              to="/account"
-              className={`header-account-link ${isActive('/account') ? 'header-account-link--active' : ''}`}
-              aria-label="Account"
-              data-tooltip="Account"
-              onClick={() => setMobileOpen(false)}
-            >
-              <i className="fa-regular fa-user" aria-hidden="true" />
-            </Link>
-          ) : null}
-
-          {loggedIn ? (
-            <button
-              type="button"
-              className="header-logout-link"
-              aria-label="Logout"
-              data-tooltip="Logout"
-              onClick={() => {
-                setMobileOpen(false);
-                navigate('/logout');
-              }}
-            >
-              <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" />
-            </button>
+              {profileMenuOpen ? (
+                <div className="profile-menu__panel">
+                  <Link
+                    to="/account"
+                    className={`profile-menu__item ${isActive('/account') ? 'profile-menu__item--active' : ''}`}
+                    onClick={() => setProfileMenuOpen(false)}
+                  >
+                    <i className="fa-regular fa-user" aria-hidden="true" />
+                    <span>Profile</span>
+                  </Link>
+                  <Link
+                    to="/settings"
+                    className={`profile-menu__item ${isActive('/settings') ? 'profile-menu__item--active' : ''}`}
+                    onClick={() => setProfileMenuOpen(false)}
+                  >
+                    <i className="fa-solid fa-gear" aria-hidden="true" />
+                    <span>Account Settings</span>
+                  </Link>
+                  <Link
+                    to="/enquiry"
+                    className={`profile-menu__item ${isActive('/enquiry') ? 'profile-menu__item--active' : ''}`}
+                    onClick={() => setProfileMenuOpen(false)}
+                  >
+                    <i className="fa-regular fa-circle-question" aria-hidden="true" />
+                    <span>Help &amp; Support</span>
+                  </Link>
+                  <button
+                    type="button"
+                    className="profile-menu__item profile-menu__item--danger"
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      navigate('/logout');
+                    }}
+                  >
+                    <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              ) : null}
+            </div>
           ) : null}
 
           <button

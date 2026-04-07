@@ -483,7 +483,7 @@ export default function Market() {
       <div className="ag-container">
         <header className="market-header">
           <h1>{showSaved ? 'Saved Market Data' : 'Market Prices'}</h1>
-          <p>{showSaved ? 'Your saved market records with filters and scroll pagination.' : 'Market prices from stored mandi data with up to 7 days of history.'}</p>
+          <p>{showSaved ? 'Your saved market records with filters and scroll pagination.' : 'Track recent mandi prices across districts and compare how markets are moving.'}</p>
         </header>
 
         {!showSaved ? (
