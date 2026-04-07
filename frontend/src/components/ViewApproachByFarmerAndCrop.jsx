@@ -28,6 +28,7 @@ export default function ViewApproachByFarmerAndCrop() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [actionLoading, setActionLoading] = useState({ approachId: null, type: null });
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -95,12 +96,15 @@ export default function ViewApproachByFarmerAndCrop() {
       : `/seller/approach/reject/${approachId}`;
 
     try {
+      setActionLoading({ approachId, type: accept ? 'accept' : 'reject' });
       const response = await apiFetch(endpoint, { method: 'POST' });
       if (!response.ok) throw new Error('Action failed. Try again.');
       showToast(accept ? 'Request accepted.' : 'Request rejected.', accept ? 'success' : 'info');
-      loadApproaches();
+      await loadApproaches();
     } catch (requestError) {
       showToast(requestError.message || 'Unable to process request.', 'error');
+    } finally {
+      setActionLoading({ approachId: null, type: null });
     }
   };
 
@@ -159,6 +163,9 @@ export default function ViewApproachByFarmerAndCrop() {
             {approaches.map((approach) => {
               const status = (approach.status || 'pending').toLowerCase();
               const isPending = status === 'pending';
+              const isAccepting = actionLoading.approachId === approach.approachId && actionLoading.type === 'accept';
+              const isRejecting = actionLoading.approachId === approach.approachId && actionLoading.type === 'reject';
+              const rowBusy = actionLoading.approachId === approach.approachId;
 
               return (
                 <Card key={approach.approachId} className="approach-crop-card">
@@ -182,8 +189,23 @@ export default function ViewApproachByFarmerAndCrop() {
 
                     {isPending ? (
                       <>
-                        <Button size="sm" onClick={() => handleAction(approach.approachId, true)}>Accept</Button>
-                        <Button variant="danger" size="sm" onClick={() => handleAction(approach.approachId, false)}>Reject</Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAction(approach.approachId, true)}
+                          loading={isAccepting}
+                          disabled={rowBusy}
+                        >
+                          {isAccepting ? 'Accepting...' : 'Accept'}
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleAction(approach.approachId, false)}
+                          loading={isRejecting}
+                          disabled={rowBusy}
+                        >
+                          {isRejecting ? 'Rejecting...' : 'Reject'}
+                        </Button>
                       </>
                     ) : (
                       <span className="approach-crop-done">Action completed</span>
