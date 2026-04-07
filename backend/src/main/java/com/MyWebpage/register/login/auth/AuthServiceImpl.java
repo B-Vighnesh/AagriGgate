@@ -3,13 +3,12 @@ package com.MyWebpage.register.login.auth;
 import com.MyWebpage.register.login.approach.ApproachFarmerService;
 import com.MyWebpage.register.login.crop.CropService;
 import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
-import com.MyWebpage.register.login.otp.OtpLoginRequestDTO;
-import com.MyWebpage.register.login.otp.LoginOtp;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
-import com.MyWebpage.register.login.otp.LoginOtpRepository;
 import com.MyWebpage.register.login.security.jwt.JWTService;
 import com.MyWebpage.register.login.common.EmailService;
+import com.MyWebpage.register.login.otp.OtpLoginRequestDTO;
+import com.MyWebpage.register.login.otp.OtpPurpose;
 import com.MyWebpage.register.login.otp.OtpService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Locale;
-import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +27,6 @@ import java.util.Random;
 public class AuthServiceImpl implements AuthService {
 
     private final FarmerRepo farmerRepo;
-    private final LoginOtpRepository loginOtpRepository;
 
     private final ApproachFarmerService approachFarmerService;
     private final CropService cropService;
@@ -50,7 +47,7 @@ public class AuthServiceImpl implements AuthService {
         if (farmerRepo.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Email exists");
         }
-        if (!otpService.isOtpVerified(dto.getEmail())) {
+        if (!otpService.isOtpVerified(dto.getEmail(), OtpPurpose.REGISTRATION)) {
             throw new RuntimeException("OTP not verified");
         }
 
@@ -70,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
         farmer.setUsername(generatedUsername);
 
         farmer = farmerRepo.save(farmer);
-        otpService.clearOtp(dto.getEmail());
+        otpService.clearOtp(dto.getEmail(), OtpPurpose.REGISTRATION);
         emailService.sendWelcomeEmail(farmer);
 
         String token =
@@ -111,16 +108,7 @@ public class AuthServiceImpl implements AuthService {
             String principal) {
 
         Farmer farmer = findFarmerByPrincipal(principal);
-        String otp = String.valueOf(100000 + new Random().nextInt(900000));
-
-        loginOtpRepository.deleteByFarmerId(farmer.getFarmerId());
-
-        LoginOtp loginOtp = new LoginOtp();
-        loginOtp.setFarmerId(farmer.getFarmerId());
-        loginOtp.setOtp(otp);
-        loginOtp.setExpiryTime(LocalDateTime.now().plusMinutes(10));
-
-        loginOtpRepository.save(loginOtp);
+        String otp = otpService.issueOtp(loginOtpPrincipal(farmer.getFarmerId()), OtpPurpose.LOGIN);
         emailService.sendLoginOtpEmail(farmer, otp);
     }
 
@@ -129,19 +117,14 @@ public class AuthServiceImpl implements AuthService {
             OtpLoginRequestDTO dto) {
 
         Farmer farmer = findFarmerByPrincipal(dto.getPrincipal());
-        LoginOtp loginOtp = loginOtpRepository.findTopByFarmerIdOrderByIdDesc(farmer.getFarmerId())
-                .orElseThrow(() -> new IllegalArgumentException("OTP not found"));
-
-        if (loginOtp.getExpiryTime().isBefore(LocalDateTime.now())) {
-            loginOtpRepository.deleteByFarmerId(farmer.getFarmerId());
-            throw new IllegalArgumentException("OTP expired");
-        }
-
-        if (!loginOtp.getOtp().equals(dto.getOtp())) {
+        boolean verified = otpService.verifyAndConsumeOtp(
+                loginOtpPrincipal(farmer.getFarmerId()),
+                OtpPurpose.LOGIN,
+                dto.getOtp()
+        );
+        if (!verified) {
             throw new IllegalArgumentException("Invalid OTP");
         }
-
-        loginOtpRepository.deleteByFarmerId(farmer.getFarmerId());
 
         String token = jwtService.generateToken(
                 farmer.getFarmerId(),
@@ -241,6 +224,10 @@ public class AuthServiceImpl implements AuthService {
         if (!farmer.isActive()) {
             throw new IllegalArgumentException("Account is not found");
         }
+    }
+
+    private String loginOtpPrincipal(Long farmerId) {
+        return String.valueOf(farmerId);
     }
 
     private String generateUsername(String firstName, Long farmerId) {

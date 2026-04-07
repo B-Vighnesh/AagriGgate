@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "registration_otp")
+@Deprecated
+// Legacy per-purpose OTP entity kept only as a migration reference. Universal OTP now uses OtpToken.
 public class RegistrationOtp {
 
     @Id

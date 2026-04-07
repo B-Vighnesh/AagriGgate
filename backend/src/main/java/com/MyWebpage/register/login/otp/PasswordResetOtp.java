@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "password_reset_otp")
+@Deprecated
+// Legacy per-purpose OTP entity kept only as a migration reference. Universal OTP now uses OtpToken.
 public class PasswordResetOtp {
 
     @Id
