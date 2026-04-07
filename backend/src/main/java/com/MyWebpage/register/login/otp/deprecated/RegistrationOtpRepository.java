@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.otp;
+package com.MyWebpage.register.login.otp.deprecated;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -9,9 +9,9 @@ import java.util.Optional;
 @Repository
 @Deprecated
 // Legacy repository kept only as a migration reference. Universal OTP now uses OtpTokenRepository.
-public interface PasswordResetOtpRepository extends JpaRepository<PasswordResetOtp, Long> {
+public interface RegistrationOtpRepository extends JpaRepository<RegistrationOtp, Long> {
 
-    Optional<PasswordResetOtp> findTopByEmailOrderByIdDesc(String email);
+    Optional<RegistrationOtp> findTopByEmailOrderByIdDesc(String email);
 
     void deleteByEmail(String email);
 

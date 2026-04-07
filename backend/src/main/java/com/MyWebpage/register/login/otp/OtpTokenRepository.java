@@ -9,7 +9,7 @@ import java.util.Optional;
 @Repository
 public interface OtpTokenRepository extends JpaRepository<OtpToken, Long> {
 
-    Optional<OtpToken> findByPrincipalAndPurpose(String principal, OtpPurpose purpose);
+    Optional<OtpToken> findTopByPrincipalAndPurposeOrderByIdDesc(String principal, OtpPurpose purpose);
 
     void deleteByPrincipalAndPurpose(String principal, OtpPurpose purpose);
 

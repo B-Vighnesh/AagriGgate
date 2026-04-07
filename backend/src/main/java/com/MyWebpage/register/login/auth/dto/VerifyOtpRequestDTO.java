@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.otp;
+package com.MyWebpage.register.login.auth.dto;
 
 public class VerifyOtpRequestDTO {
 

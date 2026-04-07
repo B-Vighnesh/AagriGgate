@@ -2,6 +2,7 @@ package com.MyWebpage.register.login.otp;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,16 +18,16 @@ public class OtpService {
     private static final int DEFAULT_OTP_LENGTH = 6;
     private static final int OTP_EXPIRATION_MINUTES = 5;
     private final OtpTokenRepository otpTokenRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public String issueOtp(String principal, OtpPurpose purpose) {
         String normalizedPrincipal = normalizePrincipal(principal);
         String otp = generateOtp(DEFAULT_OTP_LENGTH);
         otpTokenRepository.deleteByPrincipalAndPurpose(normalizedPrincipal, purpose);
-        System.out.println("hlooooooooooooooo"+otpTokenRepository.findByPrincipalAndPurpose(normalizedPrincipal, purpose));
         OtpToken token = new OtpToken();
         token.setPrincipal(normalizedPrincipal);
         token.setPurpose(purpose);
-        token.setCode(otp);
+        token.setOtpHash(passwordEncoder.encode(otp));
         token.setExpiresAt(LocalDateTime.now().plusMinutes(OTP_EXPIRATION_MINUTES));
         token.setVerified(false);
         token.setCreatedAt(LocalDateTime.now());
@@ -36,7 +37,7 @@ public class OtpService {
     }
 
     public boolean verifyOtp(String principal, OtpPurpose purpose, String otp) {
-        Optional<OtpToken> latestOtp = otpTokenRepository.findByPrincipalAndPurpose(
+        Optional<OtpToken> latestOtp = otpTokenRepository.findTopByPrincipalAndPurposeOrderByIdDesc(
                 normalizePrincipal(principal),
                 purpose
         );
@@ -50,7 +51,7 @@ public class OtpService {
             return false;
         }
 
-        if (otpToken.getCode().equals(otp)) {
+        if (passwordEncoder.matches(otp, otpToken.getOtpHash())) {
             otpToken.setVerified(true);
             otpTokenRepository.save(otpToken);
             return true;
@@ -72,7 +73,7 @@ public class OtpService {
     }
 
     public boolean isOtpVerified(String principal, OtpPurpose purpose) {
-        Optional<OtpToken> latestOtp = otpTokenRepository.findByPrincipalAndPurpose(
+        Optional<OtpToken> latestOtp = otpTokenRepository.findTopByPrincipalAndPurposeOrderByIdDesc(
                 normalizePrincipal(principal),
                 purpose
         );
@@ -90,7 +91,7 @@ public class OtpService {
     }
 
     public void setOtpVerified(String principal, OtpPurpose purpose, boolean status) {
-        Optional<OtpToken> latestOtp = otpTokenRepository.findByPrincipalAndPurpose(
+        Optional<OtpToken> latestOtp = otpTokenRepository.findTopByPrincipalAndPurposeOrderByIdDesc(
                 normalizePrincipal(principal),
                 purpose
         );
