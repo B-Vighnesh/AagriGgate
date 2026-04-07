@@ -29,6 +29,7 @@ export default function ViewApproach() {
   const [selectedBuyer, setSelectedBuyer] = useState(null);
   const [buyerLoading, setBuyerLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [actionLoading, setActionLoading] = useState({ approachId: null, type: null });
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -86,12 +87,15 @@ export default function ViewApproach() {
       ? `/seller/approach/accept/${approachId}`
       : `/seller/approach/reject/${approachId}`;
     try {
+      setActionLoading({ approachId, type: accept ? 'accept' : 'reject' });
       const response = await apiFetch(endpoint, { method: 'POST' });
       if (!response.ok) throw new Error('Action failed.');
       showToast(accept ? 'Request accepted.' : 'Request rejected.', accept ? 'success' : 'info');
-      loadApproaches();
+      await loadApproaches();
     } catch (err) {
       showToast(err.message || 'Unable to process request.', 'error');
+    } finally {
+      setActionLoading({ approachId: null, type: null });
     }
   };
 
@@ -164,6 +168,13 @@ export default function ViewApproach() {
         <div className="view-approach-list">
           {approaches.map((item) => (
             <Card key={item.approachId} className="approach-card">
+              {(() => {
+                const isAccepting = actionLoading.approachId === item.approachId && actionLoading.type === 'accept';
+                const isRejecting = actionLoading.approachId === item.approachId && actionLoading.type === 'reject';
+                const rowBusy = actionLoading.approachId === item.approachId;
+
+                return (
+                  <>
               <div className="approach-card__head">
                 <div>
                   <h3>{item.cropName}</h3>
@@ -182,11 +193,29 @@ export default function ViewApproach() {
                 </Button>
                 {(item.status || '').toLowerCase() === 'pending' ? (
                   <>
-                    <Button size="sm" onClick={() => onAction(item.approachId, true)}>Accept</Button>
-                    <Button variant="danger" size="sm" onClick={() => onAction(item.approachId, false)}>Reject</Button>
+                    <Button
+                      size="sm"
+                      onClick={() => onAction(item.approachId, true)}
+                      loading={isAccepting}
+                      disabled={rowBusy}
+                    >
+                      {isAccepting ? 'Accepting...' : 'Accept'}
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => onAction(item.approachId, false)}
+                      loading={isRejecting}
+                      disabled={rowBusy}
+                    >
+                      {isRejecting ? 'Rejecting...' : 'Reject'}
+                    </Button>
                   </>
                 ) : null}
               </div>
+                  </>
+                );
+              })()}
             </Card>
           ))}
         </div>
