@@ -260,9 +260,7 @@ export default function ViewAllCrop() {
               <Link to="/cart">
                 <Button variant="outline" className="view-all-requests-btn">Cart</Button>
               </Link>
-              <Link to="/view-approaches-user">
-                <Button variant="outline" className="view-all-requests-btn">My Requests</Button>
-              </Link>
+              
             </div>
           )}
         </div>
