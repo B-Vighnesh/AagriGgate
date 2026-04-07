@@ -61,6 +61,8 @@ public class AuthServiceImpl implements AuthService {
         farmer.setState(dto.getState());
         farmer.setPassword(passwordEncoder.encode(dto.getPassword()));
         farmer.setRole(role);
+        farmer.setActive(true);
+        farmer.setDeletedAt(null);
 
         Long farmerId = farmerRepo.getNextUserSequence();
         String generatedUsername = generateUsername(dto.getFirstName(), farmerId);
@@ -154,9 +156,10 @@ public class AuthServiceImpl implements AuthService {
             String newPassword) {
 
         Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
+        ensureAccountActive(farmer);
 
         if (!passwordEncoder.matches(currentPassword, farmer.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new IllegalArgumentException("Invalid password");
         }
 
         farmer.setPassword(passwordEncoder.encode(newPassword));
@@ -171,9 +174,10 @@ public class AuthServiceImpl implements AuthService {
             String password) {
 
         Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
+        ensureAccountActive(farmer);
 
         if (!passwordEncoder.matches(password, farmer.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new IllegalArgumentException("Invalid password");
         }
 
         if ("BUYER".equals(farmer.getRole())) {
@@ -184,6 +188,20 @@ public class AuthServiceImpl implements AuthService {
         }
 
         farmerRepo.delete(farmer);
+    }
+
+    @Override
+    public void softDeleteAccount(Long farmerId, String password) {
+        Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
+        ensureAccountActive(farmer);
+
+        if (!passwordEncoder.matches(password, farmer.getPassword())) {
+            throw new IllegalArgumentException("Invalid password");
+        }
+
+        farmer.setActive(false);
+        farmer.setDeletedAt(LocalDateTime.now());
+        farmerRepo.save(farmer);
     }
 
     private AuthResponseDTO buildResponse(
@@ -206,7 +224,14 @@ public class AuthServiceImpl implements AuthService {
         if (farmer == null) {
             throw new IllegalArgumentException("User not found");
         }
+        ensureAccountActive(farmer);
         return farmer;
+    }
+
+    private void ensureAccountActive(Farmer farmer) {
+        if (!farmer.isActive()) {
+            throw new IllegalArgumentException("Account is deactivated");
+        }
     }
 
     private String generateUsername(String firstName, Long farmerId) {

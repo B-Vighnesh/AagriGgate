@@ -4139,6 +4139,16 @@ a {
   gap: 10px;
 }
 
+.settings-danger-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.settings-danger-actions .ui-btn {
+  flex: 1 1 220px;
+}
+
 .settings-tip-item {
   padding: 12px 0;
   border-top: 1px solid var(--color-border);
