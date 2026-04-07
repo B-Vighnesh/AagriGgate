@@ -26,6 +26,7 @@ export default function ViewApproachByFarmerAndCrop() {
   const [filterStatus, setFilterStatus] = useState('All');
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [toast, setToast] = useState({ message: '', type: 'info' });
 
   const showToast = (message, type = 'info') => {
@@ -51,9 +52,11 @@ export default function ViewApproachByFarmerAndCrop() {
       });
       setApproaches(Array.isArray(data?.content) ? data.content : []);
       setTotalPages(Number(data?.totalPages || 0));
+      setTotalElements(Number(data?.totalElements || 0));
     } catch (loadError) {
       setApproaches([]);
       setTotalPages(0);
+      setTotalElements(0);
       if ([204, 400, 404].includes(loadError?.status)) {
         setError('');
       } else {
@@ -117,6 +120,12 @@ export default function ViewApproachByFarmerAndCrop() {
             <button className="link-back" onClick={() => navigate(-1)}>Back</button>
             <h1>Crop Requests</h1>
             <p>Manage buyer requests for this crop.</p>
+            {!error && approaches.length > 0 ? (
+              <p className="view-all-pagination__info">
+                Showing {approaches.length} request{approaches.length !== 1 ? 's' : ''}
+                {totalElements ? ` | ${totalElements} total` : ''}
+              </p>
+            ) : null}
           </div>
 
           <div className="approach-crop-filter">
