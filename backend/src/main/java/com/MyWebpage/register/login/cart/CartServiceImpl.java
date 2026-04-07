@@ -2,9 +2,8 @@ package com.MyWebpage.register.login.cart;
 
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
 import com.MyWebpage.register.login.crop.Crop;
-import com.MyWebpage.register.login.approach.ApproachFarmerRepo;
-import com.MyWebpage.register.login.crop.CropRepo;
 import com.MyWebpage.register.login.approach.ApproachFarmerService;
+import com.MyWebpage.register.login.crop.CropQueryService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -23,15 +22,13 @@ import java.util.List;
 public class CartServiceImpl implements CartService {
 
     private final CartItemRepo cartItemRepo;
-    private final CropRepo cropRepo;
+    private final CropQueryService cropQueryService;
     private final ApproachFarmerService approachFarmerService;
-    private final ApproachFarmerRepo approachFarmerRepo;
 
-    public CartServiceImpl(CartItemRepo cartItemRepo, CropRepo cropRepo, ApproachFarmerService approachFarmerService, ApproachFarmerRepo approachFarmerRepo) {
+    public CartServiceImpl(CartItemRepo cartItemRepo, CropQueryService cropQueryService, ApproachFarmerService approachFarmerService) {
         this.cartItemRepo = cartItemRepo;
-        this.cropRepo = cropRepo;
+        this.cropQueryService = cropQueryService;
         this.approachFarmerService = approachFarmerService;
-        this.approachFarmerRepo = approachFarmerRepo;
     }
 
     @Override
@@ -109,9 +106,8 @@ public class CartServiceImpl implements CartService {
             try {
                 Crop crop = requireAvailableCrop(item.getCropId(), buyerId);
                 validateRequestedQuantity(item.getQuantity(), crop);
-                if (approachFarmerRepo.existsByCropIdAndUserIdAndStatusIgnoreCaseAndActiveTrue(item.getCropId(), buyerId, "Rejected")) {
-                    approachFarmerRepo.findByUserIdAndCropIdAndActiveTrue(buyerId, item.getCropId())
-                            .ifPresent(existing -> approachFarmerRepo.softDeleteByApproachIdAndUserId(existing.getApproachId(), buyerId, LocalDateTime.now()));
+                if (approachFarmerService.hasRejectedApproach(buyerId, item.getCropId())) {
+                    approachFarmerService.softDeleteExistingApproach(buyerId, item.getCropId());
                 }
                 ResponseEntity<String> response = approachFarmerService.createApproach(buyerId, item.getCropId(), item.getQuantity());
                 if (response.getStatusCode().is2xxSuccessful()) {
@@ -132,18 +128,7 @@ public class CartServiceImpl implements CartService {
     }
 
     private Crop requireAvailableCrop(Long cropId, Long buyerId) {
-        Crop crop = cropRepo.findById(cropId)
-                .orElseThrow(() -> new ResourceNotFoundException("Crop not found"));
-        if (!crop.isActive() || crop.getDeletedAt() != null || crop.getFarmer() == null || !crop.getFarmer().isActive()) {
-            throw new ResourceNotFoundException("Crop not found");
-        }
-        if (crop.getFarmer() != null && buyerId.equals(crop.getFarmer().getFarmerId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot add your own crop");
-        }
-        if ("sold".equalsIgnoreCase(crop.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This crop is already sold");
-        }
-        return crop;
+        return cropQueryService.requireAvailableCropForBuyer(cropId, buyerId);
     }
 
     private void validateRequestedQuantity(Double requestedQuantity, Crop crop) {

@@ -2,8 +2,8 @@ package com.MyWebpage.register.login.approach;
 
 import com.MyWebpage.register.login.crop.Crop;
 import com.MyWebpage.register.login.farmer.Farmer;
-import com.MyWebpage.register.login.crop.CropRepo;
-import com.MyWebpage.register.login.farmer.FarmerRepo;
+import com.MyWebpage.register.login.crop.CropQueryService;
+import com.MyWebpage.register.login.farmer.FarmerQueryService;
 import com.MyWebpage.register.login.common.EmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,33 +24,26 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     private static final Logger logger = LoggerFactory.getLogger(ApproachFarmerServiceImpl.class);
 
     private final ApproachFarmerRepo approachFarmerRepository;
-    private final CropRepo cropRepository;
-    private final FarmerRepo farmerRepository;
+    private final CropQueryService cropQueryService;
+    private final FarmerQueryService farmerQueryService;
     private final EmailService emailService;
 
     public ApproachFarmerServiceImpl(
             ApproachFarmerRepo approachFarmerRepository,
-            CropRepo cropRepository,
-            FarmerRepo farmerRepository,
+            CropQueryService cropQueryService,
+            FarmerQueryService farmerQueryService,
             EmailService emailService) {
         this.approachFarmerRepository = approachFarmerRepository;
-        this.cropRepository = cropRepository;
-        this.farmerRepository = farmerRepository;
+        this.cropQueryService = cropQueryService;
+        this.farmerQueryService = farmerQueryService;
         this.emailService = emailService;
     }
 
     @Override
     public ResponseEntity<String> createApproach(Long userId, Long cropId, Double requestedQuantity) {
         try {
-            Crop crop = cropRepository.findById(cropId)
-                    .orElseThrow(() -> new RuntimeException("Crop not found with ID: " + cropId));
-            if ("sold".equalsIgnoreCase(crop.getStatus())) {
-                return new ResponseEntity<>("This crop is already sold.", HttpStatus.BAD_REQUEST);
-            }
+            Crop crop = cropQueryService.requireAvailableCropForBuyer(cropId, userId);
             Long farmerId = crop.getFarmer().getFarmerId();
-            if (!crop.isActive() || crop.getDeletedAt() != null || crop.getFarmer() == null || !crop.getFarmer().isActive()) {
-                return new ResponseEntity<>("Crop is not available.", HttpStatus.BAD_REQUEST);
-            }
 
             boolean isPending = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatusAndActiveTrue(
                     farmerId, cropId, userId, "pending");
@@ -68,17 +61,8 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                         HttpStatus.BAD_REQUEST);
             }
 
-            Farmer farmer = farmerRepository.findById(farmerId)
-                    .orElseThrow(() -> new RuntimeException("Farmer not found with ID: " + farmerId));
-            Farmer user = farmerRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-            if (!farmer.isActive() || !user.isActive()) {
-                return new ResponseEntity<>("User not found.", HttpStatus.BAD_REQUEST);
-            }
-
-            if (farmerId.equals(userId)) {
-                return new ResponseEntity<>("You cannot approach your own crop.", HttpStatus.BAD_REQUEST);
-            }
+            Farmer farmer = farmerQueryService.requireActiveFarmer(farmerId);
+            Farmer user = farmerQueryService.requireActiveFarmer(userId);
 
             ApproachFarmer approachFarmer = new ApproachFarmer();
             approachFarmer.setCropId(crop.getCropID());
@@ -206,8 +190,20 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     }
 
     @Override
+    public boolean hasRejectedApproach(Long userId, Long cropId) {
+        return approachFarmerRepository.existsByCropIdAndUserIdAndStatusIgnoreCaseAndActiveTrue(cropId, userId, "Rejected");
+    }
+
+    @Override
+    public void softDeleteExistingApproach(Long userId, Long cropId) {
+        approachFarmerRepository.findByUserIdAndCropIdAndActiveTrue(userId, cropId)
+                .ifPresent(existing ->
+                        approachFarmerRepository.softDeleteByApproachIdAndUserId(existing.getApproachId(), userId, LocalDateTime.now()));
+    }
+
+    @Override
     public boolean sendMail(ApproachFarmer approachFarmer) {
-        Farmer farmer = farmerRepository.findByEmail(approachFarmer.getUserEmail()).orElse(null);
+        Farmer farmer = farmerQueryService.findActiveByEmail(approachFarmer.getUserEmail());
         if (farmer == null) {
             return false;
         }
