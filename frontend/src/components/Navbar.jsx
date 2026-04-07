@@ -54,7 +54,7 @@ function navByRole(role) {
 
   return [
     { type: 'link', label: 'Home', to: '/' },
-    { type: 'link', label: 'Market Intelligence', to: '/market' },
+    { type: 'link', label: 'Marketplace', to: '/view-all-crops' },
     { type: 'link', label: 'My Requests', to: '/view-approaches-user' },
     {
       type: 'dropdown',
@@ -340,6 +340,15 @@ export default function Navbar() {
                 </Link>
               );
             })}
+            {loggedIn ? (
+              <Link
+                to="/enquiry"
+                className={`site-nav__utility ${isActive('/enquiry') ? 'site-nav__utility--active' : ''}`}
+                onClick={() => setMobileOpen(false)}
+              >
+                Support
+              </Link>
+            ) : null}
             {loggedIn ? (
               <Link
                 to="/settings"
