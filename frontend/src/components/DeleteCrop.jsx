@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
+import Modal from './Modal';
 import ValidateToken from './ValidateToken';
 import { apiFetch } from '../lib/api';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
@@ -15,6 +16,7 @@ export default function DeleteCrop({ cropId, onClose }) {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
+  const [confirmStep, setConfirmStep] = useState(0);
 
   const handleDelete = async () => {
     setLoading(true);
@@ -36,29 +38,49 @@ export default function DeleteCrop({ cropId, onClose }) {
 
   return (
     <div className="confirm-overlay">
-      <Card className="confirm-card">
-        <ValidateToken farmerId={farmerId} token={token} role={role} />
+      <ValidateToken farmerId={farmerId} token={token} role={role} />
 
-        {!done ? (
-          <>
-            <h3>Delete Crop</h3>
-            <p>This action is permanent. Are you sure you want to delete this crop?</p>
-
-            {error ? <p className="settings-error">{error}</p> : null}
-
-            <div className="confirm-actions">
-              <Button variant="danger" loading={loading} onClick={handleDelete}>Yes, Delete</Button>
-              <Button variant="outline" onClick={onClose}>Cancel</Button>
-            </div>
-          </>
-        ) : (
+      {done ? (
+        <Card className="confirm-card">
           <>
             <h3>Deleted</h3>
             <p>The crop has been removed successfully.</p>
             <Button className="full-width" onClick={() => navigate('/view-crop')}>View My Crops</Button>
           </>
-        )}
-      </Card>
+        </Card>
+      ) : null}
+
+      <Modal
+        isOpen={!done && confirmStep === 1}
+        title="Delete Crop"
+        message="This crop will be removed from the marketplace and its pending request chain will be cleared."
+        onClose={() => setConfirmStep(0)}
+        secondaryAction={{
+          label: 'Cancel',
+          onClick: onClose,
+        }}
+        primaryAction={{
+          label: 'Continue',
+          onClick: () => setConfirmStep(2),
+        }}
+      />
+      <Modal
+        isOpen={!done && confirmStep === 2}
+        title="Final Confirmation"
+        message="Please confirm once more. This crop will be deleted from your active listings."
+        onClose={onClose}
+        secondaryAction={{
+          label: 'Back',
+          onClick: () => setConfirmStep(1),
+        }}
+        primaryAction={{
+          label: loading ? 'Deleting...' : 'Delete Crop',
+          onClick: async () => {
+            await handleDelete();
+            setConfirmStep(0);
+          },
+        }}
+      />
     </div>
   );
 }

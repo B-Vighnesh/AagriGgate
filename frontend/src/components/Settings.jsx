@@ -24,6 +24,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteStep, setDeleteStep] = useState(1);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
   // const [deleteMode, setDeleteMode] = useState('hard');
@@ -110,8 +111,8 @@ export default function Settings() {
     } finally {
       setDeleteLoading(false);
       setShowDeleteModal(false);
+      setDeleteStep(1);
       setDeletePassword('');
-      setDeleteMode('hard');
     }
   };
 
@@ -233,7 +234,7 @@ export default function Settings() {
                   <p>Deleting your account is permanent and cannot be undone.</p>
                 </div>
               </div>
-               <Button variant="danger" onClick={() => setShowDeleteModal(true)}>Delete My Account</Button>
+               <Button variant="danger" onClick={() => { setDeleteStep(1); setShowDeleteModal(true); }}>Delete My Account</Button>
               
             </Card>
           </div>
@@ -243,21 +244,35 @@ export default function Settings() {
       {showDeleteModal && (
         <div className="confirm-overlay">
           <Card className="confirm-card">
-            <h3>Delete Account</h3>
-            <p>
-              Enter current password to confirm permanent deletion.
-            </p>
-            <input
-              type="password"
-              value={deletePassword}
-              onChange={(event) => setDeletePassword(event.target.value)}
-              placeholder="Current password"
-            />
-            <div className="confirm-actions">
-              <Button variant="danger" loading={deleteLoading} onClick={deleteAccount}>Delete</Button>
-              <Button variant="outline" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
-              
-            </div>
+            {deleteStep === 1 ? (
+              <>
+                <h3>Delete Account</h3>
+                <p>
+                  This will remove your access and clear your saved personal data from the platform.
+                </p>
+                <div className="confirm-actions">
+                  <Button variant="outline" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+                  <Button variant="danger" onClick={() => setDeleteStep(2)}>Continue</Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3>Final Confirmation</h3>
+                <p>
+                  Enter current password to confirm account deletion.
+                </p>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(event) => setDeletePassword(event.target.value)}
+                  placeholder="Current password"
+                />
+                <div className="confirm-actions">
+                  <Button variant="outline" onClick={() => setDeleteStep(1)}>Back</Button>
+                  <Button variant="danger" loading={deleteLoading} onClick={deleteAccount}>Delete</Button>
+                </div>
+              </>
+            )}
           </Card>
         </div>
       )}
