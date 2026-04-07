@@ -186,8 +186,9 @@ export default function UpdateCrop() {
       <ValidateToken farmerId={farmerId} token={token} role={role} />
 
       <div className="ag-container">
-        <div className="update-crop-head">
           <button className="link-back" onClick={() => navigate(-1)}>Back</button>
+
+        <div className="update-crop-head">
           <div>
             <h1>Update Crop</h1>
             <p>Make changes and save your listing.</p>
