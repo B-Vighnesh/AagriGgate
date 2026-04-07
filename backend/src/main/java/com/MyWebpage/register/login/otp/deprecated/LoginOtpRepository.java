@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.otp;
+package com.MyWebpage.register.login.otp.deprecated;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

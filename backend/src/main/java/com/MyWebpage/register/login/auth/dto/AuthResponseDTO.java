@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.auth;
+package com.MyWebpage.register.login.auth.dto;
 
 public class AuthResponseDTO {
     private String token;

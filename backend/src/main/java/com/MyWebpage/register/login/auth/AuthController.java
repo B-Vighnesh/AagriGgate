@@ -1,9 +1,7 @@
 package com.MyWebpage.register.login.auth;
 
+import com.MyWebpage.register.login.auth.dto.*;
 import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
-import com.MyWebpage.register.login.otp.OtpLoginRequestDTO;
-import com.MyWebpage.register.login.otp.SendLoginOtpRequestDTO;
-import com.MyWebpage.register.login.otp.VerifyOtpRequestDTO;
 import com.MyWebpage.register.login.passwordreset.ResetPasswordRequest;
 import com.MyWebpage.register.login.common.EmailService;
 import com.MyWebpage.register.login.otp.OtpPurpose;
@@ -31,6 +29,7 @@ public class AuthController {
 
     @PostMapping("/register/send-otp")
     public ResponseEntity<String> sendRegistrationOtp(@RequestBody FarmerRequestDTO dto) {
+        authService.findUser(dto.getEmail());
         String otp = otpService.issueOtp(dto.getEmail(), OtpPurpose.REGISTRATION);
         emailService.sendRegistrationOtpEmail(dto.getEmail(), dto.getFirstName(), dto.getUsername(), otp);
         return ResponseEntity.ok("OTP sent");

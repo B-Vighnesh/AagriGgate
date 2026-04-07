@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.otp;
+package com.MyWebpage.register.login.otp.deprecated;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,10 +9,10 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "registration_otp")
+@Table(name = "password_reset_otp")
 @Deprecated
 // Legacy per-purpose OTP entity kept only as a migration reference. Universal OTP now uses OtpToken.
-public class RegistrationOtp {
+public class PasswordResetOtp {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

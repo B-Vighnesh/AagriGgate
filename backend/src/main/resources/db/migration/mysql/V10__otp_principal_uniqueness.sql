@@ -1,5 +1,3 @@
-ALTER TABLE otp_token
-    CHANGE COLUMN otp_hash code VARCHAR(32) NOT NULL;
-
-ALTER TABLE otp_token
-    ADD CONSTRAINT uk_otp_token_principal_purpose UNIQUE (principal, purpose);
+-- No-op migration kept to preserve Flyway ordering.
+-- OTP token structure remains defined by V9__universal_otp.sql.
+-- No unique constraint is applied to (principal, purpose).

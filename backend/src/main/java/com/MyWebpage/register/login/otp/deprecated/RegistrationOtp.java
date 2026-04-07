@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.otp;
+package com.MyWebpage.register.login.otp.deprecated;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,20 +9,22 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "login_otp")
+@Table(name = "registration_otp")
 @Deprecated
 // Legacy per-purpose OTP entity kept only as a migration reference. Universal OTP now uses OtpToken.
-public class LoginOtp {
+public class RegistrationOtp {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long farmerId;
+    private String email;
 
     private String otp;
 
     private LocalDateTime expiryTime;
+
+    private boolean verified;
 
     public Long getId() {
         return id;
@@ -32,12 +34,12 @@ public class LoginOtp {
         this.id = id;
     }
 
-    public Long getFarmerId() {
-        return farmerId;
+    public String getEmail() {
+        return email;
     }
 
-    public void setFarmerId(Long farmerId) {
-        this.farmerId = farmerId;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getOtp() {
@@ -54,5 +56,13 @@ public class LoginOtp {
 
     public void setExpiryTime(LocalDateTime expiryTime) {
         this.expiryTime = expiryTime;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
     }
 }

@@ -5,10 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        name = "otp_token",
-        uniqueConstraints = @UniqueConstraint(name = "uk_otp_token_principal_purpose", columnNames = {"principal", "purpose"})
-)
+@Table(name = "otp_token")
 public class OtpToken {
 
     @Id
@@ -22,8 +19,8 @@ public class OtpToken {
     @Column(nullable = false, length = 32)
     private OtpPurpose purpose;
 
-    @Column(name = "code", nullable = false, length = 32)
-    private String code;
+    @Column(name = "otp_hash", nullable = false, length = 255)
+    private String otpHash;
 
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
@@ -58,12 +55,12 @@ public class OtpToken {
         this.purpose = purpose;
     }
 
-    public String getCode() {
-        return code;
+    public String getOtpHash() {
+        return otpHash;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setOtpHash(String otpHash) {
+        this.otpHash = otpHash;
     }
 
     public LocalDateTime getExpiresAt() {

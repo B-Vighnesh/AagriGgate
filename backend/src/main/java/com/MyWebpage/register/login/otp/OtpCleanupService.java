@@ -14,7 +14,7 @@ public class OtpCleanupService {
     private final OtpTokenRepository otpTokenRepository;
 
     // Universal OTP cleanup for registration, login, and password-reset tokens.
-    @Scheduled(cron = "0 */15 * * * *")
+    @Scheduled(cron = "${otp.cleanup-cron}")
     @Transactional
     public void cleanupExpiredOtps() {
         LocalDateTime now = LocalDateTime.now();

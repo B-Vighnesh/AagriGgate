@@ -1,13 +1,15 @@
 package com.MyWebpage.register.login.auth;
 
 import com.MyWebpage.register.login.approach.ApproachFarmerService;
+import com.MyWebpage.register.login.auth.dto.AuthRequestDTO;
+import com.MyWebpage.register.login.auth.dto.AuthResponseDTO;
+import com.MyWebpage.register.login.auth.dto.OtpLoginRequestDTO;
 import com.MyWebpage.register.login.crop.CropService;
 import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.security.jwt.JWTService;
 import com.MyWebpage.register.login.common.EmailService;
-import com.MyWebpage.register.login.otp.OtpLoginRequestDTO;
 import com.MyWebpage.register.login.otp.OtpPurpose;
 import com.MyWebpage.register.login.otp.OtpService;
 import jakarta.transaction.Transactional;
@@ -196,6 +198,14 @@ public class AuthServiceImpl implements AuthService {
         farmerRepo.save(farmer);
     }
 
+    @Override
+    public void findUser(String email) {
+        if(farmerRepo.existsByEmail(email))
+        {
+            throw new RuntimeException("User already exists");
+        }
+    }
+
     private AuthResponseDTO buildResponse(
             Farmer farmer,
             String token) {
@@ -222,7 +232,7 @@ public class AuthServiceImpl implements AuthService {
 
     private void ensureAccountActive(Farmer farmer) {
         if (!farmer.isActive()) {
-            throw new IllegalArgumentException("Account is not found");
+            throw new IllegalArgumentException("user not found");
         }
     }
 
