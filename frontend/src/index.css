@@ -264,19 +264,13 @@ a {
 }
 
 .notification-bell__button,
-.header-support-link,
-.header-settings-link,
 .header-account-link,
-.header-logout-link,
 .header-utility-link {
   position: relative;
 }
 
 .notification-bell__button::after,
-.header-support-link::after,
-.header-settings-link::after,
 .header-account-link::after,
-.header-logout-link::after,
 .header-utility-link::after {
   content: attr(data-tooltip);
   position: absolute;
@@ -298,53 +292,10 @@ a {
 }
 
 .notification-bell__button:hover::after,
-.header-support-link:hover::after,
-.header-settings-link:hover::after,
 .header-account-link:hover::after,
-.header-logout-link:hover::after,
 .header-utility-link:hover::after {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
-}
-
-.header-support-link {
-  width: 42px;
-  height: 42px;
-  color: var(--color-primary-dark);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
-}
-
-.header-support-link:hover,
-.header-support-link--active {
-  color: var(--color-primary);
-}
-
-.header-support-link i {
-  font-size: 1.12rem;
-  line-height: 1;
-}
-
-.header-settings-link {
-  width: 42px;
-  height: 42px;
-  color: var(--color-primary-dark);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
-}
-
-.header-settings-link:hover,
-.header-settings-link--active {
-  color: var(--color-primary);
-}
-
-.header-settings-link i {
-  font-size: 1.08rem;
-  line-height: 1;
 }
 
 .header-utility-link {
@@ -375,11 +326,16 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: #ffffff;
   transition: color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
 }
 
 .header-account-link:hover,
 .header-account-link--active {
+  background: #e7f5ee;
+  border-color: #b5d7c7;
   color: var(--color-primary);
 }
 
@@ -388,26 +344,66 @@ a {
   line-height: 1;
 }
 
-.header-logout-link {
-  width: 42px;
-  height: 42px;
+.profile-menu {
+  position: relative;
+}
+
+.profile-menu__panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 220px;
+  padding: 10px;
+  border: 1px solid #d6e7de;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 40px rgba(18, 62, 49, 0.12);
+  display: grid;
+  gap: 6px;
+  z-index: 60;
+}
+
+.profile-menu__item {
+  width: 100%;
   border: 0;
   background: transparent;
-  color: #b43b3b;
-  cursor: pointer;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  transition: color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
 }
 
-.header-logout-link:hover {
+.profile-menu__item i {
+  width: 16px;
+  text-align: center;
+  color: var(--color-primary-dark);
+  flex-shrink: 0;
+}
+
+.profile-menu__item:hover,
+.profile-menu__item--active {
+  background: #ebf6f0;
+  color: var(--color-primary-dark);
+}
+
+.profile-menu__item--danger {
+  color: #a13232;
+}
+
+.profile-menu__item--danger i {
+  color: #a13232;
+}
+
+.profile-menu__item--danger:hover {
+  background: #fff4f4;
   color: #8f2d2d;
-}
-
-.header-logout-link i {
-  font-size: 1.12rem;
-  line-height: 1;
 }
 
 .notification-bell__badge {
@@ -5274,28 +5270,17 @@ a {
     text-overflow: ellipsis;
   }
 
-  .header-logout-link {
-    display: none;
-  }
-
-  .header-support-link {
-    display: none;
-  }
-
   .header-utility-link {
     display: none;
   }
 
-  .header-settings-link {
+  .notification-bell__button::after,
+  .header-account-link::after,
+  .header-utility-link::after {
     display: none;
   }
 
-  .notification-bell__button::after,
-  .header-support-link::after,
-  .header-settings-link::after,
-  .header-account-link::after,
-  .header-logout-link::after,
-  .header-utility-link::after {
+  .profile-menu__panel {
     display: none;
   }
 
@@ -5697,7 +5682,6 @@ a {
   }
 
   .notification-bell__button,
-  .header-support-link,
   .header-account-link,
   .nav-toggle {
     width: 38px;
