@@ -49,12 +49,5 @@ public class BuyerServiceImpl implements BuyerService {
         return buyerMapper.toDTO(buyer);
     }
 
-    @Override
-    public void deleteProfile(Long farmerId) {
-        Farmer buyer = farmerRepository.findById(farmerId).orElse(null);
-        if (buyer == null || !buyer.getRole().equals("BUYER")) {
-            throw new RuntimeException("Buyer not found");
-        }
-        farmerRepository.delete(buyer);
-    }
+    
 }
