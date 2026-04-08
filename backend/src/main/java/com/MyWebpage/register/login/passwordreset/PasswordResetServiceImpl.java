@@ -20,11 +20,17 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     private final EmailService emailService;
     private final OtpService otpService;
 
+    private void ensureAccountActive(Farmer farmer) {
+        if (!farmer.isActive()) {
+            throw new IllegalArgumentException("user not found");
+        }
+    }
+
     @Override
     public void sendOtp(String email) {
         Farmer farmer = farmerRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email not registered"));
-
+        ensureAccountActive(farmer);
         String otp = otpService.issueOtp(email, OtpPurpose.PASSWORD_RESET);
         emailService.sendPasswordResetOtpEmail(farmer, otp);
     }
@@ -44,6 +50,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         }
 
         Farmer farmer = farmerRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("Email not registered"));
+        ensureAccountActive(farmer);
         farmer.setPassword(passwordEncoder.encode(newPassword));
         farmerRepo.save(farmer);
 
