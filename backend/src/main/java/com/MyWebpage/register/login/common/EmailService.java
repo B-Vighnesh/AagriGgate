@@ -76,6 +76,11 @@ public class EmailService {
 
     public int sendRegistrationOtpEmail(String to, String firstName, String username) {
         int otp = generateOtp();
+        sendRegistrationOtpEmail(to, firstName, username, String.valueOf(otp));
+        return otp;
+    }
+
+    public void sendRegistrationOtpEmail(String to, String firstName, String username, String otp) {
         String displayName = buildDisplayName(firstName, username);
         String subject = "Complete Your AagriGgate Registration";
         String msg = "Hello " + displayName + ",\n\n" +
@@ -91,7 +96,6 @@ public class EmailService {
         message.setSubject(subject);
         message.setText(msg);
         mailSender.send(message);
-        return otp;
     }
 
     public void sendWelcomeEmail(Farmer farmer) {

@@ -63,6 +63,7 @@ import com.MyWebpage.register.login.crop.Crop;
 import jakarta.persistence.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -84,6 +85,8 @@ public class Farmer {
     private String aadharNo;
     private String password;
     private String role;
+    private Boolean active = true;
+    private LocalDateTime deletedAt;
 
     public String getRole() {
         return role;
@@ -91,6 +94,26 @@ public class Farmer {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public boolean isActive() {
+        return Boolean.TRUE.equals(active);
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 
     public String getCity() {

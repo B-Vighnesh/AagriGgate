@@ -1,7 +1,7 @@
 package com.MyWebpage.register.login.market.ingestion;
 
-import com.MyWebpage.register.login.market.Market;
-import com.MyWebpage.register.login.market.MarketRepository;
+import com.MyWebpage.register.login.market.mandi.Market;
+import com.MyWebpage.register.login.market.mandi.MarketRepository;
 import com.MyWebpage.register.login.market.analytics.MarketAnalyticsService;
 import com.MyWebpage.register.login.news.util.NewsTime;
 import com.fasterxml.jackson.databind.JsonNode;

@@ -148,6 +148,7 @@ const ROADMAP = [
   ['Multi-language', 'A more accessible experience for users across different regions.'],
   ['Location context', 'Better logistics support for sourcing and transport planning.'],
   ['Price negotiation', 'More structured bargaining and offer flows inside the platform.'],
+  ['Farmer Network', 'A public knowledge-sharing space where farmers can ask questions, share solutions, and learn from real field experience.'],
   ['Price prediction', 'Smart selling'],
   ['Weather alerts', 'Crop safety'],
   ['Demand heatmap', 'Demand insights'],

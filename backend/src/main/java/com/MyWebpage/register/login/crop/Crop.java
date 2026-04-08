@@ -4,6 +4,7 @@ import com.MyWebpage.register.login.farmer.Farmer;
 import jakarta.persistence.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
 
@@ -36,6 +37,8 @@ public class Crop {
     @JoinColumn(name = "farmer_id", nullable = false)
     private Farmer farmer;
     private String postDate;
+    private Boolean active = true;
+    private LocalDateTime deletedAt;
 
     public String getPostDate() {
         return postDate;
@@ -46,6 +49,26 @@ public class Crop {
     }
 
     public Crop() {}
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public boolean isActive() {
+        return Boolean.TRUE.equals(active);
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
 
     public Crop(String cropName, String cropType, String region, Double marketPrice, Double quantity, Farmer farmer) {
         this.cropName = cropName;

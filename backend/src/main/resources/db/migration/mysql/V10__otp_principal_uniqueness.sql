@@ -1,0 +1,3 @@
+-- No-op migration kept to preserve Flyway ordering.
+-- OTP token structure remains defined by V9__universal_otp.sql.
+-- No unique constraint is applied to (principal, purpose).

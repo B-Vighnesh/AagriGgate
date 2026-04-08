@@ -81,7 +81,7 @@ function PriceCard({ item, isSaved, deleteId, onSave, onDelete }) {
       {!isSaved ? (
         <Button variant="outline" className="full-width" onClick={() => onSave(item)}>Save</Button>
       ) : (
-        <Button variant="danger" className="full-width" onClick={() => onDelete(deleteId)}>Remove Saved</Button>
+        <Button variant="danger" className="full-width" onClick={() => onDelete(deleteId, 1)}>Remove Saved</Button>
       )}
     </Card>
   );
@@ -113,6 +113,7 @@ export default function Market() {
   const [showSaved, setShowSaved] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [removeAllStep, setRemoveAllStep] = useState(0);
+  const [pendingSavedDelete, setPendingSavedDelete] = useState({ id: null, step: 0 });
   const [marketPage, setMarketPage] = useState(0);
   const [hasMoreMarketData, setHasMoreMarketData] = useState(false);
   const [activeQuery, setActiveQuery] = useState(null);
@@ -429,9 +430,13 @@ export default function Market() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id, step = 2) => {
     if (!id) {
       showToast('Unable to identify saved item.', 'error');
+      return;
+    }
+    if (step === 1) {
+      setPendingSavedDelete({ id, step: 1 });
       return;
     }
     try {
@@ -451,6 +456,7 @@ export default function Market() {
         return next;
       });
       showToast('Removed from saved.', 'success');
+      setPendingSavedDelete({ id: null, step: 0 });
       if (showSaved) {
         fetchSavedData(0, false);
       }
@@ -730,6 +736,34 @@ export default function Market() {
         )}
       </div>
 
+      <Modal
+        isOpen={pendingSavedDelete.step === 1}
+        title="Remove Saved Record"
+        message="This saved market record will be removed from your account."
+        onClose={() => setPendingSavedDelete({ id: null, step: 0 })}
+        secondaryAction={{
+          label: 'Cancel',
+          onClick: () => setPendingSavedDelete({ id: null, step: 0 }),
+        }}
+        primaryAction={{
+          label: 'Continue',
+          onClick: () => setPendingSavedDelete((prev) => ({ ...prev, step: 2 })),
+        }}
+      />
+      <Modal
+        isOpen={pendingSavedDelete.step === 2}
+        title="Final Confirmation"
+        message="Please confirm once more. This saved market record will be deleted."
+        onClose={() => setPendingSavedDelete({ id: null, step: 0 })}
+        secondaryAction={{
+          label: 'Back',
+          onClick: () => setPendingSavedDelete((prev) => ({ ...prev, step: 1 })),
+        }}
+        primaryAction={{
+          label: 'Remove Saved',
+          onClick: () => handleDelete(pendingSavedDelete.id, 2),
+        }}
+      />
       <Modal
         isOpen={removeAllStep === 1}
         title="Remove All Saved Data"

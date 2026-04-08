@@ -4,6 +4,7 @@ import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.security.model.UserPrincipal;
 import com.MyWebpage.register.login.farmer.Farmer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -29,6 +30,10 @@ public class MyUserDetailsService implements UserDetailsService {
 
         Farmer farmer = farmerOptional
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail));
+
+        if (!farmer.isActive()) {
+            throw new DisabledException("Account not found");
+        }
 
         return new UserPrincipal(farmer);
     }
