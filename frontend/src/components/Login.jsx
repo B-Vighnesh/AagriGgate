@@ -21,6 +21,7 @@ export default function Login() {
   const [loginMode, setLoginMode] = useState('password');
   const [principal, setPrincipal] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
@@ -175,12 +176,16 @@ export default function Login() {
               <label htmlFor="password">Password</label>
               <input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Enter password"
                 required
               />
+              <label className="settings-checkbox">
+                <input type="checkbox" checked={showPassword} onChange={() => setShowPassword((prev) => !prev)} />
+                Show password
+              </label>
             </>
           ) : (
             <>

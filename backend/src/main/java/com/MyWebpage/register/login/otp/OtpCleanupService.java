@@ -11,17 +11,13 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class OtpCleanupService {
 
-    private final RegistrationOtpRepository registrationOtpRepository;
-    private final PasswordResetOtpRepository passwordResetOtpRepository;
-    private final LoginOtpRepository loginOtpRepository;
+    private final OtpTokenRepository otpTokenRepository;
 
-    // Periodically purge expired OTP rows so stale records do not accumulate.
-    @Scheduled(cron = "0 */15 * * * *")
+    // Universal OTP cleanup for registration, login, and password-reset tokens.
+    @Scheduled(cron = "${otp.cleanup-cron}")
     @Transactional
     public void cleanupExpiredOtps() {
         LocalDateTime now = LocalDateTime.now();
-        registrationOtpRepository.deleteByExpiryTimeBefore(now);
-        passwordResetOtpRepository.deleteByExpiryTimeBefore(now);
-        loginOtpRepository.deleteByExpiryTimeBefore(now);
+        otpTokenRepository.deleteByExpiresAtBefore(now);
     }
 }

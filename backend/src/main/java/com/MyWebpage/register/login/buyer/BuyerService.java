@@ -6,6 +6,5 @@ public interface BuyerService {
 
     BuyerResponseDTO updateProfile(Long farmerId, BuyerRequestDTO request);
 
-    void deleteProfile(Long farmerId);
 
 }

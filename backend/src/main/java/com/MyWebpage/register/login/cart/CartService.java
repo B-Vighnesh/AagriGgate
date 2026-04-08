@@ -8,4 +8,8 @@ public interface CartService {
     void removeFromCart(Long buyerId, Long cartId);
     Page<CartItemDTO> getCart(Long buyerId, String keyword, String type, String sortBy, int page, int size);
     CartCheckoutResponseDTO checkout(Long buyerId);
+
+    void removeFromCart(Long cropId);
+
+    void removeCartItemsForFarmerCrops(Long farmerId);
 }

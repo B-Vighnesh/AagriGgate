@@ -16,6 +16,9 @@ public interface CropService {
     Crop getCropEntityById(Long cropId);
     void deleteCropByIdV1(Long farmerId, Long cropId);
     void deleteCropByFarmerIdV1(Long farmerId);
+
+    void softDeleteCropByFarmerIdV1(Long farmerId);
+
     List<Crop> getCropsByNameV1(String cropName);
 
     // v2 methods (industry-standard DTO contract)

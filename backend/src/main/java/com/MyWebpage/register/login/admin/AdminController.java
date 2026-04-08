@@ -1,8 +1,6 @@
 package com.MyWebpage.register.login.admin;
 
 import com.MyWebpage.register.login.common.ApiResponse;
-import com.MyWebpage.register.login.enquiry.Enquiry;
-import com.MyWebpage.register.login.enquiry.EnquiryRequestDTO;
 import com.MyWebpage.register.login.news.dto.request.NewsRequest;
 import com.MyWebpage.register.login.news.dto.request.TrustedSourceRequest;
 import com.MyWebpage.register.login.news.dto.response.NewsResponse;
@@ -11,6 +9,7 @@ import com.MyWebpage.register.login.news.enums.NewsCategory;
 import com.MyWebpage.register.login.news.enums.NewsStatus;
 import com.MyWebpage.register.login.news.enums.NewsType;
 import com.MyWebpage.register.login.news.service.NewsService;
+import com.MyWebpage.register.login.support.dto.SupportRequestSummaryDTO;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -25,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -41,10 +42,8 @@ public class AdminController {
     }
 
     @GetMapping("/enquiries")
-    public ResponseEntity<Page<Enquiry>> getAllEnquiries(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(adminService.getAllEnquiries(page, size));
+    public ResponseEntity<ApiResponse<List<SupportRequestSummaryDTO>>> getAllEnquiries() {
+        return ResponseEntity.ok(ApiResponse.success("Support requests fetched", adminService.getAllSupportRequests()));
     }
 
     @PostMapping("/login")
@@ -57,14 +56,9 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/enquiry")
-    public ResponseEntity<String> createEnquiry(@Valid @RequestBody EnquiryRequestDTO enquiryRequestDTO) {
-        return adminService.createEnquiry(enquiryRequestDTO);
-    }
-
     @DeleteMapping("/enquiry/{id}")
-    public ResponseEntity<String> deleteEnquiry(@PathVariable Long id) {
-        return adminService.deleteEnquiry(id);
+    public ResponseEntity<ApiResponse<String>> deleteEnquiry(@PathVariable Long id) {
+        return adminService.deleteSupportRequest(id);
     }
 
     @PostMapping("/news")

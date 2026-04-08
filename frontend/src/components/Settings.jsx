@@ -6,6 +6,7 @@ import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { apiFetch } from '../lib/api';
 import { clearAuth, getFarmerId, getRole, getToken } from '../lib/auth';
+// import { deactivateAccount as requestDeactivateAccount } from '../api/authApi';
 
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 
@@ -23,8 +24,10 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteStep, setDeleteStep] = useState(1);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
+  // const [deleteMode, setDeleteMode] = useState('hard');
 
   const [toast, setToast] = useState({ message: '', type: 'info' });
 
@@ -85,15 +88,21 @@ export default function Settings() {
   const deleteAccount = async () => {
     setDeleteLoading(true);
     try {
-      const response = await apiFetch('/auth/delete-account', {
-        method: 'DELETE',
-        body: JSON.stringify({ currentPassword: deletePassword }),
-      });
-      if (response.status === 401) {
-        showToast('Incorrect password.', 'error');
-        return;
-      }
-      if (!response.ok) throw new Error('Failed to delete account.');
+      
+        const response = await apiFetch('/auth/delete-account', {
+          method: 'DELETE',
+          body: JSON.stringify({ currentPassword: deletePassword }),
+        });
+        if (!response.ok) {
+          let message = 'Failed to delete account.';
+          try {
+            const body = await response.json();
+            message = body?.message || message;
+          } catch {
+            // ignore parse errors
+          }
+          throw new Error(message);
+        }
       clearAuth();
       showToast('Account deleted.', 'success');
       setTimeout(() => navigate('/register'), 900);
@@ -102,6 +111,7 @@ export default function Settings() {
     } finally {
       setDeleteLoading(false);
       setShowDeleteModal(false);
+      setDeleteStep(1);
       setDeletePassword('');
     }
   };
@@ -224,7 +234,8 @@ export default function Settings() {
                   <p>Deleting your account is permanent and cannot be undone.</p>
                 </div>
               </div>
-              <Button variant="danger" onClick={() => setShowDeleteModal(true)}>Delete My Account</Button>
+               <Button variant="danger" onClick={() => { setDeleteStep(1); setShowDeleteModal(true); }}>Delete My Account</Button>
+              
             </Card>
           </div>
         </div>
@@ -233,18 +244,35 @@ export default function Settings() {
       {showDeleteModal && (
         <div className="confirm-overlay">
           <Card className="confirm-card">
-            <h3>Delete Account</h3>
-            <p>Enter current password to confirm permanent deletion.</p>
-            <input
-              type="password"
-              value={deletePassword}
-              onChange={(event) => setDeletePassword(event.target.value)}
-              placeholder="Current password"
-            />
-            <div className="confirm-actions">
-              <Button variant="danger" loading={deleteLoading} onClick={deleteAccount}>Delete</Button>
-              <Button variant="outline" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
-            </div>
+            {deleteStep === 1 ? (
+              <>
+                <h3>Delete Account</h3>
+                <p>
+                  This will remove your access and clear your saved personal data from the platform.
+                </p>
+                <div className="confirm-actions">
+                  <Button variant="outline" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+                  <Button variant="danger" onClick={() => setDeleteStep(2)}>Continue</Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3>Final Confirmation</h3>
+                <p>
+                  Enter current password to confirm account deletion.
+                </p>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(event) => setDeletePassword(event.target.value)}
+                  placeholder="Current password"
+                />
+                <div className="confirm-actions">
+                  <Button variant="outline" onClick={() => setDeleteStep(1)}>Back</Button>
+                  <Button variant="danger" loading={deleteLoading} onClick={deleteAccount}>Delete</Button>
+                </div>
+              </>
+            )}
           </Card>
         </div>
       )}

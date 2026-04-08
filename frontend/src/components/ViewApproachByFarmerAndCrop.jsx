@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
+import Modal from './Modal';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { apiFetch, requestJson } from '../lib/api';
@@ -28,6 +29,8 @@ export default function ViewApproachByFarmerAndCrop() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [actionLoading, setActionLoading] = useState({ approachId: null, type: null });
+  const [pendingDecision, setPendingDecision] = useState(null);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -95,12 +98,15 @@ export default function ViewApproachByFarmerAndCrop() {
       : `/seller/approach/reject/${approachId}`;
 
     try {
+      setActionLoading({ approachId, type: accept ? 'accept' : 'reject' });
       const response = await apiFetch(endpoint, { method: 'POST' });
       if (!response.ok) throw new Error('Action failed. Try again.');
       showToast(accept ? 'Request accepted.' : 'Request rejected.', accept ? 'success' : 'info');
-      loadApproaches();
+      await loadApproaches();
     } catch (requestError) {
       showToast(requestError.message || 'Unable to process request.', 'error');
+    } finally {
+      setActionLoading({ approachId: null, type: null });
     }
   };
 
@@ -159,6 +165,9 @@ export default function ViewApproachByFarmerAndCrop() {
             {approaches.map((approach) => {
               const status = (approach.status || 'pending').toLowerCase();
               const isPending = status === 'pending';
+              const isAccepting = actionLoading.approachId === approach.approachId && actionLoading.type === 'accept';
+              const isRejecting = actionLoading.approachId === approach.approachId && actionLoading.type === 'reject';
+              const rowBusy = actionLoading.approachId === approach.approachId;
 
               return (
                 <Card key={approach.approachId} className="approach-crop-card">
@@ -182,8 +191,23 @@ export default function ViewApproachByFarmerAndCrop() {
 
                     {isPending ? (
                       <>
-                        <Button size="sm" onClick={() => handleAction(approach.approachId, true)}>Accept</Button>
-                        <Button variant="danger" size="sm" onClick={() => handleAction(approach.approachId, false)}>Reject</Button>
+                        <Button
+                          size="sm"
+                          onClick={() => setPendingDecision({ approachId: approach.approachId, type: 'accept', step: 1 })}
+                          loading={isAccepting}
+                          disabled={rowBusy}
+                        >
+                          {isAccepting ? 'Accepting...' : 'Accept'}
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setPendingDecision({ approachId: approach.approachId, step: 1 })}
+                          loading={isRejecting}
+                          disabled={rowBusy}
+                        >
+                          {isRejecting ? 'Rejecting...' : 'Reject'}
+                        </Button>
                       </>
                     ) : (
                       <span className="approach-crop-done">Action completed</span>
@@ -217,6 +241,46 @@ export default function ViewApproachByFarmerAndCrop() {
           </div>
         ) : null}
       </div>
+
+      <Modal
+        isOpen={pendingDecision?.step === 1}
+        title={pendingDecision?.type === 'accept' ? 'Accept Request' : 'Reject Request'}
+        message={pendingDecision?.type === 'accept'
+          ? 'This buyer request will be accepted for the selected crop.'
+          : 'This buyer request will be rejected for the selected crop.'}
+        onClose={() => setPendingDecision(null)}
+        secondaryAction={{
+          label: 'Cancel',
+          onClick: () => setPendingDecision(null),
+        }}
+        primaryAction={{
+          label: 'Continue',
+          onClick: () => setPendingDecision((prev) => prev ? { ...prev, step: 2 } : prev),
+        }}
+      />
+      <Modal
+        isOpen={pendingDecision?.step === 2}
+        title="Final Confirmation"
+        message={pendingDecision?.type === 'accept'
+          ? 'Please confirm once more. This request will be marked as accepted.'
+          : 'Please confirm once more. This request will be marked as rejected.'}
+        onClose={() => setPendingDecision(null)}
+        secondaryAction={{
+          label: 'Back',
+          onClick: () => setPendingDecision((prev) => prev ? { ...prev, step: 1 } : prev),
+        }}
+        primaryAction={{
+          label: pendingDecision?.type === 'accept' ? 'Accept Request' : 'Reject Request',
+          onClick: async () => {
+            const approachId = pendingDecision?.approachId;
+            const accept = pendingDecision?.type === 'accept';
+            setPendingDecision(null);
+            if (approachId) {
+              await handleAction(approachId, accept);
+            }
+          },
+        }}
+      />
 
       <Toast message={toast.message} type={toast.type} />
     </section>
