@@ -22,4 +22,6 @@ public interface SavedNewsRepository extends JpaRepository<SavedNews, Long> {
     List<SavedNews> findAllByUserIdOrderByCreatedAtDesc(Long userId);
 
     List<SavedNews> findByUserIdAndNews_IdIn(Long userId, Collection<Long> newsIds);
+
+    long deleteByUserId(Long userId);
 }

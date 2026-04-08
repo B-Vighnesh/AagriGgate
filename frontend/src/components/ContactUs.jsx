@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
+import { getToken } from '../lib/auth';
 
 const CONTACT_ITEMS = [
   { title: 'Email', value: 'webappfarmer@gmail.com', href: 'mailto:support@aagriggate.in' },
@@ -10,9 +11,17 @@ const CONTACT_ITEMS = [
 ];
 
 export default function ContactUs() {
+  const navigate = useNavigate();
+  const token = getToken();
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (token) {
+      navigate('/enquiry', { replace: true });
+    }
+  }, [navigate, token]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -52,7 +61,7 @@ export default function ContactUs() {
               ))}
             </div>
             <p className="contact-note">
-              If you are logged in, you can also use the <Link to="/enquiry">Enquiry page</Link>.
+              If you are logged in, you can also use the <Link to="/enquiry">Support page</Link>.
             </p>
           </Card>
 

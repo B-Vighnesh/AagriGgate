@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -26,6 +26,9 @@ export default function ViewCrop() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const loadMoreRef = useRef(null);
 
   const getCardTone = (crop) => {
     if (crop.isUrgent) return 'urgent';
@@ -58,8 +61,17 @@ export default function ViewCrop() {
 
     let mounted = true;
     (async () => {
-      setLoading(true);
-      setError('');
+      const append = page > 0;
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+        setError('');
+        setCrops([]);
+        setTotalPages(0);
+        setTotalElements(0);
+        setHasMore(false);
+      }
       try {
         const params = new URLSearchParams({
           page: String(page),
@@ -89,9 +101,12 @@ export default function ViewCrop() {
         const data = await response.json();
         if (!mounted) return;
         const cropList = Array.isArray(data?.content) ? data.content : [];
-        setCrops(cropList);
-        setTotalPages(Number(data?.totalPages || 0));
+        const nextPage = Number(data?.number ?? page);
+        const nextTotalPages = Number(data?.totalPages || 0);
+        setCrops((prev) => (append ? [...prev, ...cropList] : cropList));
+        setTotalPages(nextTotalPages);
         setTotalElements(Number(data?.totalElements || cropList.length || 0));
+        setHasMore(Boolean(data?.last === false || nextPage + 1 < nextTotalPages));
 
         cropList.forEach(async (crop) => {
           try {
@@ -107,7 +122,13 @@ export default function ViewCrop() {
       } catch (err) {
         if (mounted) setError(err.message || 'Server busy. Try again.');
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          if (append) {
+            setLoadingMore(false);
+          } else {
+            setLoading(false);
+          }
+        }
       }
     })();
 
@@ -118,6 +139,25 @@ export default function ViewCrop() {
       });
     };
   }, [page, token, farmerId, role, navigate, appliedQuery, sortBy, listingFilter]);
+
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasMore || loading || loadingMore) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (!entry?.isIntersecting) {
+        return;
+      }
+      setPage((prev) => prev + 1);
+    }, {
+      rootMargin: '200px 0px',
+    });
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore]);
 
   if (loading) {
     return (
@@ -147,7 +187,7 @@ export default function ViewCrop() {
           <div>
             <h1>My Crops Dashboard</h1>
             <p>
-              Showing {crops.length} crop{crops.length !== 1 ? 's' : ''} on this page
+              Showing {crops.length} crop{crops.length !== 1 ? 's' : ''}
               {totalElements ? ` | ${totalElements} total` : ''}
             </p>
           </div>
@@ -231,26 +271,19 @@ export default function ViewCrop() {
           </div>
         )}
 
-        {!loading && !error && totalPages > 1 && (
-          <div className="view-all-pagination">
-            <Button
-              variant="outline"
-              onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
-              disabled={page === 0}
-            >
-              Previous
-            </Button>
-            <span className="view-all-pagination__info">
-              Page {page + 1} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
-              disabled={page >= totalPages - 1}
-            >
-              Next
-            </Button>
-          </div>
+        {!loading && !error && crops.length > 0 && (
+          <>
+            {hasMore ? <div ref={loadMoreRef} style={{ height: '1px' }} /> : null}
+            {loadingMore ? (
+              <div className="view-all-loading view-all-loading--more">
+                <span className="ui-spinner" />
+                <span>Loading more listings...</span>
+              </div>
+            ) : null}
+            {!hasMore && totalPages > 1 ? (
+              <p className="view-all-pagination__info">You have reached the end of your listings.</p>
+            ) : null}
+          </>
         )}
       </div>
     </section>

@@ -33,7 +33,7 @@ spring:
           starttls:
             enable: true
 
-logging:
-  level:
-    org.springframework: DEBUG
-    com.MyWebpage: DEBUG
+#logging:
+#  level:
+#    org.springframework: DEBUG
+#    com.MyWebpage: DEBUG

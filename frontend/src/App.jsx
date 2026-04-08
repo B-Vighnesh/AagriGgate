@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import Home from './components/Home';
 import Account from './components/Account';
 import Market from './components/Market';
+import MarketAnalytics from './components/MarketAnalytics';
 import Weather from './components/Weather';
 import Login from './components/Login';
 import Logout from './components/Logout';
@@ -68,6 +69,7 @@ function AppRoutes() {
             <Route path="/" element={<Home />} />
             <Route path="/account" element={<Account />} />
             <Route path="/market" element={<Market />} />
+            <Route path="/market/analytics" element={<MarketAnalytics />} />
             <Route path="/weather" element={<Weather />} />
             <Route path="/trade" element={<Trade />} />
             <Route path="/login" element={<Login />} />

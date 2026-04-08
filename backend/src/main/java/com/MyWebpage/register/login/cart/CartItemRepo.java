@@ -3,6 +3,7 @@ package com.MyWebpage.register.login.cart;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -39,6 +40,9 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
                     FROM CartItem ci
                     JOIN Crop c ON c.cropID = ci.cropId
                     WHERE ci.buyerId = :buyerId
+                      AND c.active = true
+                      AND c.deletedAt IS NULL
+                      AND c.farmer.active = true
                       AND (:keyword IS NULL
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :keyword, '%'))
@@ -60,6 +64,9 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
                     FROM CartItem ci
                     JOIN Crop c ON c.cropID = ci.cropId
                     WHERE ci.buyerId = :buyerId
+                      AND c.active = true
+                      AND c.deletedAt IS NULL
+                      AND c.farmer.active = true
                       AND (:keyword IS NULL
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%'))
                            OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :keyword, '%'))
@@ -79,4 +86,19 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
             @Param("sortBy") String sortBy,
             Pageable pageable
     );
+
+    long deleteByBuyerId(Long buyerId);
+
+    long deleteByCropId(Long cropId);
+
+    @Modifying
+    @Query("""
+            DELETE FROM CartItem ci
+            WHERE ci.cropId IN (
+                SELECT c.cropID
+                FROM Crop c
+                WHERE c.farmer.farmerId = :farmerId
+            )
+            """)
+    int deleteByFarmerCropOwnerId(@Param("farmerId") Long farmerId);
 }

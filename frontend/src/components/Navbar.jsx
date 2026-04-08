@@ -12,6 +12,7 @@ import {
   markAsRead,
 } from '../lib/notificationApi';
 
+<<<<<<< HEAD
 function navByRole(role, loggedIn) {
   const base = [{ label: 'Home', to: '/' }];
   const signedInItems = loggedIn ? [{ label: 'News', to: '/news' }] : [];
@@ -28,10 +29,50 @@ function navByRole(role, loggedIn) {
       { label: 'My Crops', to: '/view-crop' },
       { label: 'Requests', to: '/view-approach' },
       { label: 'Account', to: '/account' },
+=======
+function navByRole(role) {
+  if (!role) {
+    return [
+      { type: 'link', label: 'Home', to: '/' },
+      { type: 'link', label: 'Login', to: '/login' },
+      { type: 'link', label: 'Register', to: '/register' },
+    ];
+  }
+
+  const shared = [
+    { type: 'link', label: 'Home', to: '/' },
+    { type: 'link', label: 'Marketplace', to: '/view-all-crops' },
+    { type: 'link', label: 'Market Intelligence', to: '/market' },
+  ];
+
+  if (role === 'farmer') {
+    return [
+      ...shared,
+      {
+        type: 'dropdown',
+        label: 'Crops',
+        key: 'crops',
+        children: [
+          { label: 'Add Crops', to: '/add-crop' },
+          { label: 'My Crops', to: '/view-crop' },
+        ],
+      },
+      { type: 'link', label: 'Requests', to: '/view-approach' },
+      {
+        type: 'dropdown',
+        label: 'Insights',
+        key: 'insights',
+        children: [
+          { label: 'Weather', to: '/weather' },
+          { label: 'News', to: '/news' },
+        ],
+      },
+>>>>>>> 32ac4143fa5f9fbb7d91329876aef6e7db27d72c
     ];
   }
 
   return [
+<<<<<<< HEAD
     ...base,
     ...signedInItems,
     { label: 'Browse Crops', to: '/view-all-crops' },
@@ -39,6 +80,19 @@ function navByRole(role, loggedIn) {
     { label: 'Cart', to: '/cart' },
     { label: 'My Requests', to: '/view-approaches-user' },
     { label: 'Account', to: '/account' },
+=======
+    { type: 'link', label: 'Home', to: '/' },
+    { type: 'link', label: 'Marketplace', to: '/view-all-crops' },
+    { type: 'link', label: 'My Requests', to: '/view-approaches-user' },
+    {
+      type: 'dropdown',
+      label: 'Insights',
+      key: 'insights',
+      children: [
+        { label: 'Weather', to: '/weather' },
+      ],
+    },
+>>>>>>> 32ac4143fa5f9fbb7d91329876aef6e7db27d72c
   ];
 }
 
@@ -53,8 +107,16 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [openDropdownKey, setOpenDropdownKey] = useState('');
+  const [hoverLockedDropdownKey, setHoverLockedDropdownKey] = useState('');
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const drawerRef = useRef(null);
+  const mobileNavRef = useRef(null);
+  const toggleRef = useRef(null);
+  const navRef = useRef(null);
+  const profileMenuRef = useRef(null);
+  const dropdownCloseTimeoutRef = useRef(null);
 
   const showToast = useCallback((message, type = 'info') => {
     setToast({ message, type });
@@ -78,7 +140,16 @@ export default function Navbar() {
   useEffect(() => {
     setMobileOpen(false);
     setDrawerOpen(false);
+    setOpenDropdownKey('');
+    setHoverLockedDropdownKey('');
+    setProfileMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => () => {
+    if (dropdownCloseTimeoutRef.current) {
+      window.clearTimeout(dropdownCloseTimeoutRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     if (!loggedIn) {
@@ -139,7 +210,7 @@ export default function Navbar() {
     return () => {
       active = false;
     };
-  }, [drawerOpen, loggedIn]);
+  }, [drawerOpen, loggedIn, showToast]);
 
   useEffect(() => {
     if (!drawerOpen) {
@@ -158,8 +229,69 @@ export default function Navbar() {
     };
   }, [drawerOpen]);
 
+<<<<<<< HEAD
   const items = navByRole(role, loggedIn);
+=======
+  useEffect(() => {
+    if (!profileMenuOpen) {
+      return undefined;
+    }
+
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [profileMenuOpen]);
+
+  useEffect(() => {
+    if (!mobileOpen) {
+      return undefined;
+    }
+
+    const handleOutsideMobileNav = (event) => {
+      const clickedInsideNav = mobileNavRef.current?.contains(event.target);
+      const clickedToggle = toggleRef.current?.contains(event.target);
+
+      if (!clickedInsideNav && !clickedToggle) {
+        setMobileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideMobileNav);
+    document.addEventListener('touchstart', handleOutsideMobileNav);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideMobileNav);
+      document.removeEventListener('touchstart', handleOutsideMobileNav);
+    };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (!openDropdownKey || mobileOpen) {
+      return undefined;
+    }
+
+    const handleOutsideDesktopDropdown = (event) => {
+      if (navRef.current && !navRef.current.contains(event.target)) {
+        setOpenDropdownKey('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideDesktopDropdown);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideDesktopDropdown);
+    };
+  }, [openDropdownKey, mobileOpen]);
+
+  const items = navByRole(role);
+>>>>>>> 32ac4143fa5f9fbb7d91329876aef6e7db27d72c
   const isActive = (to) => (to === '/' ? location.pathname === '/' : location.pathname.startsWith(to));
+  const isDropdownActive = (item) => item.children?.some((child) => isActive(child.to));
   const relativeTimeFormatter = useMemo(
     () => new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
     []
@@ -198,6 +330,39 @@ export default function Navbar() {
     }
   };
 
+  const toggleDropdown = (key) => {
+    setOpenDropdownKey((current) => {
+      if (current === key) {
+        setHoverLockedDropdownKey(key);
+        return '';
+      }
+
+      setHoverLockedDropdownKey('');
+      return key;
+    });
+  };
+
+  const clearDropdownCloseTimeout = () => {
+    if (dropdownCloseTimeoutRef.current) {
+      window.clearTimeout(dropdownCloseTimeoutRef.current);
+      dropdownCloseTimeoutRef.current = null;
+    }
+  };
+
+  const scheduleDropdownClose = () => {
+    clearDropdownCloseTimeout();
+    dropdownCloseTimeoutRef.current = window.setTimeout(() => {
+      setOpenDropdownKey('');
+      setHoverLockedDropdownKey('');
+      dropdownCloseTimeoutRef.current = null;
+    }, 1000);
+  };
+
+  const handleAccountButtonClick = () => {
+    setMobileOpen(false);
+    setProfileMenuOpen((prev) => !prev);
+  };
+
   return (
     <header className="site-header">
       <div className="site-header__inner ag-container">
@@ -207,17 +372,70 @@ export default function Navbar() {
         </Link>
 
         <div className="site-header__actions">
-          <nav className={`site-nav ${mobileOpen ? 'site-nav--open' : ''}`}>
-            {items.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileOpen(false)}
-                className={`site-nav__link ${isActive(item.to) ? 'site-nav__link--active' : ''}`}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav ref={(node) => { navRef.current = node; mobileNavRef.current = node; }} className={`site-nav ${mobileOpen ? 'site-nav--open' : ''}`}>
+              {items.map((item) => {
+                if (item.type === 'dropdown') {
+                  const isOpen = openDropdownKey === item.key;
+                  const active = isDropdownActive(item);
+                  return (
+                    <div
+                      key={item.key}
+                      className={`site-nav__dropdown ${isOpen ? 'site-nav__dropdown--open' : ''}`}
+                    onMouseEnter={() => {
+                      clearDropdownCloseTimeout();
+                      if (!mobileOpen && hoverLockedDropdownKey !== item.key) {
+                        setOpenDropdownKey(item.key);
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      if (!mobileOpen) {
+                        scheduleDropdownClose();
+                      }
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className={`site-nav__link site-nav__trigger ${active ? 'site-nav__link--active' : ''}`}
+                      onClick={() => {
+                        toggleDropdown(item.key);
+                      }}
+                    >
+                      <span>{item.label}</span>
+                      <i className="fa-solid fa-chevron-down" aria-hidden="true" />
+                    </button>
+                    <div className="site-nav__menu">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.to}
+                          to={child.to}
+                          onClick={() => {
+                            setMobileOpen(false);
+                            setOpenDropdownKey('');
+                          }}
+                          className={`site-nav__submenu-link ${isActive(child.to) ? 'site-nav__submenu-link--active' : ''}`}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => {
+                    setMobileOpen(false);
+                    setOpenDropdownKey('');
+                  }}
+                  className={`site-nav__link ${isActive(item.to) ? 'site-nav__link--active' : ''}`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           {loggedIn ? (
@@ -226,6 +444,7 @@ export default function Navbar() {
                 type="button"
                 className={`notification-bell__button ${drawerOpen ? 'notification-bell__button--active' : ''}`}
                 aria-label="Open notifications"
+                data-tooltip="Notifications"
                 aria-expanded={drawerOpen}
                 onClick={() => setDrawerOpen((prev) => !prev)}
               >
@@ -299,7 +518,63 @@ export default function Navbar() {
             </div>
           ) : null}
 
+          {loggedIn ? (
+            <div className="profile-menu" ref={profileMenuRef}>
+              <button
+                type="button"
+                className={`header-account-link ${profileMenuOpen ? 'header-account-link--active' : ''}`}
+                aria-label="Account"
+                data-tooltip="Account"
+                aria-expanded={profileMenuOpen}
+                onClick={handleAccountButtonClick}
+              >
+                <i className="fa-regular fa-user" aria-hidden="true" />
+              </button>
+
+              {profileMenuOpen ? (
+                <div className="profile-menu__panel">
+                  <Link
+                    to="/account"
+                    className={`profile-menu__item ${isActive('/account') ? 'profile-menu__item--active' : ''}`}
+                    onClick={() => setProfileMenuOpen(false)}
+                  >
+                    <i className="fa-regular fa-user" aria-hidden="true" />
+                    <span>Profile</span>
+                  </Link>
+                  <Link
+                    to="/settings"
+                    className={`profile-menu__item ${isActive('/settings') ? 'profile-menu__item--active' : ''}`}
+                    onClick={() => setProfileMenuOpen(false)}
+                  >
+                    <i className="fa-solid fa-gear" aria-hidden="true" />
+                    <span>Account Settings</span>
+                  </Link>
+                  <Link
+                    to="/enquiry"
+                    className={`profile-menu__item ${isActive('/enquiry') ? 'profile-menu__item--active' : ''}`}
+                    onClick={() => setProfileMenuOpen(false)}
+                  >
+                    <i className="fa-regular fa-circle-question" aria-hidden="true" />
+                    <span>Help &amp; Support</span>
+                  </Link>
+                  <button
+                    type="button"
+                    className="profile-menu__item profile-menu__item--danger"
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      navigate('/logout');
+                    }}
+                  >
+                    <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           <button
+            ref={toggleRef}
             type="button"
             className="nav-toggle"
             aria-label="Toggle navigation"

@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class FarmerRequestDTO {
-    @NotBlank
     private String username;
     @NotBlank
     @Size(min = 2, max = 50)
@@ -26,6 +25,8 @@ public class FarmerRequestDTO {
     private String district;
 
     private String dob;
+
+    private String aadharNo;
 
     public String getDob() {
         return dob;
@@ -57,4 +58,12 @@ public class FarmerRequestDTO {
     public void setState(String state) { this.state = state; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getAadharNo() {
+        return aadharNo;
+    }
+
+    public void setAadharNo(String aadharNo) {
+        this.aadharNo = aadharNo;
+    }
 }

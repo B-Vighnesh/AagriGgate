@@ -6,7 +6,13 @@ import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
-import { deleteAllSavedMarketData, deleteSavedMarketData, getMarketPrice, getSavedMarketData, saveMarketData } from '../api/marketApi';
+import {
+  deleteAllSavedMarketData,
+  deleteSavedMarketData,
+  getMarketPrice,
+  getSavedMarketData,
+  saveMarketData,
+} from '../api/marketApi';
 import commodities from './commodities';
 import statesAndDistricts from './statesAndDistricts';
 
@@ -75,7 +81,7 @@ function PriceCard({ item, isSaved, deleteId, onSave, onDelete }) {
       {!isSaved ? (
         <Button variant="outline" className="full-width" onClick={() => onSave(item)}>Save</Button>
       ) : (
-        <Button variant="danger" className="full-width" onClick={() => onDelete(deleteId)}>Remove Saved</Button>
+        <Button variant="danger" className="full-width" onClick={() => onDelete(deleteId, 1)}>Remove Saved</Button>
       )}
     </Card>
   );
@@ -94,8 +100,8 @@ export default function Market() {
   const [commodity, setCommodity] = useState('Tomato');
   const [fromDate, setFromDate] = useState(defaultDate);
   const [toDate, setToDate] = useState(defaultDate);
-  const [state, setState] = useState('');
-  const [district, setDistrict] = useState('');
+  const [state, setState] = useState('Karnataka');
+  const [district, setDistrict] = useState('Bangalore');
 
   const [marketData, setMarketData] = useState([]);
   const [savedData, setSavedData] = useState([]);
@@ -107,6 +113,7 @@ export default function Market() {
   const [showSaved, setShowSaved] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [removeAllStep, setRemoveAllStep] = useState(0);
+  const [pendingSavedDelete, setPendingSavedDelete] = useState({ id: null, step: 0 });
   const [marketPage, setMarketPage] = useState(0);
   const [hasMoreMarketData, setHasMoreMarketData] = useState(false);
   const [activeQuery, setActiveQuery] = useState(null);
@@ -217,7 +224,6 @@ export default function Market() {
     const rangeDays = diffInDays(fromDate, toDate);
     if (rangeDays > MAX_RANGE_DAYS - 1) {
       queryToDate = addDays(queryFromDate, MAX_RANGE_DAYS - 1);
-      setToDate(queryToDate);
       const message = 'Date range is limited to 7 days from the start date. Showing the first allowed 7-day window.';
       setError(message);
       showToast(message, 'info', 10000);
@@ -269,6 +275,24 @@ export default function Market() {
       }
     }
   }, [state, district, commodity, fromDate, toDate]);
+
+  const handleRunAnalysis = useCallback(async () => {
+    if (!activeQuery) {
+      showToast('Search market prices first, then run analysis.', 'info');
+      return;
+    }
+    const params = new URLSearchParams({
+      commodity: activeQuery.crop,
+      state: activeQuery.state,
+      fromDate: activeQuery.fromDate,
+      toDate: activeQuery.toDate,
+      range: '1M',
+    });
+    if (activeQuery.district) {
+      params.set('district', activeQuery.district);
+    }
+    navigate(`/market/analytics?${params.toString()}`);
+  }, [activeQuery, navigate]);
 
   useEffect(() => {
     if (!role) {
@@ -406,9 +430,13 @@ export default function Market() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id, step = 2) => {
     if (!id) {
       showToast('Unable to identify saved item.', 'error');
+      return;
+    }
+    if (step === 1) {
+      setPendingSavedDelete({ id, step: 1 });
       return;
     }
     try {
@@ -428,6 +456,7 @@ export default function Market() {
         return next;
       });
       showToast('Removed from saved.', 'success');
+      setPendingSavedDelete({ id: null, step: 0 });
       if (showSaved) {
         fetchSavedData(0, false);
       }
@@ -460,7 +489,7 @@ export default function Market() {
       <div className="ag-container">
         <header className="market-header">
           <h1>{showSaved ? 'Saved Market Data' : 'Market Prices'}</h1>
-          <p>{showSaved ? 'Your saved market records with filters and scroll pagination.' : 'Market prices from stored mandi data with up to 7 days of history.'}</p>
+          <p>{showSaved ? 'Your saved market records with filters and scroll pagination.' : 'Track recent mandi prices across districts and compare how markets are moving.'}</p>
         </header>
 
         {!showSaved ? (
@@ -559,6 +588,18 @@ export default function Market() {
                   tone="warning"
                 />
               </div>
+            )}
+
+            {!loading && activeQuery && (
+              <Card className="market-analysis-prompt">
+                <div>
+                  <h3>Ready for deeper insights?</h3>
+                  <p>We already fetched the market records. Run AI-style analysis to reveal trend lines, district heatmap, seasonal movement, and supply-price patterns.</p>
+                </div>
+                <Button onClick={handleRunAnalysis}>
+                  Do Analysis
+                </Button>
+              </Card>
             )}
 
             {loading && (
@@ -695,6 +736,34 @@ export default function Market() {
         )}
       </div>
 
+      <Modal
+        isOpen={pendingSavedDelete.step === 1}
+        title="Remove Saved Record"
+        message="This saved market record will be removed from your account."
+        onClose={() => setPendingSavedDelete({ id: null, step: 0 })}
+        secondaryAction={{
+          label: 'Cancel',
+          onClick: () => setPendingSavedDelete({ id: null, step: 0 }),
+        }}
+        primaryAction={{
+          label: 'Continue',
+          onClick: () => setPendingSavedDelete((prev) => ({ ...prev, step: 2 })),
+        }}
+      />
+      <Modal
+        isOpen={pendingSavedDelete.step === 2}
+        title="Final Confirmation"
+        message="Please confirm once more. This saved market record will be deleted."
+        onClose={() => setPendingSavedDelete({ id: null, step: 0 })}
+        secondaryAction={{
+          label: 'Back',
+          onClick: () => setPendingSavedDelete((prev) => ({ ...prev, step: 1 })),
+        }}
+        primaryAction={{
+          label: 'Remove Saved',
+          onClick: () => handleDelete(pendingSavedDelete.id, 2),
+        }}
+      />
       <Modal
         isOpen={removeAllStep === 1}
         title="Remove All Saved Data"

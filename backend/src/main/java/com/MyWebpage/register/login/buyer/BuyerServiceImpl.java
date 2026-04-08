@@ -1,5 +1,6 @@
 package com.MyWebpage.register.login.buyer;
 
+import com.MyWebpage.register.login.common.ProfileUpdateValidator;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
 import org.springframework.stereotype.Service;
@@ -34,34 +35,19 @@ public class BuyerServiceImpl implements BuyerService {
         }
 
         if (request.getUsername() != null) {
-            buyer.setUsername(request.getUsername());
+            buyer.setUsername(ProfileUpdateValidator.normalizeOptionalUsername(request.getUsername()));
         }
-        if (request.getFirstName() != null) {
-            buyer.setFirstName(request.getFirstName());
-        }
-        if (request.getLastName() != null) {
-            buyer.setLastName(request.getLastName());
-        }
-        if (request.getPhoneNo() != null) {
-            buyer.setPhoneNo(request.getPhoneNo());
-        }
-        if (request.getState() != null) {
-            buyer.setState(request.getState());
-        }
-        if (request.getDistrict() != null) {
-            buyer.setDistrict(request.getDistrict());
-        }
+        buyer.setFirstName(ProfileUpdateValidator.requirePersonName(request.getFirstName(), "firstName"));
+        buyer.setLastName(ProfileUpdateValidator.normalizeOptionalPersonName(request.getLastName(), "lastName"));
+        buyer.setPhoneNo(ProfileUpdateValidator.requirePhone(request.getPhoneNo()));
+        buyer.setState(ProfileUpdateValidator.requireState(request.getState()));
+        buyer.setDistrict(ProfileUpdateValidator.requireDistrict(request.getDistrict()));
+        buyer.setDob(ProfileUpdateValidator.requireAdultDob(request.getDob()));
+        buyer.setAadharNo(ProfileUpdateValidator.requireAadhar(request.getAadharNo()));
 
         farmerRepository.save(buyer);
         return buyerMapper.toDTO(buyer);
     }
 
-    @Override
-    public void deleteProfile(Long farmerId) {
-        Farmer buyer = farmerRepository.findById(farmerId).orElse(null);
-        if (buyer == null || !buyer.getRole().equals("BUYER")) {
-            throw new RuntimeException("Buyer not found");
-        }
-        farmerRepository.delete(buyer);
-    }
+
 }
