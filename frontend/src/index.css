@@ -788,9 +788,17 @@ a {
   color: var(--color-primary-dark);
 }
 
+.section-title--light {
+  color: #ffffff;
+}
+
 .section-subtitle {
   margin: 6px 0 20px;
   color: var(--color-muted);
+}
+
+.section-subtitle--light {
+  color: #e8fff3;
 }
 
 .section-kicker {

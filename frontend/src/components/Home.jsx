@@ -178,8 +178,8 @@ function SectionTitle({ id, kicker, title, subtitle, light = false }) {
   return (
     <div id={id}>
       <p className={`section-kicker ${light ? 'section-kicker--light' : ''}`}>{kicker}</p>
-      <h2 className="section-title">{title}</h2>
-      {subtitle ? <p className="section-subtitle">{subtitle}</p> : null}
+      <h2 className={`section-title ${light ? 'section-title--light' : ''}`}>{title}</h2>
+      {subtitle ? <p className={`section-subtitle ${light ? 'section-subtitle--light' : ''}`}>{subtitle}</p> : null}
     </div>
   );
 }
