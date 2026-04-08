@@ -64,11 +64,12 @@ public class SecurityConfig {
                                 "/api/v1/support/contact"
                         ).permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/support/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/news/saved", "/api/v1/news/saved/**").hasAnyRole("SELLER", "BUYER")
+                        .requestMatchers("/api/v1/support/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/news/**").hasAnyRole("BUYER", "SELLER")
                         // TODO: Report feature temporarily disabled — to be re-enabled in future release.
                         // .requestMatchers(HttpMethod.POST, "/api/v1/news/*/report").hasAnyRole("BUYER", "SELLER")
+                        .requestMatchers("/api/v1/support/request").hasAnyRole("BUYER", "SELLER")
                         .requestMatchers("/api/v1/notifications/**").hasAnyRole("BUYER", "SELLER")
                         .requestMatchers("/api/v1/buyers/me", "/api/v1/buyers/*").hasAnyRole("SELLER", "BUYER")
                         .requestMatchers("/api/v1/buyers/**", "/api/v1/buyer/approach/**", "/api/v1/users/favorites/**", "/api/v1/cart/**", "/api/v1/crops/*/favorite").hasRole("BUYER")
