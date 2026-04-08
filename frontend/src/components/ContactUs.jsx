@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
+import { requestJson } from '../lib/api';
 import { getToken } from '../lib/auth';
 
 const CONTACT_ITEMS = [
@@ -13,9 +14,11 @@ const CONTACT_ITEMS = [
 export default function ContactUs() {
   const navigate = useNavigate();
   const token = getToken();
-  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [form, setForm] = useState({ name: '', email: '', message: '', image: null });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     if (token) {
@@ -24,17 +27,78 @@ export default function ContactUs() {
   }, [navigate, token]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value, files, type } = event.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === 'file' ? (files?.[0] || null) : value,
+    }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+    setSubmitError('');
   };
 
-  const handleSubmit = (event) => {
+  const validateForm = () => {
+    const nextErrors = {};
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!form.name.trim()) {
+      nextErrors.name = 'Name is required.';
+    }
+    if (!form.email.trim()) {
+      nextErrors.email = 'Email is required.';
+    } else if (!emailPattern.test(form.email.trim())) {
+      nextErrors.email = 'Enter a valid email address.';
+    }
+    if (!form.message.trim()) {
+      nextErrors.message = 'Message is required.';
+    }
+
+    return nextErrors;
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+    setSubmitError('');
+    setErrors({});
+
+    const formData = new FormData();
+    formData.append('name', form.name.trim());
+    formData.append('email', form.email.trim());
+    formData.append('message', form.message.trim());
+    if (form.image) {
+      formData.append('image', form.image);
+    }
+
+    try {
+      await requestJson('/support/contact', {
+        method: 'POST',
+        body: formData,
+      });
       setSubmitted(true);
+      setForm({ name: '', email: '', message: '', image: null });
+    } catch (error) {
+      const apiErrors = error?.details?.data;
+      if (apiErrors && typeof apiErrors === 'object') {
+        setErrors(apiErrors);
+      }
+      if (error?.status === 429) {
+        setSubmitError('You have reached the maximum of 5 requests. Please register to submit more.');
+      } else {
+        setSubmitError(error?.message || 'Unable to send your message right now.');
+      }
+    } finally {
       setLoading(false);
-    }, 700);
+    }
   };
 
   return (
@@ -77,6 +141,7 @@ export default function ContactUs() {
                   placeholder="Ravi Kumar"
                   required
                 />
+                {errors.name ? <p role="alert">{errors.name}</p> : null}
 
                 <label htmlFor="email">Email Address</label>
                 <input
@@ -88,6 +153,7 @@ export default function ContactUs() {
                   placeholder="you@example.com"
                   required
                 />
+                {errors.email ? <p role="alert">{errors.email}</p> : null}
 
                 <label htmlFor="message">Message</label>
                 <textarea
@@ -99,6 +165,18 @@ export default function ContactUs() {
                   rows={5}
                   required
                 />
+                {errors.message ? <p role="alert">{errors.message}</p> : null}
+
+                <label htmlFor="image">Image Upload (Optional)</label>
+                <input
+                  id="image"
+                  name="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleChange}
+                />
+
+                {submitError ? <p role="alert">{submitError}</p> : null}
 
                 <Button type="submit" loading={loading}>
                   {loading ? 'Sending...' : 'Send Message'}
