@@ -61,7 +61,7 @@ function navByRole(role) {
       label: 'Insights',
       key: 'insights',
       children: [
-        { label: 'Weather', to: '/weather' },
+        { label: 'News', to: '/news' },
       ],
     },
   ];
