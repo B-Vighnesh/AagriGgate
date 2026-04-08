@@ -23,6 +23,19 @@ const PHONE_REGEX = /^[6-9][0-9]{9}$/;
 const AADHAR_REGEX = /^\d{12}$/;
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 
+const ROLE_OPTIONS = [
+  {
+    value: 'farmer',
+    title: 'Farmer',
+    note: 'List crops, manage requests, and track market intelligence.',
+  },
+  {
+    value: 'buyer',
+    title: 'Buyer',
+    note: 'Browse listings, connect with farmers, and manage purchase requests.',
+  },
+];
+
 export default function Register() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
@@ -173,21 +186,29 @@ export default function Register() {
 
         {step === 0 && (
           <form className="form" onSubmit={sendOtp}>
-            <div className="segmented">
-              <button
-                type="button"
-                className={role === 'farmer' ? 'segmented__item segmented__item--active' : 'segmented__item'}
-                onClick={() => setRole('farmer')}
-              >
-                Farmer
-              </button>
-              <button
-                type="button"
-                className={role === 'buyer' ? 'segmented__item segmented__item--active' : 'segmented__item'}
-                onClick={() => setRole('buyer')}
-              >
-                Buyer
-              </button>
+            <div className="register-role-block">
+              <div className="register-role-head">
+                <h2>Choose Your Role</h2>
+                <p>Select the experience that matches how you will use AagriGgate.</p>
+              </div>
+
+              <div className="register-role-grid">
+                {ROLE_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={role === option.value ? 'register-role-card register-role-card--active' : 'register-role-card'}
+                    onClick={() => setRole(option.value)}
+                    aria-pressed={role === option.value}
+                  >
+                    <span className="register-role-card__marker">
+                      {role === option.value ? 'Selected' : 'Choose'}
+                    </span>
+                    <strong>{option.title}</strong>
+                    <span>{option.note}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <label>First Name</label>

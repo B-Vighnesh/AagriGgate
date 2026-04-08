@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import Modal from './Modal';
@@ -7,8 +7,10 @@ import ValidateToken from './ValidateToken';
 import { apiFetch } from '../lib/api';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
 
-export default function DeleteCrop({ cropId, onClose }) {
+export default function DeleteCrop({ cropId: cropIdProp, onClose }) {
   const navigate = useNavigate();
+  const { cropId: cropIdParam } = useParams();
+  const cropId = cropIdProp || cropIdParam;
   const farmerId = getFarmerId();
   const token = getToken();
   const role = getRole();
@@ -16,7 +18,19 @@ export default function DeleteCrop({ cropId, onClose }) {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
-  const [confirmStep, setConfirmStep] = useState(0);
+  const [confirmStep, setConfirmStep] = useState(1);
+
+  useEffect(() => {
+    setConfirmStep(1);
+  }, [cropId]);
+
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+      return;
+    }
+    navigate(-1);
+  };
 
   const handleDelete = async () => {
     setLoading(true);
@@ -31,6 +45,7 @@ export default function DeleteCrop({ cropId, onClose }) {
       setDone(true);
     } catch (deleteError) {
       setError(deleteError.message || 'Server busy. Please try again.');
+      setConfirmStep(1);
     } finally {
       setLoading(false);
     }
@@ -50,14 +65,25 @@ export default function DeleteCrop({ cropId, onClose }) {
         </Card>
       ) : null}
 
+      {!done && error ? (
+        <Card className="confirm-card">
+          <h3>Unable to Delete Crop</h3>
+          <p>{error}</p>
+          <div className="confirm-actions">
+            <Button variant="outline" onClick={handleClose}>Cancel</Button>
+            <Button variant="danger" onClick={() => setConfirmStep(1)}>Try Again</Button>
+          </div>
+        </Card>
+      ) : null}
+
       <Modal
-        isOpen={!done && confirmStep === 1}
+        isOpen={!done && !error && confirmStep === 1}
         title="Delete Crop"
         message="This crop will be removed from the marketplace and its pending request chain will be cleared."
         onClose={() => setConfirmStep(0)}
         secondaryAction={{
           label: 'Cancel',
-          onClick: onClose,
+          onClick: handleClose,
         }}
         primaryAction={{
           label: 'Continue',
@@ -65,10 +91,10 @@ export default function DeleteCrop({ cropId, onClose }) {
         }}
       />
       <Modal
-        isOpen={!done && confirmStep === 2}
+        isOpen={!done && !error && confirmStep === 2}
         title="Final Confirmation"
         message="Please confirm once more. This crop will be deleted from your active listings."
-        onClose={onClose}
+        onClose={handleClose}
         secondaryAction={{
           label: 'Back',
           onClick: () => setConfirmStep(1),
