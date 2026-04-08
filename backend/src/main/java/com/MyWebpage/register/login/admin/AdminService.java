@@ -1,12 +1,12 @@
 package com.MyWebpage.register.login.admin;
 
-import com.MyWebpage.register.login.enquiry.EnquiryRequestDTO;
-import com.MyWebpage.register.login.enquiry.Enquiry;
-import org.springframework.data.domain.Page;
+import com.MyWebpage.register.login.common.ApiResponse;
+import com.MyWebpage.register.login.support.dto.SupportRequestSummaryDTO;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
+
 public interface AdminService {
-    ResponseEntity<String> createEnquiry(EnquiryRequestDTO enquiryRequestDTO);
-    Page<Enquiry> getAllEnquiries(int page, int size);
-    ResponseEntity<String> deleteEnquiry(Long id);
+    List<SupportRequestSummaryDTO> getAllSupportRequests();
+    ResponseEntity<ApiResponse<String>> deleteSupportRequest(Long id);
 }
