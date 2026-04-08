@@ -4453,20 +4453,14 @@ a {
     linear-gradient(135deg, #ffffff, #f5fbf8);
 }
 
-.support-back-row {
-  margin-bottom: 14px;
-}
-
-.support-back-row .link-back {
-  margin: 0;
-}
-
-.support-hero {
+.support-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
   gap: 18px;
-  align-items: start;
-  margin-bottom: 14px;
+}
+
+.support-intro-block {
+  display: grid;
+  gap: 16px;
 }
 
 .support-kicker {
@@ -4487,9 +4481,67 @@ a {
   line-height: 1.7;
 }
 
+.support-points {
+  display: grid;
+  gap: 10px;
+}
+
+.support-point-pill {
+  padding: 13px 15px;
+  border-radius: 16px;
+  border: 1px solid #d6e6dd;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--color-primary-dark);
+  font-weight: 600;
+  box-shadow: 0 10px 24px rgba(20, 74, 54, 0.05);
+}
+
+.support-body-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.92fr) minmax(0, 1.08fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.support-types-card,
+.support-form-card {
+  border-radius: 24px;
+  border: 1px solid #d8e8df;
+  box-shadow: 0 16px 36px rgba(20, 74, 54, 0.06);
+}
+
+.support-types-card {
+  background: rgba(248, 252, 249, 0.96);
+}
+
+.support-form-card {
+  background:
+    radial-gradient(circle at top right, rgba(255, 233, 216, 0.56), transparent 26%),
+    rgba(255, 255, 255, 0.95);
+}
+
+.support-section-head {
+  margin-bottom: 16px;
+}
+
+.support-section-head h2 {
+  margin: 0;
+  color: var(--color-primary-dark);
+}
+
+.support-section-head p {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
 .support-topics {
   display: grid;
   gap: 10px;
+}
+
+.support-topics--interactive {
+  gap: 12px;
 }
 
 .support-topic-card {
@@ -4499,6 +4551,7 @@ a {
   background: rgba(255, 255, 255, 0.86);
   display: grid;
   gap: 5px;
+  text-align: left;
 }
 
 .support-topic-card strong {
@@ -4511,35 +4564,47 @@ a {
   line-height: 1.5;
 }
 
+.support-topic-card small {
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
 .support-topic-card--active {
   border-color: #b7d6c7;
   background: #edf7f2;
+  box-shadow: 0 12px 26px rgba(25, 82, 60, 0.08);
 }
 
 .enquiry-form {
   display: grid;
-  gap: 10px;
-  padding: 18px;
-  border-radius: 18px;
-  border: 1px solid #d7e7df;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 14px 28px rgba(20, 74, 54, 0.05);
+  gap: 14px;
 }
 
 .enquiry-form label {
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--color-primary-dark);
+  display: inline-block;
+  margin-bottom: 8px;
 }
 
 .enquiry-form select,
 .enquiry-form textarea {
   width: 100%;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 0.92rem;
+  border: 1px solid rgba(28, 90, 67, 0.14);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
   background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.enquiry-form select:focus,
+.enquiry-form textarea:focus {
+  outline: none;
+  border-color: rgba(28, 90, 67, 0.35);
+  box-shadow: 0 0 0 4px rgba(28, 90, 67, 0.08);
 }
 
 .enquiry-form select {
@@ -4550,13 +4615,84 @@ a {
   resize: vertical;
 }
 
+.support-selected-topic {
+  padding: 14px 15px;
+  border-radius: 16px;
+  border: 1px solid rgba(28, 90, 67, 0.12);
+  background: rgba(239, 247, 242, 0.88);
+  display: grid;
+  gap: 4px;
+}
+
+.support-selected-topic span {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.support-selected-topic strong {
+  color: var(--color-primary-dark);
+  font-size: 1rem;
+}
+
+.support-selected-topic p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.support-upload-box {
+  border: 1px dashed rgba(28, 90, 67, 0.2);
+  border-radius: 18px;
+  background: rgba(239, 247, 242, 0.76);
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.support-upload-box p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.support-upload-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.support-upload-name {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  word-break: break-word;
+}
+
+.support-form-error {
+  margin: 8px 0 0;
+  color: #b42318;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.support-form-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
 .enquiry-success {
-  text-align: center;
-  padding: 14px 0;
+  text-align: left;
+  padding: 10px 0;
 }
 
 .support-success {
-  padding: 34px 0 18px;
+  padding: 10px 0;
+  display: grid;
+  gap: 16px;
+  align-content: center;
 }
 
 .enquiry-success h2 {
@@ -4565,7 +4701,64 @@ a {
 }
 
 .enquiry-success p {
-  margin: 8px 0 14px;
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.support-success-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(28, 90, 67, 0.12);
+  color: var(--color-primary-dark);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.support-success-summary {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(240, 247, 242, 0.92);
+  border: 1px solid rgba(28, 90, 67, 0.12);
+}
+
+.support-success-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(28, 90, 67, 0.1);
+}
+
+.support-success-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.support-success-row span {
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.support-success-row strong {
+  color: var(--color-primary-dark);
+  text-align: right;
+  word-break: break-word;
+}
+
+.support-success-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 /* Logout */
@@ -5292,7 +5485,7 @@ a {
     text-align: left;
   }
 
-  .support-hero {
+  .support-body-grid {
     grid-template-columns: 1fr;
   }
 
@@ -5751,6 +5944,16 @@ a {
 
   .enquiry-form {
     padding: 14px;
+  }
+
+  .support-success-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .support-success-row strong {
+    text-align: left;
   }
 
   .settings-password-tips {
