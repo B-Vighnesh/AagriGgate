@@ -30,6 +30,9 @@ export default function Settings() {
   const [deleteOtp, setDeleteOtp] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteOtpLoading, setDeleteOtpLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteNotice, setDeleteNotice] = useState('');
+  const [deleteOtpSent, setDeleteOtpSent] = useState(false);
   // const [deleteMode, setDeleteMode] = useState('hard');
 
   const [toast, setToast] = useState({ message: '', type: 'info' });
@@ -90,15 +93,21 @@ export default function Settings() {
 
   const handleSendDeleteOtp = async () => {
     if (!deletePassword.trim()) {
-      showToast('Enter current password first.', 'error');
+      setDeleteNotice('');
+      setDeleteError('Enter current password first.');
       return;
     }
+    setDeleteError('');
+    setDeleteNotice('');
     setDeleteOtpLoading(true);
     try {
       await sendDeleteAccountOtp();
-      showToast('OTP sent to your registered email.', 'success');
+      setDeleteOtpSent(true);
+      setDeleteNotice('OTP sent to your registered email.');
     } catch (err) {
-      showToast(err.message || 'Unable to send delete OTP.', 'error');
+      setDeleteOtpSent(false);
+      setDeleteNotice('');
+      setDeleteError(err.message || 'Unable to send delete OTP.');
     } finally {
       setDeleteOtpLoading(false);
     }
@@ -106,28 +115,41 @@ export default function Settings() {
 
   const deleteAccount = async () => {
     if (!deletePassword.trim()) {
-      showToast('Current password is required.', 'error');
+      setDeleteNotice('');
+      setDeleteError('Current password is required.');
       return;
     }
     if (!deleteOtp.trim()) {
-      showToast('OTP is required.', 'error');
+      setDeleteNotice('');
+      setDeleteError('OTP is required.');
       return;
     }
+    setDeleteError('');
+    setDeleteNotice('');
     setDeleteLoading(true);
     try {
       await requestDeleteAccount(deletePassword, deleteOtp);
+      resetDeleteDialog();
       clearAuth();
-      showToast('Account deleted.', 'success');
       setTimeout(() => navigate('/register'), 900);
     } catch (err) {
-      showToast(err.message || 'Server busy. Try again.', 'error');
+      setDeleteNotice('');
+      setDeleteError(err.message || 'Server busy. Try again.');
     } finally {
       setDeleteLoading(false);
-      setShowDeleteModal(false);
-      setDeleteStep(1);
-      setDeletePassword('');
-      setDeleteOtp('');
     }
+  };
+
+  const resetDeleteDialog = () => {
+    setShowDeleteModal(false);
+    setDeleteStep(1);
+    setDeletePassword('');
+    setDeleteOtp('');
+    setDeleteError('');
+    setDeleteNotice('');
+    setDeleteOtpSent(false);
+    setDeleteOtpLoading(false);
+    setDeleteLoading(false);
   };
 
   return (
@@ -248,7 +270,7 @@ export default function Settings() {
                   <p>Deleting your account is permanent and cannot be undone.</p>
                 </div>
               </div>
-               <Button variant="danger" onClick={() => { setDeleteStep(1); setShowDeleteModal(true); }}>Delete My Account</Button>
+               <Button variant="danger" onClick={() => { setDeleteStep(1); setDeleteError(''); setDeleteNotice(''); setDeleteOtp(''); setDeleteOtpSent(false); setShowDeleteModal(true); }}>Delete My Account</Button>
               
             </Card>
           </div>
@@ -257,7 +279,7 @@ export default function Settings() {
 
       {showDeleteModal && (
         <div className="confirm-overlay">
-          <Card className="confirm-card">
+          <Card className="confirm-card confirm-card--danger">
             {deleteStep === 1 ? (
               <>
                 <h3>Delete Account</h3>
@@ -265,37 +287,56 @@ export default function Settings() {
                   This will remove your access and clear your saved personal data from the platform.
                 </p>
                 <div className="confirm-actions">
-                  <Button variant="outline" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+                  <Button variant="outline" onClick={resetDeleteDialog}>Cancel</Button>
                   <Button variant="danger" onClick={() => setDeleteStep(2)}>Continue</Button>
                 </div>
               </>
             ) : (
               <>
                 <h3>Final Confirmation</h3>
-                <p>
-                  Enter your current password, request the deletion OTP, and then confirm with both.
+                <p className="confirm-card__subtitle">
+                  Confirm your password, request a deletion OTP, and verify with both before the account is removed.
                 </p>
-                <input
-                  type="password"
-                  value={deletePassword}
-                  onChange={(event) => setDeletePassword(event.target.value)}
-                  placeholder="Current password"
-                />
-                <div className="confirm-actions">
-                  <Button variant="outline" loading={deleteOtpLoading} onClick={handleSendDeleteOtp}>
-                    {deleteOtpLoading ? 'Sending OTP...' : 'Send OTP'}
-                  </Button>
+                <div className="confirm-form">
+                  <div className="confirm-field">
+                    <label htmlFor="deletePassword">Current Password</label>
+                    <input
+                      id="deletePassword"
+                      type="password"
+                      value={deletePassword}
+                      onChange={(event) => setDeletePassword(event.target.value)}
+                      placeholder="Enter current password"
+                    />
+                  </div>
+
+                  <div className="confirm-inline-panel">
+                    <div>
+                      <strong>Email Verification</strong>
+                      <span>{deleteOtpSent ? 'OTP sent to your registered email.' : 'Request an OTP to continue deletion.'}</span>
+                    </div>
+                    <Button variant="outline" loading={deleteOtpLoading} onClick={handleSendDeleteOtp}>
+                      {deleteOtpLoading ? 'Sending OTP...' : deleteOtpSent ? 'Resend OTP' : 'Send OTP'}
+                    </Button>
+                  </div>
+
+                  <div className="confirm-field">
+                    <label htmlFor="deleteOtp">Deletion OTP</label>
+                    <input
+                      id="deleteOtp"
+                      type="text"
+                      value={deleteOtp}
+                      onChange={(event) => setDeleteOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="Enter 6-digit OTP"
+                      inputMode="numeric"
+                      maxLength={6}
+                    />
+                  </div>
+
+                  {deleteNotice ? <p className="confirm-card__notice">{deleteNotice}</p> : null}
+                  {deleteError ? <p className="confirm-card__error">{deleteError}</p> : null}
                 </div>
-                <input
-                  type="text"
-                  value={deleteOtp}
-                  onChange={(event) => setDeleteOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="Enter OTP"
-                  inputMode="numeric"
-                  maxLength={6}
-                />
                 <div className="confirm-actions">
-                  <Button variant="outline" onClick={() => setDeleteStep(1)}>Back</Button>
+                  <Button variant="outline" onClick={() => { setDeleteStep(1); setDeleteError(''); setDeleteNotice(''); }}>Back</Button>
                   <Button variant="danger" loading={deleteLoading} onClick={deleteAccount}>Delete</Button>
                 </div>
               </>
