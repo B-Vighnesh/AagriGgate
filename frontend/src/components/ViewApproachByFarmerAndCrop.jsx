@@ -6,12 +6,14 @@ import Modal from './Modal';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { apiFetch, requestJson } from '../lib/api';
+import { createOrGetChatConversation } from '../api/chatApi';
 import { getRole, getToken } from '../lib/auth';
 
 const STATUS_CLASS = {
   pending: 'approach-crop-status--pending',
   accepted: 'approach-crop-status--accepted',
   rejected: 'approach-crop-status--rejected',
+  completed: 'approach-crop-status--completed',
 };
 
 export default function ViewApproachByFarmerAndCrop() {
@@ -31,6 +33,7 @@ export default function ViewApproachByFarmerAndCrop() {
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [actionLoading, setActionLoading] = useState({ approachId: null, type: null });
   const [pendingDecision, setPendingDecision] = useState(null);
+  const [chatLoadingId, setChatLoadingId] = useState(null);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -107,6 +110,18 @@ export default function ViewApproachByFarmerAndCrop() {
       showToast(requestError.message || 'Unable to process request.', 'error');
     } finally {
       setActionLoading({ approachId: null, type: null });
+    }
+  };
+
+  const openChat = async (approachId) => {
+    try {
+      setChatLoadingId(approachId);
+      const conversation = await createOrGetChatConversation(approachId);
+      navigate(`/chat/${conversation.conversationId}`);
+    } catch (error) {
+      showToast(error.message || 'Unable to open chat.', 'error');
+    } finally {
+      setChatLoadingId(null);
     }
   };
 
@@ -188,6 +203,17 @@ export default function ViewApproachByFarmerAndCrop() {
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/view-buyer/${approach.userId}`)}>
                       View Buyer
                     </Button>
+                    {(status === 'accepted' || status === 'completed') ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openChat(approach.approachId)}
+                        loading={chatLoadingId === approach.approachId}
+                        disabled={chatLoadingId !== null}
+                      >
+                        {chatLoadingId === approach.approachId ? 'Opening...' : 'Chat'}
+                      </Button>
+                    ) : null}
 
                     {isPending ? (
                       <>

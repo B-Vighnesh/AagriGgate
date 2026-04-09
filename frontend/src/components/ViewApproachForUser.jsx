@@ -7,11 +7,13 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Modal from './Modal';
 import Toast from './common/Toast';
+import { createOrGetChatConversation } from '../api/chatApi';
 
 const STATUS_CLASS = {
   pending: 'user-requests-status--pending',
   accepted: 'user-requests-status--accepted',
   rejected: 'user-requests-status--rejected',
+  completed: 'user-requests-status--completed',
 };
 
 export default function ViewApproachForUser() {
@@ -29,6 +31,7 @@ export default function ViewApproachForUser() {
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [withdrawLoading, setWithdrawLoading] = useState(null);
   const [pendingWithdraw, setPendingWithdraw] = useState(null);
+  const [chatLoadingId, setChatLoadingId] = useState(null);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -92,6 +95,18 @@ export default function ViewApproachForUser() {
       showToast(requestError.message || 'Server busy. Please try again.', 'error');
     } finally {
       setWithdrawLoading(null);
+    }
+  };
+
+  const openChat = async (approachId) => {
+    try {
+      setChatLoadingId(approachId);
+      const conversation = await createOrGetChatConversation(approachId);
+      navigate(`/chat/${conversation.conversationId}`);
+    } catch (error) {
+      showToast(error.message || 'Unable to open chat.', 'error');
+    } finally {
+      setChatLoadingId(null);
     }
   };
 
@@ -160,6 +175,17 @@ export default function ViewApproachForUser() {
                   <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${item.cropId}`)}>
                     View Crop
                   </Button>
+                  {(item.status || '').toLowerCase() === 'accepted' || (item.status || '').toLowerCase() === 'completed' ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openChat(item.approachId)}
+                      loading={chatLoadingId === item.approachId}
+                      disabled={chatLoadingId !== null}
+                    >
+                      {chatLoadingId === item.approachId ? 'Opening...' : 'Chat'}
+                    </Button>
+                  ) : null}
 
                   {(item.status || '').toLowerCase() === 'pending' && (
                     <Button

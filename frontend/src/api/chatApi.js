@@ -1,0 +1,52 @@
+import { getApiBaseUrl, requestJson } from '../lib/api';
+import { getToken } from '../lib/auth';
+
+export const getChatConversations = async () =>
+  requestJson('/chat/conversations', { method: 'GET' });
+
+export const getChatConversation = async (conversationId) =>
+  requestJson(`/chat/conversations/${conversationId}`, { method: 'GET' });
+
+export const getChatConversationByApproach = async (approachId) =>
+  requestJson(`/chat/conversations/by-approach/${approachId}`, { method: 'GET' });
+
+export const createOrGetChatConversation = async (approachId) =>
+  requestJson(`/chat/conversations/from-approach/${approachId}`, { method: 'POST' });
+
+export const getChatMessages = async (conversationId) =>
+  requestJson(`/chat/conversations/${conversationId}/messages`, { method: 'GET' });
+
+export const confirmChatDeal = async (conversationId, payload) =>
+  requestJson(`/chat/conversations/${conversationId}/deal`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const openChatSocket = ({ onOpen, onMessage, onClose, onError } = {}) => {
+  const baseUrl = getApiBaseUrl();
+  const token = getToken();
+
+  if (!baseUrl) {
+    throw new Error('VITE_API_BASE_URL is not configured.');
+  }
+  if (!token) {
+    throw new Error('Missing auth token for chat connection.');
+  }
+
+  const wsBase = baseUrl.replace(/^http/i, 'ws').replace(/\/$/, '');
+  const socket = new WebSocket(`${wsBase}/ws/chat?token=${encodeURIComponent(token)}`);
+
+  socket.onopen = () => onOpen?.();
+  socket.onclose = (event) => onClose?.(event);
+  socket.onerror = (event) => onError?.(event);
+  socket.onmessage = (event) => {
+    try {
+      const payload = JSON.parse(event.data);
+      onMessage?.(payload);
+    } catch {
+      onError?.(new Error('Unable to parse chat event.'));
+    }
+  };
+
+  return socket;
+};

@@ -6,12 +6,14 @@ import Modal from './Modal';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { apiFetch, requestJson } from '../lib/api';
+import { createOrGetChatConversation } from '../api/chatApi';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 const STATUS_CLASS = {
   pending: 'approach-badge--pending',
   accepted: 'approach-badge--accepted',
   rejected: 'approach-badge--rejected',
+  completed: 'approach-badge--completed',
 };
 
 export default function ViewApproach() {
@@ -32,6 +34,7 @@ export default function ViewApproach() {
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [actionLoading, setActionLoading] = useState({ approachId: null, type: null });
   const [pendingDecision, setPendingDecision] = useState(null);
+  const [chatLoadingId, setChatLoadingId] = useState(null);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -115,6 +118,18 @@ export default function ViewApproach() {
     }
   };
 
+  const openChat = async (approachId) => {
+    try {
+      setChatLoadingId(approachId);
+      const conversation = await createOrGetChatConversation(approachId);
+      navigate(`/chat/${conversation.conversationId}`);
+    } catch (err) {
+      showToast(err.message || 'Unable to open chat right now.', 'error');
+    } finally {
+      setChatLoadingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <section className="page page--center">
@@ -193,6 +208,17 @@ export default function ViewApproach() {
                 <Button variant="ghost" size="sm" onClick={() => onViewBuyer(item.userId)}>
                   View Buyer
                 </Button>
+                {(item.status || '').toLowerCase() === 'accepted' || (item.status || '').toLowerCase() === 'completed' ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openChat(item.approachId)}
+                    loading={chatLoadingId === item.approachId}
+                    disabled={chatLoadingId !== null}
+                  >
+                    {chatLoadingId === item.approachId ? 'Opening...' : 'Chat'}
+                  </Button>
+                ) : null}
                 {(item.status || '').toLowerCase() === 'pending' ? (
                   <>
                     <Button
