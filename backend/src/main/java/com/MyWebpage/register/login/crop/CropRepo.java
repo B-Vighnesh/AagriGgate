@@ -332,11 +332,11 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
     @Transactional
     @Modifying
     @Query("""
-            UPDATE Crop c
-            SET c.active = false, c.deletedAt = :deletedAt
-            WHERE lower(coalesce(c.status, '')) = 'sold'
-              AND c.active = true
-            """)
+    UPDATE Crop c
+    SET c.active = false, c.deletedAt = :deletedAt
+    WHERE (lower(coalesce(c.status, '')) = 'sold' OR c.quantity <= 0)
+      AND c.active = true
+""")
     int softDeleteSoldCrops(@Param("deletedAt") LocalDateTime deletedAt);
 
     @Query("""
