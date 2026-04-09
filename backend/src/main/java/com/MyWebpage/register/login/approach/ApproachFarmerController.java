@@ -1,5 +1,6 @@
 package com.MyWebpage.register.login.approach;
 
+import com.MyWebpage.register.login.chat.ChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,8 @@ public class ApproachFarmerController {
 
     @Autowired
     private ApproachFarmerService approachFarmerService;
+    @Autowired
+    private ChatService chatService;
 
     @PostMapping("/accept/{approachId}")
     public ResponseEntity<String> acceptApproach(
@@ -22,6 +25,7 @@ public class ApproachFarmerController {
         boolean success = approachFarmerService.updateApproachStatus(approachId, farmerId, true);
         if (success) {
             ApproachFarmer approachFarmer=approachFarmerService.findById(approachId);
+            chatService.createOrGetConversationForApproach(approachId, farmerId);
             boolean a=approachFarmerService.sendMail(approachFarmer);
             if(a) {
                 return ResponseEntity.ok("Approach accepted successfully.");
