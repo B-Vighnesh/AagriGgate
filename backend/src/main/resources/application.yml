@@ -4,7 +4,7 @@ spring:
   application:
     name: aagrigate
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
+    active: ${SPRING_PROFILES_ACTIVE}
   jpa:
     properties:
       hibernate:
@@ -27,8 +27,8 @@ market:
   api:
     url: ${MARKET_API_URL}
     key: ${MARKET_API_KEY}
-    ingest-on-startup: ${MARKET_API_INGEST_ON_STARTUP:false}
-    startup-state: ${MARKET_API_STARTUP_STATE:Karnataka}
+    ingest-on-startup: ${MARKET_API_INGEST_ON_STARTUP}
+    startup-state: ${MARKET_API_STARTUP_STATE}
 
 news:
   api:
