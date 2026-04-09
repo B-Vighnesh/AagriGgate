@@ -1,4 +1,4 @@
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 # AagriGgate
 
 AagriGgate is a full-stack agriculture marketplace and decision-support platform designed to enable direct trade between farmers and buyers. The system allows farmers to list crops and buyers to browse and send purchase requests, while also providing real-time market price, weather, and agriculture insights.
@@ -53,14 +53,15 @@ AagriGgate provides:
 
 ## System Architecture
 
-Architecture Flow:
+### Architecture Flow
 
+```
 
 React Frontend → REST API → Spring Boot Backend → Database
 ↓
 External APIs (Weather, Market)
 
-
+```
 
 ### Layers
 
@@ -74,6 +75,7 @@ External APIs (Weather, Market)
 | Database | MySQL / PostgreSQL | Data storage |
 | External Services | Weather API, Market API | External data |
 
+---
 
 ## Tech Stack
 
@@ -143,7 +145,7 @@ External APIs (Weather, Market)
 
 ## Database Design
 
-Main Tables:
+### Main Tables
 
 - farmer
 - buyer
@@ -229,30 +231,41 @@ Register → Verify OTP → Login → Browse Crops → Add to Cart → Send Requ
 
 ### Run Backend
 
+```
 
 cd backend
 ./mvnw spring-boot:run
 
-
+```
 
 Backend URL:
 
+```
+
 http://localhost:8080/api/v1
 
+```
 
 ### Run Frontend
 
+```
 
 cd frontend
 npm install
 npm run dev
 
+```
+
 Frontend URL:
+
+```
 
 http://localhost:5173
 
+````
 
 ---
+
 ## Environment Variables
 
 ```env
@@ -294,43 +307,43 @@ NEWS_API_QUOTA_RESET_CRON=0 0 0 * * *
 NEWS_API_SCHEDULER_CRON=0 0 0 * * *
 MARKET_API_INGESTION_CRON=0 0 9 * * *
 OTP_CLEANUP_CRON=0 */5 * * * *
-```
-
-
+````
 
 ---
 
 ## Deployment
 
-- Backend: Render
-- Frontend: Vercel
-- Database: PostgreSQL
-- Containerization: Docker
+* Backend: Render
+* Frontend: Vercel
+* Database: PostgreSQL
+* Containerization: Docker
 
 ---
 
 ## Future Improvements
 
-- Real-time chat between farmer and buyer
-- Notifications system
-- Price trend analytics
-- Price prediction
-- Multi-language support
-- Transport booking
-- Payment / escrow system
-- Admin moderation system
+* Real-time chat between farmer and buyer
+* Notifications system
+* Price trend analytics
+* Price prediction
+* Multi-language support
+* Transport booking
+* Payment / escrow system
+* Admin moderation system
 
 ---
 
 ## Contributors
 
-- B. Vighnesh Kumar
-- Akash D. Shenvi
-- Joylan Dsouza
+* B. Vighnesh Kumar
+* Akash D. Shenvi
+* Joylan Dsouza
 
 ---
 
 ## License
 
 This project is licensed under the MIT License.
+
+
 
