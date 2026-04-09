@@ -318,12 +318,6 @@ a {
   line-height: 1;
 }
 
-.header-utility-link__emoji {
-  font-size: 1.08rem;
-  line-height: 1;
-  transform: translateY(-1px);
-}
-
 .header-account-link {
   width: 42px;
   height: 42px;
@@ -4538,27 +4532,42 @@ a {
 }
 
 .chat-radio {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
   gap: 10px;
   border: 1px solid #dbe9e1;
   border-radius: 14px;
   padding: 12px 14px;
   background: rgba(255, 255, 255, 0.96);
+  cursor: pointer;
 }
 
 .chat-radio input {
-  margin-top: 3px;
+  margin: 0;
 }
 
-.chat-radio span {
+.chat-radio__content {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.chat-radio__content strong {
+  color: var(--color-primary-dark);
+  font-size: 0.96rem;
+}
+
+.chat-radio__content span {
   color: var(--color-primary-dark);
   line-height: 1.5;
+  font-size: 0.9rem;
 }
 
 .chat-radio--active {
   border-color: rgba(47, 154, 116, 0.4);
   background: #f3fbf7;
+  box-shadow: 0 10px 20px rgba(31, 111, 84, 0.08);
 }
 
 .chat-launch-btn {
@@ -6828,8 +6837,35 @@ a {
     justify-content: flex-start;
   }
 
+  .chat-panel__meta .ui-btn {
+    width: 100%;
+  }
+
   .chat-message {
     max-width: 100%;
+  }
+
+  .chat-deal-modal {
+    width: 100%;
+  }
+
+  .chat-deal-options {
+    gap: 10px;
+  }
+
+  .chat-radio {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+    padding: 14px;
+  }
+
+  .chat-radio input {
+    margin-top: 2px;
+  }
+
+  .chat-radio__content strong,
+  .chat-radio__content span {
+    word-break: break-word;
   }
 
   .segmented {
