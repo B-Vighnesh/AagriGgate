@@ -43,6 +43,33 @@ function groupConversationsByStatus(items) {
   return buckets;
 }
 
+function formatQuantity(value) {
+  if (value == null || Number.isNaN(Number(value))) {
+    return 'Not set';
+  }
+  const numeric = Number(value);
+  return Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(2);
+}
+
+function buildConversationPreview(item) {
+  if (item.status === 'COMPLETED') {
+    return `Deal closed for ${formatQuantity(item.pendingDealQuantity ?? item.requestedQuantity)} quantity.`;
+  }
+  if (item.status === 'EXPIRED') {
+    return 'Conversation expired due to inactivity.';
+  }
+  if (item.status === 'FAILED') {
+    return 'Deal was not completed.';
+  }
+  if (item.pendingDealQuantity) {
+    return `Latest offer: ${formatQuantity(item.pendingDealQuantity)} quantity awaiting confirmation.`;
+  }
+  if (item.buyerDealConfirmed || item.farmerDealConfirmed) {
+    return 'Deal confirmation has started.';
+  }
+  return 'Open the chat to continue negotiation.';
+}
+
 export default function Chat() {
   const { conversationId } = useParams();
   const navigate = useNavigate();
@@ -105,6 +132,22 @@ export default function Chat() {
 
   const counterpartyName = activeConversation
     ? (currentUserId === activeConversation.buyerId ? activeConversation.farmerName : activeConversation.buyerName)
+    : '';
+
+  const isBuyer = activeConversation ? currentUserId === activeConversation.buyerId : false;
+  const agreedQuantity = activeConversation?.pendingDealQuantity ?? activeConversation?.requestedQuantity ?? null;
+  const dealStatusText = activeConversation
+    ? activeConversation.status === 'COMPLETED'
+      ? 'Deal completed'
+      : activeConversation.status === 'EXPIRED'
+        ? 'Conversation expired'
+        : activeConversation.status === 'FAILED'
+          ? 'Deal failed'
+          : activeConversation.buyerDealConfirmed && activeConversation.farmerDealConfirmed
+            ? 'Ready to close'
+            : activeConversation.buyerDealConfirmed || activeConversation.farmerDealConfirmed
+              ? 'Waiting for the other user'
+              : 'Negotiation in progress'
     : '';
 
   const groupedConversations = useMemo(
@@ -277,12 +320,13 @@ export default function Chat() {
               >
                 <div className="chat-conversation-card__top">
                   <strong>{item.listingName}</strong>
-                  <small className={`chat-conversation-card__status chat-conversation-card__status--${statusTone}`}>
-                    {item.status}
-                  </small>
+                  <span className={`chat-status-dot chat-status-dot--${statusTone}`} aria-hidden="true" />
                 </div>
-                <span>With {counterpart}</span>
-                <small>Requested quantity: {item.requestedQuantity ?? 'Not specified'}</small>
+                <span>{counterpart}</span>
+                <small>{buildConversationPreview(item)}</small>
+                <em className={`chat-conversation-card__status chat-conversation-card__status--${statusTone}`}>
+                  {item.status}
+                </em>
               </button>
             );
           })}
@@ -418,16 +462,24 @@ export default function Chat() {
                 </div>
               </div>
 
-              <div className="chat-deal-strip">
-                <span>Requested: <strong>{activeConversation.requestedQuantity}</strong></span>
-                {activeConversation.pendingDealQuantity ? (
-                  <span>Pending deal: <strong>{activeConversation.pendingDealQuantity}</strong></span>
-                ) : null}
-                <span>Buyer confirmed: <strong>{activeConversation.buyerDealConfirmed ? 'Yes' : 'No'}</strong></span>
-                <span>Farmer confirmed: <strong>{activeConversation.farmerDealConfirmed ? 'Yes' : 'No'}</strong></span>
-              </div>
-
               <div className="chat-message-list" ref={messageListRef} onScroll={updateStickiness}>
+                {activeConversation.status === 'ACTIVE' ? (
+                  <div className="chat-offer-card">
+                    <div className="chat-offer-card__copy">
+                      <strong>Deal Summary Inline</strong>
+                      <span>
+                        Last offer: {formatQuantity(agreedQuantity)} quantity
+                      </span>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => setDealModalOpen(true)}
+                    >
+                      Confirm Deal
+                    </Button>
+                  </div>
+                ) : null}
+
                 {loadingMessages ? (
                   <div className="chat-empty">
                     <div className="ui-spinner ui-spinner--lg" />
@@ -446,7 +498,7 @@ export default function Chat() {
                         key={item.messageId}
                         className={
                           isSystem
-                            ? 'chat-message chat-message--system'
+                            ? 'chat-event-card'
                             : mine
                               ? 'chat-message chat-message--mine'
                               : 'chat-message chat-message--other'
@@ -456,7 +508,9 @@ export default function Chat() {
                           <strong className="chat-message__sender">
                             {mine ? 'You' : counterpartyName}
                           </strong>
-                        ) : null}
+                        ) : (
+                          <strong className="chat-event-card__title">Deal Update</strong>
+                        )}
                         <p>{item.messageText}</p>
                         <span>{new Date(item.createdAt).toLocaleString()}</span>
                       </div>
@@ -495,6 +549,78 @@ export default function Chat() {
                     Send Message
                   </Button>
                 </div>
+              </div>
+            </>
+          )}
+        </Card>
+
+        <Card className="chat-deal-panel">
+          {!activeConversation ? (
+            <div className="chat-empty chat-empty--deal">
+              <h3>Deal Summary</h3>
+              <p>Select a conversation to see the current negotiation status and available actions.</p>
+            </div>
+          ) : (
+            <>
+              <div className="chat-deal-panel__head">
+                <span className="settings-kicker">Deal Summary</span>
+                <h3>{dealStatusText}</h3>
+                <p>
+                  Keep the negotiation visible here while the center panel stays focused on the conversation itself.
+                </p>
+              </div>
+
+              <div className="chat-deal-summary">
+                <div className="chat-deal-summary__row">
+                  <span>Requested</span>
+                  <strong>{formatQuantity(activeConversation.requestedQuantity)}</strong>
+                </div>
+                <div className="chat-deal-summary__row">
+                  <span>Agreed</span>
+                  <strong>{formatQuantity(agreedQuantity)}</strong>
+                </div>
+                <div className="chat-deal-summary__row">
+                  <span>Status</span>
+                  <strong>{dealStatusText}</strong>
+                </div>
+                <div className="chat-deal-summary__row">
+                  <span>Buyer</span>
+                  <strong>{activeConversation.buyerDealConfirmed ? 'Confirmed' : 'Pending'}</strong>
+                </div>
+                <div className="chat-deal-summary__row">
+                  <span>Farmer</span>
+                  <strong>{activeConversation.farmerDealConfirmed ? 'Confirmed' : 'Pending'}</strong>
+                </div>
+              </div>
+
+              <div className="chat-deal-panel__card">
+                <strong>Who should act next?</strong>
+                <p>
+                  {activeConversation.status !== 'ACTIVE'
+                    ? 'This conversation is no longer active, so no more deal action is needed.'
+                    : isBuyer
+                      ? activeConversation.buyerDealConfirmed
+                        ? 'Your confirmation is saved. Waiting for the farmer to respond.'
+                        : 'Review the latest quantity and confirm when you are ready to close the deal.'
+                      : activeConversation.farmerDealConfirmed
+                        ? 'Your confirmation is saved. Waiting for the buyer to respond.'
+                        : 'Review the latest quantity and confirm when you are ready to close the deal.'}
+                </p>
+              </div>
+
+              <div className="chat-deal-panel__actions">
+                <Button
+                  onClick={() => setDealModalOpen(true)}
+                  disabled={activeConversation.status !== 'ACTIVE'}
+                >
+                  {activeConversation.status === 'COMPLETED' ? 'Deal Completed' : 'Confirm Deal'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(`/view-details/${activeConversation.listingId}`)}
+                >
+                  View Listing
+                </Button>
               </div>
             </>
           )}
