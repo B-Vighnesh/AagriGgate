@@ -47,7 +47,14 @@ export default function Chat() {
   };
 
   const scrollMessagesToBottom = (behavior = 'auto') => {
-    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+    const container = messageListRef.current;
+    if (!container) {
+      return;
+    }
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior,
+    });
   };
 
   const updateStickiness = () => {
