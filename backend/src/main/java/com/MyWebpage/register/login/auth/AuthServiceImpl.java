@@ -103,9 +103,8 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Authentication failed");
         }
 
-        Farmer farmer = dto.getPrincipal().contains("@")
-                ? farmerRepo.findByEmail(dto.getPrincipal()).orElse(null)
-                : farmerRepo.findByUsername(dto.getPrincipal());
+        Farmer farmer = findFarmerByPrincipal(dto.getPrincipal());
+
         if (farmer == null) {
             throw new RuntimeException("User not found");
         }
@@ -129,8 +128,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void sendDeletionOtp(Long farmerId) {
-        Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
-        ensureAccountActive(farmer);
+        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
         String otp = otpService.issueOtp(farmer.getFarmerId().toString(), OtpPurpose.DELETION);
         emailService.sendDeletionOtpEmail(farmer, otp);
     }
@@ -162,8 +160,7 @@ public class AuthServiceImpl implements AuthService {
             String currentPassword,
             String newPassword) {
 
-        Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
-        ensureAccountActive(farmer);
+        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
 
         if (!passwordEncoder.matches(currentPassword, farmer.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
@@ -191,8 +188,7 @@ public class AuthServiceImpl implements AuthService {
             Long farmerId,
             String password, String role) {
 
-        Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
-        ensureAccountActive(farmer);
+        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
 
         if (!passwordEncoder.matches(password, farmer.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
@@ -205,8 +201,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void softDeleteAccount(Long farmerId, DeleteAccountRequestDTO request, String role) {
-        Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
-        ensureAccountActive(farmer);
+        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
+
         if(!otpService.verifyAndConsumeOtp(farmerId.toString(),OtpPurpose.DELETION, request.getOtp()))
         {
             throw new IllegalArgumentException("Invalid otp");
@@ -252,8 +248,8 @@ public class AuthServiceImpl implements AuthService {
 
     private Farmer findFarmerByPrincipal(String principal) {
         Farmer farmer = principal.contains("@")
-                ? farmerRepo.findByEmail(principal).orElse(null)
-                : farmerRepo.findByUsername(principal);
+                ? farmerRepo.findByEmailAndActiveTrue(principal).orElse(null)
+                : farmerRepo.findByUsernameAndActiveTrue(principal);
         if (farmer == null) {
             throw new IllegalArgumentException("User not found");
         }

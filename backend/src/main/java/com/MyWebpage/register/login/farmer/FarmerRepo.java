@@ -29,4 +29,6 @@ public interface FarmerRepo extends JpaRepository<Farmer,Long> {
     boolean existsByEmail(@Email @NotBlank String email);
 
     boolean existsByEmailAndActiveTrue(@Email @NotBlank String email);
+
+    Farmer findByUsernameAndActiveTrue(String principal);
 }
