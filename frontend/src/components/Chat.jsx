@@ -509,7 +509,7 @@ export default function Chat() {
                             {mine ? 'You' : counterpartyName}
                           </strong>
                         ) : (
-                          <strong className="chat-event-card__title">Deal Update</strong>
+                          <strong className="chat-event-card__title">Application Update</strong>
                         )}
                         <p>{item.messageText}</p>
                         <span>{new Date(item.createdAt).toLocaleString()}</span>
