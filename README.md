@@ -253,16 +253,15 @@ http://localhost:5173
 
 
 ---
-
 ## Environment Variables
 
+```env
 SPRING_PROFILES_ACTIVE=dev
 SERVER_PORT=8080
 
 DB_URL=jdbc:mysql://localhost:3306/app
 DB_USERNAME=root
 DB_PASSWORD=replace_me
-
 
 EMAIL_USERNAME=your-email@example.com
 EMAIL_PASSWORD=replace_me
@@ -275,6 +274,7 @@ JWT_SECRET=base64_encoded_32_byte_secret_here
 MARKET_API_INGEST_ON_STARTUP=false
 MARKET_API_STARTUP_STATE=Karnataka
 MARKET_API_STARTUP_DISTRICT=Bangalore
+
 WEATHER_API_URL=https://api.weatherapi.com/v1/current.json
 WEATHER_API_KEY=replace_me
 
@@ -294,6 +294,8 @@ NEWS_API_QUOTA_RESET_CRON=0 0 0 * * *
 NEWS_API_SCHEDULER_CRON=0 0 0 * * *
 MARKET_API_INGESTION_CRON=0 0 9 * * *
 OTP_CLEANUP_CRON=0 */5 * * * *
+```
+
 
 
 ---
