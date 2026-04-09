@@ -429,7 +429,7 @@ export default function Navbar() {
                 setOpenDropdownKey('');
               }}
             >
-              <span className="header-utility-link__emoji" aria-hidden="true">💬</span>
+              <i className="fa-regular fa-comments" aria-hidden="true" />
             </Link>
           ) : null}
 

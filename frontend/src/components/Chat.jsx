@@ -446,7 +446,10 @@ export default function Chat() {
                   checked={useRequestedQuantity}
                   onChange={() => setUseRequestedQuantity(true)}
                 />
-                <span>Use requested quantity ({activeConversation.requestedQuantity})</span>
+                <div className="chat-radio__content">
+                  <strong>Use requested quantity</strong>
+                  <span>{activeConversation.requestedQuantity}</span>
+                </div>
               </label>
 
               <label className={!useRequestedQuantity ? 'chat-radio chat-radio--active' : 'chat-radio'}>
@@ -455,7 +458,10 @@ export default function Chat() {
                   checked={!useRequestedQuantity}
                   onChange={() => setUseRequestedQuantity(false)}
                 />
-                <span>Use updated agreed quantity</span>
+                <div className="chat-radio__content">
+                  <strong>Use updated quantity</strong>
+                  <span>Enter the final agreed quantity for both sides.</span>
+                </div>
               </label>
 
               {!useRequestedQuantity ? (
