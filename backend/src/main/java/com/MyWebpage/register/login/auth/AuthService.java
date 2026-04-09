@@ -2,6 +2,7 @@ package com.MyWebpage.register.login.auth;
 
 import com.MyWebpage.register.login.auth.dto.AuthRequestDTO;
 import com.MyWebpage.register.login.auth.dto.AuthResponseDTO;
+import com.MyWebpage.register.login.auth.dto.DeleteAccountRequestDTO;
 import com.MyWebpage.register.login.auth.dto.OtpLoginRequestDTO;
 import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
 
@@ -16,6 +17,8 @@ public interface AuthService {
 
     void sendLoginOtp(
             String principal);
+
+    void sendDeletionOtp(Long farmerId);
 
     AuthResponseDTO loginWithOtp(
             OtpLoginRequestDTO dto);
@@ -38,7 +41,7 @@ public interface AuthService {
             Long farmerId,
             String password, String role);
 
-    void softDeleteAccount(Long farmerId, String password, String role);
+    void softDeleteAccount(Long farmerId, DeleteAccountRequestDTO requestDTO, String role);
 
     void findUser(String email);
 }
