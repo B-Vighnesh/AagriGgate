@@ -15,6 +15,34 @@ function sortConversations(items) {
   });
 }
 
+function groupConversationsByStatus(items) {
+  const buckets = {
+    active: [],
+    completed: [],
+    expired: [],
+    failed: [],
+  };
+
+  items.forEach((item) => {
+    const status = String(item.status || 'ACTIVE').toUpperCase();
+    if (status === 'COMPLETED') {
+      buckets.completed.push(item);
+      return;
+    }
+    if (status === 'EXPIRED') {
+      buckets.expired.push(item);
+      return;
+    }
+    if (status === 'FAILED') {
+      buckets.failed.push(item);
+      return;
+    }
+    buckets.active.push(item);
+  });
+
+  return buckets;
+}
+
 export default function Chat() {
   const { conversationId } = useParams();
   const navigate = useNavigate();
@@ -78,6 +106,11 @@ export default function Chat() {
   const counterpartyName = activeConversation
     ? (currentUserId === activeConversation.buyerId ? activeConversation.farmerName : activeConversation.buyerName)
     : '';
+
+  const groupedConversations = useMemo(
+    () => groupConversationsByStatus(conversations),
+    [conversations]
+  );
 
   useEffect(() => {
     activeConversationIdRef.current = resolvedConversationId;
@@ -213,6 +246,51 @@ export default function Chat() {
     navigate(`/chat/${targetConversation.conversationId}`);
   };
 
+  const renderConversationSection = (title, tone, items) => {
+    if (!items.length) {
+      return null;
+    }
+
+    return (
+      <div className="chat-section">
+        <div className={`chat-section__head chat-section__head--${tone}`}>
+          <strong>{title}</strong>
+          <span>{items.length}</span>
+        </div>
+
+        <div className="chat-conversation-list">
+          {items.map((item) => {
+            const active = item.conversationId === resolvedConversationId;
+            const counterpart = currentUserId === item.buyerId ? item.farmerName : item.buyerName;
+            const statusTone = String(item.status || 'ACTIVE').toLowerCase();
+
+            return (
+              <button
+                key={item.conversationId}
+                type="button"
+                className={
+                  active
+                    ? `chat-conversation-card chat-conversation-card--${statusTone} chat-conversation-card--active`
+                    : `chat-conversation-card chat-conversation-card--${statusTone}`
+                }
+                onClick={() => openConversation(item)}
+              >
+                <div className="chat-conversation-card__top">
+                  <strong>{item.listingName}</strong>
+                  <small className={`chat-conversation-card__status chat-conversation-card__status--${statusTone}`}>
+                    {item.status}
+                  </small>
+                </div>
+                <span>With {counterpart}</span>
+                <small>Requested quantity: {item.requestedQuantity ?? 'Not specified'}</small>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   const handleSend = () => {
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
       showToast('Chat connection is not ready yet.', 'error');
@@ -303,26 +381,11 @@ export default function Chat() {
               <p>Accepted requests will create conversations here for buyers and farmers.</p>
             </div>
           ) : (
-            <div className="chat-conversation-list">
-              {conversations.map((item) => {
-                const active = item.conversationId === resolvedConversationId;
-                const counterpart = currentUserId === item.buyerId ? item.farmerName : item.buyerName;
-                return (
-                  <button
-                    key={item.conversationId}
-                    type="button"
-                    className={active ? 'chat-conversation-card chat-conversation-card--active' : 'chat-conversation-card'}
-                    onClick={() => openConversation(item)}
-                  >
-                    <div className="chat-conversation-card__top">
-                      <strong>{item.listingName}</strong>
-                      <small>{item.status}</small>
-                    </div>
-                    <span>With {counterpart}</span>
-                    <small>Requested quantity: {item.requestedQuantity ?? 'Not specified'}</small>
-                  </button>
-                );
-              })}
+            <div className="chat-sidebar__sections">
+              {renderConversationSection('Active Chats', 'active', groupedConversations.active)}
+              {renderConversationSection('Completed', 'completed', groupedConversations.completed)}
+              {renderConversationSection('Expired', 'expired', groupedConversations.expired)}
+              {renderConversationSection('Failed', 'failed', groupedConversations.failed)}
             </div>
           )}
         </Card>

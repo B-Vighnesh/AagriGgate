@@ -4237,6 +4237,74 @@ a {
   align-self: start;
 }
 
+.chat-sidebar__sections {
+  display: grid;
+  gap: 16px;
+}
+
+.chat-section {
+  display: grid;
+  gap: 10px;
+}
+
+.chat-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.chat-section__head strong {
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.chat-section__head span {
+  min-width: 30px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.chat-section__head--active strong,
+.chat-section__head--active span {
+  color: var(--color-primary-dark);
+}
+
+.chat-section__head--active span {
+  background: #e5f3ec;
+}
+
+.chat-section__head--completed strong,
+.chat-section__head--completed span {
+  color: #237c52;
+}
+
+.chat-section__head--completed span {
+  background: #e4f6eb;
+}
+
+.chat-section__head--expired strong,
+.chat-section__head--expired span {
+  color: #17211d;
+}
+
+.chat-section__head--expired span {
+  background: #ecefee;
+}
+
+.chat-section__head--failed strong,
+.chat-section__head--failed span {
+  color: #b53434;
+}
+
+.chat-section__head--failed span {
+  background: #fff0f0;
+}
+
 .chat-sidebar__head {
   display: flex;
   align-items: flex-start;
@@ -4326,6 +4394,26 @@ a {
 .chat-conversation-card span,
 .chat-conversation-card small {
   color: var(--color-muted);
+}
+
+.chat-conversation-card__status {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.chat-conversation-card--completed strong,
+.chat-conversation-card__status--completed {
+  color: #237c52;
+}
+
+.chat-conversation-card--expired strong,
+.chat-conversation-card__status--expired {
+  color: #111111;
+}
+
+.chat-conversation-card--failed strong,
+.chat-conversation-card__status--failed {
+  color: #b53434;
 }
 
 .chat-panel {
