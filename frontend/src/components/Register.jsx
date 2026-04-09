@@ -118,7 +118,12 @@ export default function Register() {
     try {
       await requestJson('/auth/register/send-otp', {
         method: 'POST',
-        body: JSON.stringify({ email: form.email }),
+        body: JSON.stringify({
+          email: form.email,
+          firstName: form.firstName,
+          username: form.username,
+          role,
+        }),
       });
       setStep(1);
       showToast('OTP sent to your email.', 'success');
@@ -140,7 +145,7 @@ export default function Register() {
     try {
       await requestJson('/auth/register/verify-otp', {
         method: 'POST',
-        body: JSON.stringify({ email: form.email, otp }),
+        body: JSON.stringify({ email: form.email, otp, role }),
       });
       setStep(2);
       showToast('OTP verified.', 'success');

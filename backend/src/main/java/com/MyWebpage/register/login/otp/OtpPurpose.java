@@ -1,7 +1,9 @@
 package com.MyWebpage.register.login.otp;
 
 public enum OtpPurpose {
-    REGISTRATION,
+    SELLER_REGISTRATION,
+    BUYER_REGISTRATION,
     LOGIN,
-    DELETION, PASSWORD_RESET
+    DELETION,
+    PASSWORD_RESET
 }

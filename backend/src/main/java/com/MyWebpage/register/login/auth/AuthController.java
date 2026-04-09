@@ -31,14 +31,15 @@ public class AuthController {
     @PostMapping("/register/send-otp")
     public ResponseEntity<String> sendRegistrationOtp(@RequestBody FarmerRequestDTO dto) {
         authService.findUser(dto.getEmail());
-        String otp = otpService.issueOtp(dto.getEmail(), OtpPurpose.REGISTRATION);
+        OtpPurpose registrationPurpose = resolveRegistrationPurpose(dto.getRole());
+        String otp = otpService.issueOtp(dto.getEmail(), registrationPurpose);
         emailService.sendRegistrationOtpEmail(dto.getEmail(), dto.getFirstName(), dto.getUsername(), otp);
         return ResponseEntity.ok("OTP sent");
     }
 
     @PostMapping("/register/verify-otp")
     public ResponseEntity<String> verifyRegistrationOtp(@RequestBody VerifyOtpRequestDTO dto) {
-        boolean verified = otpService.verifyOtp(dto.getEmail(), OtpPurpose.REGISTRATION, dto.getOtp());
+        boolean verified = otpService.verifyOtp(dto.getEmail(), resolveRegistrationPurpose(dto.getRole()), dto.getOtp());
         if (!verified) {
             throw new IllegalArgumentException("Invalid OTP");
         }
@@ -109,5 +110,12 @@ public class AuthController {
         Long farmerId = Long.parseLong(authentication.getName());
         authService.softDeleteAccount(farmerId, request.getCurrentPassword());
         return ResponseEntity.ok("Account deactivated");
+    }
+
+    private OtpPurpose resolveRegistrationPurpose(String role) {
+        if ("buyer".equalsIgnoreCase(role) || "BUYER".equalsIgnoreCase(role)) {
+            return OtpPurpose.BUYER_REGISTRATION;
+        }
+        return OtpPurpose.SELLER_REGISTRATION;
     }
 }

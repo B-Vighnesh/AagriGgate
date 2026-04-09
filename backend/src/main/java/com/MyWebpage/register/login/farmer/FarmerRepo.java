@@ -22,7 +22,11 @@ public interface FarmerRepo extends JpaRepository<Farmer,Long> {
 
     Optional<Farmer> findByEmail(String email);
 
+    Optional<Farmer> findByEmailAndActiveTrue(String email);
+
     void deleteByFarmerId(Long farmerId);
 
     boolean existsByEmail(@Email @NotBlank String email);
+
+    boolean existsByEmailAndActiveTrue(@Email @NotBlank String email);
 }
