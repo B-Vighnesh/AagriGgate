@@ -60,12 +60,16 @@ function ScrollManager() {
 
 function AppRoutes() {
   const location = useLocation();
+  const isChatRoute = location.pathname.startsWith('/chat');
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isChatRoute ? 'app-shell--chat' : ''}`.trim()}>
       <ScrollManager />
       <Navbar />
-      <main className="app-main app-main--transition" key={`${location.pathname}${location.hash}`}>
+      <main
+        className={`app-main app-main--transition ${isChatRoute ? 'app-main--chat' : ''}`.trim()}
+        key={`${location.pathname}${location.hash}`}
+      >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/account" element={<Account />} />
