@@ -179,11 +179,12 @@ export default function ViewApproachForUser() {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="chat-launch-btn"
                       onClick={() => openChat(item.approachId)}
                       loading={chatLoadingId === item.approachId}
                       disabled={chatLoadingId !== null}
                     >
-                      {chatLoadingId === item.approachId ? 'Opening...' : 'Chat'}
+                      {chatLoadingId === item.approachId ? 'Opening Chat...' : 'Open Chat'}
                     </Button>
                   ) : null}
 

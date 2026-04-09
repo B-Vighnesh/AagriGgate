@@ -207,11 +207,12 @@ export default function ViewApproachByFarmerAndCrop() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="chat-launch-btn"
                         onClick={() => openChat(approach.approachId)}
                         loading={chatLoadingId === approach.approachId}
                         disabled={chatLoadingId !== null}
                       >
-                        {chatLoadingId === approach.approachId ? 'Opening...' : 'Chat'}
+                        {chatLoadingId === approach.approachId ? 'Opening Chat...' : 'Open Chat'}
                       </Button>
                     ) : null}
 
