@@ -403,7 +403,35 @@ export default function Navbar() {
                 </Link>
               );
             })}
+
+            {loggedIn ? (
+              <Link
+                to="/chat"
+                className={`site-nav__utility ${isActive('/chat') ? 'site-nav__utility--active' : ''}`}
+                onClick={() => {
+                  setMobileOpen(false);
+                  setOpenDropdownKey('');
+                }}
+              >
+                💬 Chat
+              </Link>
+            ) : null}
           </nav>
+
+          {loggedIn ? (
+            <Link
+              to="/chat"
+              className={`header-utility-link chat-nav-shortcut ${isActive('/chat') ? 'header-utility-link--active' : ''}`}
+              aria-label="Open chat"
+              data-tooltip="Chat"
+              onClick={() => {
+                setMobileOpen(false);
+                setOpenDropdownKey('');
+              }}
+            >
+              <span className="header-utility-link__emoji" aria-hidden="true">💬</span>
+            </Link>
+          ) : null}
 
           {loggedIn ? (
             <div className="notification-bell" ref={drawerRef}>

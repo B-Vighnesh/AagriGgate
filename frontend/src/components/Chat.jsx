@@ -37,10 +37,28 @@ export default function Chat() {
 
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const messageListRef = useRef(null);
+  const activeConversationIdRef = useRef(null);
+  const stickToBottomRef = useRef(true);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
     window.setTimeout(() => setToast({ message: '', type: 'info' }), 2800);
+  };
+
+  const scrollMessagesToBottom = (behavior = 'auto') => {
+    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+  };
+
+  const updateStickiness = () => {
+    const container = messageListRef.current;
+    if (!container) {
+      stickToBottomRef.current = true;
+      return;
+    }
+
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    stickToBottomRef.current = distanceFromBottom < 56;
   };
 
   const resolvedConversationId = useMemo(() => {
@@ -53,6 +71,10 @@ export default function Chat() {
   const counterpartyName = activeConversation
     ? (currentUserId === activeConversation.buyerId ? activeConversation.farmerName : activeConversation.buyerName)
     : '';
+
+  useEffect(() => {
+    activeConversationIdRef.current = resolvedConversationId;
+  }, [resolvedConversationId]);
 
   const loadConversations = async () => {
     setLoadingList(true);
@@ -93,6 +115,8 @@ export default function Chat() {
     try {
       const data = await getChatMessages(targetConversationId);
       setMessages(Array.isArray(data) ? data : []);
+      stickToBottomRef.current = true;
+      window.requestAnimationFrame(() => scrollMessagesToBottom('auto'));
     } catch (error) {
       showToast(error.message || 'Unable to load chat messages.', 'error');
       setMessages([]);
@@ -135,7 +159,7 @@ export default function Chat() {
                 : item
             )));
             setMessages((prev) => {
-              if (incoming.conversationId !== resolvedConversationId) {
+              if (incoming.conversationId !== activeConversationIdRef.current) {
                 return prev;
               }
               if (prev.some((item) => item.messageId === incoming.messageId)) {
@@ -143,6 +167,9 @@ export default function Chat() {
               }
               return [...prev, incoming];
             });
+            if (incoming.conversationId === activeConversationIdRef.current && stickToBottomRef.current) {
+              window.requestAnimationFrame(() => scrollMessagesToBottom('smooth'));
+            }
           }
 
           if (payload?.type === 'CONVERSATION_UPDATE' && payload.data) {
@@ -173,11 +200,7 @@ export default function Chat() {
       showToast(error.message || 'Unable to connect chat.', 'error');
       return undefined;
     }
-  }, [token, role, resolvedConversationId]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [token, role]);
 
   const openConversation = async (targetConversation) => {
     navigate(`/chat/${targetConversation.conversationId}`);
@@ -200,6 +223,7 @@ export default function Chat() {
       conversationId: resolvedConversationId,
       messageText: composer.trim(),
     }));
+    stickToBottomRef.current = true;
     setComposer('');
   };
 
@@ -257,6 +281,9 @@ export default function Chat() {
             <div>
               <span className="settings-kicker">Negotiation Space</span>
               <h1>Marketplace Chat</h1>
+              <p className="chat-sidebar__subcopy">
+                Live negotiation stays tied to the accepted request, so both sides can talk clearly and close the deal with context.
+              </p>
             </div>
             <span className={socketReady ? 'chat-connection chat-connection--live' : 'chat-connection'}>
               {socketReady ? 'Live' : 'Offline'}
@@ -280,9 +307,12 @@ export default function Chat() {
                     className={active ? 'chat-conversation-card chat-conversation-card--active' : 'chat-conversation-card'}
                     onClick={() => openConversation(item)}
                   >
-                    <strong>{item.listingName}</strong>
+                    <div className="chat-conversation-card__top">
+                      <strong>{item.listingName}</strong>
+                      <small>{item.status}</small>
+                    </div>
                     <span>With {counterpart}</span>
-                    <small>{item.status}</small>
+                    <small>Requested quantity: {item.requestedQuantity ?? 'Not specified'}</small>
                   </button>
                 );
               })}
@@ -327,7 +357,7 @@ export default function Chat() {
                 <span>Farmer confirmed: <strong>{activeConversation.farmerDealConfirmed ? 'Yes' : 'No'}</strong></span>
               </div>
 
-              <div className="chat-message-list">
+              <div className="chat-message-list" ref={messageListRef} onScroll={updateStickiness}>
                 {loadingMessages ? (
                   <div className="chat-empty">
                     <div className="ui-spinner ui-spinner--lg" />
@@ -352,6 +382,11 @@ export default function Chat() {
                               : 'chat-message chat-message--other'
                         }
                       >
+                        {!isSystem ? (
+                          <strong className="chat-message__sender">
+                            {mine ? 'You' : counterpartyName}
+                          </strong>
+                        ) : null}
                         <p>{item.messageText}</p>
                         <span>{new Date(item.createdAt).toLocaleString()}</span>
                       </div>
@@ -362,6 +397,14 @@ export default function Chat() {
               </div>
 
               <div className="chat-composer">
+                <div className="chat-composer__head">
+                  <strong>{activeConversation.status === 'ACTIVE' ? 'Send a message' : 'Conversation closed'}</strong>
+                  <span>
+                    {activeConversation.status === 'ACTIVE'
+                      ? 'Keep negotiation inside the app so the history stays clear for both sides.'
+                      : 'This chat is now read-only because the deal has already been resolved.'}
+                  </span>
+                </div>
                 <textarea
                   value={composer}
                   onChange={(event) => setComposer(event.target.value)}

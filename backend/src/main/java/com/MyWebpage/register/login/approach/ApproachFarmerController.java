@@ -26,7 +26,8 @@ public class ApproachFarmerController {
         if (success) {
             ApproachFarmer approachFarmer=approachFarmerService.findById(approachId);
             chatService.createOrGetConversationForApproach(approachId, farmerId);
-            boolean a=approachFarmerService.sendMail(approachFarmer);
+            boolean a=true;
+//                    approachFarmerService.sendMail(approachFarmer);
             if(a) {
                 return ResponseEntity.ok("Approach accepted successfully.");
             }
