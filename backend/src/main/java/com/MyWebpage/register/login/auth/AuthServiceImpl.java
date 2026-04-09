@@ -59,10 +59,10 @@ public class AuthServiceImpl implements AuthService {
             FarmerRequestDTO dto,
             String role) {
 
-        if (farmerRepo.existsByEmail(dto.getEmail())) {
+        if (farmerRepo.existsByEmailAndActiveTrue(dto.getEmail())) {
             throw new RuntimeException("Email exists");
         }
-        if (!otpService.isOtpVerified(dto.getEmail(), OtpPurpose.REGISTRATION)) {
+        if (!otpService.isOtpVerified(dto.getEmail(), resolveRegistrationPurpose(role))) {
             throw new RuntimeException("OTP not verified");
         }
 
@@ -82,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
         farmer.setUsername(generatedUsername);
 
         farmer = farmerRepo.save(farmer);
-        otpService.clearOtp(dto.getEmail(), OtpPurpose.REGISTRATION);
+        otpService.clearOtp(dto.getEmail(), resolveRegistrationPurpose(role));
         emailService.sendWelcomeEmail(farmer);
 
         String token =
@@ -231,7 +231,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void findUser(String email) {
-        if(farmerRepo.existsByEmail(email))
+        if(farmerRepo.existsByEmailAndActiveTrue(email))
         {
             throw new RuntimeException("User already exists");
         }
@@ -295,5 +295,12 @@ public class AuthServiceImpl implements AuthService {
                 .replaceAll("[^a-z0-9]", "");
 
         return cleaned.isBlank() ? "ag" : cleaned;
+    }
+
+    private OtpPurpose resolveRegistrationPurpose(String role) {
+        if ("BUYER".equalsIgnoreCase(role) || "buyer".equalsIgnoreCase(role)) {
+            return OtpPurpose.BUYER_REGISTRATION;
+        }
+        return OtpPurpose.SELLER_REGISTRATION;
     }
 }
