@@ -54,10 +54,15 @@ export const changePassword = async (currentPassword, newPassword) =>
     body: JSON.stringify({ currentPassword, newPassword }),
   });
 
-export const deleteAccount = async (currentPassword) =>
+export const sendDeleteAccountOtp = async () =>
+  requestJson('/auth/delete-account/send-otp', {
+    method: 'POST',
+  });
+
+export const deleteAccount = async (password, otp) =>
   requestJson('/auth/delete-account', {
     method: 'DELETE',
-    body: JSON.stringify({ currentPassword }),
+    body: JSON.stringify({ password, otp }),
   });
 
 // export const deactivateAccount = async (currentPassword) =>

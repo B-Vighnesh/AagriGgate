@@ -150,6 +150,18 @@ public class EmailService {
         sendMail(farmer.getEmail(), msg, subject);
     }
 
+    public void sendDeletionOtpEmail(Farmer farmer, String otp) {
+        String subject = "Confirm Your AagriGgate Account Deletion";
+        String msg = "Hello " + buildDisplayName(farmer.getFirstName(), farmer.getUsername()) + ",\n\n" +
+                "We received a request to delete your AagriGgate account.\n\n" +
+                "Your one-time password (OTP) is: " + otp + "\n\n" +
+                "This OTP is valid for 5 minutes. Please do not share it with anyone.\n\n" +
+                "If you did not request account deletion, you can safely ignore this email and keep your account active.\n\n" +
+                "Regards,\n" +
+                "Team AagriGgate";
+        sendMail(farmer.getEmail(), msg, subject);
+    }
+
     public void sendPasswordResetSuccessEmail(Farmer farmer) {
         String subject = "Your AagriGgate Password Has Been Reset";
         String msg = "Hello " + buildDisplayName(farmer.getFirstName(), farmer.getUsername()) + ",\n\n" +

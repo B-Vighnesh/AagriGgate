@@ -1,0 +1,2 @@
+-- PostgreSQL otp_token.purpose is stored as VARCHAR(32), so no schema change is required.
+-- This migration preserves Flyway ordering for the DELETION OTP purpose rollout.

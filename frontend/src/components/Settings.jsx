@@ -6,6 +6,7 @@ import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { apiFetch } from '../lib/api';
 import { clearAuth, getFarmerId, getRole, getToken } from '../lib/auth';
+import { deleteAccount as requestDeleteAccount, sendDeleteAccountOtp } from '../api/authApi';
 // import { deactivateAccount as requestDeactivateAccount } from '../api/authApi';
 
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
@@ -26,7 +27,9 @@ export default function Settings() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteStep, setDeleteStep] = useState(1);
   const [deletePassword, setDeletePassword] = useState('');
+  const [deleteOtp, setDeleteOtp] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteOtpLoading, setDeleteOtpLoading] = useState(false);
   // const [deleteMode, setDeleteMode] = useState('hard');
 
   const [toast, setToast] = useState({ message: '', type: 'info' });
@@ -85,24 +88,34 @@ export default function Settings() {
     }
   };
 
+  const handleSendDeleteOtp = async () => {
+    if (!deletePassword.trim()) {
+      showToast('Enter current password first.', 'error');
+      return;
+    }
+    setDeleteOtpLoading(true);
+    try {
+      await sendDeleteAccountOtp();
+      showToast('OTP sent to your registered email.', 'success');
+    } catch (err) {
+      showToast(err.message || 'Unable to send delete OTP.', 'error');
+    } finally {
+      setDeleteOtpLoading(false);
+    }
+  };
+
   const deleteAccount = async () => {
+    if (!deletePassword.trim()) {
+      showToast('Current password is required.', 'error');
+      return;
+    }
+    if (!deleteOtp.trim()) {
+      showToast('OTP is required.', 'error');
+      return;
+    }
     setDeleteLoading(true);
     try {
-      
-        const response = await apiFetch('/auth/delete-account', {
-          method: 'DELETE',
-          body: JSON.stringify({ currentPassword: deletePassword }),
-        });
-        if (!response.ok) {
-          let message = 'Failed to delete account.';
-          try {
-            const body = await response.json();
-            message = body?.message || message;
-          } catch {
-            // ignore parse errors
-          }
-          throw new Error(message);
-        }
+      await requestDeleteAccount(deletePassword, deleteOtp);
       clearAuth();
       showToast('Account deleted.', 'success');
       setTimeout(() => navigate('/register'), 900);
@@ -113,6 +126,7 @@ export default function Settings() {
       setShowDeleteModal(false);
       setDeleteStep(1);
       setDeletePassword('');
+      setDeleteOtp('');
     }
   };
 
@@ -259,13 +273,26 @@ export default function Settings() {
               <>
                 <h3>Final Confirmation</h3>
                 <p>
-                  Enter current password to confirm account deletion.
+                  Enter your current password, request the deletion OTP, and then confirm with both.
                 </p>
                 <input
                   type="password"
                   value={deletePassword}
                   onChange={(event) => setDeletePassword(event.target.value)}
                   placeholder="Current password"
+                />
+                <div className="confirm-actions">
+                  <Button variant="outline" loading={deleteOtpLoading} onClick={handleSendDeleteOtp}>
+                    {deleteOtpLoading ? 'Sending OTP...' : 'Send OTP'}
+                  </Button>
+                </div>
+                <input
+                  type="text"
+                  value={deleteOtp}
+                  onChange={(event) => setDeleteOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Enter OTP"
+                  inputMode="numeric"
+                  maxLength={6}
                 />
                 <div className="confirm-actions">
                   <Button variant="outline" onClick={() => setDeleteStep(1)}>Back</Button>

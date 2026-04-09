@@ -3,6 +3,7 @@ package com.MyWebpage.register.login.auth;
 import com.MyWebpage.register.login.approach.ApproachFarmerService;
 import com.MyWebpage.register.login.auth.dto.AuthRequestDTO;
 import com.MyWebpage.register.login.auth.dto.AuthResponseDTO;
+import com.MyWebpage.register.login.auth.dto.DeleteAccountRequestDTO;
 import com.MyWebpage.register.login.auth.dto.OtpLoginRequestDTO;
 import com.MyWebpage.register.login.cart.CartItemRepo;
 import com.MyWebpage.register.login.crop.CropService;
@@ -127,6 +128,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public void sendDeletionOtp(Long farmerId) {
+        Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
+        ensureAccountActive(farmer);
+        String otp = otpService.issueOtp(farmer.getFarmerId().toString(), OtpPurpose.DELETION);
+        emailService.sendDeletionOtpEmail(farmer, otp);
+    }
+
+    @Override
     public AuthResponseDTO loginWithOtp(
             OtpLoginRequestDTO dto) {
 
@@ -195,11 +204,15 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void softDeleteAccount(Long farmerId, String password, String role) {
+    public void softDeleteAccount(Long farmerId, DeleteAccountRequestDTO request, String role) {
         Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
         ensureAccountActive(farmer);
+        if(!otpService.verifyAndConsumeOtp(farmerId.toString(),OtpPurpose.DELETION, request.getOtp()))
+        {
+            throw new IllegalArgumentException("Invalid otp");
 
-        if (!passwordEncoder.matches(password, farmer.getPassword())) {
+        }
+        if (!passwordEncoder.matches(request.getPassword(), farmer.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
         }
 
