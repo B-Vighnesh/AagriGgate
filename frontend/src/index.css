@@ -53,12 +53,17 @@ a {
   flex: 1;
 }
 
+.app-main--chat {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .app-main--transition {
   animation: pageFadeIn 0.34s ease;
 }
 
 .ag-container {
-  width: min(1120px, 92%);
+  width: min(1440px, 95%);
   margin: 0 auto;
 }
 
