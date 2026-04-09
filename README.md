@@ -256,16 +256,45 @@ http://localhost:5173
 
 ## Environment Variables
 
-- DB_URL
-- DB_USERNAME
-- DB_PASSWORD
-- JWT_SECRET
-- EMAIL_USERNAME
-- EMAIL_PASSWORD
-- WEATHER_API_KEY
-- MARKET_API_KEY
-- ADMIN_USERNAME
-- ADMIN_PASSWORD
+SPRING_PROFILES_ACTIVE=dev
+SERVER_PORT=8080
+
+DB_URL=jdbc:mysql://localhost:3306/app
+DB_USERNAME=root
+DB_PASSWORD=replace_me
+
+
+EMAIL_USERNAME=your-email@example.com
+EMAIL_PASSWORD=replace_me
+
+APP_SECURITY_USER=dev-user
+APP_SECURITY_PASSWORD=replace_me
+
+JWT_SECRET=base64_encoded_32_byte_secret_here
+
+MARKET_API_INGEST_ON_STARTUP=false
+MARKET_API_STARTUP_STATE=Karnataka
+MARKET_API_STARTUP_DISTRICT=Bangalore
+WEATHER_API_URL=https://api.weatherapi.com/v1/current.json
+WEATHER_API_KEY=replace_me
+
+MARKET_API_URL=https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24
+MARKET_API_KEY=replace_me
+
+NEWS_GNEWS_URL=https://gnews.io/api/v4
+NEWS_API_KEY=replace_me
+
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=replace_me
+
+APP_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174
+
+NEWS_API_CLEANUP_CRON=0 0 0 * * *
+NEWS_API_QUOTA_RESET_CRON=0 0 0 * * *
+NEWS_API_SCHEDULER_CRON=0 0 0 * * *
+MARKET_API_INGESTION_CRON=0 0 9 * * *
+OTP_CLEANUP_CRON=0 */5 * * * *
+
 
 ---
 
