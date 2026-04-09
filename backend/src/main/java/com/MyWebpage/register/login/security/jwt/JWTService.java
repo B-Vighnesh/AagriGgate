@@ -35,7 +35,7 @@ public class JWTService {
 
     public String generateAdminToken(String adminUsername, Duration ttl) {
         return generateToken(
-                String.valueOf(-1L),
+                String.valueOf(1L),
                 AppRoles.ADMIN,
                 ttl,
                 Map.of("adminUsername", adminUsername)
