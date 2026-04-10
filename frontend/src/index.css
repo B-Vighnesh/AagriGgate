@@ -4788,7 +4788,7 @@ a {
 }
 
 .chat-deal-panel {
-  display: grid;
+  display: none;
   align-self: start;
   gap: 14px;
   background: #ffffff;
@@ -5016,23 +5016,13 @@ a {
   padding: 6px 10px;
 }
 
-.chat-deal-drawer {
-  position: fixed;
-  inset: 0;
-  z-index: 220;
-  background: rgba(0, 0, 0, 0.38);
-  display: grid;
-  align-items: end;
+.chat-summary-modal {
+  width: min(560px, 96%);
+  max-height: min(88vh, 780px);
+  overflow: auto;
 }
 
-.chat-deal-drawer__card {
-  width: min(720px, 96%);
-  margin: 0 auto 12px;
-  border-radius: 18px;
-  padding: 14px 16px 18px;
-}
-
-.chat-deal-drawer__head {
+.chat-summary-modal__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -5042,7 +5032,7 @@ a {
   border-bottom: 1px solid #e6eeea;
 }
 
-.chat-deal-drawer__head strong {
+.chat-summary-modal__head strong {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -5051,7 +5041,7 @@ a {
   letter-spacing: 0.01em;
 }
 
-.chat-deal-drawer__head button {
+.chat-summary-modal__head button {
   border: 1px solid #d7e5de;
   background: #f7fbf9;
   font-weight: 700;
@@ -5067,29 +5057,6 @@ a {
   box-shadow: none;
   border: 0;
   background: #ffffff;
-}
-
-@media (min-width: 1025px) {
-  .chat-deal-panel {
-    display: none;
-  }
-
-  .chat-deal-drawer .chat-deal-panel--drawer {
-    display: grid;
-  }
-
-  .chat-deal-drawer {
-    align-items: stretch;
-    justify-items: end;
-  }
-
-  .chat-deal-drawer__card {
-    width: 320px;
-    height: 100%;
-    margin: 0;
-    border-radius: 18px 0 0 18px;
-    padding: 16px 16px 20px;
-  }
 }
 
 .chat-launch-btn {
