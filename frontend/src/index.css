@@ -4226,9 +4226,13 @@ a {
 
 .chat-shell {
   display: grid;
-  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 14px;
   align-items: stretch;
+}
+
+.chat-sidebar {
+  width: 320px;
 }
 
 .chat-sidebar,
@@ -4241,6 +4245,8 @@ a {
   display: grid;
   gap: 14px;
   align-self: start;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: calc(100vh - 120px);
   background:
     radial-gradient(circle at top left, rgba(47, 154, 116, 0.18), transparent 34%),
     linear-gradient(180deg, #f7fff9, #e9f7ef);
@@ -4251,6 +4257,8 @@ a {
 .chat-sidebar__sections {
   display: grid;
   gap: 16px;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .chat-section {
@@ -4375,10 +4383,29 @@ a {
   border: 1px solid #dbe9e1;
   background: rgba(255, 255, 255, 0.96);
   display: grid;
-  gap: 2px;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.chat-conversation-card__avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e6f1ec;
+  color: #1f6f54;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.chat-conversation-card__content {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
 }
 
 .chat-conversation-card__top {
@@ -4426,6 +4453,26 @@ a {
 .chat-conversation-card strong {
   color: var(--color-primary-dark);
   font-size: 0.9rem;
+}
+
+.chat-conversation-card__listing {
+  display: block;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+
+.chat-conversation-card__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.chat-conversation-card__meta time {
+  font-variant-numeric: tabular-nums;
 }
 
 .chat-conversation-card span,
@@ -4971,7 +5018,7 @@ a {
   }
 
   .chat-deal-drawer__card {
-    width: min(360px, 92vw);
+    width: 320px;
     height: 100%;
     margin: 0;
     border-radius: 18px 0 0 18px;
