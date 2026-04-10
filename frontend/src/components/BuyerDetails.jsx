@@ -91,7 +91,7 @@ export default function BuyerDetails() {
             className="buyer-profile-back"
             onClick={() => navigate(-1)}
           >
-            <span aria-hidden="true">←</span>
+            <span aria-hidden="true">{'<-'}</span>
             <span>Back</span>
           </button>
         </div>
