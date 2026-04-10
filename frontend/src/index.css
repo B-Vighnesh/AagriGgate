@@ -4916,6 +4916,7 @@ a {
   width: min(720px, 96%);
   margin: 0 auto 12px;
   border-radius: 18px;
+  padding: 14px 16px 18px;
 }
 
 .chat-deal-drawer__head {
@@ -4923,14 +4924,29 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e6eeea;
+}
+
+.chat-deal-drawer__head strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  color: var(--color-primary-dark);
+  letter-spacing: 0.01em;
 }
 
 .chat-deal-drawer__head button {
-  border: 0;
-  background: transparent;
+  border: 1px solid #d7e5de;
+  background: #f7fbf9;
   font-weight: 700;
   color: var(--color-primary-dark);
   cursor: pointer;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
 }
 
 .chat-deal-panel--drawer {
@@ -4959,6 +4975,7 @@ a {
     height: 100%;
     margin: 0;
     border-radius: 18px 0 0 18px;
+    padding: 16px 16px 20px;
   }
 }
 
