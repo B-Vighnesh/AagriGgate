@@ -4231,6 +4231,14 @@ a {
   align-items: stretch;
 }
 
+.chat-shell--nosummary {
+  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+}
+
+.chat-shell--nosummary .chat-deal-panel {
+  display: none;
+}
+
 .chat-sidebar,
 .chat-panel,
 .chat-deal-panel {
@@ -4896,7 +4904,7 @@ a {
 
 .chat-panel__back,
 .chat-panel__deal-toggle {
-  display: none;
+  display: inline-flex;
   border: 1px solid #d7e5de;
   background: #ffffff;
   border-radius: 999px;

@@ -88,6 +88,7 @@ export default function Chat() {
   const [dealModalOpen, setDealModalOpen] = useState(false);
   const [dealDrawerOpen, setDealDrawerOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
+  const [showSummary, setShowSummary] = useState(true);
   const [useRequestedQuantity, setUseRequestedQuantity] = useState(true);
   const [dealQuantity, setDealQuantity] = useState('');
   const [dealLoading, setDealLoading] = useState(false);
@@ -431,15 +432,13 @@ export default function Chat() {
     <section className="page chat-page">
       <ValidateToken token={token} role={role} />
 
-      <div className={`ag-container chat-shell${isMobileConversation ? ' chat-shell--conversation' : ''}${dealDrawerOpen ? ' chat-shell--dealopen' : ''}`}>
+      <div className={`ag-container chat-shell${isMobileConversation ? ' chat-shell--conversation' : ''}${dealDrawerOpen ? ' chat-shell--dealopen' : ''}${showSummary ? '' : ' chat-shell--nosummary'}`}>
         <Card className="chat-sidebar">
           <div className="chat-sidebar__head">
             <div>
               <span className="settings-kicker">Negotiation Space</span>
               <h1>Marketplace Chat</h1>
-              <p className="chat-sidebar__subcopy">
-                Live negotiation stays tied to the accepted request, so both sides can talk clearly and close the deal with context.
-              </p>
+              
             </div>
             <span className={socketReady ? 'chat-connection chat-connection--live' : 'chat-connection'}>
               {socketReady ? 'Live' : 'Offline'}
@@ -500,9 +499,15 @@ export default function Chat() {
                   <button
                     type="button"
                     className="chat-panel__deal-toggle"
-                    onClick={() => setDealDrawerOpen(true)}
+                    onClick={() => {
+                      if (isMobileView) {
+                        setDealDrawerOpen(true);
+                      } else {
+                        setShowSummary((prev) => !prev);
+                      }
+                    }}
                   >
-                    View Deal Info
+                    {isMobileView ? 'View Deal Info' : (showSummary ? 'Hide Summary' : 'Show Summary')}
                   </button>
                   <Button
                     variant="outline"
