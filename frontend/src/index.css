@@ -4471,12 +4471,13 @@ a {
 
 .chat-panel {
   display: grid;
-  grid-template-rows: auto minmax(320px, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 14px;
   background: #ffffff;
   border-color: #d7e5de;
   box-shadow: 0 22px 42px rgba(22, 52, 41, 0.12);
   position: relative;
+  height: calc(100vh - 180px);
 }
 
 .chat-panel::before {
@@ -4546,7 +4547,7 @@ a {
     linear-gradient(180deg, #ffffff, #fbfcfb);
   padding: 16px;
   overflow-y: auto;
-  min-height: 320px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
