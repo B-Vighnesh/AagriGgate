@@ -4620,6 +4620,12 @@ a {
   line-height: 1;
 }
 
+.chat-icon-btn__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .chat-icon-btn[data-tip]::after {
   content: attr(data-tip);
   position: absolute;
