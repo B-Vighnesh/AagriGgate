@@ -4227,7 +4227,7 @@ a {
 
 .chat-shell {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr) 280px;
+  grid-template-columns: 300px minmax(0, 1fr);
   gap: 12px;
   align-items: stretch;
 }
@@ -4913,7 +4913,7 @@ a {
 }
 
 .chat-deal-panel {
-  display: grid;
+  display: none;
   align-self: start;
   gap: 14px;
   background: #ffffff;
