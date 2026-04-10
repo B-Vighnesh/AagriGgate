@@ -69,7 +69,7 @@ function IconBtn({ icon, label, onClick, disabled = false, className = '', dange
       aria-label={label}
       data-tip={label}
     >
-      {icon}
+      <span className="chat-icon-btn__glyph" aria-hidden="true">{icon}</span>
     </button>
   );
 }
@@ -97,7 +97,9 @@ function PanelMenu({ items }) {
         data-tip="More options"
         onClick={() => setOpen((v) => !v)}
       >
-        ⋮
+        <span className="chat-icon-btn__glyph" aria-hidden="true">
+          <i className="fa-solid fa-ellipsis-vertical" />
+        </span>
       </button>
       {open && (
         <div className="chat-panel-menu__dropdown">
@@ -109,7 +111,7 @@ function PanelMenu({ items }) {
               onClick={() => { item.action(); setOpen(false); }}
               disabled={item.disabled}
             >
-              <span className="chat-panel-menu__item-icon">{item.icon}</span>
+              <span className="chat-panel-menu__item-icon" aria-hidden="true">{item.icon}</span>
               {item.label}
             </button>
           ))}
@@ -521,9 +523,7 @@ export default function Chat() {
               <span className="settings-kicker">Negotiation Space</span>
               <h1>Marketplace Chat</h1>
             </div>
-            <span className={socketReady ? 'chat-connection chat-connection--live' : 'chat-connection'}>
-              {socketReady ? '🟢 Live' : '🔴 Offline'}
-            </span>
+            
           </div>
 
           {conversations.length === 0 ? (
@@ -568,7 +568,7 @@ export default function Chat() {
                 {/* left: back + counterparty info */}
                 <div className="chat-panel__title">
                   <IconBtn
-                    icon="←"
+                    icon={<i className="fa-solid fa-arrow-left" />}
                     label="Back to conversations"
                     className="chat-icon-btn--back"
                     onClick={() => {
@@ -604,7 +604,7 @@ export default function Chat() {
 
                   {/* deal icon */}
                   <IconBtn
-                    icon="🤝"
+                    icon={<i className="fa-solid fa-handshake" />}
                     label={activeConversation.status === 'COMPLETED' ? 'Deal Completed' : 'Confirm Deal'}
                     onClick={openDealModal}
                     disabled={activeConversation.status !== 'ACTIVE'}
@@ -614,17 +614,17 @@ export default function Chat() {
                   <PanelMenu
                     items={[
                       {
-                        icon: '📋',
+                        icon: <i className="fa-solid fa-file-lines" />,
                         label: 'View Listing',
                         action: () => navigate(`/view-details/${activeConversation.listingId}`),
                       },
                       {
-                        icon: '📊',
+                        icon: <i className="fa-solid fa-chart-column" />,
                         label: 'Summary',
                         action: () => setDealDrawerOpen(true),
                       },
                       {
-                        icon: '👤',
+                        icon: <i className="fa-solid fa-user" />,
                         label: 'View Buyer Profile',
                         action: () => buyerProfilePath && navigate(buyerProfilePath),
                         disabled: !buyerProfilePath,
@@ -753,7 +753,7 @@ export default function Chat() {
                   checked={useRequestedQty}
                   onChange={() => setUseRequestedQty(true)}
                 />
-                <span className="chat-radio__check" aria-hidden="true">✓</span>
+                <span className="chat-radio__check" aria-hidden="true" />
                 <div className="chat-radio__content">
                   <strong>Use requested quantity</strong>
                   <span>{activeConversation.requestedQuantity}</span>
@@ -766,7 +766,7 @@ export default function Chat() {
                   checked={!useRequestedQty}
                   onChange={() => setUseRequestedQty(false)}
                 />
-                <span className="chat-radio__check" aria-hidden="true">✓</span>
+                <span className="chat-radio__check" aria-hidden="true" />
                 <div className="chat-radio__content">
                   <strong>Use updated quantity</strong>
                   <span>Enter the final agreed quantity for both sides.</span>
@@ -821,3 +821,8 @@ export default function Chat() {
     </section>
   );
 }
+
+
+
+
+
