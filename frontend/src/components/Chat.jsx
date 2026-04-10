@@ -764,9 +764,9 @@ export default function Chat() {
       ) : null}
 
       {dealDrawerOpen && activeConversation ? (
-        <div className="chat-deal-drawer" onClick={() => setDealDrawerOpen(false)}>
-          <Card className="chat-deal-drawer__card" onClick={(event) => event.stopPropagation()}>
-            <div className="chat-deal-drawer__head">
+        <div className="confirm-overlay" onClick={() => setDealDrawerOpen(false)}>
+          <Card className="confirm-card chat-summary-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="chat-summary-modal__head">
               <strong>Deal Summary</strong>
               <button type="button" onClick={() => setDealDrawerOpen(false)}>Close</button>
             </div>
