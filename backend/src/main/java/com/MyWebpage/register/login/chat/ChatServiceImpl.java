@@ -216,7 +216,7 @@ public class ChatServiceImpl implements ChatService {
         Conversation conversation = conversationRepository
                 .findByConversationIdAndBuyerIdOrConversationIdAndFarmerId(conversationId, actorId, conversationId, actorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
-        validateParticipant(conversation, actorId);
+        validateParticipant(conversation, actorId);//optional
         return conversation;
     }
 
