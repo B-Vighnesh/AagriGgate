@@ -416,8 +416,8 @@ export default function Chat() {
   };
 
   const isMobileConversation = Boolean(activeConversation);
-  const buyerStatusLabel = activeConversation?.buyerDealConfirmed ? '✅ Confirmed' : '⏳ Pending';
-  const farmerStatusLabel = activeConversation?.farmerDealConfirmed ? '✅ Confirmed' : '⏳ Pending';
+  const buyerStatusLabel = activeConversation?.buyerDealConfirmed ? 'Confirmed' : 'Pending';
+  const farmerStatusLabel = activeConversation?.farmerDealConfirmed ? 'Confirmed' : 'Pending';
 
   if (loadingList) {
     return (
