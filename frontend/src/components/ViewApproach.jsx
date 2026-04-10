@@ -29,8 +29,6 @@ export default function ViewApproach() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [selectedBuyer, setSelectedBuyer] = useState(null);
-  const [buyerLoading, setBuyerLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [actionLoading, setActionLoading] = useState({ approachId: null, type: null });
   const [pendingDecision, setPendingDecision] = useState(null);
@@ -104,18 +102,8 @@ export default function ViewApproach() {
     }
   };
 
-  const onViewBuyer = async (buyerId) => {
-    setBuyerLoading(true);
-    try {
-      const data = await requestJson(`/buyers/${buyerId}`, {
-        method: 'GET',
-      });
-      setSelectedBuyer(data);
-    } catch (err) {
-      showToast(err.message || 'Unable to load buyer details.', 'error');
-    } finally {
-      setBuyerLoading(false);
-    }
+  const onViewBuyer = (buyerId) => {
+    navigate(`/view-buyer/${buyerId}`);
   };
 
   const openChat = async (approachId) => {
@@ -272,57 +260,6 @@ export default function ViewApproach() {
         ) : null}
 
       </div>
-
-      {buyerLoading ? (
-        <div className="confirm-overlay">
-          <Card className="confirm-card text-center">
-            <h3>Loading Buyer Details</h3>
-            <p>Please wait while we fetch buyer information.</p>
-          </Card>
-        </div>
-      ) : null}
-
-      {selectedBuyer ? (
-        <div className="confirm-overlay" onClick={() => setSelectedBuyer(null)}>
-          <Card className="confirm-card" onClick={(event) => event.stopPropagation()}>
-            <h3>Buyer Details</h3>
-            <p>Details for the selected buyer request.</p>
-
-            <div className="account-info-list">
-              <div className="account-info-row">
-                <span>Username</span>
-                <strong>{selectedBuyer?.username || '-'}</strong>
-              </div>
-              <div className="account-info-row">
-                <span>Name</span>
-                <strong>{`${selectedBuyer?.firstName || ''} ${selectedBuyer?.lastName || ''}`.trim() || '-'}</strong>
-              </div>
-              <div className="account-info-row">
-                <span>Email</span>
-                <strong>{selectedBuyer?.email || '-'}</strong>
-              </div>
-              <div className="account-info-row">
-                <span>Phone</span>
-                <strong>{selectedBuyer?.phoneNo || '-'}</strong>
-              </div>
-              <div className="account-info-row">
-                <span>State</span>
-                <strong>{selectedBuyer?.state || '-'}</strong>
-              </div>
-              <div className="account-info-row">
-                <span>District</span>
-                <strong>{selectedBuyer?.district || '-'}</strong>
-              </div>
-            </div>
-
-            <div className="confirm-actions">
-              <Button variant="outline" onClick={() => setSelectedBuyer(null)}>
-                Close
-              </Button>
-            </div>
-          </Card>
-        </div>
-      ) : null}
 
       <Modal
         isOpen={pendingDecision?.step === 1}
