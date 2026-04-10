@@ -4223,6 +4223,13 @@ a {
   background:
     radial-gradient(circle at top left, rgba(47, 154, 116, 0.08), transparent 24%),
     linear-gradient(180deg, #edf7f1 0%, #f7fbf8 100%);
+  padding: 18px 0;
+  overflow: hidden;
+}
+
+.chat-page .ag-container {
+  height: calc(100dvh - 112px);
+  min-height: 600px;
 }
 
 .chat-shell {
@@ -4230,6 +4237,7 @@ a {
   grid-template-columns: 300px minmax(0, 1fr);
   gap: 12px;
   align-items: stretch;
+  height: 100%;
 }
 
 .chat-sidebar {
@@ -4249,8 +4257,8 @@ a {
   gap: 14px;
   align-self: start;
   grid-template-rows: auto minmax(0, 1fr);
-  height: calc(100dvh - 120px);
-  min-height: 620px;
+  height: 100%;
+  min-height: 0;
   background:
     radial-gradient(circle at top left, rgba(47, 154, 116, 0.18), transparent 34%),
     linear-gradient(180deg, #f7fff9, #e9f7ef);
@@ -4550,8 +4558,8 @@ a {
   border-color: #d7e5de;
   box-shadow: 0 22px 42px rgba(22, 52, 41, 0.12);
   position: relative;
-  height: calc(100dvh - 120px);
-  min-height: 620px;
+  height: 100%;
+  min-height: 0;
 }
 
 .chat-panel::before {
@@ -4748,6 +4756,7 @@ a {
   padding: 12px;
   overflow-y: auto;
   min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -6807,6 +6816,15 @@ a {
 }
 
 @media (max-width: 1024px) {
+  .chat-page {
+    overflow: visible;
+  }
+
+  .chat-page .ag-container {
+    height: auto;
+    min-height: 0;
+  }
+
   .chat-shell {
     grid-template-columns: 1fr;
   }
