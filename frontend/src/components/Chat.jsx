@@ -356,7 +356,6 @@ export default function Chat() {
                       <span className="chat-conversation-card__listing">{item.listingName}</span>
                     </div>
                     <div className="chat-conversation-card__meta">
-                      <span className={`chat-status-dot chat-status-dot--${statusTone}`} aria-hidden="true" />
                       <time>{lastTime ? new Date(lastTime).toLocaleDateString() : ''}</time>
                     </div>
                   </div>
@@ -435,6 +434,11 @@ export default function Chat() {
     } finally {
       setDealLoading(false);
     }
+  };
+
+  const openDealModal = () => {
+    setDealDrawerOpen(false);
+    setDealModalOpen(true);
   };
 
   const isMobileConversation = Boolean(activeConversation);
@@ -543,7 +547,7 @@ export default function Chat() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setDealModalOpen(true)}
+                    onClick={openDealModal}
                     disabled={activeConversation.status !== 'ACTIVE'}
                   >
                     {activeConversation.status === 'COMPLETED' ? 'Deal Completed' : 'Deal Confirmation'}
@@ -685,7 +689,7 @@ export default function Chat() {
 
               <div className="chat-deal-panel__actions">
                 <Button
-                  onClick={() => setDealModalOpen(true)}
+                  onClick={openDealModal}
                   disabled={activeConversation.status !== 'ACTIVE'}
                 >
                   {activeConversation.status === 'COMPLETED' ? 'Deal Completed' : 'Confirm Deal'}
@@ -816,7 +820,7 @@ export default function Chat() {
 
               <div className="chat-deal-panel__actions">
                 <Button
-                  onClick={() => setDealModalOpen(true)}
+                  onClick={openDealModal}
                   disabled={activeConversation.status !== 'ACTIVE'}
                 >
                   {activeConversation.status === 'COMPLETED' ? 'Deal Completed' : 'Confirm Deal'}
