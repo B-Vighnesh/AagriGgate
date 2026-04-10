@@ -308,6 +308,12 @@ export default function Chat() {
       return null;
     }
 
+    const initialsFor = (name) => {
+      if (!name) return '??';
+      const parts = String(name).trim().split(/\s+/).slice(0, 2);
+      return parts.map((part) => part[0]?.toUpperCase()).join('');
+    };
+
     return (
       <div className="chat-section">
         <div className={`chat-section__head chat-section__head--${tone}`}>
@@ -320,6 +326,7 @@ export default function Chat() {
             const active = item.conversationId === resolvedConversationId;
             const counterpart = currentUserId === item.buyerId ? item.farmerName : item.buyerName;
             const statusTone = String(item.status || 'ACTIVE').toLowerCase();
+            const lastTime = item.lastMessageAt || item.updatedAt || item.createdAt;
 
             return (
               <button
@@ -332,15 +339,25 @@ export default function Chat() {
                 }
                 onClick={() => openConversation(item)}
               >
-                <div className="chat-conversation-card__top">
-                  <strong>{item.listingName}</strong>
-                  <span className={`chat-status-dot chat-status-dot--${statusTone}`} aria-hidden="true" />
+                <div className="chat-conversation-card__avatar" aria-hidden="true">
+                  {initialsFor(counterpart)}
                 </div>
-                <span>{counterpart}</span>
-                <small>{buildConversationPreview(item)}</small>
-                <em className={`chat-conversation-card__status chat-conversation-card__status--${statusTone}`}>
-                  {item.status}
-                </em>
+                <div className="chat-conversation-card__content">
+                  <div className="chat-conversation-card__top">
+                    <div>
+                      <strong>{counterpart}</strong>
+                      <span className="chat-conversation-card__listing">{item.listingName}</span>
+                    </div>
+                    <div className="chat-conversation-card__meta">
+                      <span className={`chat-status-dot chat-status-dot--${statusTone}`} aria-hidden="true" />
+                      <time>{lastTime ? new Date(lastTime).toLocaleDateString() : ''}</time>
+                    </div>
+                  </div>
+                  <small>{buildConversationPreview(item)}</small>
+                  <em className={`chat-conversation-card__status chat-conversation-card__status--${statusTone}`}>
+                    {item.status}
+                  </em>
+                </div>
               </button>
             );
           })}
