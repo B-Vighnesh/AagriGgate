@@ -484,8 +484,8 @@ export default function Chat() {
             <>
               <div className="chat-panel__head">
                 <div>
-                  <h2>{activeConversation.listingName}</h2>
-                  <p>Talking with <strong>{counterpartyName}</strong></p>
+                  <h2>{counterpartyName}</h2>
+                  <p>Crop: <strong>{activeConversation.listingName}</strong></p>
                 </div>
                 <div className="chat-panel__meta">
                   <button
