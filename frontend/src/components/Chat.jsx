@@ -86,6 +86,8 @@ export default function Chat() {
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [socketReady, setSocketReady] = useState(false);
   const [dealModalOpen, setDealModalOpen] = useState(false);
+  const [dealDrawerOpen, setDealDrawerOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
   const [useRequestedQuantity, setUseRequestedQuantity] = useState(true);
   const [dealQuantity, setDealQuantity] = useState('');
   const [dealLoading, setDealLoading] = useState(false);
@@ -167,7 +169,9 @@ export default function Chat() {
       const sorted = sortConversations(list);
       setConversations(sorted);
 
-      const targetId = conversationId ? Number(conversationId) : sorted[0]?.conversationId;
+      const targetId = conversationId
+        ? Number(conversationId)
+        : (isMobileView ? null : sorted[0]?.conversationId);
       if (targetId) {
         const selected = sorted.find((item) => item.conversationId === targetId) || null;
         if (selected) {
@@ -209,12 +213,24 @@ export default function Chat() {
   };
 
   useEffect(() => {
+    const media = window.matchMedia('(max-width: 1024px)');
+    const updateView = () => setIsMobileView(media.matches);
+    updateView();
+    if (media.addEventListener) {
+      media.addEventListener('change', updateView);
+      return () => media.removeEventListener('change', updateView);
+    }
+    media.addListener(updateView);
+    return () => media.removeListener(updateView);
+  }, []);
+
+  useEffect(() => {
     if (!role) {
       navigate('/login');
       return;
     }
     loadConversations();
-  }, [conversationId]);
+  }, [conversationId, isMobileView]);
 
   useEffect(() => {
     if (!resolvedConversationId) {
@@ -356,6 +372,13 @@ export default function Chat() {
     setComposer('');
   };
 
+  const handleComposerKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleSend();
+    }
+  };
+
   const handleDealConfirm = async () => {
     if (!activeConversation) {
       return;
@@ -392,6 +415,10 @@ export default function Chat() {
     }
   };
 
+  const isMobileConversation = Boolean(activeConversation);
+  const buyerStatusLabel = activeConversation?.buyerDealConfirmed ? '✅ Confirmed' : '⏳ Pending';
+  const farmerStatusLabel = activeConversation?.farmerDealConfirmed ? '✅ Confirmed' : '⏳ Pending';
+
   if (loadingList) {
     return (
       <section className="page page--center">
@@ -404,7 +431,7 @@ export default function Chat() {
     <section className="page chat-page">
       <ValidateToken token={token} role={role} />
 
-      <div className="ag-container chat-shell">
+      <div className={`ag-container chat-shell${isMobileConversation ? ' chat-shell--conversation' : ''}${dealDrawerOpen ? ' chat-shell--dealopen' : ''}`}>
         <Card className="chat-sidebar">
           <div className="chat-sidebar__head">
             <div>
@@ -448,9 +475,35 @@ export default function Chat() {
                   <p>Talking with <strong>{counterpartyName}</strong></p>
                 </div>
                 <div className="chat-panel__meta">
+                  <button
+                    type="button"
+                    className="chat-panel__back"
+                    onClick={() => {
+                      setActiveConversation(null);
+                      setDealDrawerOpen(false);
+                      navigate('/chat');
+                    }}
+                  >
+                    Back
+                  </button>
                   <span className={`chat-status chat-status--${(activeConversation.status || 'active').toLowerCase()}`}>
                     {activeConversation.status}
                   </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(`/view-details/${activeConversation.listingId}`)}
+                    className="chat-panel__link-btn"
+                  >
+                    View Listing
+                  </Button>
+                  <button
+                    type="button"
+                    className="chat-panel__deal-toggle"
+                    onClick={() => setDealDrawerOpen(true)}
+                  >
+                    View Deal Info
+                  </button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -463,23 +516,6 @@ export default function Chat() {
               </div>
 
               <div className="chat-message-list" ref={messageListRef} onScroll={updateStickiness}>
-                {activeConversation.status === 'ACTIVE' ? (
-                  <div className="chat-offer-card">
-                    <div className="chat-offer-card__copy">
-                      <strong>Deal Summary Inline</strong>
-                      <span>
-                        Last offer: {formatQuantity(agreedQuantity)} quantity
-                      </span>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => setDealModalOpen(true)}
-                    >
-                      Confirm Deal
-                    </Button>
-                  </div>
-                ) : null}
-
                 {loadingMessages ? (
                   <div className="chat-empty">
                     <div className="ui-spinner ui-spinner--lg" />
@@ -498,21 +534,26 @@ export default function Chat() {
                         key={item.messageId}
                         className={
                           isSystem
-                            ? 'chat-event-card'
+                            ? 'chat-event-pill'
                             : mine
                               ? 'chat-message chat-message--mine'
                               : 'chat-message chat-message--other'
                         }
                       >
                         {!isSystem ? (
-                          <strong className="chat-message__sender">
-                            {mine ? 'You' : counterpartyName}
-                          </strong>
+                          <>
+                            <strong className="chat-message__sender">
+                              {mine ? 'You' : counterpartyName}
+                            </strong>
+                            <p>{item.messageText}</p>
+                            <span>{new Date(item.createdAt).toLocaleString()}</span>
+                          </>
                         ) : (
-                          <strong className="chat-event-card__title">Application Update</strong>
+                          <>
+                            <span>{item.messageText}</span>
+                            <em>{new Date(item.createdAt).toLocaleString()}</em>
+                          </>
                         )}
-                        <p>{item.messageText}</p>
-                        <span>{new Date(item.createdAt).toLocaleString()}</span>
                       </div>
                     );
                   })
@@ -529,25 +570,26 @@ export default function Chat() {
                       : 'This chat is now read-only because the deal has already been resolved.'}
                   </span>
                 </div>
-                <textarea
-                  value={composer}
-                  onChange={(event) => setComposer(event.target.value)}
-                  placeholder={activeConversation.status === 'ACTIVE'
-                    ? 'Write a message for negotiation...'
-                    : 'This conversation is closed.'}
-                  disabled={activeConversation.status !== 'ACTIVE'}
-                  rows={3}
-                />
-                <div className="chat-composer__actions">
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate(`/view-details/${activeConversation.listingId}`)}
+                <div className="chat-composer__input">
+                  <input
+                    type="text"
+                    value={composer}
+                    onChange={(event) => setComposer(event.target.value)}
+                    onKeyDown={handleComposerKeyDown}
+                    placeholder={activeConversation.status === 'ACTIVE'
+                      ? 'Write a message for negotiation...'
+                      : 'This conversation is closed.'}
+                    disabled={activeConversation.status !== 'ACTIVE'}
+                  />
+                  <button
+                    type="button"
+                    className="chat-send-btn"
+                    onClick={handleSend}
+                    disabled={activeConversation.status !== 'ACTIVE' || !composer.trim()}
+                    aria-label="Send message"
                   >
-                    View Listing
-                  </Button>
-                  <Button onClick={handleSend} disabled={activeConversation.status !== 'ACTIVE' || !composer.trim()}>
-                    Send Message
-                  </Button>
+                    <i className="fa-solid fa-paper-plane" aria-hidden="true" />
+                  </button>
                 </div>
               </div>
             </>
@@ -585,11 +627,11 @@ export default function Chat() {
                 </div>
                 <div className="chat-deal-summary__row">
                   <span>Buyer</span>
-                  <strong>{activeConversation.buyerDealConfirmed ? 'Confirmed' : 'Pending'}</strong>
+                  <strong>{buyerStatusLabel}</strong>
                 </div>
                 <div className="chat-deal-summary__row">
                   <span>Farmer</span>
-                  <strong>{activeConversation.farmerDealConfirmed ? 'Confirmed' : 'Pending'}</strong>
+                  <strong>{farmerStatusLabel}</strong>
                 </div>
               </div>
 
@@ -642,6 +684,7 @@ export default function Chat() {
                   checked={useRequestedQuantity}
                   onChange={() => setUseRequestedQuantity(true)}
                 />
+                <span className="chat-radio__check" aria-hidden="true">✓</span>
                 <div className="chat-radio__content">
                   <strong>Use requested quantity</strong>
                   <span>{activeConversation.requestedQuantity}</span>
@@ -654,6 +697,7 @@ export default function Chat() {
                   checked={!useRequestedQuantity}
                   onChange={() => setUseRequestedQuantity(false)}
                 />
+                <span className="chat-radio__check" aria-hidden="true">✓</span>
                 <div className="chat-radio__content">
                   <strong>Use updated quantity</strong>
                   <span>Enter the final agreed quantity for both sides.</span>
@@ -681,6 +725,79 @@ export default function Chat() {
               <Button onClick={handleDealConfirm} loading={dealLoading}>
                 {dealLoading ? 'Saving...' : 'Confirm Deal'}
               </Button>
+            </div>
+          </Card>
+        </div>
+      ) : null}
+
+      {dealDrawerOpen && activeConversation ? (
+        <div className="chat-deal-drawer" onClick={() => setDealDrawerOpen(false)}>
+          <Card className="chat-deal-drawer__card" onClick={(event) => event.stopPropagation()}>
+            <div className="chat-deal-drawer__head">
+              <strong>Deal Summary</strong>
+              <button type="button" onClick={() => setDealDrawerOpen(false)}>Close</button>
+            </div>
+            <div className="chat-deal-panel chat-deal-panel--drawer">
+              <div className="chat-deal-panel__head">
+                <span className="settings-kicker">Deal Summary</span>
+                <h3>{dealStatusText}</h3>
+                <p>
+                  Keep the negotiation visible here while the center panel stays focused on the conversation itself.
+                </p>
+              </div>
+
+              <div className="chat-deal-summary">
+                <div className="chat-deal-summary__row">
+                  <span>Requested</span>
+                  <strong>{formatQuantity(activeConversation.requestedQuantity)}</strong>
+                </div>
+                <div className="chat-deal-summary__row">
+                  <span>Agreed</span>
+                  <strong>{formatQuantity(agreedQuantity)}</strong>
+                </div>
+                <div className="chat-deal-summary__row">
+                  <span>Status</span>
+                  <strong>{dealStatusText}</strong>
+                </div>
+                <div className="chat-deal-summary__row">
+                  <span>Buyer</span>
+                  <strong>{buyerStatusLabel}</strong>
+                </div>
+                <div className="chat-deal-summary__row">
+                  <span>Farmer</span>
+                  <strong>{farmerStatusLabel}</strong>
+                </div>
+              </div>
+
+              <div className="chat-deal-panel__card">
+                <strong>Who should act next?</strong>
+                <p>
+                  {activeConversation.status !== 'ACTIVE'
+                    ? 'This conversation is no longer active, so no more deal action is needed.'
+                    : isBuyer
+                      ? activeConversation.buyerDealConfirmed
+                        ? 'Your confirmation is saved. Waiting for the farmer to respond.'
+                        : 'Review the latest quantity and confirm when you are ready to close the deal.'
+                      : activeConversation.farmerDealConfirmed
+                        ? 'Your confirmation is saved. Waiting for the buyer to respond.'
+                        : 'Review the latest quantity and confirm when you are ready to close the deal.'}
+                </p>
+              </div>
+
+              <div className="chat-deal-panel__actions">
+                <Button
+                  onClick={() => setDealModalOpen(true)}
+                  disabled={activeConversation.status !== 'ACTIVE'}
+                >
+                  {activeConversation.status === 'COMPLETED' ? 'Deal Completed' : 'Confirm Deal'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(`/view-details/${activeConversation.listingId}`)}
+                >
+                  View Listing
+                </Button>
+              </div>
             </div>
           </Card>
         </div>
