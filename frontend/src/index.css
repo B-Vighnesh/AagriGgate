@@ -4227,7 +4227,7 @@ a {
 .chat-shell {
   display: grid;
   grid-template-columns: minmax(250px, 300px) minmax(0, 1fr) minmax(250px, 290px);
-  gap: 18px;
+  gap: 14px;
   align-items: stretch;
 }
 
@@ -4326,14 +4326,15 @@ a {
 .chat-sidebar__head h1 {
   margin: 10px 0 0;
   color: var(--color-primary-dark);
-  font-size: clamp(1.35rem, 3.2vw, 1.8rem);
+  font-size: clamp(1.15rem, 2.6vw, 1.5rem);
 }
 
 .chat-sidebar__subcopy {
   margin: 8px 0 0;
   color: var(--color-muted);
   max-width: 28rem;
-  line-height: 1.6;
+  line-height: 1.5;
+  font-size: 0.88rem;
 }
 
 .chat-connection {
@@ -4369,12 +4370,12 @@ a {
 
 .chat-conversation-card {
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 16px;
+  padding: 10px 12px;
+  border-radius: 14px;
   border: 1px solid #dbe9e1;
   background: rgba(255, 255, 255, 0.96);
   display: grid;
-  gap: 3px;
+  gap: 2px;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
@@ -4424,11 +4425,13 @@ a {
 
 .chat-conversation-card strong {
   color: var(--color-primary-dark);
+  font-size: 0.9rem;
 }
 
 .chat-conversation-card span,
 .chat-conversation-card small {
   color: var(--color-muted);
+  font-size: 0.82rem;
 }
 
 .chat-conversation-card__status {
@@ -4477,7 +4480,7 @@ a {
   border-color: #d7e5de;
   box-shadow: 0 22px 42px rgba(22, 52, 41, 0.12);
   position: relative;
-  height: calc(100vh - 180px);
+  height: calc(100vh - 150px);
 }
 
 .chat-panel::before {
@@ -4501,11 +4504,13 @@ a {
 .chat-panel__head h2 {
   margin: 0 0 6px;
   color: var(--color-primary-dark);
+  font-size: 1.15rem;
 }
 
 .chat-panel__head p {
   margin: 0;
   color: var(--color-muted);
+  font-size: 0.88rem;
 }
 
 .chat-panel__meta {
@@ -4519,7 +4524,7 @@ a {
 .chat-status {
   border-radius: 999px;
   padding: 6px 11px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
@@ -4580,11 +4585,12 @@ a {
 
 .chat-message {
   max-width: min(78%, 520px);
-  padding: 12px 14px;
-  border-radius: 18px;
+  padding: 10px 12px;
+  border-radius: 16px;
   display: grid;
   gap: 6px;
   box-shadow: 0 10px 24px rgba(16, 42, 35, 0.06);
+  font-size: 0.9rem;
 }
 
 .chat-message__sender {
@@ -4600,7 +4606,7 @@ a {
 }
 
 .chat-message span {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--color-muted);
 }
 
@@ -4628,7 +4634,7 @@ a {
   background: #eef5f1;
   border: 1px solid #d8e4de;
   color: #2b4a3d;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   text-align: center;
 }
 
@@ -4639,7 +4645,7 @@ a {
 .chat-event-pill em {
   font-style: normal;
   color: #5f746b;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
 }
 
 .chat-composer {
@@ -4654,12 +4660,12 @@ a {
 
 .chat-composer__head strong {
   color: var(--color-primary-dark);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .chat-composer__head span {
   color: var(--color-muted);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   line-height: 1.45;
 }
 
@@ -4673,8 +4679,8 @@ a {
   width: 100%;
   border: 1px solid #d7e6de;
   border-radius: 999px;
-  padding: 12px 48px 12px 16px;
-  font-size: 0.92rem;
+  padding: 10px 44px 10px 14px;
+  font-size: 0.88rem;
   font-family: inherit;
   background: rgba(255, 255, 255, 0.98);
 }
@@ -4688,8 +4694,8 @@ a {
 .chat-send-btn {
   position: absolute;
   right: 6px;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 0;
   background: #1f6f54;
@@ -4735,7 +4741,7 @@ a {
 .chat-deal-panel__head h3 {
   margin: 8px 0 6px;
   color: #6a3e11;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
 }
 
 .chat-deal-panel__head p {
@@ -4759,7 +4765,7 @@ a {
 
 .chat-deal-summary__row span {
   color: var(--color-muted);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
 }
 
 .chat-deal-summary__row strong {
@@ -4774,6 +4780,7 @@ a {
   border: 1px solid #eadbc9;
   display: grid;
   gap: 6px;
+  font-size: 0.88rem;
 }
 
 .chat-deal-panel__card strong {
