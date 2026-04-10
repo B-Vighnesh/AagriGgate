@@ -169,9 +169,7 @@ export default function Chat() {
       const sorted = sortConversations(list);
       setConversations(sorted);
 
-      const targetId = conversationId
-        ? Number(conversationId)
-        : (isMobileView ? null : sorted[0]?.conversationId);
+      const targetId = conversationId ? Number(conversationId) : null;
       if (targetId) {
         const selected = sorted.find((item) => item.conversationId === targetId) || null;
         if (selected) {
