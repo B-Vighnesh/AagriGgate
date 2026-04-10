@@ -6,6 +6,7 @@ import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { confirmChatDeal, getChatConversation, getChatConversations, getChatMessages, openChatSocket } from '../api/chatApi';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
+import '../assets/Chat.css';
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
 
@@ -37,11 +38,10 @@ function formatQuantity(value) {
 
 function buildConversationPreview(item) {
   if (item.status === 'COMPLETED') return `Deal closed for ${formatQuantity(item.pendingDealQuantity ?? item.requestedQuantity)} quantity.`;
-  if (item.status === 'EXPIRED')   return 'Conversation expired due to inactivity.';
+  if (item.status === 'EXPIRED')   return 'Conversation expired.';
   if (item.status === 'FAILED')    return 'Deal was not completed.';
-  if (item.pendingDealQuantity)    return `Latest offer: ${formatQuantity(item.pendingDealQuantity)} quantity awaiting confirmation.`;
-  if (item.buyerDealConfirmed || item.farmerDealConfirmed) return 'Deal confirmation has started.';
-  return 'Open the chat to continue negotiation.';
+  if (item.pendingDealQuantity)    return `Offer: ${formatQuantity(item.pendingDealQuantity)} quantity.`;
+  return 'Continue negotiation...';
 }
 
 const initialsFor = (name) => {
@@ -56,6 +56,29 @@ const colorFor = (name) => {
   const value   = String(name || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
   const index   = value % palette.length;
   return { backgroundColor: palette[index], color: text[index] };
+};
+
+const formatTime = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+const isSameDay = (d1, d2) => {
+  return d1.getFullYear() === d2.getFullYear() &&
+         d1.getMonth() === d2.getMonth() &&
+         d1.getDate() === d2.getDate();
+};
+
+const getRelativeDate = (dateStr) => {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (isSameDay(date, today)) return 'Today';
+  if (isSameDay(date, yesterday)) return 'Yesterday';
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 /* ─── Tooltip icon button ─────────────────────────────────────────────────── */
@@ -143,12 +166,14 @@ export default function Chat() {
   const [useRequestedQty,    setUseRequestedQty]    = useState(true);
   const [dealQuantity,       setDealQuantity]       = useState('');
   const [dealLoading,        setDealLoading]        = useState(false);
+  const [showScrollDown,     setShowScrollDown]     = useState(false);
+  const [isTyping,           setIsTyping]           = useState(false);
 
   const socketRef               = useRef(null);
-  const messagesEndRef          = useRef(null);
   const messageListRef          = useRef(null);
   const activeConversationIdRef = useRef(null);
   const stickToBottomRef        = useRef(true);
+  const composerRef             = useRef(null);
 
   /* ── toast ── */
   const showToast = (message, type = 'info') => {
@@ -167,8 +192,17 @@ export default function Chat() {
     const container = messageListRef.current;
     if (!container) { stickToBottomRef.current = true; return; }
     const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-    stickToBottomRef.current = distanceFromBottom < 56;
+    stickToBottomRef.current = distanceFromBottom < 80;
+    setShowScrollDown(distanceFromBottom > 300);
   };
+
+  /* ── auto-resize textarea ── */
+  useEffect(() => {
+    if (composerRef.current) {
+      composerRef.current.style.height = 'auto';
+      composerRef.current.style.height = `${Math.min(composerRef.current.scrollHeight, 120)}px`;
+    }
+  }, [composer]);
 
   /* ── derived ── */
   const resolvedConversationId = useMemo(() => {
@@ -193,8 +227,8 @@ export default function Chat() {
           : activeConversation.buyerDealConfirmed && activeConversation.farmerDealConfirmed
             ? 'Ready to close'
             : activeConversation.buyerDealConfirmed || activeConversation.farmerDealConfirmed
-              ? 'Waiting for the other user'
-              : 'Negotiation in progress'
+              ? 'Waiting for counterparty'
+              : 'Negotiating'
     : '';
 
   const groupedConversations = useMemo(
@@ -342,10 +376,10 @@ export default function Chat() {
 
   const handleSend = () => {
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-      showToast('Chat connection is not ready yet.', 'error');
+      showToast('Connection not ready.', 'error');
       return;
     }
-    if (!resolvedConversationId) { showToast('Choose a conversation first.', 'error'); return; }
+    if (!resolvedConversationId) { showToast('Choose a conversation.', 'error'); return; }
     if (!composer.trim()) return;
     socketRef.current.send(JSON.stringify({
       conversationId: resolvedConversationId,
@@ -356,7 +390,7 @@ export default function Chat() {
   };
 
   const handleComposerKeyDown = (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); handleSend(); }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
   const handleDealConfirm = async () => {
@@ -364,7 +398,7 @@ export default function Chat() {
     if (!useRequestedQty) {
       const numericQty = Number(dealQuantity);
       if (!Number.isFinite(numericQty) || numericQty <= 0) {
-        showToast('Enter a valid updated quantity.', 'error');
+        showToast('Enter a valid quantity.', 'error');
         return;
       }
     }
@@ -381,7 +415,7 @@ export default function Chat() {
           return sortConversations([result.conversation, ...rest]);
         });
       }
-      showToast(result?.message || 'Deal confirmation updated.', result?.completed ? 'success' : 'info');
+      showToast(result?.message || 'Deal updated.', result?.completed ? 'success' : 'info');
       setDealModalOpen(false);
       setUseRequestedQty(true);
       setDealQuantity('');
@@ -392,7 +426,6 @@ export default function Chat() {
     }
   };
 
-  /* open deal modal, close summary drawer first */
   const openDealModal = () => {
     setDealDrawerOpen(false);
     setDealModalOpen(true);
@@ -430,15 +463,12 @@ export default function Chat() {
                       <span className="chat-conversation-card__listing">{item.listingName}</span>
                     </div>
                     <div className="chat-conversation-card__meta">
-                      <span className={`chat-status-dot chat-status-dot--${statusTone}`} aria-hidden="true" />
-                      <time>{lastTime ? new Date(lastTime).toLocaleDateString() : ''}</time>
+                      <time>{lastTime ? getRelativeDate(lastTime) : ''}</time>
                     </div>
                   </div>
                   <small>{buildConversationPreview(item)}</small>
-                  <em className={`chat-conversation-card__status chat-conversation-card__status--${statusTone}`}>
-                    {item.status}
-                  </em>
                 </div>
+                {active && <div className="chat-conversation-card__active-indicator" />}
               </button>
             );
           })}
@@ -447,7 +477,6 @@ export default function Chat() {
     );
   };
 
-  /* ── deal summary body (shared between right panel + drawer) ── */
   const DealSummaryBody = () => (
     <>
       <div className="chat-deal-summary">
@@ -460,31 +489,31 @@ export default function Chat() {
           <strong>{formatQuantity(agreedQuantity)}</strong>
         </div>
         <div className="chat-deal-summary__row">
-          <span>Status</span>
-          <strong>{dealStatusText}</strong>
-        </div>
-        <div className="chat-deal-summary__row">
           <span>Buyer</span>
-          <strong>{buyerStatusLabel}</strong>
+          <strong className={`status-pill status-pill--${activeConversation.buyerDealConfirmed ? 'success' : 'pending'}`}>
+            {buyerStatusLabel}
+          </strong>
         </div>
         <div className="chat-deal-summary__row">
           <span>Farmer</span>
-          <strong>{farmerStatusLabel}</strong>
+          <strong className={`status-pill status-pill--${activeConversation.farmerDealConfirmed ? 'success' : 'pending'}`}>
+            {farmerStatusLabel}
+          </strong>
         </div>
       </div>
 
       <div className="chat-deal-panel__card">
-        <strong>Who should act next?</strong>
+        <strong>Next Steps</strong>
         <p>
           {activeConversation.status !== 'ACTIVE'
-            ? 'This conversation is no longer active, so no more deal action is needed.'
+            ? 'Deal closed.'
             : isBuyer
               ? activeConversation.buyerDealConfirmed
-                ? 'Your confirmation is saved. Waiting for the farmer to respond.'
-                : 'Review the latest quantity and confirm when you are ready to close the deal.'
+                ? 'Waiting for farmer.'
+                : 'Confirm the final quantity.'
               : activeConversation.farmerDealConfirmed
-                ? 'Your confirmation is saved. Waiting for the buyer to respond.'
-                : 'Review the latest quantity and confirm when you are ready to close the deal.'}
+                ? 'Waiting for buyer.'
+                : 'Confirm the final quantity.'}
         </p>
       </div>
 
@@ -499,11 +528,67 @@ export default function Chat() {
     </>
   );
 
+  const renderedMessages = useMemo(() => {
+    const groups = [];
+    let lastDate = null;
+
+    messages.forEach((msg) => {
+      const msgDate = new Date(msg.createdAt);
+      const dateStr = getRelativeDate(msg.createdAt);
+
+      if (dateStr !== lastDate) {
+        groups.push({ type: 'DATE', label: dateStr, key: `date-${msg.messageId}` });
+        lastDate = dateStr;
+      }
+      groups.push({ type: 'MSG', ...msg, key: msg.messageId });
+    });
+
+    return groups.map((item) => {
+      if (item.type === 'DATE') {
+        return (
+          <div key={item.key} className="chat-date-separator">
+            <span>{item.label}</span>
+          </div>
+        );
+      }
+
+      const isSystem = item.messageType === 'SYSTEM';
+      const mine     = item.senderId === currentUserId;
+
+      if (isSystem) {
+        return (
+          <div key={item.key} className="chat-event-pill">
+            <span>{item.messageText}</span>
+            <em>{formatTime(item.createdAt)}</em>
+          </div>
+        );
+      }
+
+      return (
+        <div key={item.key} className={`chat-message-row ${mine ? 'chat-message-row--mine' : 'chat-message-row--other'}`}>
+          {!mine && (
+            <div className="chat-message-avatar" style={colorFor(counterpartyName)}>
+              {initialsFor(counterpartyName)}
+            </div>
+          )}
+          <div className="chat-message-bubble">
+            <p>{item.messageText}</p>
+            <div className="chat-message-footer">
+              <time>{formatTime(item.createdAt)}</time>
+              {mine && <i className="fa-solid fa-check-double chat-message-status" />}
+            </div>
+          </div>
+        </div>
+      );
+    });
+  }, [messages, currentUserId, counterpartyName]);
+
   /* ─────────────────────────────── render ─────────────────────────────────── */
   if (loadingList) {
     return (
-      <section className="page page--center">
+      <section className="page page--center chat-loading-page">
         <div className="ui-spinner ui-spinner--lg" />
+        <p>Loading your conversations...</p>
       </section>
     );
   }
@@ -511,121 +596,101 @@ export default function Chat() {
   const isMobileConversation = Boolean(activeConversation);
 
   return (
-    <section className="page chat-page">
+    <section className="page chat-page premium-chat">
       <ValidateToken token={token} role={role} />
 
       <div className={`ag-container chat-shell${isMobileConversation ? ' chat-shell--conversation' : ''}${dealDrawerOpen ? ' chat-shell--dealopen' : ''}`}>
 
         {/* ── sidebar ── */}
         <Card className="chat-sidebar">
-          <div className="chat-sidebar__head">
-            <div>
-              <span className="settings-kicker">Negotiation Space</span>
-              <h1>Marketplace Chat</h1>
+          <div className="chat-sidebar__header">
+            <div className="chat-sidebar__header-top">
+              <h1>Messages</h1>
+              <div className="chat-connection-status">
+                <span className={`status-dot ${socketReady ? 'status-dot--online' : 'status-dot--offline'}`} />
+                {socketReady ? 'Live' : 'Connecting...'}
+              </div>
             </div>
-            
+            <div className="chat-search">
+              <i className="fa-solid fa-magnifying-glass" />
+              <input type="text" placeholder="Search chats..." disabled />
+            </div>
           </div>
 
-          {conversations.length === 0 ? (
-            <div className="chat-empty">
-              <h3>No chats yet</h3>
-              <p>Accepted requests will create conversations here for buyers and farmers.</p>
-            </div>
-          ) : (
-            <div className="chat-sidebar__sections">
-              {renderConversationSection('Active Chats', 'active',    groupedConversations.active)}
-              {renderConversationSection('Completed',   'completed',  groupedConversations.completed)}
-              {renderConversationSection('Expired',     'expired',    groupedConversations.expired)}
-              {renderConversationSection('Failed',      'failed',     groupedConversations.failed)}
-            </div>
-          )}
+          <div className="chat-sidebar__content">
+            {conversations.length === 0 ? (
+              <div className="chat-empty-sidebar">
+                <i className="fa-regular fa-comment-dots" />
+                <p>No conversations found.</p>
+              </div>
+            ) : (
+              <div className="chat-sidebar__sections">
+                {renderConversationSection('Active',    'active',    groupedConversations.active)}
+                {renderConversationSection('Closed',    'completed',  groupedConversations.completed)}
+                {renderConversationSection('Archived',  'expired',    groupedConversations.expired)}
+              </div>
+            )}
+          </div>
         </Card>
 
         {/* ── chat panel ── */}
         <Card className="chat-panel">
           {!activeConversation ? (
-            <div className="chat-empty chat-empty--panel">
-              <div className="chat-empty__icon" aria-hidden="true">
-                <i className="fa-regular fa-comments" />
-              </div>
-              <h3>Select a conversation</h3>
-              <p>Choose an accepted request to continue the negotiation and confirm the final deal.</p>
-              <div className="chat-empty__tips">
-                <div>
-                  <strong>Tip</strong>
-                  <span>Click a chat on the left to view negotiation history.</span>
+            <div className="chat-panel__empty">
+              <div className="chat-panel__empty-content">
+                <div className="chat-illustration">
+                  <i className="fa-regular fa-comments" />
                 </div>
-                <div>
-                  <strong>Next</strong>
-                  <span>Use the Summary button to review deal status anytime.</span>
-                </div>
+                <h2>Your Negotiation Space</h2>
+                <p>Select a chat from the sidebar to start negotiating deals with farmers or buyers.</p>
               </div>
             </div>
           ) : (
             <>
               {/* panel header */}
-              <div className="chat-panel__head">
-                {/* left: back + counterparty info */}
-                <div className="chat-panel__title">
-                  <IconBtn
-                    icon={<i className="fa-solid fa-arrow-left" />}
-                    label="Back to conversations"
-                    className="chat-icon-btn--back"
-                    onClick={() => {
-                      setActiveConversation(null);
-                      setDealDrawerOpen(false);
-                      navigate('/chat');
-                    }}
-                  />
-
-                  {/* clickable buyer/farmer name → profile */}
-                  <button
-                    type="button"
-                    className="chat-counterparty-btn"
-                    onClick={() => buyerProfilePath && navigate(buyerProfilePath)}
-                    title={`View ${counterpartyName}'s profile`}
-                    style={colorFor(counterpartyName)}
-                  >
-                    <span className="chat-counterparty-avatar">{initialsFor(counterpartyName)}</span>
-                    <div>
-                      <span className="chat-counterparty-name">{counterpartyName}</span>
-                      <span className="chat-counterparty-listing">
-                        {activeConversation.listingName}
-                      </span>
-                    </div>
+              <div className="chat-panel__header">
+                <div className="chat-header__info">
+                  <button className="chat-back-btn" onClick={() => navigate('/chat')}>
+                    <i className="fa-solid fa-chevron-left" />
                   </button>
+                  <div 
+                    className="chat-header__avatar" 
+                    style={colorFor(counterpartyName)}
+                    onClick={() => buyerProfilePath && navigate(buyerProfilePath)}
+                  >
+                    {initialsFor(counterpartyName)}
+                  </div>
+                  <div className="chat-header__details">
+                    <h3 onClick={() => buyerProfilePath && navigate(buyerProfilePath)}>{counterpartyName}</h3>
+                    <p>{activeConversation.listingName}</p>
+                  </div>
                 </div>
 
-                {/* right: status + icon actions */}
-                <div className="chat-panel__meta">
-                  <span className={`chat-status chat-status--${(activeConversation.status || 'active').toLowerCase()}`}>
+                <div className="chat-header__actions">
+                  <div className="chat-status-badge">
                     {activeConversation.status}
-                  </span>
-
-                  {/* deal icon */}
+                  </div>
                   <IconBtn
                     icon={<i className="fa-solid fa-handshake" />}
-                    label={activeConversation.status === 'COMPLETED' ? 'Deal Completed' : 'Confirm Deal'}
+                    label="Deal"
                     onClick={openDealModal}
                     disabled={activeConversation.status !== 'ACTIVE'}
                   />
-
-                  {/* 3-dot menu */}
                   <PanelMenu
                     items={[
                       {
-                        icon: <i className="fa-solid fa-file-lines" />,
-                        label: 'View Listing',
+                        icon: <i className="fa-solid fa-circle-info" />,
+                        label: 'Listing Details',
                         action: () => navigate(`/view-details/${activeConversation.listingId}`),
                       },
                       {
-                        icon: <i className="fa-solid fa-chart-column" />,
-                        label: 'Summary',
+                        icon: <i className="fa-solid fa-chart-simple" />,
+                        label: 'Deal Summary',
                         action: () => setDealDrawerOpen(true),
                       },
                       {
                         icon: <i className="fa-solid fa-user" />,
-                        label: 'View Buyer Profile',
+                        label: 'View Profile',
                         action: () => buyerProfilePath && navigate(buyerProfilePath),
                         disabled: !buyerProfilePath,
                       },
@@ -635,83 +700,57 @@ export default function Chat() {
               </div>
 
               {/* message list */}
-              <div className="chat-message-list" ref={messageListRef} onScroll={updateStickiness}>
-                {loadingMessages ? (
-                  <div className="chat-empty">
-                    <div className="ui-spinner ui-spinner--lg" />
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div className="chat-empty">
-                    <h3>No messages yet</h3>
-                    <p>Start the conversation here. The full history is stored even if real-time delivery is interrupted.</p>
-                  </div>
-                ) : (
-                  messages.map((item) => {
-                    const isSystem = item.messageType === 'SYSTEM';
-                    const mine     = item.senderId === currentUserId;
-                    return (
-                      <div
-                        key={item.messageId}
-                        className={
-                          isSystem
-                            ? 'chat-event-pill'
-                            : mine
-                              ? 'chat-message chat-message--mine'
-                              : 'chat-message chat-message--other'
-                        }
-                      >
-                        {!isSystem ? (
-                          <>
-                            <strong className="chat-message__sender">
-                              {mine ? 'You' : counterpartyName}
-                            </strong>
-                            <p>{item.messageText}</p>
-                            <span>{new Date(item.createdAt).toLocaleString()}</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>{item.messageText}</span>
-                            <em>{new Date(item.createdAt).toLocaleString()}</em>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })
+              <div className="chat-message-list-container">
+                <div className="chat-message-list" ref={messageListRef} onScroll={updateStickiness}>
+                  {loadingMessages ? (
+                    <div className="chat-messages-loading">
+                      <div className="ui-spinner" />
+                    </div>
+                  ) : (
+                    <>
+                      {renderedMessages}
+                      {isTyping && (
+                        <div className="chat-message-row chat-message-row--other">
+                          <div className="chat-message-avatar" style={colorFor(counterpartyName)}>
+                            {initialsFor(counterpartyName)}
+                          </div>
+                          <div className="chat-typing-indicator">
+                            <span></span><span></span><span></span>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                {showScrollDown && (
+                  <button className="chat-scroll-down" onClick={() => scrollMessagesToBottom('smooth')}>
+                    <i className="fa-solid fa-chevron-down" />
+                  </button>
                 )}
-                <div ref={messagesEndRef} />
               </div>
 
               {/* composer */}
-              <div className="chat-composer">
-                <div className="chat-composer__head">
-                  <strong>{activeConversation.status === 'ACTIVE' ? 'Send a message' : 'Conversation closed'}</strong>
-                  <span>
-                    {activeConversation.status === 'ACTIVE'
-                      ? 'Keep negotiation inside the app so the history stays clear for both sides.'
-                      : 'This chat is now read-only because the deal has already been resolved.'}
-                  </span>
-                </div>
-                <div className="chat-composer__input">
-                  <input
-                    type="text"
+              <div className="chat-composer-area">
+                <div className="chat-composer__inner">
+                  <div className="chat-composer__tools">
+                    <button className="chat-tool-btn" title="Add file" disabled><i className="fa-solid fa-paperclip" /></button>
+                    <button className="chat-tool-btn" title="Add emoji" disabled><i className="fa-regular fa-face-smile" /></button>
+                  </div>
+                  <textarea
+                    ref={composerRef}
                     value={composer}
                     onChange={(e) => setComposer(e.target.value)}
                     onKeyDown={handleComposerKeyDown}
-                    placeholder={
-                      activeConversation.status === 'ACTIVE'
-                        ? 'Write a message for negotiation...'
-                        : 'This conversation is closed.'
-                    }
+                    placeholder={activeConversation.status === 'ACTIVE' ? 'Type a message...' : 'Conversation closed'}
                     disabled={activeConversation.status !== 'ACTIVE'}
+                    rows={1}
                   />
                   <button
-                    type="button"
-                    className="chat-send-btn"
+                    className="chat-send-button"
                     onClick={handleSend}
                     disabled={activeConversation.status !== 'ACTIVE' || !composer.trim()}
-                    aria-label="Send message"
                   >
-                    <i className="fa-solid fa-paper-plane" aria-hidden="true" />
+                    <i className="fa-solid fa-paper-plane" />
                   </button>
                 </div>
               </div>
@@ -722,107 +761,95 @@ export default function Chat() {
         {/* ── right deal panel (desktop) ── */}
         <Card className="chat-deal-panel">
           {!activeConversation ? (
-            <div className="chat-empty chat-empty--deal">
+            <div className="chat-deal-panel__empty">
               <h3>Deal Summary</h3>
-              <p>Select a conversation to see the current negotiation status and available actions.</p>
+              <p>Current status and agreed terms will appear here.</p>
             </div>
           ) : (
             <>
-              <div className="chat-deal-panel__head">
+              <div className="chat-deal-panel__header">
                 <h3>{dealStatusText}</h3>
               </div>
-              <DealSummaryBody />
+              <div className="chat-deal-panel__content">
+                <DealSummaryBody />
+              </div>
             </>
           )}
         </Card>
       </div>
 
-      {/* ── deal confirmation modal ── */}
-      {dealModalOpen && activeConversation ? (
-        <div className="confirm-overlay" onClick={() => setDealModalOpen(false)}>
-          <Card className="confirm-card chat-deal-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Deal Confirmation</h3>
-            <p className="confirm-card__subtitle">
-              Confirm whether the final deal uses the requested quantity or an updated agreed quantity.
-            </p>
-
-            <div className="chat-deal-options">
-              <label className={useRequestedQty ? 'chat-radio chat-radio--active' : 'chat-radio'}>
-                <input
-                  type="radio"
-                  checked={useRequestedQty}
-                  onChange={() => setUseRequestedQty(true)}
-                />
-                <span className="chat-radio__check" aria-hidden="true" />
-                <div className="chat-radio__content">
-                  <strong>Use requested quantity</strong>
-                  <span>{activeConversation.requestedQuantity}</span>
+      {/* ── Deal Modal ── */}
+      {dealModalOpen && activeConversation && (
+        <div className="premium-modal-overlay" onClick={() => setDealModalOpen(false)}>
+          <Card className="premium-modal chat-deal-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Confirm Deal Terms</h2>
+              <button className="modal-close" onClick={() => setDealModalOpen(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <p>Finalize the quantity before closing the deal.</p>
+              
+              <div className="deal-option-grid">
+                <div 
+                  className={`deal-option ${useRequestedQty ? 'deal-option--active' : ''}`}
+                  onClick={() => setUseRequestedQty(true)}
+                >
+                  <div className="deal-option__check"><i className="fa-solid fa-check" /></div>
+                  <div className="deal-option__info">
+                    <strong>Requested Quantity</strong>
+                    <span>{activeConversation.requestedQuantity} units</span>
+                  </div>
                 </div>
-              </label>
 
-              <label className={!useRequestedQty ? 'chat-radio chat-radio--active' : 'chat-radio'}>
-                <input
-                  type="radio"
-                  checked={!useRequestedQty}
-                  onChange={() => setUseRequestedQty(false)}
-                />
-                <span className="chat-radio__check" aria-hidden="true" />
-                <div className="chat-radio__content">
-                  <strong>Use updated quantity</strong>
-                  <span>Enter the final agreed quantity for both sides.</span>
+                <div 
+                  className={`deal-option ${!useRequestedQty ? 'deal-option--active' : ''}`}
+                  onClick={() => setUseRequestedQty(false)}
+                >
+                  <div className="deal-option__check"><i className="fa-solid fa-check" /></div>
+                  <div className="deal-option__info">
+                    <strong>Updated Quantity</strong>
+                    <span>Enter manually below</span>
+                  </div>
                 </div>
-              </label>
+              </div>
 
               {!useRequestedQty && (
-                <div className="confirm-field">
-                  <label htmlFor="dealQuantity">Updated Quantity</label>
+                <div className="deal-quantity-input">
+                  <label>Agreed Quantity</label>
                   <input
-                    id="dealQuantity"
                     type="number"
-                    min="0"
-                    step="0.01"
                     value={dealQuantity}
                     onChange={(e) => setDealQuantity(e.target.value)}
-                    placeholder="Enter agreed quantity"
+                    placeholder="0.00"
                   />
                 </div>
               )}
             </div>
-
-            <div className="confirm-actions">
+            <div className="modal-footer">
               <Button variant="outline" onClick={() => setDealModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleDealConfirm} loading={dealLoading}>
-                {dealLoading ? 'Saving...' : 'Confirm Deal'}
-              </Button>
+              <Button onClick={handleDealConfirm} loading={dealLoading}>Confirm Deal</Button>
             </div>
           </Card>
         </div>
-      ) : null}
+      )}
 
-      {/* ── deal summary drawer (mobile / summary button) ── */}
-      {dealDrawerOpen && activeConversation ? (
-        <div className="confirm-overlay" onClick={() => setDealDrawerOpen(false)}>
-          <Card className="confirm-card chat-summary-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="chat-summary-modal__head">
-              <strong>Deal Summary</strong>
-              <button type="button" onClick={() => setDealDrawerOpen(false)}>✕</button>
+      {/* ── Mobile Summary Drawer ── */}
+      {dealDrawerOpen && activeConversation && (
+        <div className="premium-modal-overlay" onClick={() => setDealDrawerOpen(false)}>
+          <div className="mobile-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="drawer-handle" />
+            <div className="drawer-header">
+              <h2>Deal Summary</h2>
+              <button className="drawer-close" onClick={() => setDealDrawerOpen(false)}>✕</button>
             </div>
-            <div className="chat-deal-panel chat-deal-panel--drawer">
-              <div className="chat-deal-panel__head">
-                <h3>{dealStatusText}</h3>
-              </div>
+            <div className="drawer-body">
               <DealSummaryBody />
             </div>
-          </Card>
+          </div>
         </div>
-      ) : null}
+      )}
 
       <Toast message={toast.message} type={toast.type} />
     </section>
   );
 }
-
-
-
-
-
