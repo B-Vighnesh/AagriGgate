@@ -8,6 +8,8 @@ const FIELDS = [
   { key: 'username', label: 'Username' },
   { key: 'email', label: 'Email' },
   { key: 'phoneNo', label: 'Phone' },
+  { key: 'city', label: 'City' },
+  { key: 'aadharNo', label: 'Aadhar No' },
   { key: 'dob', label: 'Date of Birth' },
   { key: 'state', label: 'State' },
   { key: 'district', label: 'District' },
