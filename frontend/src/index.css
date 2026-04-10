@@ -4514,6 +4514,10 @@ a {
   color: #b53434;
 }
 
+.chat-conversation-card--active strong {
+  color: #5b8bd9;
+}
+
 .chat-conversation-card__status--active {
   color: #5b8bd9;
 }
