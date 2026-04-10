@@ -6234,6 +6234,40 @@ a {
   background: #eef7f1;
 }
 
+.buyer-profile-topbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.buyer-profile-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid #cfe2d8;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-primary-dark);
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(20, 74, 54, 0.08);
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.buyer-profile-back:hover {
+  background: #ffffff;
+  border-color: #b5d7c7;
+  transform: translateY(-1px);
+}
+
+.buyer-profile-back span:first-child {
+  font-size: 1rem;
+  line-height: 1;
+}
+
 .buyer-profile-layout {
   display: grid;
   gap: 18px;
@@ -6242,6 +6276,7 @@ a {
 .buyer-profile-hero {
   display: grid;
   gap: 18px;
+  padding: 20px;
   background:
     radial-gradient(circle at top right, rgba(234, 143, 68, 0.14), transparent 28%),
     linear-gradient(180deg, #ffffff, #f7fcf9);
@@ -6255,12 +6290,14 @@ a {
 
 .buyer-profile-card {
   min-width: 0;
+  padding: 18px;
 }
 
 .buyer-profile-head {
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 
 .buyer-avatar {
@@ -6352,6 +6389,7 @@ a {
 
 .buyer-profile-list {
   display: grid;
+  min-width: 0;
 }
 
 .buyer-profile-row {
@@ -6824,6 +6862,15 @@ a {
   .buyer-profile-grid,
   .buyer-profile-metrics {
     grid-template-columns: 1fr;
+  }
+
+  .buyer-profile-hero,
+  .buyer-profile-card {
+    padding: 16px;
+  }
+
+  .buyer-profile-head {
+    align-items: flex-start;
   }
 
   .view-crop-card__top,
@@ -7344,6 +7391,42 @@ a {
     padding: 14px;
   }
 
+  .buyer-profile-topbar {
+    margin-bottom: 12px;
+  }
+
+  .buyer-profile-back {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .buyer-profile-head {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .buyer-avatar {
+    width: 68px;
+    height: 68px;
+    border-radius: 18px;
+    font-size: 1.28rem;
+  }
+
+  .buyer-profile-head h1 {
+    font-size: clamp(1.35rem, 6vw, 1.7rem);
+  }
+
+  .buyer-profile-head p,
+  .buyer-profile-section-head p,
+  .buyer-profile-metric strong {
+    font-size: 0.92rem;
+  }
+
+  .buyer-profile-kicker {
+    font-size: 0.7rem;
+    padding: 5px 9px;
+  }
+
   .buyer-tools-toolbar {
     grid-template-columns: 1fr;
   }
@@ -7554,5 +7637,20 @@ a {
   .site-nav__utility,
   .site-nav__logout {
     font-size: 0.92rem;
+  }
+
+  .buyer-profile-hero,
+  .buyer-profile-card {
+    padding: 14px;
+  }
+
+  .buyer-profile-back {
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: 0.88rem;
+  }
+
+  .buyer-profile-metric {
+    padding: 12px 13px;
   }
 }
