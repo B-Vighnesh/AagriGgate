@@ -4480,7 +4480,7 @@ a {
   border-color: #d7e5de;
   box-shadow: 0 22px 42px rgba(22, 52, 41, 0.12);
   position: relative;
-  height: calc(100vh - 150px);
+  height: calc(100vh - 120px);
 }
 
 .chat-panel::before {
