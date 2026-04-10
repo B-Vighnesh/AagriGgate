@@ -4424,15 +4424,15 @@ a {
 }
 
 .chat-status-dot--active {
-  background: #26a269;
+  background: #5b8bd9;
 }
 
 .chat-status-dot--completed {
-  background: #2e8b57;
+  background: #1f6f54;
 }
 
 .chat-status-dot--expired {
-  background: #1c1c1c;
+  background: #111111;
 }
 
 .chat-status-dot--failed {
@@ -4445,9 +4445,9 @@ a {
 }
 
 .chat-conversation-card--active {
-  border-color: rgba(47, 154, 116, 0.46);
-  box-shadow: 0 16px 34px rgba(39, 115, 86, 0.12);
-  background: linear-gradient(180deg, #ffffff, #f2fbf6);
+  border-color: rgba(91, 139, 217, 0.6);
+  box-shadow: 0 12px 26px rgba(91, 139, 217, 0.14);
+  background: #ffffff;
 }
 
 .chat-conversation-card strong {
@@ -4491,12 +4491,12 @@ a {
 
 .chat-conversation-card--completed strong,
 .chat-conversation-card__status--completed {
-  color: #237c52;
+  color: #1f6f54;
 }
 
 .chat-conversation-card--completed {
-  background: linear-gradient(180deg, #ffffff, #f4fbf7);
-  border-color: #cfe6d8;
+  background: #ffffff;
+  border-color: rgba(31, 111, 84, 0.55);
 }
 
 .chat-conversation-card--expired strong,
@@ -4505,8 +4505,8 @@ a {
 }
 
 .chat-conversation-card--expired {
-  background: linear-gradient(180deg, #ffffff, #f2f4f4);
-  border-color: #d9e0de;
+  background: #ffffff;
+  border-color: rgba(17, 17, 17, 0.4);
 }
 
 .chat-conversation-card--failed strong,
@@ -4514,9 +4514,13 @@ a {
   color: #b53434;
 }
 
+.chat-conversation-card__status--active {
+  color: #5b8bd9;
+}
+
 .chat-conversation-card--failed {
-  background: linear-gradient(180deg, #ffffff, #fff4f4);
-  border-color: #f0d0d0;
+  background: #ffffff;
+  border-color: rgba(197, 51, 51, 0.45);
 }
 
 .chat-panel {
