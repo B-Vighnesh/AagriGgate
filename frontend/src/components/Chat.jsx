@@ -483,9 +483,12 @@ export default function Chat() {
           ) : (
             <>
               <div className="chat-panel__head">
-                <div>
-                  <h2>{counterpartyName}</h2>
-                  <p>Crop: <strong>{activeConversation.listingName}</strong></p>
+                <div className="chat-panel__title">
+                  
+                  <div>
+                    <h2>{counterpartyName}</h2>
+                    <p>Crop: <strong>{activeConversation.listingName}</strong></p>
+                  </div>
                 </div>
                 <div className="chat-panel__meta">
                   <button
@@ -497,7 +500,7 @@ export default function Chat() {
                       navigate('/chat');
                     }}
                   >
-                    Back
+                    ⬅ Back
                   </button>
                   <span className={`chat-status chat-status--${(activeConversation.status || 'active').toLowerCase()}`}>
                     {activeConversation.status}

@@ -4548,6 +4548,16 @@ a {
   gap: 12px;
 }
 
+.chat-panel__title {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.chat-panel__title h2 {
+  margin: 0 0 6px;
+}
+
 .chat-panel__head h2 {
   margin: 0 0 6px;
   color: var(--color-primary-dark);
