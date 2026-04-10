@@ -6234,39 +6234,119 @@ a {
   background: #eef7f1;
 }
 
+.buyer-profile-layout {
+  display: grid;
+  gap: 18px;
+}
+
+.buyer-profile-hero {
+  display: grid;
+  gap: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(234, 143, 68, 0.14), transparent 28%),
+    linear-gradient(180deg, #ffffff, #f7fcf9);
+}
+
+.buyer-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
 .buyer-profile-card {
-  max-width: 760px;
+  min-width: 0;
 }
 
 .buyer-profile-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--color-border);
-  margin-bottom: 10px;
+  gap: 16px;
 }
 
 .buyer-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  width: 76px;
+  height: 76px;
+  border-radius: 22px;
   display: grid;
   place-items: center;
-  background: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
   color: #fff;
-  font-weight: 700;
-  font-size: 1.2rem;
+  font-weight: 800;
+  font-size: 1.45rem;
+  flex-shrink: 0;
+  box-shadow: 0 16px 28px rgba(31, 111, 84, 0.18);
+}
+
+.buyer-profile-head__copy {
+  min-width: 0;
+}
+
+.buyer-profile-kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e7f4ed;
+  color: var(--color-primary-dark);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .buyer-profile-head h1 {
-  margin: 0;
+  margin: 10px 0 0;
   color: var(--color-primary-dark);
-  font-size: clamp(1.4rem, 4vw, 1.8rem);
+  font-size: clamp(1.6rem, 4vw, 2.15rem);
+  line-height: 1.12;
 }
 
 .buyer-profile-head p {
-  margin: 4px 0 0;
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  max-width: 560px;
+}
+
+.buyer-profile-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.buyer-profile-metric {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid #d7e7de;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.buyer-profile-metric span {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.buyer-profile-metric strong {
+  color: var(--color-primary-dark);
+  font-size: 1rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.buyer-profile-section-head {
+  margin-bottom: 12px;
+}
+
+.buyer-profile-section-head h2 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 1.05rem;
+}
+
+.buyer-profile-section-head p {
+  margin: 6px 0 0;
   color: var(--color-muted);
 }
 
@@ -6292,6 +6372,7 @@ a {
   color: var(--color-text);
   text-align: right;
   font-size: 0.9rem;
+  word-break: break-word;
 }
 
 /* Forgot password */
@@ -6738,6 +6819,11 @@ a {
   .approach-crop-card {
     grid-template-columns: 1fr;
     align-items: flex-start;
+  }
+
+  .buyer-profile-grid,
+  .buyer-profile-metrics {
+    grid-template-columns: 1fr;
   }
 
   .view-crop-card__top,
