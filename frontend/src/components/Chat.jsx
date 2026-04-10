@@ -88,7 +88,6 @@ export default function Chat() {
   const [dealModalOpen, setDealModalOpen] = useState(false);
   const [dealDrawerOpen, setDealDrawerOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
-  const [showSummary, setShowSummary] = useState(true);
   const [useRequestedQuantity, setUseRequestedQuantity] = useState(true);
   const [dealQuantity, setDealQuantity] = useState('');
   const [dealLoading, setDealLoading] = useState(false);
@@ -432,7 +431,7 @@ export default function Chat() {
     <section className="page chat-page">
       <ValidateToken token={token} role={role} />
 
-      <div className={`ag-container chat-shell${isMobileConversation ? ' chat-shell--conversation' : ''}${dealDrawerOpen ? ' chat-shell--dealopen' : ''}${showSummary ? '' : ' chat-shell--nosummary'}`}>
+      <div className={`ag-container chat-shell${isMobileConversation ? ' chat-shell--conversation' : ''}${dealDrawerOpen ? ' chat-shell--dealopen' : ''}`}>
         <Card className="chat-sidebar">
           <div className="chat-sidebar__head">
             <div>
@@ -499,15 +498,9 @@ export default function Chat() {
                   <button
                     type="button"
                     className="chat-panel__deal-toggle"
-                    onClick={() => {
-                      if (isMobileView) {
-                        setDealDrawerOpen(true);
-                      } else {
-                        setShowSummary((prev) => !prev);
-                      }
-                    }}
+                    onClick={() => setDealDrawerOpen(true)}
                   >
-                    {isMobileView ? 'View Deal Info' : (showSummary ? 'Hide Summary' : 'Show Summary')}
+                    Summary
                   </button>
                   <Button
                     variant="outline"
@@ -610,11 +603,8 @@ export default function Chat() {
           ) : (
             <>
               <div className="chat-deal-panel__head">
-                <span className="settings-kicker">Deal Summary</span>
                 <h3>{dealStatusText}</h3>
-                <p>
-                  Keep the negotiation visible here while the center panel stays focused on the conversation itself.
-                </p>
+                
               </div>
 
               <div className="chat-deal-summary">
@@ -744,11 +734,8 @@ export default function Chat() {
             </div>
             <div className="chat-deal-panel chat-deal-panel--drawer">
               <div className="chat-deal-panel__head">
-                <span className="settings-kicker">Deal Summary</span>
                 <h3>{dealStatusText}</h3>
-                <p>
-                  Keep the negotiation visible here while the center panel stays focused on the conversation itself.
-                </p>
+               
               </div>
 
               <div className="chat-deal-summary">
