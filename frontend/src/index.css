@@ -4488,8 +4488,7 @@ a {
   font-size: 0.7rem;
   margin-top: 2px;
 }
-
-.chat-conversation-card--completed strong,
+.chat-conversation-card__status--completed strong,
 .chat-conversation-card__status--completed {
   color: #1f6f54;
 }
@@ -4498,7 +4497,6 @@ a {
   background: #ffffff;
   border-color: rgba(31, 111, 84, 0.55);
 }
-
 .chat-conversation-card--expired strong,
 .chat-conversation-card__status--expired {
   color: #111111;
@@ -4508,14 +4506,9 @@ a {
   background: #ffffff;
   border-color: rgba(17, 17, 17, 0.4);
 }
-
 .chat-conversation-card--failed strong,
 .chat-conversation-card__status--failed {
   color: #b53434;
-}
-
-.chat-conversation-card--active strong {
-  color: #5b8bd9;
 }
 
 .chat-conversation-card__status--active {

@@ -313,6 +313,13 @@ export default function Chat() {
       const parts = String(name).trim().split(/\s+/).slice(0, 2);
       return parts.map((part) => part[0]?.toUpperCase()).join('');
     };
+    const colorFor = (name) => {
+      const palette = ['#e3f2f1', '#e9f1ff', '#f1e9ff', '#fff1e9', '#e9f7ed', '#ffe9f1'];
+      const text = ['#1f6f54', '#2d5ea7', '#6a3e91', '#b1562f', '#2f7a4f', '#9b2f5c'];
+      const value = String(name || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const index = value % palette.length;
+      return { backgroundColor: palette[index], color: text[index] };
+    };
 
     return (
       <div className="chat-section">
@@ -339,7 +346,7 @@ export default function Chat() {
                 }
                 onClick={() => openConversation(item)}
               >
-                <div className="chat-conversation-card__avatar" aria-hidden="true">
+                <div className="chat-conversation-card__avatar" aria-hidden="true" style={colorFor(counterpart)}>
                   {initialsFor(counterpart)}
                 </div>
                 <div className="chat-conversation-card__content">
