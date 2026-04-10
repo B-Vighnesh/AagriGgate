@@ -7617,6 +7617,34 @@ a {
     grid-template-rows: auto minmax(260px, 1fr) auto;
   }
 
+  .chat-shell--conversation {
+    height: calc(100dvh - 110px);
+    min-height: calc(100dvh - 110px);
+  }
+
+  .chat-shell--conversation .chat-panel {
+    display: grid;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+  }
+
+  .chat-shell--conversation .chat-message-list {
+    min-height: 0;
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chat-shell--conversation .chat-composer {
+    border-top: 1px solid #e4ece8;
+    padding-top: 8px;
+    background: #ffffff;
+  }
+
   .chat-panel__head,
   .chat-composer__actions {
     flex-direction: column;
@@ -7625,8 +7653,9 @@ a {
 
   .chat-panel__meta {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-content: stretch;
+    align-items: stretch;
   }
 
   .chat-panel__meta > *,
@@ -7662,6 +7691,32 @@ a {
     line-height: 1.2;
   }
 
+  .chat-panel__head {
+    gap: 8px;
+  }
+
+  .chat-panel__head p {
+    font-size: 0.8rem;
+  }
+
+  .chat-panel__back,
+  .chat-panel__deal-toggle,
+  .chat-panel__link-btn.ui-btn--ghost,
+  .chat-panel__meta .ui-btn {
+    min-height: 34px;
+    padding: 5px 8px;
+    font-size: 0.72rem;
+  }
+
+  .chat-status {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 8px;
+    font-size: 0.68rem;
+  }
+
   .chat-conversation-card {
     grid-template-columns: 34px minmax(0, 1fr);
     padding: 10px;
@@ -7684,7 +7739,7 @@ a {
 
   .chat-message-list {
     padding: 10px;
-    min-height: 280px;
+    min-height: 0;
   }
 
   .chat-message {
@@ -7699,6 +7754,14 @@ a {
 
   .chat-composer {
     gap: 8px;
+  }
+
+  .chat-composer__head strong {
+    font-size: 0.8rem;
+  }
+
+  .chat-composer__head span {
+    font-size: 0.7rem;
   }
 
   .chat-composer__input input {
@@ -7826,6 +7889,11 @@ a {
     width: min(100%, 94%);
   }
 
+  .chat-shell--conversation {
+    height: calc(100dvh - 98px);
+    min-height: calc(100dvh - 98px);
+  }
+
   .chat-sidebar,
   .chat-panel,
   .chat-deal-panel {
@@ -7853,13 +7921,31 @@ a {
 
   .chat-panel__link-btn.ui-btn--ghost,
   .chat-panel__meta .ui-btn {
-    min-height: 40px;
-    padding-left: 10px;
-    padding-right: 10px;
+    min-height: 32px;
+    padding-left: 8px;
+    padding-right: 8px;
+    font-size: 0.68rem;
+  }
+
+  .chat-panel__meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .chat-panel__back,
+  .chat-panel__deal-toggle {
+    min-height: 32px;
+    padding: 5px 8px;
+    font-size: 0.68rem;
+  }
+
+  .chat-status {
+    min-height: 32px;
+    font-size: 0.64rem;
   }
 
   .chat-message-list {
-    min-height: 240px;
+    min-height: 0;
   }
 
   .chat-empty {
