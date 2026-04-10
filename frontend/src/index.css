@@ -4452,13 +4452,13 @@ a {
 
 .chat-conversation-card strong {
   color: var(--color-primary-dark);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
 }
 
 .chat-conversation-card__listing {
   display: block;
   color: var(--color-muted);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   margin-top: 2px;
 }
 
@@ -4467,7 +4467,7 @@ a {
   align-items: center;
   gap: 8px;
   color: var(--color-muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   white-space: nowrap;
 }
 
@@ -4478,14 +4478,14 @@ a {
 .chat-conversation-card span,
 .chat-conversation-card small {
   color: var(--color-muted);
-  font-size: 0.82rem;
+  font-size: 0.72rem;
 }
 
 .chat-conversation-card__status {
   font-weight: 800;
   letter-spacing: 0.02em;
   font-style: normal;
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   margin-top: 2px;
 }
 
