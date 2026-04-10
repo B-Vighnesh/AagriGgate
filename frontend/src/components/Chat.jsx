@@ -484,8 +484,21 @@ export default function Chat() {
         <Card className="chat-panel">
           {!activeConversation ? (
             <div className="chat-empty chat-empty--panel">
+              <div className="chat-empty__icon" aria-hidden="true">
+                <i className="fa-regular fa-comments" />
+              </div>
               <h3>Select a conversation</h3>
               <p>Choose an accepted request to continue the negotiation and confirm the final deal.</p>
+              <div className="chat-empty__tips">
+                <div>
+                  <strong>Tip</strong>
+                  <span>Click a chat on the left to view negotiation history.</span>
+                </div>
+                <div>
+                  <strong>Next</strong>
+                  <span>Use the Summary button to review deal status anytime.</span>
+                </div>
+              </div>
             </div>
           ) : (
             <>
