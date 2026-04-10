@@ -4228,7 +4228,7 @@ a {
 .chat-shell {
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr);
-  gap: 14px;
+  gap: 10px;
   align-items: stretch;
 }
 
@@ -4240,6 +4240,7 @@ a {
 .chat-panel,
 .chat-deal-panel {
   min-width: 0;
+  padding: 14px;
 }
 
 .chat-sidebar {
@@ -4257,9 +4258,27 @@ a {
 
 .chat-sidebar__sections {
   display: grid;
-  gap: 16px;
+  gap: 12px;
   overflow-y: auto;
   padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #c6d6ce transparent;
+}
+
+.chat-sidebar__sections::-webkit-scrollbar,
+.chat-message-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-sidebar__sections::-webkit-scrollbar-track,
+.chat-message-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-sidebar__sections::-webkit-scrollbar-thumb,
+.chat-message-list::-webkit-scrollbar-thumb {
+  background: #c6d6ce;
+  border-radius: 999px;
 }
 
 .chat-section {
@@ -4533,14 +4552,7 @@ a {
 }
 
 .chat-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 6px;
-  border-radius: 22px 0 0 22px;
-  background: linear-gradient(180deg, #2f9a74, #1f6f54);
-  opacity: 0.9;
-  pointer-events: none;
+  content: none;
 }
 
 .chat-panel__head {
@@ -4605,16 +4617,16 @@ a {
 
 .chat-message-list {
   border: 1px solid #dbe9e1;
-  border-radius: 20px;
+  border-radius: 12px;
   background:
     radial-gradient(circle at top right, rgba(234, 143, 68, 0.06), transparent 26%),
     linear-gradient(180deg, #ffffff, #fbfcfb);
-  padding: 16px;
+  padding: 12px;
   overflow-y: auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .chat-offer-card {
