@@ -137,6 +137,7 @@ export default function Chat() {
     : '';
 
   const isBuyer = activeConversation ? currentUserId === activeConversation.buyerId : false;
+  const canViewBuyerProfile = Boolean(activeConversation?.buyerId) && !isBuyer;
   const agreedQuantity = activeConversation?.pendingDealQuantity ?? activeConversation?.requestedQuantity ?? null;
   const dealStatusText = activeConversation
     ? activeConversation.status === 'COMPLETED'
@@ -537,6 +538,16 @@ export default function Chat() {
                   >
                     View Listing
                   </Button>
+                  {canViewBuyerProfile ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/view-buyer/${activeConversation.buyerId}`)}
+                      className="chat-panel__link-btn"
+                    >
+                      View Buyer
+                    </Button>
+                  ) : null}
                   <button
                     type="button"
                     className="chat-panel__deal-toggle"
@@ -700,6 +711,14 @@ export default function Chat() {
                 >
                   View Listing
                 </Button>
+                {canViewBuyerProfile ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(`/view-buyer/${activeConversation.buyerId}`)}
+                  >
+                    View Buyer
+                  </Button>
+                ) : null}
               </div>
             </>
           )}
@@ -831,6 +850,14 @@ export default function Chat() {
                 >
                   View Listing
                 </Button>
+                {canViewBuyerProfile ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(`/view-buyer/${activeConversation.buyerId}`)}
+                  >
+                    View Buyer
+                  </Button>
+                ) : null}
               </div>
             </div>
           </Card>
