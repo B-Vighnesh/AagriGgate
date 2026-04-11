@@ -162,7 +162,6 @@ export default function Chat() {
   const [socketReady,        setSocketReady]        = useState(false);
   const [dealModalOpen,      setDealModalOpen]      = useState(false);
   const [dealDrawerOpen,     setDealDrawerOpen]     = useState(false);
-  const [isMobileView,       setIsMobileView]       = useState(false);
   const [useRequestedQty,    setUseRequestedQty]    = useState(true);
   const [dealQuantity,       setDealQuantity]       = useState('');
   const [dealLoading,        setDealLoading]        = useState(false);
@@ -240,9 +239,17 @@ export default function Chat() {
   const farmerStatusLabel = activeConversation?.farmerDealConfirmed ? 'Confirmed' : 'Pending';
 
   /* ── buyer profile route ── */
-  const buyerProfilePath = activeConversation?.buyerId
+  const buyerProfilePath = activeConversation?.buyerId && !isBuyer
     ? `/view-buyer/${activeConversation.buyerId}`
     : null;
+
+  const handleBackNavigation = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate('/chat');
+  };
 
   /* ── sync ref ── */
   useEffect(() => {
@@ -299,22 +306,14 @@ export default function Chat() {
 
   /* ── mobile breakpoint ── */
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 1024px)');
-    const updateView = () => setIsMobileView(media.matches);
-    updateView();
-    if (media.addEventListener) {
-      media.addEventListener('change', updateView);
-      return () => media.removeEventListener('change', updateView);
-    }
-    media.addListener(updateView);
-    return () => media.removeListener(updateView);
+    return undefined;
   }, []);
 
   /* ── on mount / conversationId change ── */
   useEffect(() => {
     if (!role) { navigate('/login'); return; }
     loadConversations();
-  }, [conversationId, isMobileView]);
+  }, [conversationId]);
 
   /* ── load messages on conversation switch ── */
   useEffect(() => {
@@ -626,8 +625,9 @@ export default function Chat() {
             ) : (
               <div className="chat-sidebar__sections">
                 {renderConversationSection('Active',    'active',    groupedConversations.active)}
-                {renderConversationSection('Closed',    'completed',  groupedConversations.completed)}
-                {renderConversationSection('Archived',  'expired',    groupedConversations.expired)}
+                {renderConversationSection('Completed',    'completed',  groupedConversations.completed)}
+                {renderConversationSection('Failed',    'failed',     groupedConversations.failed)}
+                {renderConversationSection('Expired',  'expired',    groupedConversations.expired)}
               </div>
             )}
           </div>
@@ -650,18 +650,29 @@ export default function Chat() {
               {/* panel header */}
               <div className="chat-panel__header">
                 <div className="chat-header__info">
-                  <button className="chat-back-btn" onClick={() => navigate('/chat')}>
+                  <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={handleBackNavigation}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
                     <i className="fa-solid fa-chevron-left" />
                   </button>
                   <div 
-                    className="chat-header__avatar" 
+                    className={`chat-header__avatar${buyerProfilePath ? ' chat-header__avatar--clickable' : ''}`}
                     style={colorFor(counterpartyName)}
                     onClick={() => buyerProfilePath && navigate(buyerProfilePath)}
                   >
                     {initialsFor(counterpartyName)}
                   </div>
                   <div className="chat-header__details">
-                    <h3 onClick={() => buyerProfilePath && navigate(buyerProfilePath)}>{counterpartyName}</h3>
+                    <h3
+                      className={buyerProfilePath ? 'chat-header__name--clickable' : ''}
+                      onClick={() => buyerProfilePath && navigate(buyerProfilePath)}
+                    >
+                      {counterpartyName}
+                    </h3>
                     <p>{activeConversation.listingName}</p>
                   </div>
                 </div>
@@ -688,12 +699,11 @@ export default function Chat() {
                         label: 'Deal Summary',
                         action: () => setDealDrawerOpen(true),
                       },
-                      {
+                      ...(buyerProfilePath ? [{
                         icon: <i className="fa-solid fa-user" />,
-                        label: 'View Profile',
-                        action: () => buyerProfilePath && navigate(buyerProfilePath),
-                        disabled: !buyerProfilePath,
-                      },
+                        label: 'View Buyer Profile',
+                        action: () => navigate(buyerProfilePath),
+                      }] : []),
                     ]}
                   />
                 </div>
