@@ -9,6 +9,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 1%;
+  margin-bottom: 1%;
 }
 
 .premium-chat .ag-container {
@@ -39,6 +41,7 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  width: 40%;
 }
 
 .chat-sidebar__header {
@@ -248,6 +251,7 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.04);
+  width: 100%;
 }
 
 .chat-panel__header {

@@ -758,24 +758,7 @@ export default function Chat() {
           )}
         </Card>
 
-        {/* ── right deal panel (desktop) ── */}
-        <Card className="chat-deal-panel">
-          {!activeConversation ? (
-            <div className="chat-deal-panel__empty">
-              <h3>Deal Summary</h3>
-              <p>Current status and agreed terms will appear here.</p>
-            </div>
-          ) : (
-            <>
-              <div className="chat-deal-panel__header">
-                <h3>{dealStatusText}</h3>
-              </div>
-              <div className="chat-deal-panel__content">
-                <DealSummaryBody />
-              </div>
-            </>
-          )}
-        </Card>
+        
       </div>
 
       {/* ── Deal Modal ── */}
