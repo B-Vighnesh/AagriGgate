@@ -244,7 +244,10 @@ export default function Chat() {
     : null;
 
   const handleBackNavigation = () => {
-    
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
     navigate('/chat');
   };
 
@@ -302,9 +305,6 @@ export default function Chat() {
   };
 
   /* ── mobile breakpoint ── */
-  useEffect(() => {
-    return undefined;
-  }, []);
 
   /* ── on mount / conversationId change ── */
   useEffect(() => {
