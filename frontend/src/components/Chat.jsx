@@ -244,10 +244,7 @@ export default function Chat() {
     : null;
 
   const handleBackNavigation = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
+    
     navigate('/chat');
   };
 
