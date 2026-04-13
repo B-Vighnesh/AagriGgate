@@ -189,7 +189,6 @@ export default function Chat() {
   const [searchTerm,         setSearchTerm]         = useState('');
   const [dateFrom,           setDateFrom]           = useState('');
   const [dateTo,             setDateTo]             = useState('');
-  const [cropFilter,         setCropFilter]         = useState('');
 
   const socketRef               = useRef(null);
   const messageListRef          = useRef(null);
@@ -284,14 +283,6 @@ export default function Chat() {
     return currentUserId === item.buyerId ? item.farmerName : item.buyerName;
   };
 
-  const availableCrops = useMemo(() => {
-    const crops = new Set();
-    filteredConversations.forEach((item) => {
-      if (item.listingName) crops.add(item.listingName);
-    });
-    return Array.from(crops).sort((left, right) => left.localeCompare(right));
-  }, [filteredConversations]);
-
   const visibleConversations = useMemo(() => {
     const searchValue = searchTerm.trim().toLowerCase();
     const fromDate = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
@@ -301,7 +292,6 @@ export default function Chat() {
       const counterparty = resolveCounterpartyName(item);
       const text = `${item.listingName || ''} ${counterparty || ''}`.toLowerCase();
       if (searchValue && !text.includes(searchValue)) return false;
-      if (cropFilter && item.listingName !== cropFilter) return false;
 
       const dateValue = item.lastMessageAt || item.updatedAt || item.createdAt || null;
       if ((fromDate || toDate) && !dateValue) return false;
@@ -310,7 +300,7 @@ export default function Chat() {
 
       return true;
     });
-  }, [filteredConversations, searchTerm, dateFrom, dateTo, cropFilter]);
+  }, [filteredConversations, searchTerm, dateFrom, dateTo]);
 
   useEffect(() => {
     if (!activeConversation || loadingList) return;
@@ -915,15 +905,6 @@ export default function Chat() {
                       value={dateTo}
                       onChange={(event) => setDateTo(event.target.value)}
                     />
-                  </label>
-                  <label className="chat-filter-label chat-filter-label--select">
-                    <span>Crop</span>
-                    <select value={cropFilter} onChange={(event) => setCropFilter(event.target.value)}>
-                      <option value="">All crops</option>
-                      {availableCrops.map((crop) => (
-                        <option key={crop} value={crop}>{crop}</option>
-                      ))}
-                    </select>
                   </label>
                 </div>
                 {chatFilter === 'active' && (
