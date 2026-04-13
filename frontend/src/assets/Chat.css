@@ -262,8 +262,7 @@
 }
 
 .chat-conversation-card:hover .chat-conversation-card__quick-actions,
-.chat-conversation-card:focus-visible .chat-conversation-card__quick-actions,
-.chat-conversation-card--active .chat-conversation-card__quick-actions {
+.chat-conversation-card:focus-visible .chat-conversation-card__quick-actions {
   opacity: 1;
   transform: translateY(-50%) translateX(0);
   pointer-events: auto;
