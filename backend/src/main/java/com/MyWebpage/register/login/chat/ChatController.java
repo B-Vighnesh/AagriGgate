@@ -22,9 +22,12 @@ public class ChatController {
     }
 
     @GetMapping("/conversations")
-    public ResponseEntity<List<ConversationSummaryDTO>> getConversations(Authentication authentication) {
+    public ResponseEntity<List<ConversationSummaryDTO>> getConversations(
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "archived", required = false) Boolean archived,
+            Authentication authentication) {
         Long userId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(chatService.getConversationsForUser(userId));
+        return ResponseEntity.ok(chatService.getConversationsForUser(userId, status, archived));
     }
 
     @PostMapping("/conversations/from-approach/{approachId}")

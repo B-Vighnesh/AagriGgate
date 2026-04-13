@@ -12,6 +12,7 @@ public interface ChatService {
     ConversationSummaryDTO getConversation(Long conversationId, Long actorId);
     ConversationSummaryDTO getConversationByApproach(Long approachId, Long actorId);
     List<ConversationSummaryDTO> getConversationsForUser(Long actorId);
+    List<ConversationSummaryDTO> getConversationsForUser(Long actorId, String status, Boolean archived);
     List<ChatMessageDTO> getMessages(Long conversationId, Long actorId);
     ChatMessageDTO postMessage(Long conversationId, Long senderId, String messageText);
     DealConfirmationResultDTO confirmDeal(Long conversationId, Long actorId, DealConfirmationRequestDTO request);
