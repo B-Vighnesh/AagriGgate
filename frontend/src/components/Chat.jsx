@@ -547,6 +547,7 @@ export default function Chat() {
                       title={item.archived ? 'Unarchive chat' : 'Archive chat'}
                     >
                       <i className={`fa-solid ${item.archived ? 'fa-box-open' : 'fa-box-archive'}`} />
+                      <span>{item.archived ? 'Unarchive' : 'Archive'}</span>
                     </button>
                   )}
                   {canDeleteConversation(item) && (
@@ -561,6 +562,7 @@ export default function Chat() {
                       title="Delete chat"
                     >
                       <i className="fa-solid fa-trash" />
+                      <span>Delete</span>
                     </button>
                   )}
                 </div>
