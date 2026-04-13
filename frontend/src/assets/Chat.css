@@ -685,6 +685,15 @@
   opacity: 1;
 }
 
+.chat-blocked-banner {
+  background: #fff4e6;
+  color: #9a5c13;
+  border-bottom: 1px solid rgba(154, 92, 19, 0.2);
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .chat-message-list {
   height: 100%;
   overflow-y: auto;
@@ -1207,6 +1216,34 @@
   justify-content: space-between;
   gap: 12px;
   align-items: center;
+}
+
+.chat-action-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.chat-action-modal__field label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a3a32;
+}
+
+.chat-action-modal__field input,
+.chat-action-modal__field textarea,
+.chat-action-modal__field select {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.chat-action-modal__field textarea {
+  min-height: 96px;
 }
 
 .chat-action-modal__meta strong {

@@ -9,6 +9,8 @@ import {
   confirmChatDeal,
   failChatConversation,
   deleteChatConversation,
+  blockChatUser,
+  reportChatUser,
   getChatConversation,
   getChatConversations,
   getChatMessages,
@@ -184,6 +186,8 @@ export default function Chat() {
   const [isTyping,           setIsTyping]           = useState(false);
   const [actionDialog,       setActionDialog]       = useState({ open: false, type: '', conversation: null, step: 1 });
   const [actionLoading,      setActionLoading]      = useState(false);
+  const [blockReason,        setBlockReason]        = useState('');
+  const [reportDialog,       setReportDialog]       = useState({ open: false, reason: '', message: '', imageUrl: '', loading: false });
   const [chatFilter,         setChatFilter]         = useState('active');
   const [activeSubFilter,    setActiveSubFilter]    = useState('active');
   const [isFilterNavigating, setIsFilterNavigating] = useState(false);
@@ -244,6 +248,11 @@ export default function Chat() {
     : '';
 
   const isBuyer       = activeConversation ? currentUserId === activeConversation.buyerId : false;
+  const counterpartyId = activeConversation
+    ? (isBuyer ? activeConversation.farmerId : activeConversation.buyerId)
+    : null;
+  const counterpartyRoleLabel = isBuyer ? 'Farmer' : 'Buyer';
+  const isBlocked = Boolean(activeConversation?.blockedByMe || activeConversation?.blockedMe);
   const agreedQuantity = activeConversation?.pendingDealQuantity ?? activeConversation?.requestedQuantity ?? null;
 
   const dealStatusText = activeConversation
@@ -562,11 +571,22 @@ export default function Chat() {
 
   const openActionDialog = (type, conversation = activeConversation) => {
     if (!conversation) return;
+    if (type === 'block') {
+      setBlockReason('');
+    }
     setActionDialog({ open: true, type, conversation, step: 1 });
   };
 
   const closeActionDialog = () => {
     setActionDialog({ open: false, type: '', conversation: null, step: 1 });
+  };
+
+  const openReportDialog = () => {
+    setReportDialog({ open: true, reason: '', message: '', imageUrl: '', loading: false });
+  };
+
+  const closeReportDialog = () => {
+    setReportDialog({ open: false, reason: '', message: '', imageUrl: '', loading: false });
   };
 
   const handleConversationAction = async () => {
@@ -592,12 +612,39 @@ export default function Chat() {
         const updated = await failChatConversation(actionDialog.conversation.conversationId);
         mergeConversationUpdate(updated);
         showToast('Deal cancelled. Conversation moved to failed.', 'success');
+      } else if (actionDialog.type === 'block') {
+        const updated = await blockChatUser(counterpartyId, blockReason);
+        if (updated) {
+          mergeConversationUpdate(updated);
+        }
+        showToast(`${counterpartyRoleLabel} blocked.`, 'success');
       }
       closeActionDialog();
     } catch (error) {
       showToast(error.message || 'Unable to update conversation.', 'error');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleReportSubmit = async () => {
+    if (!counterpartyId) return;
+    if (!reportDialog.reason.trim() || !reportDialog.message.trim()) {
+      showToast('Please provide a reason and message.', 'error');
+      return;
+    }
+    setReportDialog((prev) => ({ ...prev, loading: true }));
+    try {
+      await reportChatUser(counterpartyId, {
+        reason: reportDialog.reason.trim(),
+        message: reportDialog.message.trim(),
+        imageUrl: reportDialog.imageUrl.trim() || null,
+      });
+      showToast('Report submitted.', 'success');
+      closeReportDialog();
+    } catch (error) {
+      showToast(error.message || 'Unable to submit report.', 'error');
+      setReportDialog((prev) => ({ ...prev, loading: false }));
     }
   };
 
@@ -1035,14 +1082,14 @@ export default function Chat() {
                     icon={<i className="fa-solid fa-handshake" />}
                     label="Confirm deal"
                     onClick={openDealModal}
-                    disabled={activeConversation.status !== 'ACTIVE'}
+                    disabled={activeConversation.status !== 'ACTIVE' || isBlocked}
                   />
                   <IconBtn
                     icon={<i className="fa-solid fa-ban" />}
                     label="Cancel deal"
                     danger
                     onClick={() => openActionDialog('fail')}
-                    disabled={activeConversation.status !== 'ACTIVE'}
+                    disabled={activeConversation.status !== 'ACTIVE' || isBlocked}
                   />
                   <PanelMenu
                     items={[
@@ -1072,6 +1119,21 @@ export default function Chat() {
                         label: 'View Buyer Profile',
                         action: () => navigate(buyerProfilePath),
                       }] : []),
+                      ...(counterpartyId ? [{
+                        icon: <i className="fa-solid fa-user-slash" />,
+                        label: activeConversation?.blockedByMe
+                          ? `${counterpartyRoleLabel} Blocked`
+                          : `Block ${counterpartyRoleLabel}`,
+                        action: () => openActionDialog('block'),
+                        danger: true,
+                        disabled: Boolean(activeConversation?.blockedByMe),
+                      }] : []),
+                      ...(counterpartyId ? [{
+                        icon: <i className="fa-solid fa-flag" />,
+                        label: `Report ${counterpartyRoleLabel}`,
+                        action: () => openReportDialog(),
+                        danger: true,
+                      }] : []),
                     ]}
                   />
                 </div>
@@ -1079,6 +1141,13 @@ export default function Chat() {
 
               {/* message list */}
               <div className="chat-message-list-container">
+                {isBlocked && (
+                  <div className="chat-blocked-banner">
+                    {activeConversation?.blockedByMe
+                      ? `You blocked this ${counterpartyRoleLabel.toLowerCase()}.`
+                      : `${counterpartyRoleLabel} blocked you. You cannot send messages.`}
+                  </div>
+                )}
                 <div className="chat-message-list" ref={messageListRef} onScroll={updateStickiness}>
                   {loadingMessages ? (
                     <div className="chat-messages-loading">
@@ -1119,14 +1188,16 @@ export default function Chat() {
                     value={composer}
                     onChange={(e) => setComposer(e.target.value)}
                     onKeyDown={handleComposerKeyDown}
-                    placeholder={activeConversation.status === 'ACTIVE' ? 'Type a message...' : 'Conversation closed'}
-                    disabled={activeConversation.status !== 'ACTIVE'}
+                    placeholder={activeConversation.status === 'ACTIVE'
+                      ? (isBlocked ? 'Messaging disabled' : 'Type a message...')
+                      : 'Conversation closed'}
+                    disabled={activeConversation.status !== 'ACTIVE' || isBlocked}
                     rows={1}
                   />
                   <button
                     className="chat-send-button"
                     onClick={handleSend}
-                    disabled={activeConversation.status !== 'ACTIVE' || !composer.trim()}
+                    disabled={activeConversation.status !== 'ACTIVE' || isBlocked || !composer.trim()}
                   >
                     <i className="fa-solid fa-paper-plane" />
                   </button>
@@ -1221,6 +1292,8 @@ export default function Chat() {
                     ? 'Unarchive Conversation'
                     : actionDialog.type === 'fail'
                       ? 'Cancel Deal'
+                      : actionDialog.type === 'block'
+                        ? `Block ${counterpartyRoleLabel}`
                     : 'Archive Conversation'}
               </h2>
               <button className="modal-close" onClick={closeActionDialog}>âœ•</button>
@@ -1235,8 +1308,21 @@ export default function Chat() {
                       ? actionDialog.step === 1
                         ? 'This is the first confirmation. Click Continue to confirm you want to cancel the deal for both participants.'
                         : 'This will mark the deal as failed for both participants and move the chat into the failed section.'
-                      : 'This will move the active conversation into your archived section without deleting it.'}
+                      : actionDialog.type === 'block'
+                        ? `Blocking will prevent this ${counterpartyRoleLabel.toLowerCase()} from interacting with you.`
+                    : 'This will move the active conversation into your archived section without deleting it.'}
               </p>
+              {actionDialog.type === 'block' && (
+                <div className="chat-action-modal__field">
+                  <label>Reason (optional)</label>
+                  <input
+                    type="text"
+                    value={blockReason}
+                    onChange={(event) => setBlockReason(event.target.value)}
+                    placeholder="e.g. Spam messages"
+                  />
+                </div>
+              )}
               <div className="chat-action-modal__meta">
                 <strong>{actionDialog.conversation.listingName}</strong>
                 <span>{actionDialog.conversation.status}</span>
@@ -1244,7 +1330,7 @@ export default function Chat() {
             </div>
               <div className="modal-footer">
                 <Button variant="outline" onClick={closeActionDialog} disabled={actionLoading}>Cancel</Button>
-                <Button
+              <Button
                 onClick={() => {
                   if (actionDialog.type === 'fail' && actionDialog.step === 1) {
                     setActionDialog((prev) => ({ ...prev, step: 2 }));
@@ -1253,7 +1339,7 @@ export default function Chat() {
                   handleConversationAction();
                 }}
                 loading={actionLoading}
-                className={actionDialog.type === 'delete' || actionDialog.type === 'fail' ? 'chat-action-modal__danger-btn' : ''}
+                className={actionDialog.type === 'delete' || actionDialog.type === 'fail' || actionDialog.type === 'block' ? 'chat-action-modal__danger-btn' : ''}
               >
                 {actionDialog.type === 'delete'
                   ? 'Delete'
@@ -1263,8 +1349,59 @@ export default function Chat() {
                       ? actionDialog.step === 1
                         ? 'Continue'
                         : 'Cancel Deal'
+                    : actionDialog.type === 'block'
+                      ? `Block ${counterpartyRoleLabel}`
                     : 'Archive'}
               </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {reportDialog.open && (
+        <div className="premium-modal-overlay" onClick={closeReportDialog}>
+          <Card className="premium-modal chat-report-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Report {counterpartyRoleLabel}</h2>
+              <button className="modal-close" onClick={closeReportDialog}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="chat-action-modal__field">
+                <label>Reason</label>
+                <select
+                  value={reportDialog.reason}
+                  onChange={(event) => setReportDialog((prev) => ({ ...prev, reason: event.target.value }))}
+                >
+                  <option value="">Select a reason</option>
+                  <option value="Spam">Spam</option>
+                  <option value="Abuse">Abuse</option>
+                  <option value="Scam">Scam</option>
+                  <option value="Offensive content">Offensive content</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="chat-action-modal__field">
+                <label>Message</label>
+                <textarea
+                  rows={4}
+                  value={reportDialog.message}
+                  onChange={(event) => setReportDialog((prev) => ({ ...prev, message: event.target.value }))}
+                  placeholder="Describe the issue"
+                />
+              </div>
+              <div className="chat-action-modal__field">
+                <label>Screenshot URL (optional)</label>
+                <input
+                  type="text"
+                  value={reportDialog.imageUrl}
+                  onChange={(event) => setReportDialog((prev) => ({ ...prev, imageUrl: event.target.value }))}
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <Button variant="outline" onClick={closeReportDialog} disabled={reportDialog.loading}>Cancel</Button>
+              <Button onClick={handleReportSubmit} loading={reportDialog.loading}>Submit Report</Button>
             </div>
           </Card>
         </div>

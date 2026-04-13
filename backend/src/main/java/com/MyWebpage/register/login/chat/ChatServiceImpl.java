@@ -25,18 +25,24 @@ public class ChatServiceImpl implements ChatService {
     private final ApproachFarmerRepo approachFarmerRepo;
     private final CropDealService cropDealService;
     private final ChatRealtimeService chatRealtimeService;
+    private final UserBlockRepository userBlockRepository;
+    private final UserReportRepository userReportRepository;
 
     public ChatServiceImpl(
             ConversationRepository conversationRepository,
             ChatMessageRepository chatMessageRepository,
             ApproachFarmerRepo approachFarmerRepo,
             CropDealService cropDealService,
-            ChatRealtimeService chatRealtimeService) {
+            ChatRealtimeService chatRealtimeService,
+            UserBlockRepository userBlockRepository,
+            UserReportRepository userReportRepository) {
         this.conversationRepository = conversationRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.approachFarmerRepo = approachFarmerRepo;
         this.cropDealService = cropDealService;
         this.chatRealtimeService = chatRealtimeService;
+        this.userBlockRepository = userBlockRepository;
+        this.userReportRepository = userReportRepository;
     }
 
     @Override
@@ -97,6 +103,7 @@ public class ChatServiceImpl implements ChatService {
             throw new IllegalArgumentException("Message cannot be empty");
         }
         Conversation conversation = requireParticipantConversation(conversationId, senderId);
+        validateNotBlocked(conversation, senderId);
         if (conversation.getStatus() != ConversationStatus.ACTIVE || !Boolean.TRUE.equals(conversation.getActive())) {
             throw new IllegalArgumentException("This conversation is closed");
         }
@@ -122,6 +129,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public DealConfirmationResultDTO confirmDeal(Long conversationId, Long actorId, DealConfirmationRequestDTO request) {
         Conversation conversation = requireParticipantConversation(conversationId, actorId);
+        validateNotBlocked(conversation, actorId);
         if (conversation.getStatus() != ConversationStatus.ACTIVE || !Boolean.TRUE.equals(conversation.getActive())) {
             throw new IllegalArgumentException("This conversation is closed");
         }
@@ -223,6 +231,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public ConversationSummaryDTO failConversation(Long conversationId, Long actorId) {
         Conversation conversation = requireParticipantConversation(conversationId, actorId);
+        validateNotBlocked(conversation, actorId);
         if (conversation.getStatus() != ConversationStatus.ACTIVE || !Boolean.TRUE.equals(conversation.getActive())) {
             throw new IllegalArgumentException("Only active conversations can be cancelled");
         }
@@ -261,6 +270,42 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    public ConversationSummaryDTO blockUser(Long actorId, Long targetUserId, String reason) {
+        if (targetUserId == null || Objects.equals(actorId, targetUserId)) {
+            throw new IllegalArgumentException("Invalid user to block");
+        }
+        if (!userBlockRepository.existsByBlockerIdAndBlockedId(actorId, targetUserId)) {
+            UserBlock block = new UserBlock();
+            block.setBlockerId(actorId);
+            block.setBlockedId(targetUserId);
+            block.setReason(reason);
+            userBlockRepository.save(block);
+        }
+        Conversation conversation = conversationRepository.findByBuyerIdOrFarmerIdOrderByLastMessageAtDescUpdatedAtDesc(actorId, actorId)
+                .stream()
+                .filter(item ->
+                        (Objects.equals(item.getBuyerId(), actorId) && Objects.equals(item.getFarmerId(), targetUserId))
+                                || (Objects.equals(item.getFarmerId(), actorId) && Objects.equals(item.getBuyerId(), targetUserId)))
+                .findFirst()
+                .orElse(null);
+        return conversation == null ? null : toSummary(conversation, actorId);
+    }
+
+    @Override
+    public void reportUser(Long actorId, Long targetUserId, String reason, String message, String imageUrl) {
+        if (targetUserId == null || Objects.equals(actorId, targetUserId)) {
+            throw new IllegalArgumentException("Invalid user to report");
+        }
+        UserReport report = new UserReport();
+        report.setReporterId(actorId);
+        report.setReportedId(targetUserId);
+        report.setReason(reason);
+        report.setMessage(message);
+        report.setImageUrl(imageUrl);
+        userReportRepository.save(report);
+    }
+
+    @Override
     public void softDeleteConversation(Long conversationId, Long actorId) {
         Conversation conversation = requireParticipantConversation(conversationId, actorId);
         if (!isDeleteAllowed(conversation)) {
@@ -280,6 +325,7 @@ public class ChatServiceImpl implements ChatService {
             if (isDeletedForActor(existing, actorId)) {
                 throw new ResourceNotFoundException("Conversation not found");
             }
+            validateNotBlocked(existing, actorId);
             return existing;
         }
 
@@ -293,6 +339,9 @@ public class ChatServiceImpl implements ChatService {
         }
         if (!Objects.equals(actorId, approach.getFarmerId()) && !Objects.equals(actorId, approach.getUserId())) {
             throw new IllegalArgumentException("You cannot access this conversation");
+        }
+        if (userBlockRepository.existsBetween(approach.getUserId(), approach.getFarmerId())) {
+            throw new IllegalArgumentException("Chat is blocked between these users");
         }
 
         Conversation conversation = new Conversation();
@@ -330,6 +379,15 @@ public class ChatServiceImpl implements ChatService {
     private void validateParticipant(Conversation conversation, Long actorId) {
         if (!Objects.equals(conversation.getBuyerId(), actorId) && !Objects.equals(conversation.getFarmerId(), actorId)) {
             throw new IllegalArgumentException("You cannot access this conversation");
+        }
+    }
+
+    private void validateNotBlocked(Conversation conversation, Long actorId) {
+        Long counterpartyId = Objects.equals(actorId, conversation.getBuyerId())
+                ? conversation.getFarmerId()
+                : conversation.getBuyerId();
+        if (userBlockRepository.existsBetween(actorId, counterpartyId)) {
+            throw new IllegalArgumentException("You cannot interact with this user");
         }
     }
 
@@ -444,6 +502,11 @@ public class ChatServiceImpl implements ChatService {
         dto.setUpdatedAt(conversation.getUpdatedAt());
         dto.setCompletedAt(conversation.getCompletedAt());
         dto.setArchived(getArchivedAt(conversation, actorId) != null);
+        dto.setBlockedByMe(userBlockRepository.existsByBlockerIdAndBlockedId(actorId,
+                Objects.equals(actorId, conversation.getBuyerId()) ? conversation.getFarmerId() : conversation.getBuyerId()));
+        dto.setBlockedMe(userBlockRepository.existsByBlockerIdAndBlockedId(
+                Objects.equals(actorId, conversation.getBuyerId()) ? conversation.getFarmerId() : conversation.getBuyerId(),
+                actorId));
         return dto;
     }
 
