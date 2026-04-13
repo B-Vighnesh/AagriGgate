@@ -760,62 +760,58 @@ export default function Chat() {
           </div>
 
           <div className="chat-sidebar__content">
-            {conversations.length === 0 ? (
-              <div className="chat-empty-sidebar">
-                <i className="fa-regular fa-comment-dots" />
-                <p>No conversations found.</p>
+            <>
+              <div className="chat-sidebar__filters">
+                {filterOptions.map((option) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    className={`chat-filter-chip${chatFilter === option.key ? ' chat-filter-chip--active' : ''}`}
+                    onClick={() => {
+                      setChatFilter(option.key);
+                      if (option.key === 'active') {
+                        setActiveSubFilter('active');
+                      }
+                    }}
+                  >
+                    <span>{option.label}</span>
+                  </button>
+                ))}
               </div>
-            ) : (
-              <>
-                <div className="chat-sidebar__filters">
-                  {filterOptions.map((option) => (
-                    <button
-                      key={option.key}
-                      type="button"
-                      className={`chat-filter-chip${chatFilter === option.key ? ' chat-filter-chip--active' : ''}`}
-                      onClick={() => {
-                        setChatFilter(option.key);
-                        if (option.key === 'active') {
-                          setActiveSubFilter('active');
-                        }
-                      }}
-                    >
-                      <span>{option.label}</span>
-                      <em>{option.count}</em>
-                    </button>
-                  ))}
+              {chatFilter === 'active' && (
+                <div className="chat-sidebar__filters chat-sidebar__filters--sub">
+                  <button
+                    type="button"
+                    className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'active' ? ' chat-filter-chip--active' : ''}`}
+                    onClick={() => setActiveSubFilter('active')}
+                  >
+                    <span>Active</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'archived' ? ' chat-filter-chip--active' : ''}`}
+                    onClick={() => setActiveSubFilter('archived')}
+                  >
+                    <span>Archived</span>
+                  </button>
                 </div>
-                {chatFilter === 'active' && (
-                  <div className="chat-sidebar__filters chat-sidebar__filters--sub">
-                    <button
-                      type="button"
-                      className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'active' ? ' chat-filter-chip--active' : ''}`}
-                      onClick={() => setActiveSubFilter('active')}
-                    >
-                      <span>Active</span>
-                      <em>{groupedConversations.active.length}</em>
-                    </button>
-                    <button
-                      type="button"
-                      className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'archived' ? ' chat-filter-chip--active' : ''}`}
-                      onClick={() => setActiveSubFilter('archived')}
-                    >
-                      <span>Archived</span>
-                      <em>{groupedConversations.archived.length}</em>
-                    </button>
+              )}
+              <div className="chat-sidebar__sections">
+                {renderConversationSection(
+                  chatFilter === 'active'
+                    ? (activeSubFilter === 'archived' ? 'Archived' : 'Active')
+                    : (filterOptions.find((item) => item.key === chatFilter)?.label || 'Active'),
+                  chatFilter === 'active' ? activeSubFilter : chatFilter,
+                  filteredConversations
+                )}
+                {filteredConversations.length === 0 && (
+                  <div className="chat-empty-sidebar">
+                    <i className="fa-regular fa-comment-dots" />
+                    <p>No conversations found.</p>
                   </div>
                 )}
-                <div className="chat-sidebar__sections">
-                  {renderConversationSection(
-                    chatFilter === 'active'
-                      ? (activeSubFilter === 'archived' ? 'Archived' : 'Active')
-                      : (filterOptions.find((item) => item.key === chatFilter)?.label || 'Active'),
-                    chatFilter === 'active' ? activeSubFilter : chatFilter,
-                    filteredConversations
-                  )}
-                </div>
-              </>
-            )}
+              </div>
+            </>
           </div>
         </Card>
 
