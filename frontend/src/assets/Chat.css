@@ -160,8 +160,7 @@
   display: block;
 }
 
-.chat-filter-label input,
-.chat-filter-label select {
+.chat-filter-label input {
   width: 100%;
   border: 1px solid rgba(31, 111, 84, 0.16);
   border-radius: 10px;
@@ -174,8 +173,7 @@
   letter-spacing: 0;
 }
 
-.chat-filter-label input:focus,
-.chat-filter-label select:focus {
+.chat-filter-label input:focus {
   outline: none;
   border-color: rgba(47, 154, 116, 0.45);
   box-shadow: 0 4px 12px rgba(47, 154, 116, 0.12);
@@ -1312,8 +1310,7 @@
     flex: 1 1 110px;
   }
 
-  .chat-filter-label input,
-  .chat-filter-label select {
+  .chat-filter-label input {
     padding: 7px 9px;
     font-size: 0.78rem;
   }
