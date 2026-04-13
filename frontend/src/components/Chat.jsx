@@ -186,6 +186,10 @@ export default function Chat() {
   const [activeSubFilter,    setActiveSubFilter]    = useState('active');
   const [isFilterNavigating, setIsFilterNavigating] = useState(false);
   const [suppressConversation, setSuppressConversation] = useState(false);
+  const [searchTerm,         setSearchTerm]         = useState('');
+  const [dateFrom,           setDateFrom]           = useState('');
+  const [dateTo,             setDateTo]             = useState('');
+  const [cropFilter,         setCropFilter]         = useState('');
 
   const socketRef               = useRef(null);
   const messageListRef          = useRef(null);
@@ -275,10 +279,37 @@ export default function Chat() {
     return groupedConversations[chatFilter] || [];
   }, [chatFilter, activeSubFilter, groupedConversations]);
 
+  const availableCrops = useMemo(() => {
+    const crops = new Set();
+    filteredConversations.forEach((item) => {
+      if (item.listingName) crops.add(item.listingName);
+    });
+    return Array.from(crops).sort((left, right) => left.localeCompare(right));
+  }, [filteredConversations]);
+
+  const visibleConversations = useMemo(() => {
+    const searchValue = searchTerm.trim().toLowerCase();
+    const fromDate = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
+    const toDate = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
+
+    return filteredConversations.filter((item) => {
+      const text = `${item.listingName || ''} ${item.farmerName || ''} ${item.buyerName || ''}`.toLowerCase();
+      if (searchValue && !text.includes(searchValue)) return false;
+      if (cropFilter && item.listingName !== cropFilter) return false;
+
+      const dateValue = item.lastMessageAt || item.updatedAt || item.createdAt || null;
+      if ((fromDate || toDate) && !dateValue) return false;
+      if (fromDate && new Date(dateValue) < fromDate) return false;
+      if (toDate && new Date(dateValue) > toDate) return false;
+
+      return true;
+    });
+  }, [filteredConversations, searchTerm, dateFrom, dateTo, cropFilter]);
+
   useEffect(() => {
     if (!activeConversation || loadingList) return;
     if (conversationId) return;
-    const stillVisible = filteredConversations.some(
+    const stillVisible = visibleConversations.some(
       (item) => item.conversationId === activeConversation.conversationId
     );
     if (!stillVisible) {
@@ -286,7 +317,7 @@ export default function Chat() {
       setMessages([]);
       navigate('/chat');
     }
-  }, [chatFilter, filteredConversations, activeConversation, loadingList, conversationId, navigate]);
+  }, [chatFilter, visibleConversations, activeConversation, loadingList, conversationId, navigate]);
 
   const buyerStatusLabel  = activeConversation?.buyerDealConfirmed  ? 'Confirmed' : 'Pending';
   const farmerStatusLabel = activeConversation?.farmerDealConfirmed ? 'Confirmed' : 'Pending';
@@ -825,7 +856,13 @@ export default function Chat() {
             </div>
             <div className="chat-search">
               <i className="fa-solid fa-magnifying-glass" />
-              <input type="text" placeholder="Search chats..." disabled />
+              <input
+                type="text"
+                placeholder="Search by farmer or crop..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                aria-label="Search chats"
+              />
             </div>
           </div>
 
@@ -855,6 +892,33 @@ export default function Chat() {
                       <span>{option.label}</span>
                     </button>
                   ))}
+                </div>
+                <div className="chat-sidebar__filters chat-sidebar__filters--tools">
+                  <label className="chat-filter-label">
+                    <span>From</span>
+                    <input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(event) => setDateFrom(event.target.value)}
+                    />
+                  </label>
+                  <label className="chat-filter-label">
+                    <span>To</span>
+                    <input
+                      type="date"
+                      value={dateTo}
+                      onChange={(event) => setDateTo(event.target.value)}
+                    />
+                  </label>
+                  <label className="chat-filter-label chat-filter-label--select">
+                    <span>Crop</span>
+                    <select value={cropFilter} onChange={(event) => setCropFilter(event.target.value)}>
+                      <option value="">All crops</option>
+                      {availableCrops.map((crop) => (
+                        <option key={crop} value={crop}>{crop}</option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
                 {chatFilter === 'active' && (
                   <div className="chat-sidebar__filters chat-sidebar__filters--sub">
@@ -900,12 +964,12 @@ export default function Chat() {
                     ? (activeSubFilter === 'archived' ? 'Archived' : 'Active')
                     : (filterOptions.find((item) => item.key === chatFilter)?.label || 'Active'),
                   chatFilter === 'active' ? activeSubFilter : chatFilter,
-                  filteredConversations
+                  visibleConversations
                 )}
-                {filteredConversations.length === 0 && (
+                {visibleConversations.length === 0 && (
                   <div className="chat-empty-sidebar">
                     <i className="fa-regular fa-comment-dots" />
-                    <p>No conversations found.</p>
+                    <p>No conversations match your filters.</p>
                   </div>
                 )}
               </div>
