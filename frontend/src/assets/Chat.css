@@ -549,6 +549,16 @@
   box-shadow: 0 4px 12px rgba(47, 154, 116, 0.15);
 }
 
+.chat-icon-btn--danger {
+  color: #b42318;
+}
+
+.chat-icon-btn--danger:hover {
+  border-color: #d13a3a;
+  color: #b42318;
+  box-shadow: 0 4px 12px rgba(196, 43, 43, 0.16);
+}
+
 .chat-icon-btn--dots {
   position: relative;
 }

@@ -7,6 +7,7 @@ import ValidateToken from './ValidateToken';
 import {
   archiveChatConversation,
   confirmChatDeal,
+  failChatConversation,
   deleteChatConversation,
   getChatConversation,
   getChatConversations,
@@ -100,6 +101,7 @@ function IconBtn({ icon, label, onClick, disabled = false, className = '', dange
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
+      title={label}
       data-tip={label}
     >
       <span className="chat-icon-btn__glyph" aria-hidden="true">{icon}</span>
@@ -572,6 +574,10 @@ export default function Chat() {
         const result = await deleteChatConversation(actionDialog.conversation.conversationId);
         removeConversationLocally(actionDialog.conversation.conversationId);
         showToast(result?.message || 'Conversation deleted.', 'success');
+      } else if (actionDialog.type === 'fail') {
+        const updated = await failChatConversation(actionDialog.conversation.conversationId);
+        mergeConversationUpdate(updated);
+        showToast('Deal cancelled. Conversation moved to failed.', 'success');
       }
       closeActionDialog();
     } catch (error) {
@@ -1014,8 +1020,15 @@ export default function Chat() {
                   </div>
                   <IconBtn
                     icon={<i className="fa-solid fa-handshake" />}
-                    label="Deal"
+                    label="Confirm deal"
                     onClick={openDealModal}
+                    disabled={activeConversation.status !== 'ACTIVE'}
+                  />
+                  <IconBtn
+                    icon={<i className="fa-solid fa-ban" />}
+                    label="Cancel deal"
+                    danger
+                    onClick={() => openActionDialog('fail')}
                     disabled={activeConversation.status !== 'ACTIVE'}
                   />
                   <PanelMenu
@@ -1193,6 +1206,8 @@ export default function Chat() {
                   ? 'Delete Conversation'
                   : actionDialog.type === 'unarchive'
                     ? 'Unarchive Conversation'
+                    : actionDialog.type === 'fail'
+                      ? 'Cancel Deal'
                     : 'Archive Conversation'}
               </h2>
               <button className="modal-close" onClick={closeActionDialog}>âœ•</button>
@@ -1203,6 +1218,8 @@ export default function Chat() {
                   ? 'This will soft delete the conversation only for you. The other participant will still keep their copy.'
                   : actionDialog.type === 'unarchive'
                     ? 'This will move the conversation back into your active list.'
+                    : actionDialog.type === 'fail'
+                      ? 'This will mark the deal as failed for both participants and move the chat into the failed section.'
                     : 'This will move the active conversation into your archived section without deleting it.'}
               </p>
               <div className="chat-action-modal__meta">
@@ -1215,12 +1232,14 @@ export default function Chat() {
               <Button
                 onClick={handleConversationAction}
                 loading={actionLoading}
-                className={actionDialog.type === 'delete' ? 'chat-action-modal__danger-btn' : ''}
+                className={actionDialog.type === 'delete' || actionDialog.type === 'fail' ? 'chat-action-modal__danger-btn' : ''}
               >
                 {actionDialog.type === 'delete'
                   ? 'Delete'
                   : actionDialog.type === 'unarchive'
                     ? 'Unarchive'
+                    : actionDialog.type === 'fail'
+                      ? 'Cancel Deal'
                     : 'Archive'}
               </Button>
             </div>

@@ -221,6 +221,46 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    public ConversationSummaryDTO failConversation(Long conversationId, Long actorId) {
+        Conversation conversation = requireParticipantConversation(conversationId, actorId);
+        if (conversation.getStatus() != ConversationStatus.ACTIVE || !Boolean.TRUE.equals(conversation.getActive())) {
+            throw new IllegalArgumentException("Only active conversations can be cancelled");
+        }
+
+        String actorName = Objects.equals(actorId, conversation.getBuyerId())
+                ? conversation.getBuyerName()
+                : conversation.getFarmerName();
+
+        conversation.setStatus(ConversationStatus.FAILED);
+        conversation.setActive(false);
+        conversation.setFailedAt(LocalDateTime.now());
+        touchConversation(conversation, LocalDateTime.now());
+
+        ApproachFarmer approach = approachFarmerRepo.findById(conversation.getApproachId()).orElse(null);
+        if (approach != null) {
+            approach.setStatus("Failed");
+            approachFarmerRepo.save(approach);
+        }
+
+        ChatMessage systemMessage = createSystemMessage(conversation.getConversationId(),
+                actorName + " cancelled the deal. Conversation moved to failed.");
+
+        Conversation savedConversation = conversationRepository.save(conversation);
+        ChatMessage savedSystemMessage = chatMessageRepository.save(systemMessage);
+        ChatMessageDTO messageDto = toMessageDto(savedSystemMessage);
+        ConversationSummaryDTO summary = toSummary(savedConversation, actorId);
+
+        chatRealtimeService.sendToConversation(savedConversation, "CHAT_MESSAGE", messageDto, null);
+        chatRealtimeService.sendToUser(savedConversation.getBuyerId(), "CONVERSATION_UPDATE",
+                toSummary(savedConversation, savedConversation.getBuyerId()), "Deal cancelled.");
+        if (!savedConversation.getBuyerId().equals(savedConversation.getFarmerId())) {
+            chatRealtimeService.sendToUser(savedConversation.getFarmerId(), "CONVERSATION_UPDATE",
+                    toSummary(savedConversation, savedConversation.getFarmerId()), "Deal cancelled.");
+        }
+        return summary;
+    }
+
+    @Override
     public void softDeleteConversation(Long conversationId, Long actorId) {
         Conversation conversation = requireParticipantConversation(conversationId, actorId);
         if (!isDeleteAllowed(conversation)) {

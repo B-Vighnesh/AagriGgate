@@ -30,6 +30,11 @@ export const confirmChatDeal = async (conversationId, payload) =>
     body: JSON.stringify(payload),
   });
 
+export const failChatConversation = async (conversationId) =>
+  requestJson(`/chat/conversations/${conversationId}/fail`, {
+    method: 'POST',
+  });
+
 export const archiveChatConversation = async (conversationId) =>
   requestJson(`/chat/conversations/${conversationId}/archive`, {
     method: 'POST',
