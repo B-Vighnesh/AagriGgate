@@ -284,6 +284,19 @@ export default function Chat() {
   const canDeleteConversation = (conversation) => ['COMPLETED', 'FAILED', 'EXPIRED'].includes(String(conversation?.status || '').toUpperCase());
   const canArchiveConversation = (conversation) => String(conversation?.status || '').toUpperCase() === 'ACTIVE';
 
+  const resolveFilterParams = () => {
+    if (chatFilter === 'active') {
+      return {
+        status: 'ACTIVE',
+        archived: activeSubFilter === 'archived',
+      };
+    }
+    return {
+      status: chatFilter.toUpperCase(),
+      archived: null,
+    };
+  };
+
   /* ── buyer profile route ── */
   const buyerProfilePath = activeConversation?.buyerId && !isBuyer
     ? `/view-buyer/${activeConversation.buyerId}`
@@ -303,7 +316,8 @@ export default function Chat() {
   const loadConversations = async () => {
     setLoadingList(true);
     try {
-      const data   = await getChatConversations();
+      const { status, archived } = resolveFilterParams();
+      const data   = await getChatConversations({ status, archived });
       const list   = Array.isArray(data) ? data : [];
       const sorted = sortConversations(list);
       setConversations(sorted);
@@ -353,7 +367,7 @@ export default function Chat() {
   useEffect(() => {
     if (!role) { navigate('/login'); return; }
     loadConversations();
-  }, [conversationId]);
+  }, [conversationId, chatFilter, activeSubFilter]);
 
   /* ── load messages on conversation switch ── */
   useEffect(() => {
