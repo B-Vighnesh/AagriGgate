@@ -279,6 +279,11 @@ export default function Chat() {
     return groupedConversations[chatFilter] || [];
   }, [chatFilter, activeSubFilter, groupedConversations]);
 
+  const resolveCounterpartyName = (item) => {
+    if (!item) return '';
+    return currentUserId === item.buyerId ? item.farmerName : item.buyerName;
+  };
+
   const availableCrops = useMemo(() => {
     const crops = new Set();
     filteredConversations.forEach((item) => {
@@ -293,7 +298,8 @@ export default function Chat() {
     const toDate = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
 
     return filteredConversations.filter((item) => {
-      const text = `${item.listingName || ''} ${item.farmerName || ''} ${item.buyerName || ''}`.toLowerCase();
+      const counterparty = resolveCounterpartyName(item);
+      const text = `${item.listingName || ''} ${counterparty || ''}`.toLowerCase();
       if (searchValue && !text.includes(searchValue)) return false;
       if (cropFilter && item.listingName !== cropFilter) return false;
 
