@@ -182,7 +182,7 @@ export default function Chat() {
   const [dealLoading,        setDealLoading]        = useState(false);
   const [showScrollDown,     setShowScrollDown]     = useState(false);
   const [isTyping,           setIsTyping]           = useState(false);
-  const [actionDialog,       setActionDialog]       = useState({ open: false, type: '', conversation: null });
+  const [actionDialog,       setActionDialog]       = useState({ open: false, type: '', conversation: null, step: 1 });
   const [actionLoading,      setActionLoading]      = useState(false);
   const [chatFilter,         setChatFilter]         = useState('active');
   const [activeSubFilter,    setActiveSubFilter]    = useState('active');
@@ -548,11 +548,11 @@ export default function Chat() {
 
   const openActionDialog = (type, conversation = activeConversation) => {
     if (!conversation) return;
-    setActionDialog({ open: true, type, conversation });
+    setActionDialog({ open: true, type, conversation, step: 1 });
   };
 
   const closeActionDialog = () => {
-    setActionDialog({ open: false, type: '', conversation: null });
+    setActionDialog({ open: false, type: '', conversation: null, step: 1 });
   };
 
   const handleConversationAction = async () => {
@@ -961,7 +961,6 @@ export default function Chat() {
                 )}
                 {visibleConversations.length === 0 && (
                   <div className="chat-empty-sidebar">
-                    <i className="fa-regular fa-comment-dots" />
                     <p>No conversations match your filters.</p>
                   </div>
                 )}
@@ -1219,18 +1218,26 @@ export default function Chat() {
                   : actionDialog.type === 'unarchive'
                     ? 'This will move the conversation back into your active list.'
                     : actionDialog.type === 'fail'
-                      ? 'This will mark the deal as failed for both participants and move the chat into the failed section.'
-                    : 'This will move the active conversation into your archived section without deleting it.'}
+                      ? actionDialog.step === 1
+                        ? 'This is the first confirmation. Click Continue to confirm you want to cancel the deal for both participants.'
+                        : 'This will mark the deal as failed for both participants and move the chat into the failed section.'
+                      : 'This will move the active conversation into your archived section without deleting it.'}
               </p>
               <div className="chat-action-modal__meta">
                 <strong>{actionDialog.conversation.listingName}</strong>
                 <span>{actionDialog.conversation.status}</span>
               </div>
             </div>
-            <div className="modal-footer">
-              <Button variant="outline" onClick={closeActionDialog} disabled={actionLoading}>Cancel</Button>
-              <Button
-                onClick={handleConversationAction}
+              <div className="modal-footer">
+                <Button variant="outline" onClick={closeActionDialog} disabled={actionLoading}>Cancel</Button>
+                <Button
+                onClick={() => {
+                  if (actionDialog.type === 'fail' && actionDialog.step === 1) {
+                    setActionDialog((prev) => ({ ...prev, step: 2 }));
+                    return;
+                  }
+                  handleConversationAction();
+                }}
                 loading={actionLoading}
                 className={actionDialog.type === 'delete' || actionDialog.type === 'fail' ? 'chat-action-modal__danger-btn' : ''}
               >
@@ -1239,7 +1246,9 @@ export default function Chat() {
                   : actionDialog.type === 'unarchive'
                     ? 'Unarchive'
                     : actionDialog.type === 'fail'
-                      ? 'Cancel Deal'
+                      ? actionDialog.step === 1
+                        ? 'Continue'
+                        : 'Cancel Deal'
                     : 'Archive'}
               </Button>
             </div>
