@@ -22,6 +22,21 @@ export const confirmChatDeal = async (conversationId, payload) =>
     body: JSON.stringify(payload),
   });
 
+export const archiveChatConversation = async (conversationId) =>
+  requestJson(`/chat/conversations/${conversationId}/archive`, {
+    method: 'POST',
+  });
+
+export const unarchiveChatConversation = async (conversationId) =>
+  requestJson(`/chat/conversations/${conversationId}/unarchive`, {
+    method: 'POST',
+  });
+
+export const deleteChatConversation = async (conversationId) =>
+  requestJson(`/chat/conversations/${conversationId}`, {
+    method: 'DELETE',
+  });
+
 export const openChatSocket = ({ onOpen, onMessage, onClose, onError } = {}) => {
   const baseUrl = getApiBaseUrl();
   const token = getToken();

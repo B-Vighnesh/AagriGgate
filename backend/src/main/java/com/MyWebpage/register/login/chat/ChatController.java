@@ -4,6 +4,7 @@ import com.MyWebpage.register.login.chat.dto.ChatMessageDTO;
 import com.MyWebpage.register.login.chat.dto.ConversationSummaryDTO;
 import com.MyWebpage.register.login.chat.dto.DealConfirmationRequestDTO;
 import com.MyWebpage.register.login.chat.dto.DealConfirmationResultDTO;
+import com.MyWebpage.register.login.common.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -65,5 +66,30 @@ public class ChatController {
             Authentication authentication) {
         Long userId = Long.parseLong(authentication.getName());
         return ResponseEntity.ok(chatService.confirmDeal(conversationId, userId, request));
+    }
+
+    @PostMapping("/conversations/{conversationId}/archive")
+    public ResponseEntity<ConversationSummaryDTO> archiveConversation(
+            @PathVariable Long conversationId,
+            Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(chatService.archiveConversation(conversationId, userId));
+    }
+
+    @PostMapping("/conversations/{conversationId}/unarchive")
+    public ResponseEntity<ConversationSummaryDTO> unarchiveConversation(
+            @PathVariable Long conversationId,
+            Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(chatService.unarchiveConversation(conversationId, userId));
+    }
+
+    @DeleteMapping("/conversations/{conversationId}")
+    public ResponseEntity<ApiResponse<String>> softDeleteConversation(
+            @PathVariable Long conversationId,
+            Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        chatService.softDeleteConversation(conversationId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Conversation deleted successfully.", "OK"));
     }
 }

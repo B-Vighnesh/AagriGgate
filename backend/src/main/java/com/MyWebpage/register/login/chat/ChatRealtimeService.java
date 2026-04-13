@@ -46,6 +46,10 @@ public class ChatRealtimeService {
         }
     }
 
+    public void sendToUser(Long userId, String type, Object data, String message) {
+        sendToUser(userId, new ChatSocketEventDTO(type, data, message));
+    }
+
     public void sendError(WebSocketSession session, String message) {
         send(session, new ChatSocketEventDTO("ERROR", null, message));
     }

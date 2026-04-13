@@ -15,4 +15,7 @@ public interface ChatService {
     List<ChatMessageDTO> getMessages(Long conversationId, Long actorId);
     ChatMessageDTO postMessage(Long conversationId, Long senderId, String messageText);
     DealConfirmationResultDTO confirmDeal(Long conversationId, Long actorId, DealConfirmationRequestDTO request);
+    ConversationSummaryDTO archiveConversation(Long conversationId, Long actorId);
+    ConversationSummaryDTO unarchiveConversation(Long conversationId, Long actorId);
+    void softDeleteConversation(Long conversationId, Long actorId);
 }

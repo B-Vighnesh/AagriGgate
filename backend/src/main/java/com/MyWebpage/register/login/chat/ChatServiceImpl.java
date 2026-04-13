@@ -41,13 +41,13 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ConversationSummaryDTO createOrGetConversationForApproach(Long approachId, Long actorId) {
-        return toSummary(ensureConversationForAcceptedApproach(approachId, actorId));
+        return toSummary(ensureConversationForAcceptedApproach(approachId, actorId), actorId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ConversationSummaryDTO getConversation(Long conversationId, Long actorId) {
-        return toSummary(requireParticipantConversation(conversationId, actorId));
+        return toSummary(requireParticipantConversation(conversationId, actorId), actorId);
     }
 
     @Override
@@ -56,7 +56,10 @@ public class ChatServiceImpl implements ChatService {
         Conversation conversation = conversationRepository.findByApproachId(approachId)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
         validateParticipant(conversation, actorId);
-        return toSummary(conversation);
+        if (isDeletedForActor(conversation, actorId)) {
+            throw new ResourceNotFoundException("Conversation not found");
+        }
+        return toSummary(conversation, actorId);
     }
 
     @Override
@@ -64,7 +67,8 @@ public class ChatServiceImpl implements ChatService {
     public List<ConversationSummaryDTO> getConversationsForUser(Long actorId) {
         return conversationRepository.findByBuyerIdOrFarmerIdOrderByLastMessageAtDescUpdatedAtDesc(actorId, actorId)
                 .stream()
-                .map(this::toSummary)
+                .filter(conversation -> !isDeletedForActor(conversation, actorId))
+                .map(conversation -> toSummary(conversation, actorId))
                 .toList();
     }
 
@@ -99,7 +103,10 @@ public class ChatServiceImpl implements ChatService {
         Conversation savedConversation = conversationRepository.save(conversation);
         ChatMessageDTO dto = toMessageDto(chatMessage);
         chatRealtimeService.sendToConversation(savedConversation, "CHAT_MESSAGE", dto, null);
-        chatRealtimeService.sendToConversation(savedConversation, "CONVERSATION_UPDATE", toSummary(savedConversation), null);
+        chatRealtimeService.sendToUser(savedConversation.getBuyerId(), "CONVERSATION_UPDATE", toSummary(savedConversation, savedConversation.getBuyerId()), null);
+        if (!savedConversation.getBuyerId().equals(savedConversation.getFarmerId())) {
+            chatRealtimeService.sendToUser(savedConversation.getFarmerId(), "CONVERSATION_UPDATE", toSummary(savedConversation, savedConversation.getFarmerId()), null);
+        }
         return dto;
     }
 
@@ -163,19 +170,67 @@ public class ChatServiceImpl implements ChatService {
         Conversation savedConversation = conversationRepository.save(conversation);
         ChatMessage savedSystemMessage = chatMessageRepository.save(systemMessage);
         ChatMessageDTO messageDto = toMessageDto(savedSystemMessage);
-        ConversationSummaryDTO summaryDTO = toSummary(savedConversation);
+        ConversationSummaryDTO summaryDTO = toSummary(savedConversation, actorId);
 
         chatRealtimeService.sendToConversation(savedConversation, "CHAT_MESSAGE", messageDto, null);
-        chatRealtimeService.sendToConversation(savedConversation, "CONVERSATION_UPDATE", summaryDTO, result.getMessage());
+        chatRealtimeService.sendToUser(savedConversation.getBuyerId(), "CONVERSATION_UPDATE", toSummary(savedConversation, savedConversation.getBuyerId()), result.getMessage());
+        if (!savedConversation.getBuyerId().equals(savedConversation.getFarmerId())) {
+            chatRealtimeService.sendToUser(savedConversation.getFarmerId(), "CONVERSATION_UPDATE", toSummary(savedConversation, savedConversation.getFarmerId()), result.getMessage());
+        }
 
         result.setConversation(summaryDTO);
         return result;
+    }
+
+    @Override
+    public ConversationSummaryDTO archiveConversation(Long conversationId, Long actorId) {
+        Conversation conversation = requireParticipantConversation(conversationId, actorId);
+        if (conversation.getStatus() != ConversationStatus.ACTIVE || !Boolean.TRUE.equals(conversation.getActive())) {
+            throw new IllegalArgumentException("Only active conversations can be archived");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        setArchivedAt(conversation, actorId, now);
+        Conversation savedConversation = conversationRepository.save(conversation);
+        ConversationSummaryDTO summary = toSummary(savedConversation, actorId);
+        chatRealtimeService.sendToUser(actorId, "CONVERSATION_UPDATE", summary, "Conversation archived.");
+        return summary;
+    }
+
+    @Override
+    public ConversationSummaryDTO unarchiveConversation(Long conversationId, Long actorId) {
+        Conversation conversation = requireParticipantConversation(conversationId, actorId);
+        if (conversation.getStatus() != ConversationStatus.ACTIVE || !Boolean.TRUE.equals(conversation.getActive())) {
+            throw new IllegalArgumentException("Only active conversations can be unarchived");
+        }
+
+        setArchivedAt(conversation, actorId, null);
+        Conversation savedConversation = conversationRepository.save(conversation);
+        ConversationSummaryDTO summary = toSummary(savedConversation, actorId);
+        chatRealtimeService.sendToUser(actorId, "CONVERSATION_UPDATE", summary, "Conversation moved back to active.");
+        return summary;
+    }
+
+    @Override
+    public void softDeleteConversation(Long conversationId, Long actorId) {
+        Conversation conversation = requireParticipantConversation(conversationId, actorId);
+        if (!isDeleteAllowed(conversation)) {
+            throw new IllegalArgumentException("Only completed, failed, or expired conversations can be deleted");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        setDeletedAt(conversation, actorId, now);
+        Conversation savedConversation = conversationRepository.save(conversation);
+        chatRealtimeService.sendToUser(actorId, "CONVERSATION_REMOVED", toSummary(savedConversation, actorId), "Conversation deleted.");
     }
 
     public Conversation ensureConversationForAcceptedApproach(Long approachId, Long actorId) {
         Conversation existing = conversationRepository.findByApproachId(approachId).orElse(null);
         if (existing != null) {
             validateParticipant(existing, actorId);
+            if (isDeletedForActor(existing, actorId)) {
+                throw new ResourceNotFoundException("Conversation not found");
+            }
             return existing;
         }
 
@@ -216,7 +271,10 @@ public class ChatServiceImpl implements ChatService {
         Conversation conversation = conversationRepository
                 .findByConversationIdAndBuyerIdOrConversationIdAndFarmerId(conversationId, actorId, conversationId, actorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
-        validateParticipant(conversation, actorId);//optional
+        validateParticipant(conversation, actorId);
+        if (isDeletedForActor(conversation, actorId)) {
+            throw new ResourceNotFoundException("Conversation not found");
+        }
         return conversation;
     }
 
@@ -255,7 +313,57 @@ public class ChatServiceImpl implements ChatService {
         return chatMessage;
     }
 
-    private ConversationSummaryDTO toSummary(Conversation conversation) {
+    private boolean isDeleteAllowed(Conversation conversation) {
+        return conversation.getStatus() == ConversationStatus.COMPLETED
+                || conversation.getStatus() == ConversationStatus.FAILED
+                || conversation.getStatus() == ConversationStatus.EXPIRED;
+    }
+
+    private boolean isDeletedForActor(Conversation conversation, Long actorId) {
+        return getDeletedAt(conversation, actorId) != null;
+    }
+
+    private LocalDateTime getDeletedAt(Conversation conversation, Long actorId) {
+        if (Objects.equals(conversation.getBuyerId(), actorId)) {
+            return conversation.getBuyerDeletedAt();
+        }
+        if (Objects.equals(conversation.getFarmerId(), actorId)) {
+            return conversation.getFarmerDeletedAt();
+        }
+        return null;
+    }
+
+    private LocalDateTime getArchivedAt(Conversation conversation, Long actorId) {
+        if (Objects.equals(conversation.getBuyerId(), actorId)) {
+            return conversation.getBuyerArchivedAt();
+        }
+        if (Objects.equals(conversation.getFarmerId(), actorId)) {
+            return conversation.getFarmerArchivedAt();
+        }
+        return null;
+    }
+
+    private void setDeletedAt(Conversation conversation, Long actorId, LocalDateTime deletedAt) {
+        if (Objects.equals(conversation.getBuyerId(), actorId)) {
+            conversation.setBuyerDeletedAt(deletedAt);
+            return;
+        }
+        if (Objects.equals(conversation.getFarmerId(), actorId)) {
+            conversation.setFarmerDeletedAt(deletedAt);
+        }
+    }
+
+    private void setArchivedAt(Conversation conversation, Long actorId, LocalDateTime archivedAt) {
+        if (Objects.equals(conversation.getBuyerId(), actorId)) {
+            conversation.setBuyerArchivedAt(archivedAt);
+            return;
+        }
+        if (Objects.equals(conversation.getFarmerId(), actorId)) {
+            conversation.setFarmerArchivedAt(archivedAt);
+        }
+    }
+
+    private ConversationSummaryDTO toSummary(Conversation conversation, Long actorId) {
         ConversationSummaryDTO dto = new ConversationSummaryDTO();
         dto.setConversationId(conversation.getConversationId());
         dto.setApproachId(conversation.getApproachId());
@@ -275,6 +383,7 @@ public class ChatServiceImpl implements ChatService {
         dto.setCreatedAt(conversation.getCreatedAt());
         dto.setUpdatedAt(conversation.getUpdatedAt());
         dto.setCompletedAt(conversation.getCompletedAt());
+        dto.setArchived(getArchivedAt(conversation, actorId) != null);
         return dto;
     }
 

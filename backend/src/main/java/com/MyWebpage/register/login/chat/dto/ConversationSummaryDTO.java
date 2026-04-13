@@ -21,6 +21,7 @@ public class ConversationSummaryDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime completedAt;
+    private Boolean archived;
 
     public Long getConversationId() {
         return conversationId;
@@ -164,5 +165,13 @@ public class ConversationSummaryDTO {
 
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public Boolean getArchived() {
+        return archived;
+    }
+
+    public void setArchived(Boolean archived) {
+        this.archived = archived;
     }
 }

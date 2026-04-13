@@ -4,7 +4,16 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
-import { confirmChatDeal, getChatConversation, getChatConversations, getChatMessages, openChatSocket } from '../api/chatApi';
+import {
+  archiveChatConversation,
+  confirmChatDeal,
+  deleteChatConversation,
+  getChatConversation,
+  getChatConversations,
+  getChatMessages,
+  openChatSocket,
+  unarchiveChatConversation,
+} from '../api/chatApi';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 import '../assets/Chat.css';
 
@@ -19,8 +28,9 @@ function sortConversations(items) {
 }
 
 function groupConversationsByStatus(items) {
-  const buckets = { active: [], completed: [], expired: [], failed: [] };
+  const buckets = { active: [], archived: [], completed: [], expired: [], failed: [] };
   items.forEach((item) => {
+    if (item.archived) { buckets.archived.push(item); return; }
     const status = String(item.status || 'ACTIVE').toUpperCase();
     if (status === 'COMPLETED') { buckets.completed.push(item); return; }
     if (status === 'EXPIRED')   { buckets.expired.push(item);   return; }
@@ -169,6 +179,8 @@ export default function Chat() {
   const [dealLoading,        setDealLoading]        = useState(false);
   const [showScrollDown,     setShowScrollDown]     = useState(false);
   const [isTyping,           setIsTyping]           = useState(false);
+  const [actionDialog,       setActionDialog]       = useState({ open: false, type: '', conversation: null });
+  const [actionLoading,      setActionLoading]      = useState(false);
 
   const socketRef               = useRef(null);
   const messageListRef          = useRef(null);
@@ -239,6 +251,8 @@ export default function Chat() {
 
   const buyerStatusLabel  = activeConversation?.buyerDealConfirmed  ? 'Confirmed' : 'Pending';
   const farmerStatusLabel = activeConversation?.farmerDealConfirmed ? 'Confirmed' : 'Pending';
+  const canDeleteConversation = (conversation) => ['COMPLETED', 'FAILED', 'EXPIRED'].includes(String(conversation?.status || '').toUpperCase());
+  const canArchiveConversation = (conversation) => String(conversation?.status || '').toUpperCase() === 'ACTIVE';
 
   /* ── buyer profile route ── */
   const buyerProfilePath = activeConversation?.buyerId && !isBuyer
@@ -345,12 +359,13 @@ export default function Chat() {
 
           if (payload?.type === 'CONVERSATION_UPDATE' && payload.data) {
             const updated = payload.data;
-            setConversations((prev) => {
-              const rest = prev.filter((item) => item.conversationId !== updated.conversationId);
-              return sortConversations([updated, ...rest]);
-            });
-            if (updated.conversationId === resolvedConversationId) setActiveConversation(updated);
+            mergeConversationUpdate(updated);
             if (payload.message) showToast(payload.message, updated.status === 'COMPLETED' ? 'success' : 'info');
+          }
+
+          if (payload?.type === 'CONVERSATION_REMOVED' && payload.data?.conversationId) {
+            removeConversationLocally(payload.data.conversationId);
+            if (payload.message) showToast(payload.message, 'info');
           }
 
           if (payload?.type === 'ERROR' && payload.message) showToast(payload.message, 'error');
@@ -367,6 +382,62 @@ export default function Chat() {
   /* ── handlers ── */
   const openConversation = (targetConversation) => {
     navigate(`/chat/${targetConversation.conversationId}`);
+  };
+
+  const mergeConversationUpdate = (updatedConversation) => {
+    setConversations((prev) => {
+      const rest = prev.filter((item) => item.conversationId !== updatedConversation.conversationId);
+      return sortConversations([updatedConversation, ...rest]);
+    });
+    if (updatedConversation.conversationId === resolvedConversationId) {
+      setActiveConversation(updatedConversation);
+    }
+  };
+
+  const removeConversationLocally = (conversationIdToRemove) => {
+    setConversations((prev) => prev.filter((item) => item.conversationId !== conversationIdToRemove));
+    if (resolvedConversationId === conversationIdToRemove) {
+      setActiveConversation(null);
+      setMessages([]);
+      navigate('/chat');
+    }
+  };
+
+  const openActionDialog = (type, conversation = activeConversation) => {
+    if (!conversation) return;
+    setActionDialog({ open: true, type, conversation });
+  };
+
+  const closeActionDialog = () => {
+    setActionDialog({ open: false, type: '', conversation: null });
+  };
+
+  const handleConversationAction = async () => {
+    if (!actionDialog.conversation) return;
+    setActionLoading(true);
+    try {
+      if (actionDialog.type === 'archive') {
+        const updated = await archiveChatConversation(actionDialog.conversation.conversationId);
+        mergeConversationUpdate(updated);
+        if (resolvedConversationId === actionDialog.conversation.conversationId) {
+          navigate('/chat');
+        }
+        showToast('Conversation archived.', 'success');
+      } else if (actionDialog.type === 'unarchive') {
+        const updated = await unarchiveChatConversation(actionDialog.conversation.conversationId);
+        mergeConversationUpdate(updated);
+        showToast('Conversation moved back to active.', 'success');
+      } else if (actionDialog.type === 'delete') {
+        const result = await deleteChatConversation(actionDialog.conversation.conversationId);
+        removeConversationLocally(actionDialog.conversation.conversationId);
+        showToast(result?.message || 'Conversation deleted.', 'success');
+      }
+      closeActionDialog();
+    } catch (error) {
+      showToast(error.message || 'Unable to update conversation.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleSend = () => {
@@ -621,6 +692,7 @@ export default function Chat() {
             ) : (
               <div className="chat-sidebar__sections">
                 {renderConversationSection('Active',    'active',    groupedConversations.active)}
+                {renderConversationSection('Archived',  'archived',  groupedConversations.archived)}
                 {renderConversationSection('Completed',    'completed',  groupedConversations.completed)}
                 {renderConversationSection('Failed',    'failed',     groupedConversations.failed)}
                 {renderConversationSection('Expired',  'expired',    groupedConversations.expired)}
@@ -695,6 +767,17 @@ export default function Chat() {
                         label: 'Deal Summary',
                         action: () => setDealDrawerOpen(true),
                       },
+                      ...(canArchiveConversation(activeConversation) ? [{
+                        icon: <i className={`fa-solid ${activeConversation.archived ? 'fa-box-open' : 'fa-box-archive'}`} />,
+                        label: activeConversation.archived ? 'Unarchive Chat' : 'Archive Chat',
+                        action: () => openActionDialog(activeConversation.archived ? 'unarchive' : 'archive'),
+                      }] : []),
+                      ...(canDeleteConversation(activeConversation) ? [{
+                        icon: <i className="fa-solid fa-trash" />,
+                        label: 'Delete Chat',
+                        action: () => openActionDialog('delete'),
+                        danger: true,
+                      }] : []),
                       ...(buyerProfilePath ? [{
                         icon: <i className="fa-solid fa-user" />,
                         label: 'View Buyer Profile',
@@ -835,6 +918,50 @@ export default function Chat() {
               <DealSummaryBody />
             </div>
           </div>
+        </div>
+      )}
+
+      {actionDialog.open && actionDialog.conversation && (
+        <div className="premium-modal-overlay" onClick={closeActionDialog}>
+          <Card className="premium-modal chat-action-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                {actionDialog.type === 'delete'
+                  ? 'Delete Conversation'
+                  : actionDialog.type === 'unarchive'
+                    ? 'Unarchive Conversation'
+                    : 'Archive Conversation'}
+              </h2>
+              <button className="modal-close" onClick={closeActionDialog}>âœ•</button>
+            </div>
+            <div className="modal-body">
+              <p>
+                {actionDialog.type === 'delete'
+                  ? 'This will soft delete the conversation only for you. The other participant will still keep their copy.'
+                  : actionDialog.type === 'unarchive'
+                    ? 'This will move the conversation back into your active list.'
+                    : 'This will move the active conversation into your archived section without deleting it.'}
+              </p>
+              <div className="chat-action-modal__meta">
+                <strong>{actionDialog.conversation.listingName}</strong>
+                <span>{actionDialog.conversation.status}</span>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <Button variant="outline" onClick={closeActionDialog} disabled={actionLoading}>Cancel</Button>
+              <Button
+                onClick={handleConversationAction}
+                loading={actionLoading}
+                className={actionDialog.type === 'delete' ? 'chat-action-modal__danger-btn' : ''}
+              >
+                {actionDialog.type === 'delete'
+                  ? 'Delete'
+                  : actionDialog.type === 'unarchive'
+                    ? 'Unarchive'
+                    : 'Archive'}
+              </Button>
+            </div>
+          </Card>
         </div>
       )}
 

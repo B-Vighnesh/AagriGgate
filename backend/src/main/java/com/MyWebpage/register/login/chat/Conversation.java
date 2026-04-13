@@ -61,6 +61,10 @@ public class Conversation {
     private LocalDateTime completedAt;
     private LocalDateTime failedAt;
     private LocalDateTime expiredAt;
+    private LocalDateTime buyerArchivedAt;
+    private LocalDateTime farmerArchivedAt;
+    private LocalDateTime buyerDeletedAt;
+    private LocalDateTime farmerDeletedAt;
 
     @PrePersist
     public void prePersist() {
@@ -251,5 +255,37 @@ public class Conversation {
 
     public void setExpiredAt(LocalDateTime expiredAt) {
         this.expiredAt = expiredAt;
+    }
+
+    public LocalDateTime getBuyerArchivedAt() {
+        return buyerArchivedAt;
+    }
+
+    public void setBuyerArchivedAt(LocalDateTime buyerArchivedAt) {
+        this.buyerArchivedAt = buyerArchivedAt;
+    }
+
+    public LocalDateTime getFarmerArchivedAt() {
+        return farmerArchivedAt;
+    }
+
+    public void setFarmerArchivedAt(LocalDateTime farmerArchivedAt) {
+        this.farmerArchivedAt = farmerArchivedAt;
+    }
+
+    public LocalDateTime getBuyerDeletedAt() {
+        return buyerDeletedAt;
+    }
+
+    public void setBuyerDeletedAt(LocalDateTime buyerDeletedAt) {
+        this.buyerDeletedAt = buyerDeletedAt;
+    }
+
+    public LocalDateTime getFarmerDeletedAt() {
+        return farmerDeletedAt;
+    }
+
+    public void setFarmerDeletedAt(LocalDateTime farmerDeletedAt) {
+        this.farmerDeletedAt = farmerDeletedAt;
     }
 }
