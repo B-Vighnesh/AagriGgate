@@ -4,6 +4,7 @@ import com.MyWebpage.register.login.crop.Crop;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.crop.CropQueryService;
 import com.MyWebpage.register.login.farmer.FarmerQueryService;
+import com.MyWebpage.register.login.chat.UserBlockRepository;
 import com.MyWebpage.register.login.common.EmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,16 +28,19 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     private final CropQueryService cropQueryService;
     private final FarmerQueryService farmerQueryService;
     private final EmailService emailService;
+    private final UserBlockRepository userBlockRepository;
 
     public ApproachFarmerServiceImpl(
             ApproachFarmerRepo approachFarmerRepository,
             CropQueryService cropQueryService,
             FarmerQueryService farmerQueryService,
-            EmailService emailService) {
+            EmailService emailService,
+            UserBlockRepository userBlockRepository) {
         this.approachFarmerRepository = approachFarmerRepository;
         this.cropQueryService = cropQueryService;
         this.farmerQueryService = farmerQueryService;
         this.emailService = emailService;
+        this.userBlockRepository = userBlockRepository;
     }
 
     @Override
@@ -44,6 +48,9 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
         try {
             Crop crop = cropQueryService.requireAvailableCropForBuyer(cropId, userId);
             Long farmerId = crop.getFarmer().getFarmerId();
+            if (userBlockRepository.existsBetween(userId, farmerId)) {
+                return new ResponseEntity<>("Cannot create a new approach. You are blocked by this user.", HttpStatus.FORBIDDEN);
+            }
 
             boolean isPending = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatusAndActiveTrue(
                     farmerId, cropId, userId, "pending");

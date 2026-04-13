@@ -4,6 +4,7 @@ import com.MyWebpage.register.login.chat.dto.ChatMessageDTO;
 import com.MyWebpage.register.login.chat.dto.ConversationSummaryDTO;
 import com.MyWebpage.register.login.chat.dto.DealConfirmationRequestDTO;
 import com.MyWebpage.register.login.chat.dto.DealConfirmationResultDTO;
+import com.MyWebpage.register.login.chat.dto.ReportUserRequestDTO;
 import com.MyWebpage.register.login.common.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -77,6 +78,28 @@ public class ChatController {
             Authentication authentication) {
         Long userId = Long.parseLong(authentication.getName());
         return ResponseEntity.ok(chatService.failConversation(conversationId, userId));
+    }
+
+    @PostMapping("/users/{targetUserId}/block")
+    public ResponseEntity<ConversationSummaryDTO> blockUser(
+            @PathVariable Long targetUserId,
+            @RequestParam(name = "reason", required = false) String reason,
+            Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(chatService.blockUser(userId, targetUserId, reason));
+    }
+
+    @PostMapping("/users/{targetUserId}/report")
+    public ResponseEntity<ApiResponse<String>> reportUser(
+            @PathVariable Long targetUserId,
+            @RequestBody(required = false) ReportUserRequestDTO request,
+            Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        chatService.reportUser(userId, targetUserId,
+                request != null ? request.getReason() : null,
+                request != null ? request.getMessage() : null,
+                request != null ? request.getImageUrl() : null);
+        return ResponseEntity.ok(ApiResponse.success("Report submitted.", "OK"));
     }
 
     @PostMapping("/conversations/{conversationId}/archive")

@@ -35,6 +35,20 @@ export const failChatConversation = async (conversationId) =>
     method: 'POST',
   });
 
+export const blockChatUser = async (userId, reason) => {
+  const params = new URLSearchParams();
+  if (reason) params.set('reason', reason);
+  const query = params.toString();
+  const path = query ? `/chat/users/${userId}/block?${query}` : `/chat/users/${userId}/block`;
+  return requestJson(path, { method: 'POST' });
+};
+
+export const reportChatUser = async (userId, payload) =>
+  requestJson(`/chat/users/${userId}/report`, {
+    method: 'POST',
+    body: JSON.stringify(payload || {}),
+  });
+
 export const archiveChatConversation = async (conversationId) =>
   requestJson(`/chat/conversations/${conversationId}/archive`, {
     method: 'POST',

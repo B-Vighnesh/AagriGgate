@@ -22,6 +22,8 @@ public class ConversationSummaryDTO {
     private LocalDateTime updatedAt;
     private LocalDateTime completedAt;
     private Boolean archived;
+    private Boolean blockedByMe;
+    private Boolean blockedMe;
 
     public Long getConversationId() {
         return conversationId;
@@ -173,5 +175,21 @@ public class ConversationSummaryDTO {
 
     public void setArchived(Boolean archived) {
         this.archived = archived;
+    }
+
+    public Boolean getBlockedByMe() {
+        return blockedByMe;
+    }
+
+    public void setBlockedByMe(Boolean blockedByMe) {
+        this.blockedByMe = blockedByMe;
+    }
+
+    public Boolean getBlockedMe() {
+        return blockedMe;
+    }
+
+    public void setBlockedMe(Boolean blockedMe) {
+        this.blockedMe = blockedMe;
     }
 }
