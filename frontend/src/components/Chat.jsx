@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
@@ -159,6 +159,7 @@ function PanelMenu({ items }) {
 /* ─── main component ──────────────────────────────────────────────────────── */
 export default function Chat() {
   const { conversationId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = getToken();
   const role  = getRole();
@@ -183,12 +184,18 @@ export default function Chat() {
   const [actionLoading,      setActionLoading]      = useState(false);
   const [chatFilter,         setChatFilter]         = useState('active');
   const [activeSubFilter,    setActiveSubFilter]    = useState('active');
+  const [isFilterNavigating, setIsFilterNavigating] = useState(false);
+  const [suppressConversation, setSuppressConversation] = useState(false);
 
   const socketRef               = useRef(null);
   const messageListRef          = useRef(null);
   const activeConversationIdRef = useRef(null);
   const stickToBottomRef        = useRef(true);
   const composerRef             = useRef(null);
+  const filterNavRef            = useRef(false);
+  const filterOverrideRef       = useRef(false);
+  const loadSeqRef              = useRef(0);
+  const didSyncFilterRef        = useRef(false);
 
   /* ── toast ── */
   const showToast = (message, type = 'info') => {
@@ -221,9 +228,10 @@ export default function Chat() {
 
   /* ── derived ── */
   const resolvedConversationId = useMemo(() => {
+    if (suppressConversation) return null;
     if (conversationId) return Number(conversationId);
     return activeConversation?.conversationId || null;
-  }, [conversationId, activeConversation]);
+  }, [conversationId, activeConversation, suppressConversation]);
 
   const counterpartyName = activeConversation
     ? (currentUserId === activeConversation.buyerId ? activeConversation.farmerName : activeConversation.buyerName)
@@ -317,7 +325,8 @@ export default function Chat() {
     : null;
 
   const handleBackNavigation = () => {
-   
+    setActiveConversation(null);
+    setMessages([]);
     navigate('/chat');
   };
 
@@ -326,28 +335,55 @@ export default function Chat() {
     activeConversationIdRef.current = resolvedConversationId;
   }, [resolvedConversationId]);
 
+  useEffect(() => {
+    if (!conversationId) {
+      if (isFilterNavigating) {
+        setIsFilterNavigating(false);
+        filterNavRef.current = false;
+      }
+      if (suppressConversation) {
+        setSuppressConversation(false);
+      }
+      if (filterOverrideRef.current) {
+        filterOverrideRef.current = false;
+      }
+    }
+  }, [conversationId, isFilterNavigating, suppressConversation]);
+
   /* ── load conversations ── */
   const loadConversations = async () => {
+    const loadSeq = ++loadSeqRef.current;
     setLoadingList(true);
     try {
       const { status, archived } = resolveFilterParams();
       const data   = await getChatConversations({ status, archived });
+      if (loadSeq !== loadSeqRef.current) return;
       const list   = Array.isArray(data) ? data : [];
       const sorted = sortConversations(list);
       setConversations(sorted);
 
       const targetId = conversationId ? Number(conversationId) : null;
-      if (targetId) {
+      if (targetId && !filterNavRef.current && !suppressConversation && !filterOverrideRef.current) {
         const selected = sorted.find((item) => item.conversationId === targetId) || null;
         if (selected) {
-          syncFilterToConversation(selected);
+          if (!didSyncFilterRef.current) {
+            syncFilterToConversation(selected);
+            didSyncFilterRef.current = true;
+          }
           setActiveConversation(selected);
         } else {
           const fetched = await getChatConversation(targetId);
-          syncFilterToConversation(fetched);
+          if (loadSeq !== loadSeqRef.current) return;
+          if (!didSyncFilterRef.current) {
+            syncFilterToConversation(fetched);
+            didSyncFilterRef.current = true;
+          }
           setActiveConversation(fetched);
           setConversations((prev) => sortConversations([...prev, fetched]));
         }
+      } else if (filterNavRef.current || suppressConversation || filterOverrideRef.current) {
+        setActiveConversation(null);
+        setMessages([]);
       } else {
         setActiveConversation(null);
       }
@@ -384,6 +420,17 @@ export default function Chat() {
     if (!role) { navigate('/login'); return; }
     loadConversations();
   }, [conversationId, chatFilter, activeSubFilter]);
+
+  useEffect(() => {
+    const filterParam = (searchParams.get('filter') || '').toLowerCase();
+    const subParam = (searchParams.get('sub') || '').toLowerCase();
+    if (filterParam && ['active', 'completed', 'failed', 'expired'].includes(filterParam)) {
+      setChatFilter(filterParam);
+      if (filterParam === 'active') {
+        setActiveSubFilter(subParam === 'archived' ? 'archived' : 'active');
+      }
+    }
+  }, [searchParams]);
 
   /* ── load messages on conversation switch ── */
   useEffect(() => {
@@ -441,7 +488,9 @@ export default function Chat() {
 
   /* ── handlers ── */
   const openConversation = (targetConversation) => {
-    syncFilterToConversation(targetConversation);
+    didSyncFilterRef.current = true;
+    setIsFilterNavigating(false);
+    filterNavRef.current = false;
     navigate(`/chat/${targetConversation.conversationId}`);
   };
 
@@ -789,9 +838,14 @@ export default function Chat() {
                         if (option.key === 'active') {
                           setActiveSubFilter('active');
                         }
+                        didSyncFilterRef.current = true;
+                        filterNavRef.current = true;
+                        filterOverrideRef.current = true;
+                        setIsFilterNavigating(true);
+                        setSuppressConversation(true);
                         setActiveConversation(null);
                         setMessages([]);
-                        navigate('/chat');
+                        navigate(`/chat?filter=${option.key}`);
                       }}
                     >
                       <span>{option.label}</span>
@@ -805,9 +859,14 @@ export default function Chat() {
                       className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'active' ? ' chat-filter-chip--active' : ''}`}
                       onClick={() => {
                         setActiveSubFilter('active');
+                        didSyncFilterRef.current = true;
+                        filterNavRef.current = true;
+                        filterOverrideRef.current = true;
+                        setIsFilterNavigating(true);
+                        setSuppressConversation(true);
                         setActiveConversation(null);
                         setMessages([]);
-                        navigate('/chat');
+                        navigate('/chat?filter=active&sub=active');
                       }}
                     >
                       <span>Active</span>
@@ -817,9 +876,14 @@ export default function Chat() {
                       className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'archived' ? ' chat-filter-chip--active' : ''}`}
                       onClick={() => {
                         setActiveSubFilter('archived');
+                        didSyncFilterRef.current = true;
+                        filterNavRef.current = true;
+                        filterOverrideRef.current = true;
+                        setIsFilterNavigating(true);
+                        setSuppressConversation(true);
                         setActiveConversation(null);
                         setMessages([]);
-                        navigate('/chat');
+                        navigate('/chat?filter=active&sub=archived');
                       }}
                     >
                       <span>Archived</span>
