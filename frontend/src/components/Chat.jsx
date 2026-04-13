@@ -534,6 +534,36 @@ export default function Chat() {
                   </div>
                   <small>{buildConversationPreview(item)}</small>
                 </div>
+                <div className="chat-conversation-card__quick-actions">
+                  {canArchiveConversation(item) && (
+                    <button
+                      type="button"
+                      className="chat-conversation-card__quick-btn"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openActionDialog(item.archived ? 'unarchive' : 'archive', item);
+                      }}
+                      aria-label={item.archived ? 'Unarchive chat' : 'Archive chat'}
+                      title={item.archived ? 'Unarchive chat' : 'Archive chat'}
+                    >
+                      <i className={`fa-solid ${item.archived ? 'fa-box-open' : 'fa-box-archive'}`} />
+                    </button>
+                  )}
+                  {canDeleteConversation(item) && (
+                    <button
+                      type="button"
+                      className="chat-conversation-card__quick-btn chat-conversation-card__quick-btn--danger"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openActionDialog('delete', item);
+                      }}
+                      aria-label="Delete chat"
+                      title="Delete chat"
+                    >
+                      <i className="fa-solid fa-trash" />
+                    </button>
+                  )}
+                </div>
                 {active && <div className="chat-conversation-card__active-indicator" />}
               </button>
             );

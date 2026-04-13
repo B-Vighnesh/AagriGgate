@@ -170,6 +170,7 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
   text-align: left;
+  overflow: hidden;
 }
 
 .chat-conversation-card:hover {
@@ -196,6 +197,7 @@
 .chat-conversation-card__content {
   flex: 1;
   min-width: 0;
+  padding-right: 44px;
 }
 
 .chat-conversation-card__top {
@@ -244,6 +246,57 @@
   height: 24px;
   background: #2f9a74;
   border-radius: 0 4px 4px 0;
+}
+
+.chat-conversation-card__quick-actions {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%) translateX(10px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.chat-conversation-card:hover .chat-conversation-card__quick-actions,
+.chat-conversation-card:focus-visible .chat-conversation-card__quick-actions,
+.chat-conversation-card--active .chat-conversation-card__quick-actions {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+  pointer-events: auto;
+}
+
+.chat-conversation-card__quick-btn {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #637381;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.chat-conversation-card__quick-btn:hover {
+  background: #ffffff;
+  color: #1f6f54;
+  transform: scale(1.06);
+}
+
+.chat-conversation-card__quick-btn--danger {
+  color: #c53333;
+}
+
+.chat-conversation-card__quick-btn--danger:hover {
+  background: #fff1f1;
+  color: #b42318;
 }
 
 /* ── Panel ── */
@@ -1152,6 +1205,19 @@
     height: 42px;
     border-radius: 14px;
     font-size: 0.92rem;
+  }
+
+  .chat-conversation-card__content {
+    padding-right: 0;
+  }
+
+  .chat-conversation-card__quick-actions {
+    position: static;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+    margin-left: auto;
+    flex-shrink: 0;
   }
 
   .chat-shell--conversation .chat-sidebar { display: none; }
