@@ -181,6 +181,7 @@ export default function Chat() {
   const [isTyping,           setIsTyping]           = useState(false);
   const [actionDialog,       setActionDialog]       = useState({ open: false, type: '', conversation: null });
   const [actionLoading,      setActionLoading]      = useState(false);
+  const [chatFilter,         setChatFilter]         = useState('active');
 
   const socketRef               = useRef(null);
   const messageListRef          = useRef(null);
@@ -248,6 +249,16 @@ export default function Chat() {
     () => groupConversationsByStatus(conversations),
     [conversations]
   );
+
+  const filterOptions = useMemo(() => ([
+    { key: 'active',    label: 'Active',    count: groupedConversations.active.length },
+    { key: 'archived',  label: 'Archived',  count: groupedConversations.archived.length },
+    { key: 'completed', label: 'Completed', count: groupedConversations.completed.length },
+    { key: 'failed',    label: 'Failed',    count: groupedConversations.failed.length },
+    { key: 'expired',   label: 'Expired',   count: groupedConversations.expired.length },
+  ]), [groupedConversations]);
+
+  const filteredConversations = groupedConversations[chatFilter] || [];
 
   const buyerStatusLabel  = activeConversation?.buyerDealConfirmed  ? 'Confirmed' : 'Pending';
   const farmerStatusLabel = activeConversation?.farmerDealConfirmed ? 'Confirmed' : 'Pending';
@@ -722,13 +733,28 @@ export default function Chat() {
                 <p>No conversations found.</p>
               </div>
             ) : (
-              <div className="chat-sidebar__sections">
-                {renderConversationSection('Active',    'active',    groupedConversations.active)}
-                {renderConversationSection('Archived',  'archived',  groupedConversations.archived)}
-                {renderConversationSection('Completed',    'completed',  groupedConversations.completed)}
-                {renderConversationSection('Failed',    'failed',     groupedConversations.failed)}
-                {renderConversationSection('Expired',  'expired',    groupedConversations.expired)}
-              </div>
+              <>
+                <div className="chat-sidebar__filters">
+                  {filterOptions.map((option) => (
+                    <button
+                      key={option.key}
+                      type="button"
+                      className={`chat-filter-chip${chatFilter === option.key ? ' chat-filter-chip--active' : ''}`}
+                      onClick={() => setChatFilter(option.key)}
+                    >
+                      <span>{option.label}</span>
+                      <em>{option.count}</em>
+                    </button>
+                  ))}
+                </div>
+                <div className="chat-sidebar__sections">
+                  {renderConversationSection(
+                    filterOptions.find((item) => item.key === chatFilter)?.label || 'Active',
+                    chatFilter,
+                    filteredConversations
+                  )}
+                </div>
+              </>
             )}
           </div>
         </Card>
