@@ -268,7 +268,8 @@ export default function Chat() {
   }, [chatFilter, activeSubFilter, groupedConversations]);
 
   useEffect(() => {
-    if (!activeConversation) return;
+    if (!activeConversation || loadingList) return;
+    if (conversationId) return;
     const stillVisible = filteredConversations.some(
       (item) => item.conversationId === activeConversation.conversationId
     );
@@ -277,7 +278,7 @@ export default function Chat() {
       setMessages([]);
       navigate('/chat');
     }
-  }, [chatFilter, filteredConversations, activeConversation, navigate]);
+  }, [chatFilter, filteredConversations, activeConversation, loadingList, conversationId, navigate]);
 
   const buyerStatusLabel  = activeConversation?.buyerDealConfirmed  ? 'Confirmed' : 'Pending';
   const farmerStatusLabel = activeConversation?.farmerDealConfirmed ? 'Confirmed' : 'Pending';
