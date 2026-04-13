@@ -131,6 +131,11 @@
   padding: 4px 6px 12px;
 }
 
+.chat-sidebar__filters--sub {
+  padding-top: 0;
+  margin-top: -2px;
+}
+
 .chat-filter-chip {
   border: 1px solid rgba(31, 111, 84, 0.12);
   background: #f8faf9;
@@ -144,6 +149,11 @@
   gap: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.chat-filter-chip--sub {
+  background: #ffffff;
+  border-style: dashed;
 }
 
 .chat-filter-chip em {

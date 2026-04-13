@@ -182,6 +182,7 @@ export default function Chat() {
   const [actionDialog,       setActionDialog]       = useState({ open: false, type: '', conversation: null });
   const [actionLoading,      setActionLoading]      = useState(false);
   const [chatFilter,         setChatFilter]         = useState('active');
+  const [activeSubFilter,    setActiveSubFilter]    = useState('active');
 
   const socketRef               = useRef(null);
   const messageListRef          = useRef(null);
@@ -251,14 +252,32 @@ export default function Chat() {
   );
 
   const filterOptions = useMemo(() => ([
-    { key: 'active',    label: 'Active',    count: groupedConversations.active.length },
-    { key: 'archived',  label: 'Archived',  count: groupedConversations.archived.length },
+    { key: 'active',    label: 'Active',    count: groupedConversations.active.length + groupedConversations.archived.length },
     { key: 'completed', label: 'Completed', count: groupedConversations.completed.length },
     { key: 'failed',    label: 'Failed',    count: groupedConversations.failed.length },
     { key: 'expired',   label: 'Expired',   count: groupedConversations.expired.length },
   ]), [groupedConversations]);
 
-  const filteredConversations = groupedConversations[chatFilter] || [];
+  const filteredConversations = useMemo(() => {
+    if (chatFilter === 'active') {
+      return activeSubFilter === 'archived'
+        ? groupedConversations.archived
+        : groupedConversations.active;
+    }
+    return groupedConversations[chatFilter] || [];
+  }, [chatFilter, activeSubFilter, groupedConversations]);
+
+  useEffect(() => {
+    if (!activeConversation) return;
+    const stillVisible = filteredConversations.some(
+      (item) => item.conversationId === activeConversation.conversationId
+    );
+    if (!stillVisible) {
+      setActiveConversation(null);
+      setMessages([]);
+      navigate('/chat');
+    }
+  }, [chatFilter, filteredConversations, activeConversation, navigate]);
 
   const buyerStatusLabel  = activeConversation?.buyerDealConfirmed  ? 'Confirmed' : 'Pending';
   const farmerStatusLabel = activeConversation?.farmerDealConfirmed ? 'Confirmed' : 'Pending';
@@ -740,17 +759,44 @@ export default function Chat() {
                       key={option.key}
                       type="button"
                       className={`chat-filter-chip${chatFilter === option.key ? ' chat-filter-chip--active' : ''}`}
-                      onClick={() => setChatFilter(option.key)}
+                      onClick={() => {
+                        setChatFilter(option.key);
+                        if (option.key === 'active') {
+                          setActiveSubFilter('active');
+                        }
+                      }}
                     >
                       <span>{option.label}</span>
                       <em>{option.count}</em>
                     </button>
                   ))}
                 </div>
+                {chatFilter === 'active' && (
+                  <div className="chat-sidebar__filters chat-sidebar__filters--sub">
+                    <button
+                      type="button"
+                      className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'active' ? ' chat-filter-chip--active' : ''}`}
+                      onClick={() => setActiveSubFilter('active')}
+                    >
+                      <span>Active</span>
+                      <em>{groupedConversations.active.length}</em>
+                    </button>
+                    <button
+                      type="button"
+                      className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'archived' ? ' chat-filter-chip--active' : ''}`}
+                      onClick={() => setActiveSubFilter('archived')}
+                    >
+                      <span>Archived</span>
+                      <em>{groupedConversations.archived.length}</em>
+                    </button>
+                  </div>
+                )}
                 <div className="chat-sidebar__sections">
                   {renderConversationSection(
-                    filterOptions.find((item) => item.key === chatFilter)?.label || 'Active',
-                    chatFilter,
+                    chatFilter === 'active'
+                      ? (activeSubFilter === 'archived' ? 'Archived' : 'Active')
+                      : (filterOptions.find((item) => item.key === chatFilter)?.label || 'Active'),
+                    chatFilter === 'active' ? activeSubFilter : chatFilter,
                     filteredConversations
                   )}
                 </div>
