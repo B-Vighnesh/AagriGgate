@@ -298,6 +298,19 @@ export default function Chat() {
     };
   };
 
+  const syncFilterToConversation = (conversation) => {
+    if (!conversation) return;
+    const status = String(conversation.status || '').toLowerCase();
+    if (status === 'active') {
+      setChatFilter('active');
+      setActiveSubFilter(conversation.archived ? 'archived' : 'active');
+      return;
+    }
+    if (status === 'completed' || status === 'failed' || status === 'expired') {
+      setChatFilter(status);
+    }
+  };
+
   /* ── buyer profile route ── */
   const buyerProfilePath = activeConversation?.buyerId && !isBuyer
     ? `/view-buyer/${activeConversation.buyerId}`
@@ -327,9 +340,11 @@ export default function Chat() {
       if (targetId) {
         const selected = sorted.find((item) => item.conversationId === targetId) || null;
         if (selected) {
+          syncFilterToConversation(selected);
           setActiveConversation(selected);
         } else {
           const fetched = await getChatConversation(targetId);
+          syncFilterToConversation(fetched);
           setActiveConversation(fetched);
           setConversations((prev) => sortConversations([...prev, fetched]));
         }
@@ -426,6 +441,7 @@ export default function Chat() {
 
   /* ── handlers ── */
   const openConversation = (targetConversation) => {
+    syncFilterToConversation(targetConversation);
     navigate(`/chat/${targetConversation.conversationId}`);
   };
 
@@ -763,40 +779,53 @@ export default function Chat() {
           <div className="chat-sidebar__content">
             <>
               <div className="chat-sidebar__filters">
-                {filterOptions.map((option) => (
-                  <button
-                    key={option.key}
-                    type="button"
-                    className={`chat-filter-chip${chatFilter === option.key ? ' chat-filter-chip--active' : ''}`}
-                    onClick={() => {
-                      setChatFilter(option.key);
-                      if (option.key === 'active') {
-                        setActiveSubFilter('active');
-                      }
-                    }}
-                  >
-                    <span>{option.label}</span>
-                  </button>
-                ))}
-              </div>
-              {chatFilter === 'active' && (
-                <div className="chat-sidebar__filters chat-sidebar__filters--sub">
-                  <button
-                    type="button"
-                    className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'active' ? ' chat-filter-chip--active' : ''}`}
-                    onClick={() => setActiveSubFilter('active')}
-                  >
-                    <span>Active</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'archived' ? ' chat-filter-chip--active' : ''}`}
-                    onClick={() => setActiveSubFilter('archived')}
-                  >
-                    <span>Archived</span>
-                  </button>
+                  {filterOptions.map((option) => (
+                    <button
+                      key={option.key}
+                      type="button"
+                      className={`chat-filter-chip${chatFilter === option.key ? ' chat-filter-chip--active' : ''}`}
+                      onClick={() => {
+                        setChatFilter(option.key);
+                        if (option.key === 'active') {
+                          setActiveSubFilter('active');
+                        }
+                        setActiveConversation(null);
+                        setMessages([]);
+                        navigate('/chat');
+                      }}
+                    >
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
                 </div>
-              )}
+                {chatFilter === 'active' && (
+                  <div className="chat-sidebar__filters chat-sidebar__filters--sub">
+                    <button
+                      type="button"
+                      className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'active' ? ' chat-filter-chip--active' : ''}`}
+                      onClick={() => {
+                        setActiveSubFilter('active');
+                        setActiveConversation(null);
+                        setMessages([]);
+                        navigate('/chat');
+                      }}
+                    >
+                      <span>Active</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'archived' ? ' chat-filter-chip--active' : ''}`}
+                      onClick={() => {
+                        setActiveSubFilter('archived');
+                        setActiveConversation(null);
+                        setMessages([]);
+                        navigate('/chat');
+                      }}
+                    >
+                      <span>Archived</span>
+                    </button>
+                  </div>
+                )}
               <div className="chat-sidebar__sections">
                 {renderConversationSection(
                   chatFilter === 'active'
