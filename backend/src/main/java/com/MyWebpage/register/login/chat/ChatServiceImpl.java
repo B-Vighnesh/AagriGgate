@@ -65,9 +65,18 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional(readOnly = true)
     public List<ConversationSummaryDTO> getConversationsForUser(Long actorId) {
+        return getConversationsForUser(actorId, null, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ConversationSummaryDTO> getConversationsForUser(Long actorId, String status, Boolean archived) {
+        ConversationStatus targetStatus = resolveStatus(status);
         return conversationRepository.findByBuyerIdOrFarmerIdOrderByLastMessageAtDescUpdatedAtDesc(actorId, actorId)
                 .stream()
                 .filter(conversation -> !isDeletedForActor(conversation, actorId))
+                .filter(conversation -> targetStatus == null || conversation.getStatus() == targetStatus)
+                .filter(conversation -> archived == null || Objects.equals(getArchivedAt(conversation, actorId) != null, archived))
                 .map(conversation -> toSummary(conversation, actorId))
                 .toList();
     }
@@ -317,6 +326,17 @@ public class ChatServiceImpl implements ChatService {
         return conversation.getStatus() == ConversationStatus.COMPLETED
                 || conversation.getStatus() == ConversationStatus.FAILED
                 || conversation.getStatus() == ConversationStatus.EXPIRED;
+    }
+
+    private ConversationStatus resolveStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return ConversationStatus.ACTIVE;
+        }
+        try {
+            return ConversationStatus.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Unsupported conversation status");
+        }
     }
 
     private boolean isDeletedForActor(Conversation conversation, Long actorId) {
