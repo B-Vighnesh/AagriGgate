@@ -44,6 +44,7 @@
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
   min-width: 0;
+    width: 40%;
   min-height: 0;
 }
 
