@@ -327,7 +327,11 @@ export default function Chat() {
   const handleBackNavigation = () => {
     setActiveConversation(null);
     setMessages([]);
-    navigate('/chat');
+    if (chatFilter === 'active') {
+      navigate(`/chat?filter=active&sub=${activeSubFilter}`);
+      return;
+    }
+    navigate(`/chat?filter=${chatFilter}`);
   };
 
   /* ── sync ref ── */
