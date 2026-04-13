@@ -117,6 +117,8 @@ function PanelMenu({ items }) {
         type="button"
         className="chat-icon-btn chat-icon-btn--dots"
         aria-label="More options"
+        aria-expanded={open}
+        aria-haspopup="menu"
         data-tip="More options"
         onClick={() => setOpen((v) => !v)}
       >
@@ -244,10 +246,7 @@ export default function Chat() {
     : null;
 
   const handleBackNavigation = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
+   
     navigate('/chat');
   };
 
