@@ -18,5 +18,6 @@ public interface ChatService {
     DealConfirmationResultDTO confirmDeal(Long conversationId, Long actorId, DealConfirmationRequestDTO request);
     ConversationSummaryDTO archiveConversation(Long conversationId, Long actorId);
     ConversationSummaryDTO unarchiveConversation(Long conversationId, Long actorId);
+    ConversationSummaryDTO failConversation(Long conversationId, Long actorId);
     void softDeleteConversation(Long conversationId, Long actorId);
 }

@@ -71,6 +71,14 @@ public class ChatController {
         return ResponseEntity.ok(chatService.confirmDeal(conversationId, userId, request));
     }
 
+    @PostMapping("/conversations/{conversationId}/fail")
+    public ResponseEntity<ConversationSummaryDTO> failConversation(
+            @PathVariable Long conversationId,
+            Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(chatService.failConversation(conversationId, userId));
+    }
+
     @PostMapping("/conversations/{conversationId}/archive")
     public ResponseEntity<ConversationSummaryDTO> archiveConversation(
             @PathVariable Long conversationId,
