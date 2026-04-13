@@ -1,8 +1,16 @@
 import { getApiBaseUrl, requestJson } from '../lib/api';
 import { getToken } from '../lib/auth';
 
-export const getChatConversations = async () =>
-  requestJson('/chat/conversations', { method: 'GET' });
+export const getChatConversations = async ({ status, archived } = {}) => {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (archived !== undefined && archived !== null) {
+    params.set('archived', String(archived));
+  }
+  const query = params.toString();
+  const path = query ? `/chat/conversations?${query}` : '/chat/conversations';
+  return requestJson(path, { method: 'GET' });
+};
 
 export const getChatConversation = async (conversationId) =>
   requestJson(`/chat/conversations/${conversationId}`, { method: 'GET' });
