@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -201,6 +201,7 @@ export default function Chat() {
   const filterOverrideRef       = useRef(false);
   const loadSeqRef              = useRef(0);
   const didSyncFilterRef        = useRef(false);
+  const initialScrollRef        = useRef(null);
 
   /* ── toast ── */
   const showToast = (message, type = 'info') => {
@@ -433,11 +434,14 @@ export default function Chat() {
   const loadMessages = async (targetConversationId) => {
     if (!targetConversationId) { setMessages([]); return; }
     setLoadingMessages(true);
+    initialScrollRef.current = targetConversationId;
     try {
       const data = await getChatMessages(targetConversationId);
       setMessages(Array.isArray(data) ? data : []);
       stickToBottomRef.current = true;
-      window.requestAnimationFrame(() => scrollMessagesToBottom('auto'));
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => scrollMessagesToBottom('auto'));
+      });
     } catch (error) {
       showToast(error.message || 'Unable to load chat messages.', 'error');
       setMessages([]);
@@ -470,6 +474,15 @@ export default function Chat() {
     if (!resolvedConversationId) return;
     loadMessages(resolvedConversationId);
   }, [resolvedConversationId]);
+
+  useLayoutEffect(() => {
+    if (!resolvedConversationId) return;
+    if (loadingMessages) return;
+    if (initialScrollRef.current && initialScrollRef.current !== resolvedConversationId) return;
+    if (!stickToBottomRef.current) return;
+    scrollMessagesToBottom('auto');
+    initialScrollRef.current = null;
+  }, [messages, loadingMessages, resolvedConversationId]);
 
   /* ── websocket ── */
   useEffect(() => {
@@ -524,6 +537,7 @@ export default function Chat() {
     didSyncFilterRef.current = true;
     setIsFilterNavigating(false);
     filterNavRef.current = false;
+    stickToBottomRef.current = true;
     navigate(`/chat/${targetConversation.conversationId}`);
   };
 
