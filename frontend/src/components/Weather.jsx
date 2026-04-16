@@ -164,8 +164,16 @@ export default function Weather() {
         </header>
 
         <div className="weather-page__actions">
-          <Button type="button" variant="outline" onClick={fetchMyLocationWeather}>
-            Refresh Weather
+          <Button
+            type="button"
+            variant="outline"
+            onClick={fetchMyLocationWeather}
+            className="weather-refresh-btn"
+            aria-label="Refresh weather"
+            title="Refresh weather"
+          >
+            <i className="fa-solid fa-rotate-right weather-refresh-btn__icon" aria-hidden="true" />
+            <span className="weather-refresh-btn__label">Refresh Weather</span>
           </Button>
         </div>
 
