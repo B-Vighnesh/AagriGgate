@@ -22,6 +22,7 @@ weather:
   api:
     url: ${WEATHER_API_URL}
     key: ${WEATHER_API_KEY}
+    ingest-on-startup: ${WEATHER_API_INGEST_ON_STARTUP}
 
 market:
   api:
