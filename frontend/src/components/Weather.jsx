@@ -4,7 +4,7 @@ import Button from './common/Button';
 import Card from './common/Card';
 import ValidateToken from './ValidateToken';
 import { getRole, getToken } from '../lib/auth';
-import { getWeatherByCity, getWeatherForMe } from '../api/weatherApi';
+import { getWeatherForMe } from '../api/weatherApi';
 
 function getAlert(weather) {
   if (!weather) return null;
@@ -33,23 +33,8 @@ export default function Weather() {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [city, setCity] = useState('');
 
   const alert = useMemo(() => getAlert(weather), [weather]);
-
-  const fetchByCity = async (queryCity) => {
-    setLoading(true);
-    setError('');
-    try {
-      const payload = await getWeatherByCity(queryCity);
-      setWeather(payload?.data || null);
-    } catch (err) {
-      setWeather(null);
-      setError(err.message || 'Unable to fetch weather details.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchMyLocationWeather = async () => {
     if (!token) {
@@ -61,10 +46,6 @@ export default function Weather() {
     try {
       const payload = await getWeatherForMe();
       setWeather(payload?.data || null);
-      const profileCity = payload?.data?.location?.name || '';
-      if (profileCity) {
-        setCity(profileCity);
-      }
     } catch (err) {
       setWeather(null);
       setError(err.message || 'Unable to fetch weather details.');
@@ -85,33 +66,20 @@ export default function Weather() {
     fetchMyLocationWeather();
   }, []);
 
-  const onSearchSubmit = (event) => {
-    event.preventDefault();
-    if (!city.trim()) return;
-    fetchByCity(city.trim());
-  };
-
   return (
     <section className="page weather-page">
       <ValidateToken token={token} />
       <div className="ag-container">
         <header className="weather-header">
           <h1>Weather</h1>
-          <p>Weather from backend API using your profile city or searched city.</p>
+          <p>Weather for your saved district from your farmer profile.</p>
         </header>
 
-        <Card className="weather-search-card">
-          <form className="weather-search-form" onSubmit={onSearchSubmit}>
-            <input
-              type="text"
-              value={city}
-              placeholder="City (e.g. Delhi)"
-              onChange={(event) => setCity(event.target.value)}
-            />
-            <Button type="submit">Search</Button>
-            <Button type="button" variant="outline" onClick={fetchMyLocationWeather}>My Profile City</Button>
-          </form>
-        </Card>
+        <div className="weather-page__actions">
+          <Button type="button" variant="outline" onClick={fetchMyLocationWeather}>
+            Refresh Weather
+          </Button>
+        </div>
 
         {alert && (
           <p className={`weather-alert weather-alert--${alert.type === 'error' ? 'error' : 'warning'}`}>
