@@ -31,4 +31,5 @@ public class BuyerRequestDTO {
 
     private String aadharNo;
 
+    private String city;
 }

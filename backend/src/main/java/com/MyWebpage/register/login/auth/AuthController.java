@@ -6,6 +6,7 @@ import com.MyWebpage.register.login.passwordreset.ResetPasswordRequest;
 import com.MyWebpage.register.login.common.EmailService;
 import com.MyWebpage.register.login.otp.OtpPurpose;
 import com.MyWebpage.register.login.otp.OtpService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -30,14 +31,15 @@ public class AuthController {
     @PostMapping("/register/send-otp")
     public ResponseEntity<String> sendRegistrationOtp(@RequestBody FarmerRequestDTO dto) {
         authService.findUser(dto.getEmail());
-        String otp = otpService.issueOtp(dto.getEmail(), OtpPurpose.REGISTRATION);
+        OtpPurpose registrationPurpose = resolveRegistrationPurpose(dto.getRole());
+        String otp = otpService.issueOtp(dto.getEmail(), registrationPurpose);
         emailService.sendRegistrationOtpEmail(dto.getEmail(), dto.getFirstName(), dto.getUsername(), otp);
         return ResponseEntity.ok("OTP sent");
     }
 
     @PostMapping("/register/verify-otp")
     public ResponseEntity<String> verifyRegistrationOtp(@RequestBody VerifyOtpRequestDTO dto) {
-        boolean verified = otpService.verifyOtp(dto.getEmail(), OtpPurpose.REGISTRATION, dto.getOtp());
+        boolean verified = otpService.verifyOtp(dto.getEmail(), resolveRegistrationPurpose(dto.getRole()), dto.getOtp());
         if (!verified) {
             throw new IllegalArgumentException("Invalid OTP");
         }
@@ -70,6 +72,13 @@ public class AuthController {
         return authService.loginWithOtp(dto);
     }
 
+    @PostMapping("/delete-account/send-otp")
+    public ResponseEntity<String> sendDeleteAccountOtp(Authentication authentication) {
+        Long farmerId = Long.parseLong(authentication.getName());
+        authService.sendDeletionOtp(farmerId);
+        return ResponseEntity.ok("Delete account OTP sent");
+    }
+
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(
             Authentication authentication,
@@ -82,14 +91,14 @@ public class AuthController {
     @DeleteMapping("/delete-account")
     public ResponseEntity<String> deleteAccount(
             Authentication authentication,
-            @RequestBody ResetPasswordRequest request) {
+            @Valid @RequestBody DeleteAccountRequestDTO request) {
         Long farmerId = Long.parseLong(authentication.getName());
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         String role="";
         for (GrantedAuthority authority : authorities) {
              role= authority.getAuthority();
         }
-        authService.softDeleteAccount(farmerId, request.getCurrentPassword(), role);
+        authService.softDeleteAccount(farmerId, request, role);
         return ResponseEntity.ok("Account deleted");
     }
 
@@ -101,5 +110,12 @@ public class AuthController {
         Long farmerId = Long.parseLong(authentication.getName());
         authService.softDeleteAccount(farmerId, request.getCurrentPassword());
         return ResponseEntity.ok("Account deactivated");
+    }
+
+    private OtpPurpose resolveRegistrationPurpose(String role) {
+        if ("buyer".equalsIgnoreCase(role) || "BUYER".equalsIgnoreCase(role)) {
+            return OtpPurpose.BUYER_REGISTRATION;
+        }
+        return OtpPurpose.SELLER_REGISTRATION;
     }
 }

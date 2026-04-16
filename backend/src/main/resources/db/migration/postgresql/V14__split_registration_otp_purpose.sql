@@ -1,0 +1,1 @@
+-- PostgreSQL keeps otp_token.purpose as varchar, so no enum alteration is required here.

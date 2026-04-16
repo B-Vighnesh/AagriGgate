@@ -6,12 +6,14 @@ import Modal from './Modal';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { apiFetch, requestJson } from '../lib/api';
+import { createOrGetChatConversation } from '../api/chatApi';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 const STATUS_CLASS = {
   pending: 'approach-badge--pending',
   accepted: 'approach-badge--accepted',
   rejected: 'approach-badge--rejected',
+  completed: 'approach-badge--completed',
 };
 
 export default function ViewApproach() {
@@ -27,11 +29,10 @@ export default function ViewApproach() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [selectedBuyer, setSelectedBuyer] = useState(null);
-  const [buyerLoading, setBuyerLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [actionLoading, setActionLoading] = useState({ approachId: null, type: null });
   const [pendingDecision, setPendingDecision] = useState(null);
+  const [chatLoadingId, setChatLoadingId] = useState(null);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -101,17 +102,19 @@ export default function ViewApproach() {
     }
   };
 
-  const onViewBuyer = async (buyerId) => {
-    setBuyerLoading(true);
+  const onViewBuyer = (buyerId) => {
+    navigate(`/view-buyer/${buyerId}`);
+  };
+
+  const openChat = async (approachId) => {
     try {
-      const data = await requestJson(`/buyers/${buyerId}`, {
-        method: 'GET',
-      });
-      setSelectedBuyer(data);
+      setChatLoadingId(approachId);
+      const conversation = await createOrGetChatConversation(approachId);
+      navigate(`/chat/${conversation.conversationId}`);
     } catch (err) {
-      showToast(err.message || 'Unable to load buyer details.', 'error');
+      showToast(err.message || 'Unable to open chat right now.', 'error');
     } finally {
-      setBuyerLoading(false);
+      setChatLoadingId(null);
     }
   };
 
@@ -193,6 +196,18 @@ export default function ViewApproach() {
                 <Button variant="ghost" size="sm" onClick={() => onViewBuyer(item.userId)}>
                   View Buyer
                 </Button>
+                {(item.status || '').toLowerCase() === 'accepted' || (item.status || '').toLowerCase() === 'completed' ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="chat-launch-btn"
+                    onClick={() => openChat(item.approachId)}
+                    loading={chatLoadingId === item.approachId}
+                    disabled={chatLoadingId !== null}
+                  >
+                    {chatLoadingId === item.approachId ? 'Opening Chat...' : 'Open Chat'}
+                  </Button>
+                ) : null}
                 {(item.status || '').toLowerCase() === 'pending' ? (
                   <>
                     <Button
@@ -245,57 +260,6 @@ export default function ViewApproach() {
         ) : null}
 
       </div>
-
-      {buyerLoading ? (
-        <div className="confirm-overlay">
-          <Card className="confirm-card text-center">
-            <h3>Loading Buyer Details</h3>
-            <p>Please wait while we fetch buyer information.</p>
-          </Card>
-        </div>
-      ) : null}
-
-      {selectedBuyer ? (
-        <div className="confirm-overlay" onClick={() => setSelectedBuyer(null)}>
-          <Card className="confirm-card" onClick={(event) => event.stopPropagation()}>
-            <h3>Buyer Details</h3>
-            <p>Details for the selected buyer request.</p>
-
-            <div className="account-info-list">
-              <div className="account-info-row">
-                <span>Username</span>
-                <strong>{selectedBuyer?.username || '-'}</strong>
-              </div>
-              <div className="account-info-row">
-                <span>Name</span>
-                <strong>{`${selectedBuyer?.firstName || ''} ${selectedBuyer?.lastName || ''}`.trim() || '-'}</strong>
-              </div>
-              <div className="account-info-row">
-                <span>Email</span>
-                <strong>{selectedBuyer?.email || '-'}</strong>
-              </div>
-              <div className="account-info-row">
-                <span>Phone</span>
-                <strong>{selectedBuyer?.phoneNo || '-'}</strong>
-              </div>
-              <div className="account-info-row">
-                <span>State</span>
-                <strong>{selectedBuyer?.state || '-'}</strong>
-              </div>
-              <div className="account-info-row">
-                <span>District</span>
-                <strong>{selectedBuyer?.district || '-'}</strong>
-              </div>
-            </div>
-
-            <div className="confirm-actions">
-              <Button variant="outline" onClick={() => setSelectedBuyer(null)}>
-                Close
-              </Button>
-            </div>
-          </Card>
-        </div>
-      ) : null}
 
       <Modal
         isOpen={pendingDecision?.step === 1}

@@ -23,7 +23,7 @@ public class MyUserDetailsService implements UserDetailsService {
         Optional<Farmer> farmerOptional;
 
         if (usernameOrEmail.contains("@")) {
-            farmerOptional = farmerRepo.findByEmail(usernameOrEmail);
+            farmerOptional = farmerRepo.findByEmailAndActiveTrue(usernameOrEmail);
         } else {
             farmerOptional = Optional.ofNullable(farmerRepo.findByUsername(usernameOrEmail));
         }

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public class FarmerRequestDTO {
     private String username;
+    private String role;
     @NotBlank
     @Size(min = 2, max = 50)
     private String firstName;
@@ -46,6 +47,8 @@ public class FarmerRequestDTO {
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
     public String getLastName() { return lastName; }

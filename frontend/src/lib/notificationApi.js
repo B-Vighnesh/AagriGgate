@@ -5,9 +5,9 @@ const unwrap = async (promise) => {
   return response?.data ?? response;
 };
 
-export const getNotifications = ({ status = 'UNREAD', page = 0, size = 10 } = {}) => {
+export const getNotifications = ({ deliveryType = 'NOTIFICATION', page = 0, size = 10 } = {}) => {
   const searchParams = new URLSearchParams();
-  if (status) searchParams.set('status', status);
+  if (deliveryType) searchParams.set('deliveryType', deliveryType);
   searchParams.set('page', String(page));
   searchParams.set('size', String(size));
   return unwrap(requestJson(`/notifications?${searchParams.toString()}`, { method: 'GET' }));
@@ -25,11 +25,17 @@ export const markAllAsRead = () =>
 export const getPreferences = () =>
   unwrap(requestJson('/notifications/preferences', { method: 'GET' }));
 
-export const setPreference = (type, enabled) =>
-  unwrap(requestJson(`/notifications/preferences/${type}`, {
+export const setPreference = (categoryName, deliveryType) =>
+  unwrap(requestJson(`/notifications/preferences/${categoryName}`, {
     method: 'PATCH',
-    body: JSON.stringify({ enabled }),
+    body: JSON.stringify({ deliveryType }),
   }));
 
 export const resetPreferences = () =>
   unwrap(requestJson('/notifications/preferences/reset', { method: 'POST' }));
+
+export const getActiveAlerts = () =>
+  unwrap(requestJson('/notifications/alerts/active', { method: 'GET' }));
+
+export const acknowledgeAlert = (notificationId) =>
+  unwrap(requestJson(`/notifications/${notificationId}/acknowledge`, { method: 'PATCH' }));

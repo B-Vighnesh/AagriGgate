@@ -1,17 +1,17 @@
 package com.MyWebpage.register.login.notification.dto.request;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
 public class NotificationPreferenceRequest {
 
-    @NotNull
-    private Boolean enabled;
+    @NotBlank
+    private String deliveryType;
 
-    public Boolean getEnabled() {
-        return enabled;
+    public String getDeliveryType() {
+        return deliveryType;
     }
 
-    public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
+    public void setDeliveryType(String deliveryType) {
+        this.deliveryType = deliveryType;
     }
 }
