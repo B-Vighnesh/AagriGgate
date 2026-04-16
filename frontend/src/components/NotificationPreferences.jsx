@@ -1,96 +1,94 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import '../assets/NotificationPreferences.css';
-import Button from './common/Button';
-import Card from './common/Card';
 import { getPreferences, resetPreferences, setPreference } from '../lib/notificationApi';
 
-const DELIVERY_OPTIONS = [
-  {
-    key: 'NOTIFICATION',
-    label: 'Notification',
-    icon: 'fa-regular fa-bell',
-    description: 'Show it in the bell drawer without interrupting the user.',
-  },
-  {
-    key: 'ALERT',
-    label: 'Alert',
-    icon: 'fa-solid fa-triangle-exclamation',
-    description: 'Treat it as a higher-priority alert for urgent updates.',
-  },
-  {
-    key: 'OFF',
-    label: 'Off',
-    icon: 'fa-regular fa-bell-slash',
-    description: 'Do not deliver this category unless the system forces it.',
-  },
-];
+/* ── category metadata ───────────────────────────────────── */
 
 const CATEGORY_META = {
   NEWS_IMPORTANT: {
     title: 'Important News',
-    description: 'Major farming advisories, policy updates, or important announcements.',
+    description: 'Major farming advisories and announcements.',
     icon: 'fa-regular fa-newspaper',
   },
   REQUEST: {
     title: 'Request Activity',
-    description: 'Updates when buyers and farmers exchange or act on requests.',
+    description: 'Buyer and farmer request updates.',
     icon: 'fa-solid fa-seedling',
   },
   WEATHER_FLOOD: {
     title: 'Flood Warning',
-    description: 'Severe flood conditions for your location and nearby areas.',
+    description: 'Severe flood alerts for your area.',
     icon: 'fa-solid fa-cloud-showers-water',
   },
   WEATHER_RAIN: {
     title: 'Rain Advisory',
-    description: 'Rain-related updates that may affect harvest and field planning.',
+    description: 'Rain updates affecting crops.',
     icon: 'fa-solid fa-cloud-rain',
   },
   PRICE_THRESHOLD: {
     title: 'Price Threshold',
-    description: 'Market conditions or saved rules that meet your target price.',
+    description: 'Market price target alerts.',
     icon: 'fa-solid fa-chart-line',
   },
   CROP: {
     title: 'Crop Updates',
-    description: 'Crop-specific updates for crops you follow or interact with.',
+    description: 'Updates for followed crops.',
     icon: 'fa-solid fa-leaf',
   },
   ADMIN: {
     title: 'Admin Messages',
-    description: 'Platform-level messages that may remain mandatory.',
+    description: 'Platform-level messages.',
     icon: 'fa-solid fa-shield-halved',
   },
 };
 
-const prettifyCategory = (value) => String(value || '')
-  .toLowerCase()
-  .split('_')
-  .filter(Boolean)
-  .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-  .join(' ');
+const prettifyCategory = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .split('_')
+    .filter(Boolean)
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join(' ');
 
-const getCategoryMeta = (item) => {
-  const fallbackTitle = prettifyCategory(item?.categoryName);
+const getMeta = (item) => {
+  const cat = CATEGORY_META[item?.categoryName];
   return {
-    title: CATEGORY_META[item?.categoryName]?.title || fallbackTitle || 'Notification Category',
-    description: item?.description || CATEGORY_META[item?.categoryName]?.description || 'Choose how this category should reach you.',
-    icon: CATEGORY_META[item?.categoryName]?.icon || 'fa-regular fa-bell',
+    title: cat?.title || prettifyCategory(item?.categoryName) || 'Notification',
+    description: item?.description || cat?.description || '',
+    icon: cat?.icon || 'fa-regular fa-bell',
   };
 };
 
-const getToneForDelivery = (deliveryType) => {
-  if (deliveryType === 'ALERT') return 'critical';
-  if (deliveryType === 'OFF') return 'muted';
-  return 'calm';
-};
+/* ── toggle switch ───────────────────────────────────────── */
+
+function Toggle({ checked, onChange, disabled, id, label }) {
+  return (
+    <label className="ntf-toggle" htmlFor={id}>
+      <input
+        id={id}
+        type="checkbox"
+        className="ntf-toggle__input"
+        checked={checked}
+        onChange={onChange}
+        disabled={disabled}
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+      />
+      <span className="ntf-toggle__track" aria-hidden="true">
+        <span className="ntf-toggle__thumb" />
+      </span>
+    </label>
+  );
+}
+
+/* ── main component ──────────────────────────────────────── */
 
 export default function NotificationPreferences({ open, onClose, onToast }) {
   const [preferences, setPreferences] = useState([]);
   const [loading, setLoading] = useState(false);
   const [savingCategory, setSavingCategory] = useState('');
-  const [savedCategory, setSavedCategory] = useState('');
 
   useEffect(() => {
     if (!open) return undefined;
@@ -101,58 +99,53 @@ export default function NotificationPreferences({ open, onClose, onToast }) {
       try {
         const data = await getPreferences();
         if (active) setPreferences(Array.isArray(data) ? data : []);
-      } catch (error) {
-        if (active) onToast?.(error.message || 'Failed to load notification preferences.', 'error');
+      } catch (err) {
+        if (active) onToast?.(err.message || 'Failed to load preferences.', 'error');
       } finally {
         if (active) setLoading(false);
       }
     })();
 
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [open, onToast]);
-
-  const counts = useMemo(() => preferences.reduce((acc, item) => {
-    const key = item.effectiveDeliveryType || 'NOTIFICATION';
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, { NOTIFICATION: 0, ALERT: 0, OFF: 0 }), [preferences]);
 
   if (!open) return null;
 
-  const updateSavedCategory = (categoryName) => {
-    setSavedCategory(categoryName);
-    window.setTimeout(() => setSavedCategory(''), 1400);
+  const isEnabled = (item) => {
+    const effective = item.effectiveDeliveryType || item.defaultDeliveryType || 'NOTIFICATION';
+    return effective !== 'OFF';
   };
 
-  const handleSelect = async (item, deliveryType) => {
+  const handleToggle = async (item) => {
     const categoryName = item.categoryName;
     if (savingCategory === categoryName) return;
 
+    const currentlyEnabled = isEnabled(item);
+    const newDelivery = currentlyEnabled ? 'OFF' : (item.defaultDeliveryType || 'NOTIFICATION');
+
+    // optimistic update
     const previous = item;
     const optimistic = {
       ...item,
-      userSelectedDeliveryType: deliveryType === item.defaultDeliveryType ? null : deliveryType,
-      effectiveDeliveryType: deliveryType,
+      effectiveDeliveryType: newDelivery,
+      userSelectedDeliveryType: newDelivery === item.defaultDeliveryType ? null : newDelivery,
     };
 
-    setPreferences((prev) => prev.map((entry) => (
-      entry.categoryName === categoryName ? optimistic : entry
-    )));
+    setPreferences((prev) =>
+      prev.map((entry) => (entry.categoryName === categoryName ? optimistic : entry)),
+    );
     setSavingCategory(categoryName);
 
     try {
-      const updated = await setPreference(categoryName, deliveryType);
-      setPreferences((prev) => prev.map((entry) => (
-        entry.categoryName === categoryName ? updated : entry
-      )));
-      updateSavedCategory(categoryName);
-    } catch (error) {
-      setPreferences((prev) => prev.map((entry) => (
-        entry.categoryName === categoryName ? previous : entry
-      )));
-      onToast?.(error.message || 'Failed to update preference.', 'error');
+      const updated = await setPreference(categoryName, newDelivery);
+      setPreferences((prev) =>
+        prev.map((entry) => (entry.categoryName === categoryName ? updated : entry)),
+      );
+    } catch (err) {
+      setPreferences((prev) =>
+        prev.map((entry) => (entry.categoryName === categoryName ? previous : entry)),
+      );
+      onToast?.(err.message || 'Failed to update preference.', 'error');
     } finally {
       setSavingCategory('');
     }
@@ -165,120 +158,98 @@ export default function NotificationPreferences({ open, onClose, onToast }) {
       const refreshed = await getPreferences();
       setPreferences(Array.isArray(refreshed) ? refreshed : []);
       onToast?.('Preferences reset to defaults.', 'success');
-    } catch (error) {
-      onToast?.(error.message || 'Failed to reset preferences.', 'error');
+    } catch (err) {
+      onToast?.(err.message || 'Failed to reset preferences.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  const enabledCount = preferences.filter(isEnabled).length;
+
   return (
-    <div className="notification-preferences__overlay" onClick={onClose}>
-      <Card className="notification-preferences" onClick={(event) => event.stopPropagation()}>
-        <div className="notification-preferences__hero">
-          <div className="notification-preferences__head">
-            <div>
-              <span className="notification-preferences__eyebrow">Message Controls</span>
-              <h3>Notification Preferences</h3>
-              <p>Choose whether each category should arrive as a notification, an alert, or not at all.</p>
-            </div>
-            <button type="button" className="notification-preferences__close" onClick={onClose} aria-label="Close preferences">
-              <i className="fa-solid fa-xmark" aria-hidden="true" />
-            </button>
+    <div className="ntf-prefs-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Notification Preferences">
+      <div className="ntf-prefs" onClick={(e) => e.stopPropagation()}>
+        {/* header */}
+        <header className="ntf-prefs__header">
+          <div className="ntf-prefs__header-text">
+            <h2 className="ntf-prefs__title">Notification Preferences</h2>
+            <p className="ntf-prefs__subtitle">
+              {enabledCount} of {preferences.length} categories enabled
+            </p>
           </div>
+          <button
+            type="button"
+            className="ntf-prefs__close"
+            onClick={onClose}
+            aria-label="Close preferences"
+          >
+            <i className="fa-solid fa-xmark" aria-hidden="true" />
+          </button>
+        </header>
 
-          <div className="notification-preferences__summary">
-            <div className="notification-preferences__summary-card">
-              <span>Notifications</span>
-              <strong>{counts.NOTIFICATION}</strong>
+        {/* body */}
+        <div className="ntf-prefs__body">
+          {loading && (
+            <div className="ntf-prefs__loading">
+              <span className="ui-spinner" aria-hidden="true" />
+              <span>Loading preferences…</span>
             </div>
-            <div className="notification-preferences__summary-card notification-preferences__summary-card--alert">
-              <span>Alerts</span>
-              <strong>{counts.ALERT}</strong>
-            </div>
-            <div className="notification-preferences__summary-card notification-preferences__summary-card--off">
-              <span>Off</span>
-              <strong>{counts.OFF}</strong>
-            </div>
-          </div>
-        </div>
+          )}
 
-        {loading ? <p className="notification-preferences__loading">Loading preferences...</p> : null}
+          {!loading && (
+            <div className="ntf-prefs__list" role="list">
+              {preferences.map((item) => {
+                const meta = getMeta(item);
+                const enabled = isEnabled(item);
+                const saving = savingCategory === item.categoryName;
 
-        {!loading ? (
-          <div className="notification-preferences__list">
-            {preferences.map((item) => {
-              const meta = getCategoryMeta(item);
-              const saving = savingCategory === item.categoryName;
-              const saved = savedCategory === item.categoryName;
-              const effectiveDeliveryType = item.effectiveDeliveryType || item.defaultDeliveryType || 'NOTIFICATION';
-              const tone = getToneForDelivery(effectiveDeliveryType);
-              const usingDefault = !item.userSelectedDeliveryType;
-
-              return (
-                <section
-                  key={item.categoryName}
-                  className={`notification-preferences__row notification-preferences__row--${tone}`}
-                >
-                  <div className="notification-preferences__row-head">
-                    <div className="notification-preferences__icon" aria-hidden="true">
+                return (
+                  <div
+                    key={item.categoryName}
+                    className={`ntf-prefs__row ${enabled ? '' : 'ntf-prefs__row--off'}`}
+                    role="listitem"
+                  >
+                    <div className="ntf-prefs__row-icon" aria-hidden="true">
                       <i className={meta.icon} />
                     </div>
-                    <div className="notification-preferences__copy">
-                      <div className="notification-preferences__title-row">
-                        <strong>{meta.title}</strong>
-                        <span className={`notification-preferences__pill notification-preferences__pill--${tone}`}>
-                          {effectiveDeliveryType}
-                        </span>
-                        {saved ? <span className="notification-preferences__saved">Saved</span> : null}
-                      </div>
-                      <p>{meta.description}</p>
+                    <div className="ntf-prefs__row-copy">
+                      <strong>{meta.title}</strong>
+                      <span>{meta.description}</span>
                     </div>
+                    <Toggle
+                      id={`pref-toggle-${item.categoryName}`}
+                      checked={enabled}
+                      onChange={() => handleToggle(item)}
+                      disabled={saving}
+                      label={`${meta.title} ${enabled ? 'enabled' : 'disabled'}`}
+                    />
                   </div>
-
-                  <div className="notification-preferences__meta">
-                    <span>
-                      Default: <strong>{item.defaultDeliveryType}</strong>
-                    </span>
-                    <span>
-                      Mode: <strong>{usingDefault ? 'Using default' : 'Customized'}</strong>
-                    </span>
-                  </div>
-
-                  <div className="notification-preferences__options" role="radiogroup" aria-label={`${meta.title} delivery type`}>
-                    {DELIVERY_OPTIONS.map((option) => {
-                      const selected = effectiveDeliveryType === option.key;
-                      return (
-                        <button
-                          key={option.key}
-                          type="button"
-                          className={`notification-preferences__option${selected ? ' notification-preferences__option--selected' : ''}`}
-                          onClick={() => handleSelect(item, option.key)}
-                          disabled={saving}
-                          aria-pressed={selected}
-                        >
-                          <span className="notification-preferences__option-icon" aria-hidden="true">
-                            <i className={option.icon} />
-                          </span>
-                          <span className="notification-preferences__option-copy">
-                            <strong>{option.label}</strong>
-                            <small>{option.description}</small>
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-        ) : null}
-
-        <div className="notification-preferences__actions">
-          <Button variant="ghost" onClick={handleReset} loading={loading}>Reset to defaults</Button>
-          <Button variant="outline" onClick={onClose}>Done</Button>
+                );
+              })}
+            </div>
+          )}
         </div>
-      </Card>
+
+        {/* footer */}
+        <footer className="ntf-prefs__footer">
+          <button
+            type="button"
+            className="ntf-prefs__footer-btn ntf-prefs__footer-btn--ghost"
+            onClick={handleReset}
+            disabled={loading}
+          >
+            Reset to defaults
+          </button>
+          <button
+            type="button"
+            className="ntf-prefs__footer-btn"
+            onClick={onClose}
+          >
+            Done
+          </button>
+        </footer>
+      </div>
     </div>
   );
 }
