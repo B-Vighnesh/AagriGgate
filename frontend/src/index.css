@@ -433,11 +433,13 @@ a {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: min(360px, calc(100vw - 20px));
+  width: min(420px, calc(100vw - 20px));
   border: 1px solid var(--color-border);
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 18px 36px rgba(16, 72, 51, 0.14);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(234, 143, 68, 0.08), transparent 26%),
+    linear-gradient(180deg, #ffffff, #f8fcfa);
+  box-shadow: 0 22px 42px rgba(16, 72, 51, 0.16);
   overflow: hidden;
   z-index: 80;
 }
@@ -448,18 +450,25 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 14px 16px;
-  background: #f7fcf9;
+  padding: 16px 18px;
+  background: rgba(247, 252, 249, 0.95);
 }
 
 .notification-drawer__head strong {
   display: block;
   color: var(--color-primary-dark);
+  font-size: 1rem;
 }
 
 .notification-drawer__head span {
   color: var(--color-muted);
   font-size: 0.82rem;
+}
+
+.notification-drawer__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .notification-drawer__action,
@@ -472,18 +481,32 @@ a {
   padding: 0;
 }
 
+.notification-drawer__preferences {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #e9f4ee;
+}
+
 .notification-drawer__action[disabled] {
   opacity: 0.45;
   cursor: default;
 }
 
 .notification-drawer__body {
-  max-height: 420px;
+  max-height: min(70vh, 560px);
   overflow: auto;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
 }
 
 .notification-drawer__list {
   display: grid;
+  gap: 10px;
 }
 
 .notification-drawer__empty {
@@ -492,27 +515,112 @@ a {
   color: var(--color-muted);
 }
 
+.notification-drawer__section {
+  display: grid;
+  gap: 10px;
+}
+
+.notification-drawer__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 4px;
+}
+
+.notification-drawer__section-head strong {
+  color: var(--color-primary-dark);
+  font-size: 0.9rem;
+}
+
+.notification-drawer__section-head span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #edf5f1;
+  color: var(--color-primary-dark);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.notification-drawer__empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 26px 16px 30px;
+}
+
+.notification-drawer__empty-state strong {
+  color: var(--color-primary-dark);
+}
+
+.notification-drawer__empty-state p {
+  margin: 0;
+  max-width: 280px;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.notification-drawer__empty-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef6f1;
+  color: var(--color-primary);
+  font-size: 1.28rem;
+}
+
 .notification-item {
-  border: 0;
-  border-top: 1px solid #edf4ef;
+  border: 1px solid #e4eee8;
+  border-radius: 18px;
   background: #ffffff;
   text-align: left;
-  padding: 14px 16px;
+  padding: 14px 15px;
   display: grid;
   gap: 10px;
   cursor: pointer;
-}
-
-.notification-item:first-child {
-  border-top: 0;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 .notification-item:hover {
-  background: #f8fcfa;
+  background: #fbfefd;
+  border-color: #cfe0d6;
+  box-shadow: 0 12px 24px rgba(18, 62, 49, 0.08);
+  transform: translateY(-1px);
+}
+
+.notification-item--alert,
+.notification-item--critical {
+  border-color: #f1d5cd;
+  background: linear-gradient(180deg, #fffdfc, #fff7f5);
+}
+
+.notification-item--high {
+  border-color: #efd7bf;
+  background: linear-gradient(180deg, #fffefb, #fff9f2);
+}
+
+.notification-drawer__list--alerts .notification-item {
+  cursor: default;
 }
 
 .notification-item__copy strong {
   color: var(--color-primary-dark);
+}
+
+.notification-item__title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .notification-item__copy p {
@@ -533,6 +641,57 @@ a {
 .notification-item__type {
   color: var(--color-primary);
   font-weight: 800;
+}
+
+.notification-item__severity {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f0f6f2;
+  color: var(--color-primary-dark);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.notification-item__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.notification-item__action {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.notification-item__action--ghost {
+  background: #edf5f1;
+  color: var(--color-primary-dark);
+}
+
+.notification-drawer__footer-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.notification-drawer__footer-copy strong {
+  color: var(--color-primary-dark);
+  font-size: 0.88rem;
+}
+
+.notification-drawer__footer-copy span {
+  color: var(--color-muted);
+  font-size: 0.78rem;
 }
 
 .nav-toggle {
@@ -6442,6 +6601,46 @@ a {
 
   .notification-drawer {
     right: -6px;
+    width: min(100vw - 12px, 420px);
+    border-radius: 20px;
+  }
+
+  .notification-drawer__head,
+  .notification-drawer__footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .notification-drawer__head-actions {
+    width: 100%;
+  }
+
+  .notification-drawer__action,
+  .notification-drawer__preferences {
+    min-height: 38px;
+  }
+
+  .notification-drawer__footer-copy {
+    width: 100%;
+  }
+
+  .notification-drawer__preferences {
+    width: 100%;
+  }
+
+  .notification-item__title-row,
+  .notification-item__meta,
+  .notification-item__actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .notification-item__actions {
+    width: 100%;
+  }
+
+  .notification-item__action {
+    width: 100%;
   }
 
   .site-nav--open {
