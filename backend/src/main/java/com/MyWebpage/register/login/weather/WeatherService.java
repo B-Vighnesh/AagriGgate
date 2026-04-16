@@ -36,19 +36,6 @@ public class WeatherService {
         this.weatherSnapshotRepository = weatherSnapshotRepository;
     }
 
-    public Map<String, Object> getWeatherByCity(String city) {
-        if (city == null || city.isBlank()) {
-            throw new IllegalArgumentException("City is required");
-        }
-
-        Optional<WeatherSnapshot> snapshot = weatherSnapshotRepository.findByDistrictNameIgnoreCase(city.trim());
-        if (snapshot.isPresent()) {
-            return toWeatherResponse(snapshot.get());
-        }
-
-        return fetchWeatherByQuery(city.trim());
-    }
-
     public void refreshScheduledWeatherSnapshots() {
         KarnatakaWeatherDistricts.all().forEach((districtName, point) -> {
             try {
@@ -76,14 +63,11 @@ public class WeatherService {
             if (snapshot.isPresent()) {
                 return toWeatherResponse(snapshot.get());
             }
+
+            return fetchWeatherByQuery(district);
         }
 
-        String queryCity = firstNonBlank(farmer.getCity(), farmer.getDistrict(), farmer.getState());
-        if (queryCity == null) {
-            throw new IllegalArgumentException("Profile location is missing. Please update city/state.");
-        }
-
-        return getWeatherByCity(queryCity);
+        throw new IllegalArgumentException("Profile district is missing. Please update your district.");
     }
 
     @SuppressWarnings("unchecked")
@@ -237,15 +221,6 @@ public class WeatherService {
         response.put("current", current);
         response.put("source", "scheduled_snapshot");
         return response;
-    }
-
-    private String firstNonBlank(String... values) {
-        for (String value : values) {
-            if (value != null && !value.isBlank()) {
-                return value.trim();
-            }
-        }
-        return null;
     }
 
     private String normalize(String value) {
