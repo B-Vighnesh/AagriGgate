@@ -296,6 +296,11 @@ export default function Chat() {
     return currentUserId === item.buyerId ? item.farmerName : item.buyerName;
   };
 
+  const isConversationWithUser = (item, userId) => {
+    if (!item || !userId) return false;
+    return item.buyerId === userId || item.farmerId === userId;
+  };
+
   const visibleConversations = useMemo(() => {
     const searchValue = searchTerm.trim().toLowerCase();
     const fromDate = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
@@ -561,6 +566,38 @@ export default function Chat() {
     }
   };
 
+  const moveConversationsForUserToFailed = (userId) => {
+    if (!userId) return;
+    const nowIso = new Date().toISOString();
+
+    setConversations((prev) => sortConversations(
+      prev.map((item) => {
+        if (!isConversationWithUser(item, userId)) return item;
+        if (String(item.status || '').toUpperCase() !== 'ACTIVE') return item;
+        return {
+          ...item,
+          status: 'FAILED',
+          active: false,
+          failedAt: nowIso,
+          updatedAt: nowIso,
+          lastMessageAt: nowIso,
+        };
+      })
+    ));
+
+    setActiveConversation((prev) => {
+      if (!prev || !isConversationWithUser(prev, userId)) return prev;
+      return {
+        ...prev,
+        status: 'FAILED',
+        active: false,
+        failedAt: nowIso,
+        updatedAt: nowIso,
+        lastMessageAt: nowIso,
+      };
+    });
+  };
+
   const removeConversationLocally = (conversationIdToRemove) => {
     setConversations((prev) => prev.filter((item) => item.conversationId !== conversationIdToRemove));
     if (resolvedConversationId === conversationIdToRemove) {
@@ -618,6 +655,16 @@ export default function Chat() {
         if (updated) {
           mergeConversationUpdate(updated);
         }
+        moveConversationsForUserToFailed(counterpartyId);
+        didSyncFilterRef.current = true;
+        filterNavRef.current = true;
+        filterOverrideRef.current = true;
+        setIsFilterNavigating(true);
+        setSuppressConversation(true);
+        setActiveConversation(null);
+        setMessages([]);
+        setChatFilter('failed');
+        navigate('/chat?filter=failed');
         showToast(`${counterpartyRoleLabel} blocked.`, 'success');
       } else if (actionDialog.type === 'unblock') {
         const updated = await unblockChatUser(counterpartyId);
