@@ -2887,6 +2887,16 @@ a {
   margin-bottom: 16px;
 }
 
+.weather-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weather-refresh-btn__icon {
+  font-size: 0.92rem;
+}
+
 .weather-alert {
   margin: 0 0 14px;
   padding: 10px 12px;
@@ -6762,7 +6772,15 @@ a {
   }
 
   .weather-page__actions .ui-btn {
-    width: 100%;
+    width: auto;
+    min-width: 46px;
+    min-height: 46px;
+    justify-content: center;
+    padding-inline: 14px;
+  }
+
+  .weather-refresh-btn__label {
+    display: none;
   }
 
   .weather-temp,
