@@ -4,6 +4,7 @@ public class VerifyOtpRequestDTO {
 
     private String email;
     private String otp;
+    private String role;
 
     public String getEmail() {
         return email;
@@ -19,5 +20,13 @@ public class VerifyOtpRequestDTO {
 
     public void setOtp(String otp) {
         this.otp = otp;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

@@ -28,6 +28,15 @@ public class BuyerServiceImpl implements BuyerService {
     }
 
     @Override
+    public BuyerResponseDTO getProfileForFarmers(Long farmerId) {
+        Farmer buyer = farmerRepository.findById(farmerId).orElse(null);
+        if (buyer == null || !buyer.getRole().equals("BUYER")) {
+            throw new RuntimeException("Buyer not found");
+        }
+        return buyerMapper.toDTO(buyer);
+    }
+
+    @Override
     public BuyerResponseDTO updateProfile(Long farmerId, BuyerRequestDTO request) {
         Farmer buyer = farmerRepository.findById(farmerId).orElse(null);
         if (buyer == null || !buyer.getRole().equals("BUYER")) {

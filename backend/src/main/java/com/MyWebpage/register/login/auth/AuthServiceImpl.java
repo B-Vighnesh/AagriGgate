@@ -3,6 +3,7 @@ package com.MyWebpage.register.login.auth;
 import com.MyWebpage.register.login.approach.ApproachFarmerService;
 import com.MyWebpage.register.login.auth.dto.AuthRequestDTO;
 import com.MyWebpage.register.login.auth.dto.AuthResponseDTO;
+import com.MyWebpage.register.login.auth.dto.DeleteAccountRequestDTO;
 import com.MyWebpage.register.login.auth.dto.OtpLoginRequestDTO;
 import com.MyWebpage.register.login.cart.CartItemRepo;
 import com.MyWebpage.register.login.crop.CropService;
@@ -12,8 +13,8 @@ import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.favorite.FavoriteRepo;
 import com.MyWebpage.register.login.market.saved.SavedMarketRepository;
 import com.MyWebpage.register.login.news.repository.SavedNewsRepository;
-import com.MyWebpage.register.login.notification.repository.NotificationRepository;
-import com.MyWebpage.register.login.notification.repository.UserNotificationPreferenceRepository;
+import com.MyWebpage.register.login.notification.repository.UserCategoryPreferenceRepository;
+import com.MyWebpage.register.login.notification.repository.UserMessageRepository;
 import com.MyWebpage.register.login.security.jwt.JWTService;
 import com.MyWebpage.register.login.common.EmailService;
 import com.MyWebpage.register.login.otp.OtpPurpose;
@@ -41,8 +42,8 @@ public class AuthServiceImpl implements AuthService {
     private final CartItemRepo cartItemRepo;
     private final FavoriteRepo favoriteRepo;
     private final SavedNewsRepository savedNewsRepository;
-    private final NotificationRepository notificationRepository;
-    private final UserNotificationPreferenceRepository notificationPreferenceRepository;
+    private final UserMessageRepository userMessageRepository;
+    private final UserCategoryPreferenceRepository notificationPreferenceRepository;
     private final SavedMarketRepository savedMarketRepository;
 
     private final PasswordEncoder passwordEncoder;
@@ -58,10 +59,10 @@ public class AuthServiceImpl implements AuthService {
             FarmerRequestDTO dto,
             String role) {
 
-        if (farmerRepo.existsByEmail(dto.getEmail())) {
+        if (farmerRepo.existsByEmailAndActiveTrue(dto.getEmail())) {
             throw new RuntimeException("Email exists");
         }
-        if (!otpService.isOtpVerified(dto.getEmail(), OtpPurpose.REGISTRATION)) {
+        if (!otpService.isOtpVerified(dto.getEmail(), resolveRegistrationPurpose(role))) {
             throw new RuntimeException("OTP not verified");
         }
 
@@ -81,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
         farmer.setUsername(generatedUsername);
 
         farmer = farmerRepo.save(farmer);
-        otpService.clearOtp(dto.getEmail(), OtpPurpose.REGISTRATION);
+        otpService.clearOtp(dto.getEmail(), resolveRegistrationPurpose(role));
         emailService.sendWelcomeEmail(farmer);
 
         String token =
@@ -102,9 +103,8 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Authentication failed");
         }
 
-        Farmer farmer = dto.getPrincipal().contains("@")
-                ? farmerRepo.findByEmail(dto.getPrincipal()).orElse(null)
-                : farmerRepo.findByUsername(dto.getPrincipal());
+        Farmer farmer = findFarmerByPrincipal(dto.getPrincipal());
+
         if (farmer == null) {
             throw new RuntimeException("User not found");
         }
@@ -124,6 +124,13 @@ public class AuthServiceImpl implements AuthService {
         Farmer farmer = findFarmerByPrincipal(principal);
         String otp = otpService.issueOtp(loginOtpPrincipal(farmer.getFarmerId()), OtpPurpose.LOGIN);
         emailService.sendLoginOtpEmail(farmer, otp);
+    }
+
+    @Override
+    public void sendDeletionOtp(Long farmerId) {
+        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
+        String otp = otpService.issueOtp(farmer.getFarmerId().toString(), OtpPurpose.DELETION);
+        emailService.sendDeletionOtpEmail(farmer, otp);
     }
 
     @Override
@@ -153,8 +160,7 @@ public class AuthServiceImpl implements AuthService {
             String currentPassword,
             String newPassword) {
 
-        Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
-        ensureAccountActive(farmer);
+        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
 
         if (!passwordEncoder.matches(currentPassword, farmer.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
@@ -182,8 +188,7 @@ public class AuthServiceImpl implements AuthService {
             Long farmerId,
             String password, String role) {
 
-        Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
-        ensureAccountActive(farmer);
+        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
 
         if (!passwordEncoder.matches(password, farmer.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
@@ -195,11 +200,15 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void softDeleteAccount(Long farmerId, String password, String role) {
-        Farmer farmer = farmerRepo.findById(farmerId).orElseThrow();
-        ensureAccountActive(farmer);
+    public void softDeleteAccount(Long farmerId, DeleteAccountRequestDTO request, String role) {
+        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
 
-        if (!passwordEncoder.matches(password, farmer.getPassword())) {
+        if(!otpService.verifyAndConsumeOtp(farmerId.toString(),OtpPurpose.DELETION, request.getOtp()))
+        {
+            throw new IllegalArgumentException("Invalid otp");
+
+        }
+        if (!passwordEncoder.matches(request.getPassword(), farmer.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
         }
 
@@ -208,7 +217,7 @@ public class AuthServiceImpl implements AuthService {
         cartItemRepo.deleteByBuyerId(farmerId);
         favoriteRepo.deleteByBuyerId(farmerId);
         savedNewsRepository.deleteByUserId(farmerId);
-        notificationRepository.deleteByUserId(farmerId);
+        userMessageRepository.deleteByUserId(farmerId);
         notificationPreferenceRepository.deleteByUserId(farmerId);
         savedMarketRepository.deleteByUserId(farmerId);
         approachFarmerService.softDeleteApproach(farmerId, role);
@@ -218,7 +227,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void findUser(String email) {
-        if(farmerRepo.existsByEmail(email))
+        if(farmerRepo.existsByEmailAndActiveTrue(email))
         {
             throw new RuntimeException("User already exists");
         }
@@ -239,8 +248,8 @@ public class AuthServiceImpl implements AuthService {
 
     private Farmer findFarmerByPrincipal(String principal) {
         Farmer farmer = principal.contains("@")
-                ? farmerRepo.findByEmail(principal).orElse(null)
-                : farmerRepo.findByUsername(principal);
+                ? farmerRepo.findByEmailAndActiveTrue(principal).orElse(null)
+                : farmerRepo.findByUsernameAndActiveTrue(principal);
         if (farmer == null) {
             throw new IllegalArgumentException("User not found");
         }
@@ -282,5 +291,12 @@ public class AuthServiceImpl implements AuthService {
                 .replaceAll("[^a-z0-9]", "");
 
         return cleaned.isBlank() ? "ag" : cleaned;
+    }
+
+    private OtpPurpose resolveRegistrationPurpose(String role) {
+        if ("BUYER".equalsIgnoreCase(role) || "buyer".equalsIgnoreCase(role)) {
+            return OtpPurpose.BUYER_REGISTRATION;
+        }
+        return OtpPurpose.SELLER_REGISTRATION;
     }
 }
