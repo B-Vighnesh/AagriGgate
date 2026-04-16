@@ -11,6 +11,8 @@ public interface UserBlockRepository extends JpaRepository<UserBlock, Long> {
 
     boolean existsByBlockerIdAndBlockedId(Long blockerId, Long blockedId);
 
+    void deleteByBlockerIdAndBlockedId(Long blockerId, Long blockedId);
+
     @Query("""
             SELECT (count(b) > 0) FROM UserBlock b
             WHERE (b.blockerId = :userA AND b.blockedId = :userB)

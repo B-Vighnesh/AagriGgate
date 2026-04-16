@@ -43,6 +43,11 @@ export const blockChatUser = async (userId, reason) => {
   return requestJson(path, { method: 'POST' });
 };
 
+export const unblockChatUser = async (userId) =>
+  requestJson(`/chat/users/${userId}/block`, {
+    method: 'DELETE',
+  });
+
 export const reportChatUser = async (userId, payload) =>
   requestJson(`/chat/users/${userId}/report`, {
     method: 'POST',

@@ -20,6 +20,7 @@ public interface ChatService {
     ConversationSummaryDTO unarchiveConversation(Long conversationId, Long actorId);
     ConversationSummaryDTO failConversation(Long conversationId, Long actorId);
     ConversationSummaryDTO blockUser(Long actorId, Long targetUserId, String reason);
+    ConversationSummaryDTO unblockUser(Long actorId, Long targetUserId);
     void reportUser(Long actorId, Long targetUserId, String reason, String message, String imageUrl);
     void softDeleteConversation(Long conversationId, Long actorId);
 }
