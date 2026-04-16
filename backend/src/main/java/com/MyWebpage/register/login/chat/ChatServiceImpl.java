@@ -288,7 +288,35 @@ public class ChatServiceImpl implements ChatService {
                                 || (Objects.equals(item.getFarmerId(), actorId) && Objects.equals(item.getBuyerId(), targetUserId)))
                 .findFirst()
                 .orElse(null);
-        return conversation == null ? null : toSummary(conversation, actorId);
+        if (conversation == null) {
+            return null;
+        }
+        ConversationSummaryDTO actorSummary = toSummary(conversation, actorId);
+        chatRealtimeService.sendToUser(actorId, "CONVERSATION_UPDATE", actorSummary, "User blocked.");
+        chatRealtimeService.sendToUser(targetUserId, "CONVERSATION_UPDATE", toSummary(conversation, targetUserId), "User blocked.");
+        return actorSummary;
+    }
+
+    @Override
+    public ConversationSummaryDTO unblockUser(Long actorId, Long targetUserId) {
+        if (targetUserId == null || Objects.equals(actorId, targetUserId)) {
+            throw new IllegalArgumentException("Invalid user to unblock");
+        }
+        userBlockRepository.deleteByBlockerIdAndBlockedId(actorId, targetUserId);
+        Conversation conversation = conversationRepository.findByBuyerIdOrFarmerIdOrderByLastMessageAtDescUpdatedAtDesc(actorId, actorId)
+                .stream()
+                .filter(item ->
+                        (Objects.equals(item.getBuyerId(), actorId) && Objects.equals(item.getFarmerId(), targetUserId))
+                                || (Objects.equals(item.getFarmerId(), actorId) && Objects.equals(item.getBuyerId(), targetUserId)))
+                .findFirst()
+                .orElse(null);
+        if (conversation == null) {
+            return null;
+        }
+        ConversationSummaryDTO actorSummary = toSummary(conversation, actorId);
+        chatRealtimeService.sendToUser(actorId, "CONVERSATION_UPDATE", actorSummary, "User unblocked.");
+        chatRealtimeService.sendToUser(targetUserId, "CONVERSATION_UPDATE", toSummary(conversation, targetUserId), "User unblocked.");
+        return actorSummary;
     }
 
     @Override

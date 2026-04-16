@@ -10,6 +10,7 @@ import {
   failChatConversation,
   deleteChatConversation,
   blockChatUser,
+  unblockChatUser,
   reportChatUser,
   getChatConversation,
   getChatConversations,
@@ -618,6 +619,12 @@ export default function Chat() {
           mergeConversationUpdate(updated);
         }
         showToast(`${counterpartyRoleLabel} blocked.`, 'success');
+      } else if (actionDialog.type === 'unblock') {
+        const updated = await unblockChatUser(counterpartyId);
+        if (updated) {
+          mergeConversationUpdate(updated);
+        }
+        showToast(`${counterpartyRoleLabel} unblocked.`, 'success');
       }
       closeActionDialog();
     } catch (error) {
@@ -1122,11 +1129,10 @@ export default function Chat() {
                       ...(counterpartyId ? [{
                         icon: <i className="fa-solid fa-user-slash" />,
                         label: activeConversation?.blockedByMe
-                          ? `${counterpartyRoleLabel} Blocked`
+                          ? `Unblock ${counterpartyRoleLabel}`
                           : `Block ${counterpartyRoleLabel}`,
-                        action: () => openActionDialog('block'),
+                        action: () => openActionDialog(activeConversation?.blockedByMe ? 'unblock' : 'block'),
                         danger: true,
-                        disabled: Boolean(activeConversation?.blockedByMe),
                       }] : []),
                       ...(counterpartyId ? [{
                         icon: <i className="fa-solid fa-flag" />,
@@ -1292,6 +1298,8 @@ export default function Chat() {
                     ? 'Unarchive Conversation'
                     : actionDialog.type === 'fail'
                       ? 'Cancel Deal'
+                      : actionDialog.type === 'unblock'
+                        ? `Unblock ${counterpartyRoleLabel}`
                       : actionDialog.type === 'block'
                         ? `Block ${counterpartyRoleLabel}`
                     : 'Archive Conversation'}
@@ -1308,6 +1316,8 @@ export default function Chat() {
                       ? actionDialog.step === 1
                         ? 'This is the first confirmation. Click Continue to confirm you want to cancel the deal for both participants.'
                         : 'This will mark the deal as failed for both participants and move the chat into the failed section.'
+                      : actionDialog.type === 'unblock'
+                        ? `Unblocking will allow this ${counterpartyRoleLabel.toLowerCase()} to interact with you again.`
                       : actionDialog.type === 'block'
                         ? `Blocking will prevent this ${counterpartyRoleLabel.toLowerCase()} from interacting with you.`
                     : 'This will move the active conversation into your archived section without deleting it.'}
@@ -1349,6 +1359,8 @@ export default function Chat() {
                       ? actionDialog.step === 1
                         ? 'Continue'
                         : 'Cancel Deal'
+                    : actionDialog.type === 'unblock'
+                      ? `Unblock ${counterpartyRoleLabel}`
                     : actionDialog.type === 'block'
                       ? `Block ${counterpartyRoleLabel}`
                     : 'Archive'}

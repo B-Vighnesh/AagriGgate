@@ -89,6 +89,14 @@ public class ChatController {
         return ResponseEntity.ok(chatService.blockUser(userId, targetUserId, reason));
     }
 
+    @DeleteMapping("/users/{targetUserId}/block")
+    public ResponseEntity<ConversationSummaryDTO> unblockUser(
+            @PathVariable Long targetUserId,
+            Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(chatService.unblockUser(userId, targetUserId));
+    }
+
     @PostMapping("/users/{targetUserId}/report")
     public ResponseEntity<ApiResponse<String>> reportUser(
             @PathVariable Long targetUserId,
