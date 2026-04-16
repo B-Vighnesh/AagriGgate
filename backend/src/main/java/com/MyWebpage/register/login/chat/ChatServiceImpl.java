@@ -281,19 +281,43 @@ public class ChatServiceImpl implements ChatService {
             block.setReason(reason);
             userBlockRepository.save(block);
         }
-        Conversation conversation = conversationRepository.findByBuyerIdOrFarmerIdOrderByLastMessageAtDescUpdatedAtDesc(actorId, actorId)
-                .stream()
-                .filter(item ->
-                        (Objects.equals(item.getBuyerId(), actorId) && Objects.equals(item.getFarmerId(), targetUserId))
-                                || (Objects.equals(item.getFarmerId(), actorId) && Objects.equals(item.getBuyerId(), targetUserId)))
-                .findFirst()
-                .orElse(null);
+        List<Conversation> conversations = conversationRepository
+                .findByBuyerIdAndFarmerIdOrBuyerIdAndFarmerIdOrderByLastMessageAtDescUpdatedAtDesc(
+                        actorId, targetUserId, targetUserId, actorId
+                );
+        Conversation conversation = conversations.stream().findFirst().orElse(null);
+        String actorName = conversation == null
+                ? "A user"
+                : Objects.equals(actorId, conversation.getBuyerId()) ? conversation.getBuyerName() : conversation.getFarmerName();
+
+        LocalDateTime now = LocalDateTime.now();
+        for (Conversation item : conversations) {
+            if (item.getStatus() == ConversationStatus.ACTIVE && Boolean.TRUE.equals(item.getActive())) {
+                item.setStatus(ConversationStatus.FAILED);
+                item.setActive(false);
+                item.setFailedAt(now);
+                touchConversation(item, now);
+                Conversation savedConversation = conversationRepository.save(item);
+                ChatMessage savedSystemMessage = chatMessageRepository.save(
+                        createSystemMessage(item.getConversationId(),
+                                actorName + " blocked the other user. Conversation moved to failed.")
+                );
+                chatRealtimeService.sendToConversation(savedConversation, "CHAT_MESSAGE", toMessageDto(savedSystemMessage), null);
+                chatRealtimeService.sendToUser(savedConversation.getBuyerId(), "CONVERSATION_UPDATE",
+                        toSummary(savedConversation, savedConversation.getBuyerId()), "User blocked. Conversation moved to failed.");
+                if (!savedConversation.getBuyerId().equals(savedConversation.getFarmerId())) {
+                    chatRealtimeService.sendToUser(savedConversation.getFarmerId(), "CONVERSATION_UPDATE",
+                            toSummary(savedConversation, savedConversation.getFarmerId()), "User blocked. Conversation moved to failed.");
+                }
+            }
+        }
         if (conversation == null) {
             return null;
         }
-        ConversationSummaryDTO actorSummary = toSummary(conversation, actorId);
+        Conversation refreshedConversation = conversationRepository.findById(conversation.getConversationId()).orElse(conversation);
+        ConversationSummaryDTO actorSummary = toSummary(refreshedConversation, actorId);
         chatRealtimeService.sendToUser(actorId, "CONVERSATION_UPDATE", actorSummary, "User blocked.");
-        chatRealtimeService.sendToUser(targetUserId, "CONVERSATION_UPDATE", toSummary(conversation, targetUserId), "User blocked.");
+        chatRealtimeService.sendToUser(targetUserId, "CONVERSATION_UPDATE", toSummary(refreshedConversation, targetUserId), "User blocked.");
         return actorSummary;
     }
 

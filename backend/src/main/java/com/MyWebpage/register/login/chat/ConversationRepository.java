@@ -9,4 +9,10 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     Optional<Conversation> findByApproachId(Long approachId);
     Optional<Conversation> findByConversationIdAndBuyerIdOrConversationIdAndFarmerId(Long conversationId, Long buyerId, Long sameConversationId, Long farmerId);
     List<Conversation> findByBuyerIdOrFarmerIdOrderByLastMessageAtDescUpdatedAtDesc(Long buyerId, Long farmerId);
+    List<Conversation> findByBuyerIdAndFarmerIdOrBuyerIdAndFarmerIdOrderByLastMessageAtDescUpdatedAtDesc(
+            Long buyerId,
+            Long farmerId,
+            Long reverseBuyerId,
+            Long reverseFarmerId
+    );
 }
