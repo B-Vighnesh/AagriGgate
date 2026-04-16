@@ -6,7 +6,9 @@ import NotificationPreferences from './NotificationPreferences';
 import Toast from './common/Toast';
 import { getRole, isLoggedIn } from '../lib/auth';
 import {
+  acknowledgeAlert,
   countUnread,
+  getActiveAlerts,
   getNotifications,
   markAllAsRead,
   markAsRead,
@@ -76,6 +78,7 @@ export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [openDropdownKey, setOpenDropdownKey] = useState('');
@@ -126,6 +129,7 @@ export default function Navbar() {
     if (!loggedIn) {
       setUnreadCount(0);
       setNotifications([]);
+      setAlerts([]);
       return undefined;
     }
 
@@ -162,9 +166,13 @@ export default function Navbar() {
     const loadNotifications = async () => {
       setNotificationsLoading(true);
       try {
-        const page = await getNotifications({ status: 'UNREAD', page: 0, size: 10 });
+        const [page, activeAlerts] = await Promise.all([
+          getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 10 }),
+          getActiveAlerts(),
+        ]);
         if (active) {
           setNotifications(Array.isArray(page?.content) ? page.content : []);
+          setAlerts(Array.isArray(activeAlerts) ? activeAlerts : []);
         }
       } catch (error) {
         if (active) {
@@ -271,6 +279,27 @@ export default function Navbar() {
     return relativeTimeFormatter.format(parsed);
   };
 
+  const getDeliveryLabel = (notification) => notification?.deliveryType || 'NOTIFICATION';
+
+  const getNotificationTone = (notification) => {
+    if (notification?.deliveryType === 'ALERT') return 'alert';
+    if (notification?.severity === 'CRITICAL') return 'critical';
+    if (notification?.severity === 'HIGH') return 'high';
+    return 'default';
+  };
+
+  const resolveNotificationRoute = (notification) => {
+    if (notification?.redirectUrl) return notification.redirectUrl;
+
+    if (notification?.referenceType === 'NEWS') return '/news';
+    if (notification?.referenceType === 'REQUEST') return role === 'farmer' ? '/view-approach' : '/view-approaches-user';
+    if (notification?.referenceType === 'MARKET') return '/market';
+    if (notification?.referenceType === 'WEATHER') return '/weather';
+    if (notification?.referenceType === 'ADMIN') return '/account';
+
+    return null;
+  };
+
   const handleMarkAllRead = async () => {
     try {
       await markAllAsRead();
@@ -289,11 +318,20 @@ export default function Navbar() {
       setUnreadCount((prev) => Math.max(prev - 1, 0));
       setDrawerOpen(false);
 
-      if (notification.referenceType === 'NEWS') {
-        navigate('/news');
-      }
+      const targetRoute = resolveNotificationRoute(notification);
+      if (targetRoute) navigate(targetRoute);
     } catch (error) {
       showToast(error.message || 'Failed to update notification.', 'error');
+    }
+  };
+
+  const handleAlertAcknowledge = async (alert) => {
+    try {
+      await acknowledgeAlert(alert.id);
+      setAlerts((prev) => prev.filter((item) => item.id !== alert.id));
+      showToast('Alert acknowledged.', 'success');
+    } catch (error) {
+      showToast(error.message || 'Failed to acknowledge alert.', 'error');
     }
   };
 
@@ -452,16 +490,18 @@ export default function Navbar() {
                   <div className="notification-drawer__head">
                     <div>
                       <strong>Notifications</strong>
-                      <span>{unreadCount} unread</span>
+                      <span>{unreadCount} unread notifications</span>
                     </div>
-                    <button
-                      type="button"
-                      className="notification-drawer__action"
-                      onClick={handleMarkAllRead}
-                      disabled={!notifications.length}
-                    >
-                      Mark All Read
-                    </button>
+                    <div className="notification-drawer__head-actions">
+                      <button
+                        type="button"
+                        className="notification-drawer__action"
+                        onClick={handleMarkAllRead}
+                        disabled={!notifications.length}
+                      >
+                        Mark all read
+                      </button>
+                    </div>
                   </div>
 
                   <div className="notification-drawer__body">
@@ -469,34 +509,109 @@ export default function Navbar() {
                       <p className="notification-drawer__empty">Loading notifications...</p>
                     ) : null}
 
-                    {!notificationsLoading && notifications.length === 0 ? (
-                      <p className="notification-drawer__empty">No unread notifications right now.</p>
-                    ) : null}
-
-                    {!notificationsLoading && notifications.length > 0 ? (
-                      <div className="notification-drawer__list">
-                        {notifications.map((notification) => (
-                          <button
-                            key={notification.id}
-                            type="button"
-                            className="notification-item"
-                            onClick={() => handleNotificationClick(notification)}
-                          >
-                            <div className="notification-item__copy">
-                              <strong>{notification.title}</strong>
-                              <p>{notification.body}</p>
+                    {!notificationsLoading ? (
+                      <>
+                        {alerts.length > 0 ? (
+                          <section className="notification-drawer__section">
+                            <div className="notification-drawer__section-head">
+                              <strong>Active Alerts</strong>
+                              <span>{alerts.length}</span>
                             </div>
-                            <span className="notification-item__meta">
-                              <span className="notification-item__type">{notification.type}</span>
-                              <span>{formatNotificationDate(notification.createdAt)}</span>
-                            </span>
-                          </button>
-                        ))}
-                      </div>
+                            <div className="notification-drawer__list notification-drawer__list--alerts">
+                              {alerts.map((alert) => (
+                                <article
+                                  key={alert.id}
+                                  className={`notification-item notification-item--${getNotificationTone(alert)}`}
+                                >
+                                  <div className="notification-item__copy">
+                                    <div className="notification-item__title-row">
+                                      <strong>{alert.title}</strong>
+                                      <span className="notification-item__severity">{alert.severity || 'ALERT'}</span>
+                                    </div>
+                                    <p>{alert.message}</p>
+                                  </div>
+                                  <div className="notification-item__meta">
+                                    <span className="notification-item__type">{getDeliveryLabel(alert)}</span>
+                                    <span>{formatNotificationDate(alert.createdAt)}</span>
+                                  </div>
+                                  <div className="notification-item__actions">
+                                    {resolveNotificationRoute(alert) ? (
+                                      <button
+                                        type="button"
+                                        className="notification-item__action notification-item__action--ghost"
+                                        onClick={() => {
+                                          setDrawerOpen(false);
+                                          navigate(resolveNotificationRoute(alert));
+                                        }}
+                                      >
+                                        View
+                                      </button>
+                                    ) : null}
+                                    <button
+                                      type="button"
+                                      className="notification-item__action"
+                                      onClick={() => handleAlertAcknowledge(alert)}
+                                    >
+                                      Acknowledge
+                                    </button>
+                                  </div>
+                                </article>
+                              ))}
+                            </div>
+                          </section>
+                        ) : null}
+
+                        {notifications.length > 0 ? (
+                          <section className="notification-drawer__section">
+                            <div className="notification-drawer__section-head">
+                              <strong>Recent Notifications</strong>
+                              <span>{notifications.length}</span>
+                            </div>
+                            <div className="notification-drawer__list">
+                              {notifications.map((notification) => (
+                                <button
+                                  key={notification.id}
+                                  type="button"
+                                  className={`notification-item notification-item--${getNotificationTone(notification)}`}
+                                  onClick={() => handleNotificationClick(notification)}
+                                >
+                                  <div className="notification-item__copy">
+                                    <div className="notification-item__title-row">
+                                      <strong>{notification.title}</strong>
+                                      {notification.severity ? (
+                                        <span className="notification-item__severity">{notification.severity}</span>
+                                      ) : null}
+                                    </div>
+                                    <p>{notification.message}</p>
+                                  </div>
+                                  <span className="notification-item__meta">
+                                    <span className="notification-item__type">{getDeliveryLabel(notification)}</span>
+                                    <span>{formatNotificationDate(notification.createdAt)}</span>
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </section>
+                        ) : null}
+
+                        {alerts.length === 0 && notifications.length === 0 ? (
+                          <div className="notification-drawer__empty-state">
+                            <div className="notification-drawer__empty-icon" aria-hidden="true">
+                              <i className="fa-regular fa-bell-slash" />
+                            </div>
+                            <strong>Nothing new right now</strong>
+                            <p>Your alerts and notifications will appear here when the system has something important for you.</p>
+                          </div>
+                        ) : null}
+                      </>
                     ) : null}
                   </div>
 
                   <div className="notification-drawer__footer">
+                    <div className="notification-drawer__footer-copy">
+                      <strong>Need more control?</strong>
+                      <span>Adjust category delivery types and defaults.</span>
+                    </div>
                     <button
                       type="button"
                       className="notification-drawer__preferences"
