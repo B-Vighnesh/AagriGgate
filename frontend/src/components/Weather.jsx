@@ -6,6 +6,77 @@ import ValidateToken from './ValidateToken';
 import { getRole, getToken } from '../lib/auth';
 import { getWeatherForMe } from '../api/weatherApi';
 
+function formatValue(value, suffix = '') {
+  if (value == null || Number.isNaN(Number(value))) return '-';
+  const numeric = Number(value);
+  const formatted = Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(1);
+  return `${formatted}${suffix}`;
+}
+
+function getRainGuidance(current) {
+  const precip = Number(current?.precip_mm);
+  const condition = String(current?.condition?.text || '').toLowerCase();
+  if (!Number.isNaN(precip) && precip >= 2) {
+    return {
+      tone: 'warning',
+      title: 'Rain risk',
+      text: 'Rain is building up. Consider delaying harvest, drying, or transport activity.',
+    };
+  }
+  if (condition.includes('rain') || condition.includes('shower') || condition.includes('drizzle')) {
+    return {
+      tone: 'warning',
+      title: 'Rain expected',
+      text: 'Keep an eye on field movement and harvested crop exposure.',
+    };
+  }
+  return {
+    tone: 'neutral',
+    title: 'Low rain signal',
+    text: 'No immediate rain signal. Irrigation planning may still be important.',
+  };
+}
+
+function getHumidityGuidance(current) {
+  const humidity = Number(current?.humidity);
+  if (!Number.isNaN(humidity) && humidity >= 80) {
+    return {
+      tone: 'warning',
+      title: 'High humidity',
+      text: 'Disease and fungal risk can increase in standing crops and stored produce.',
+    };
+  }
+  if (!Number.isNaN(humidity) && humidity <= 35) {
+    return {
+      tone: 'caution',
+      title: 'Low humidity',
+      text: 'Drying conditions are strong. Watch crop moisture loss and irrigation need.',
+    };
+  }
+  return {
+    tone: 'good',
+    title: 'Balanced humidity',
+    text: 'Humidity is in a moderate range for routine field planning.',
+  };
+}
+
+function getWindGuidance(current) {
+  const wind = Number(current?.wind_kph);
+  const gust = Number(current?.gust_kph);
+  if ((!Number.isNaN(gust) && gust >= 35) || (!Number.isNaN(wind) && wind >= 25)) {
+    return {
+      tone: 'warning',
+      title: 'Strong wind',
+      text: 'Be careful with pesticide spraying, staking, and loose harvested material.',
+    };
+  }
+  return {
+    tone: 'neutral',
+    title: 'Stable wind',
+    text: 'Wind conditions look manageable for most field work.',
+  };
+}
+
 function getAlert(weather) {
   if (!weather) return null;
   const current = weather.current || {};
@@ -25,6 +96,18 @@ function Metric({ label, value }) {
   );
 }
 
+function AdvisoryCard({ icon, title, text, tone }) {
+  return (
+    <Card className={`weather-advisory weather-advisory--${tone}`}>
+      <div className="weather-advisory__icon" aria-hidden="true">{icon}</div>
+      <div>
+        <h4>{title}</h4>
+        <p>{text}</p>
+      </div>
+    </Card>
+  );
+}
+
 export default function Weather() {
   const navigate = useNavigate();
   const role = getRole();
@@ -35,6 +118,11 @@ export default function Weather() {
   const [error, setError] = useState('');
 
   const alert = useMemo(() => getAlert(weather), [weather]);
+  const current = weather?.current || {};
+  const location = weather?.location || {};
+  const rainGuidance = useMemo(() => getRainGuidance(current), [current]);
+  const humidityGuidance = useMemo(() => getHumidityGuidance(current), [current]);
+  const windGuidance = useMemo(() => getWindGuidance(current), [current]);
 
   const fetchMyLocationWeather = async () => {
     if (!token) {
@@ -72,7 +160,7 @@ export default function Weather() {
       <div className="ag-container">
         <header className="weather-header">
           <h1>Weather</h1>
-          <p>Weather for your saved district from your farmer profile.</p>
+          <p>Live-ready district weather focused on field decisions, harvest timing, and crop safety.</p>
         </header>
 
         <div className="weather-page__actions">
@@ -100,30 +188,127 @@ export default function Weather() {
 
         {!loading && weather && (
           <div className="weather-layout">
-            <Card className="weather-summary">
-              <div className="weather-summary__main">
-                {weather?.current?.condition?.icon ? (
-                  <img src={`https:${weather.current.condition.icon}`} alt={weather?.current?.condition?.text || 'Weather icon'} />
-                ) : null}
-                <div>
-                  <h2>{weather?.location?.name || '-'}, {weather?.location?.region || '-'}</h2>
-                  <p>{weather?.location?.country || '-'}</p>
-                  <p>{weather?.current?.condition?.text || '-'}</p>
+            <Card className="weather-hero">
+              <div className="weather-hero__main">
+                <div className="weather-hero__identity">
+                  <div className="weather-hero__icon-wrap">
+                    {current?.condition?.icon ? (
+                      <img src={`https:${current.condition.icon}`} alt={current?.condition?.text || 'Weather icon'} />
+                    ) : (
+                      <i className="fa-solid fa-cloud-sun" />
+                    )}
+                  </div>
+                  <div className="weather-hero__copy">
+                    <span className="weather-kicker">Farmer District Forecast</span>
+                    <h2>{location?.name || '-'}, {location?.region || '-'}</h2>
+                    <p>{current?.condition?.text || '-'} with {formatValue(current?.cloud, '%')} cloud cover</p>
+                  </div>
+                </div>
+                <div className="weather-temp weather-temp--hero">
+                  <strong>{formatValue(current?.temp_c, ' C')}</strong>
+                  <span>Feels like {formatValue(current?.feelslike_c, ' C')}</span>
                 </div>
               </div>
-              <div className="weather-temp">
-                <strong>{weather?.current?.temp_c ?? '-'} C</strong>
-                <span>Feels like {weather?.current?.feelslike_c ?? '-'} C</span>
+
+              <div className="weather-hero__meta">
+                <span><i className="fa-regular fa-clock" /> Updated {current?.last_updated || '-'}</span>
+                <span><i className="fa-solid fa-location-dot" /> {location?.country || '-'}</span>
+                <span><i className="fa-solid fa-cloud-rain" /> Rain {formatValue(current?.precip_mm, ' mm')}</span>
+                <span><i className="fa-solid fa-wind" /> Wind {formatValue(current?.wind_kph, ' km/h')}</span>
               </div>
+
+              {alert && (
+                <div className={`weather-hero__alert weather-hero__alert--${alert.type === 'error' ? 'error' : 'warning'}`}>
+                  <i className={`fa-solid ${alert.type === 'error' ? 'fa-temperature-high' : 'fa-triangle-exclamation'}`} />
+                  <span>{alert.msg}</span>
+                </div>
+              )}
             </Card>
 
-            <div className="weather-metrics-grid">
-              <Metric label="Humidity" value={`${weather?.current?.humidity ?? '-'}%`} />
-              <Metric label="Wind" value={`${weather?.current?.wind_kph ?? '-'} km/h`} />
-              <Metric label="Pressure" value={`${weather?.current?.pressure_mb ?? '-'} mb`} />
-              <Metric label="Visibility" value={`${weather?.current?.vis_km ?? '-'} km`} />
-              <Metric label="UV Index" value={weather?.current?.uv ?? '-'} />
-              <Metric label="Cloud" value={`${weather?.current?.cloud ?? '-'}%`} />
+            <div className="weather-decision-grid">
+              <Card className="weather-focus weather-focus--temperature">
+                <div className="weather-focus__head">
+                  <span className="weather-focus__icon"><i className="fa-solid fa-temperature-three-quarters" /></span>
+                  <div>
+                    <p>Temperature</p>
+                    <h3>{formatValue(current?.temp_c, ' C')}</h3>
+                  </div>
+                </div>
+                <div className="weather-focus__body">
+                  <span>Feels like {formatValue(current?.feelslike_c, ' C')}</span>
+                  <small>Heat and cold directly affect crop stress, flowering, and storage handling.</small>
+                </div>
+              </Card>
+
+              <Card className="weather-focus weather-focus--rain">
+                <div className="weather-focus__head">
+                  <span className="weather-focus__icon"><i className="fa-solid fa-cloud-rain" /></span>
+                  <div>
+                    <p>Rain</p>
+                    <h3>{formatValue(current?.precip_mm, ' mm')}</h3>
+                  </div>
+                </div>
+                <div className="weather-focus__body">
+                  <span>{current?.condition?.text || '-'}</span>
+                  <small>Rain affects harvest timing, drying, transport, and irrigation decisions.</small>
+                </div>
+              </Card>
+
+              <Card className="weather-focus weather-focus--humidity">
+                <div className="weather-focus__head">
+                  <span className="weather-focus__icon"><i className="fa-solid fa-droplet" /></span>
+                  <div>
+                    <p>Humidity</p>
+                    <h3>{formatValue(current?.humidity, '%')}</h3>
+                  </div>
+                </div>
+                <div className="weather-focus__body">
+                  <span>Air moisture level</span>
+                  <small>Humidity helps estimate disease risk, drying speed, and produce storage safety.</small>
+                </div>
+              </Card>
+            </div>
+
+            <div className="weather-content-grid">
+              <div className="weather-content-grid__main">
+                <Card className="weather-section-card">
+                  <div className="weather-section-card__head">
+                    <div>
+                      <span className="weather-kicker">Field Signals</span>
+                      <h3>Wind, cloud, and timing</h3>
+                    </div>
+                  </div>
+                  <div className="weather-metrics-grid weather-metrics-grid--rich">
+                    <Metric label="Wind Speed" value={formatValue(current?.wind_kph, ' km/h')} />
+                    <Metric label="Wind Gust" value={formatValue(current?.gust_kph, ' km/h')} />
+                    <Metric label="Wind Direction" value={current?.wind_dir || '-'} />
+                    <Metric label="Cloud Cover" value={formatValue(current?.cloud, '%')} />
+                    <Metric label="Condition" value={current?.condition?.text || '-'} />
+                    <Metric label="Last Updated" value={current?.last_updated || '-'} />
+                  </div>
+                </Card>
+              </div>
+
+              <div className="weather-content-grid__side">
+                <AdvisoryCard
+                  icon={<i className="fa-solid fa-cloud-showers-heavy" />}
+                  title={rainGuidance.title}
+                  text={rainGuidance.text}
+                  tone={rainGuidance.tone}
+                />
+                <AdvisoryCard
+                  icon={<i className="fa-solid fa-seedling" />}
+                  title={humidityGuidance.title}
+                  text={humidityGuidance.text}
+                  tone={humidityGuidance.tone}
+                />
+                <AdvisoryCard
+                  icon={<i className="fa-solid fa-wind" />}
+                  title={windGuidance.title}
+                  text={windGuidance.text}
+                  tone={windGuidance.tone}
+                />
+              </div>
             </div>
           </div>
         )}
