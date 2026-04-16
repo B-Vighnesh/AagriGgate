@@ -92,8 +92,10 @@ public class WeatherService {
             String districtName,
             KarnatakaWeatherDistricts.WeatherPoint point,
             Map<String, Object> payload) {
+        Map<String, Object> location = payload == null ? null : mapValue(payload.get("location"));
         Map<String, Object> current = payload == null ? null : (Map<String, Object>) payload.get("current");
         Map<String, Object> condition = current == null ? null : (Map<String, Object>) current.get("condition");
+        Map<String, Object> airQuality = current == null ? null : mapValue(current.get("air_quality"));
 
         WeatherSnapshot snapshot = weatherSnapshotRepository
                 .findByStateNameIgnoreCaseAndDistrictNameIgnoreCase(stateName, districtName)
@@ -101,15 +103,53 @@ public class WeatherService {
 
         snapshot.setStateName(stateName);
         snapshot.setDistrictName(districtName);
-        snapshot.setLatitude(point.lat());
-        snapshot.setLongitude(point.lon());
+        snapshot.setLocationName(stringOrDefault(location, "name", districtName));
+        snapshot.setRegionName(stringOrDefault(location, "region", stateName));
+        snapshot.setCountryName(stringOrDefault(location, "country", "India"));
+        snapshot.setLatitude(numberOrDefault(location, "lat", point.lat()));
+        snapshot.setLongitude(numberOrDefault(location, "lon", point.lon()));
+        snapshot.setTimezoneId(stringValue(location == null ? null : location.get("tz_id")));
+        snapshot.setLocaltimeEpoch(longValue(location, "localtime_epoch"));
+        snapshot.setLocationLocaltime(stringValue(location == null ? null : location.get("localtime")));
+        snapshot.setLastUpdatedEpoch(longValue(current, "last_updated_epoch"));
+        snapshot.setLastUpdated(stringValue(current == null ? null : current.get("last_updated")));
         snapshot.setTemperatureC(numberValue(current, "temp_c"));
+        snapshot.setTemperatureF(numberValue(current, "temp_f"));
+        snapshot.setIsDay(integerValue(current, "is_day"));
         snapshot.setFeelsLikeC(numberValue(current, "feelslike_c"));
+        snapshot.setFeelsLikeF(numberValue(current, "feelslike_f"));
+        snapshot.setWindchillC(numberValue(current, "windchill_c"));
+        snapshot.setWindchillF(numberValue(current, "windchill_f"));
+        snapshot.setHeatindexC(numberValue(current, "heatindex_c"));
+        snapshot.setHeatindexF(numberValue(current, "heatindex_f"));
+        snapshot.setDewpointC(numberValue(current, "dewpoint_c"));
+        snapshot.setDewpointF(numberValue(current, "dewpoint_f"));
+        snapshot.setWindMph(numberValue(current, "wind_mph"));
         snapshot.setWindKph(numberValue(current, "wind_kph"));
+        snapshot.setWindDegree(integerValue(current, "wind_degree"));
+        snapshot.setWindDir(stringValue(current == null ? null : current.get("wind_dir")));
+        snapshot.setPressureMb(numberValue(current, "pressure_mb"));
+        snapshot.setPressureIn(numberValue(current, "pressure_in"));
         snapshot.setPrecipMm(numberValue(current, "precip_mm"));
+        snapshot.setPrecipIn(numberValue(current, "precip_in"));
         snapshot.setHumidity(integerValue(current, "humidity"));
+        snapshot.setCloud(integerValue(current, "cloud"));
+        snapshot.setVisKm(numberValue(current, "vis_km"));
+        snapshot.setVisMiles(numberValue(current, "vis_miles"));
+        snapshot.setUv(numberValue(current, "uv"));
+        snapshot.setGustMph(numberValue(current, "gust_mph"));
+        snapshot.setGustKph(numberValue(current, "gust_kph"));
         snapshot.setConditionText(condition == null ? null : stringValue(condition.get("text")));
         snapshot.setConditionIcon(condition == null ? null : stringValue(condition.get("icon")));
+        snapshot.setConditionCode(integerValue(condition, "code"));
+        snapshot.setAirQualityCo(numberValue(airQuality, "co"));
+        snapshot.setAirQualityNo2(numberValue(airQuality, "no2"));
+        snapshot.setAirQualityO3(numberValue(airQuality, "o3"));
+        snapshot.setAirQualitySo2(numberValue(airQuality, "so2"));
+        snapshot.setAirQualityPm25(numberValue(airQuality, "pm2_5"));
+        snapshot.setAirQualityPm10(numberValue(airQuality, "pm10"));
+        snapshot.setAirQualityUsEpaIndex(integerValue(airQuality, "us-epa-index"));
+        snapshot.setAirQualityGbDefraIndex(integerValue(airQuality, "gb-defra-index"));
         snapshot.setFetchedAt(LocalDateTime.now());
         weatherSnapshotRepository.save(snapshot);
     }
@@ -119,7 +159,7 @@ public class WeatherService {
                 .fromUriString(weatherApiUrl)
                 .queryParam("key", weatherApiKey)
                 .queryParam("q", query)
-                .queryParam("aqi", "no")
+                .queryParam("aqi", "yes")
                 .toUriString();
         logger.info("Calling weather API for query: {}", query);
 
@@ -136,25 +176,61 @@ public class WeatherService {
 
     private Map<String, Object> toWeatherResponse(WeatherSnapshot snapshot) {
         Map<String, Object> location = new LinkedHashMap<>();
-        location.put("name", snapshot.getDistrictName());
-        location.put("region", snapshot.getStateName());
-        location.put("country", "India");
+        location.put("name", snapshot.getLocationName() == null ? snapshot.getDistrictName() : snapshot.getLocationName());
+        location.put("region", snapshot.getRegionName() == null ? snapshot.getStateName() : snapshot.getRegionName());
+        location.put("country", snapshot.getCountryName() == null ? "India" : snapshot.getCountryName());
         location.put("lat", snapshot.getLatitude());
         location.put("lon", snapshot.getLongitude());
-        location.put("localtime", snapshot.getFetchedAt() == null ? null : snapshot.getFetchedAt().toString());
+        location.put("tz_id", snapshot.getTimezoneId());
+        location.put("localtime_epoch", snapshot.getLocaltimeEpoch());
+        location.put("localtime", snapshot.getLocationLocaltime());
 
         Map<String, Object> condition = new LinkedHashMap<>();
         condition.put("text", snapshot.getConditionText());
         condition.put("icon", snapshot.getConditionIcon());
+        condition.put("code", snapshot.getConditionCode());
+
+        Map<String, Object> airQuality = new LinkedHashMap<>();
+        airQuality.put("co", snapshot.getAirQualityCo());
+        airQuality.put("no2", snapshot.getAirQualityNo2());
+        airQuality.put("o3", snapshot.getAirQualityO3());
+        airQuality.put("so2", snapshot.getAirQualitySo2());
+        airQuality.put("pm2_5", snapshot.getAirQualityPm25());
+        airQuality.put("pm10", snapshot.getAirQualityPm10());
+        airQuality.put("us-epa-index", snapshot.getAirQualityUsEpaIndex());
+        airQuality.put("gb-defra-index", snapshot.getAirQualityGbDefraIndex());
 
         Map<String, Object> current = new LinkedHashMap<>();
+        current.put("last_updated_epoch", snapshot.getLastUpdatedEpoch());
+        current.put("last_updated", snapshot.getLastUpdated());
         current.put("temp_c", snapshot.getTemperatureC());
+        current.put("temp_f", snapshot.getTemperatureF());
+        current.put("is_day", snapshot.getIsDay());
         current.put("feelslike_c", snapshot.getFeelsLikeC());
+        current.put("feelslike_f", snapshot.getFeelsLikeF());
+        current.put("windchill_c", snapshot.getWindchillC());
+        current.put("windchill_f", snapshot.getWindchillF());
+        current.put("heatindex_c", snapshot.getHeatindexC());
+        current.put("heatindex_f", snapshot.getHeatindexF());
+        current.put("dewpoint_c", snapshot.getDewpointC());
+        current.put("dewpoint_f", snapshot.getDewpointF());
+        current.put("wind_mph", snapshot.getWindMph());
         current.put("wind_kph", snapshot.getWindKph());
+        current.put("wind_degree", snapshot.getWindDegree());
+        current.put("wind_dir", snapshot.getWindDir());
+        current.put("pressure_mb", snapshot.getPressureMb());
+        current.put("pressure_in", snapshot.getPressureIn());
         current.put("precip_mm", snapshot.getPrecipMm());
+        current.put("precip_in", snapshot.getPrecipIn());
         current.put("humidity", snapshot.getHumidity());
+        current.put("cloud", snapshot.getCloud());
+        current.put("vis_km", snapshot.getVisKm());
+        current.put("vis_miles", snapshot.getVisMiles());
+        current.put("uv", snapshot.getUv());
+        current.put("gust_mph", snapshot.getGustMph());
+        current.put("gust_kph", snapshot.getGustKph());
         current.put("condition", condition);
-        current.put("last_updated", snapshot.getFetchedAt() == null ? null : snapshot.getFetchedAt().toString());
+        current.put("air_quality", airQuality);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("location", location);
@@ -187,6 +263,11 @@ public class WeatherService {
         return null;
     }
 
+    private Double numberOrDefault(Map<String, Object> source, String key, Double fallback) {
+        Double value = numberValue(source, key);
+        return value == null ? fallback : value;
+    }
+
     private Integer integerValue(Map<String, Object> source, String key) {
         if (source == null) {
             return null;
@@ -196,6 +277,30 @@ public class WeatherService {
             return number.intValue();
         }
         return null;
+    }
+
+    private Long longValue(Map<String, Object> source, String key) {
+        if (source == null) {
+            return null;
+        }
+        Object value = source.get(key);
+        if (value instanceof Number number) {
+            return number.longValue();
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> mapValue(Object value) {
+        if (value instanceof Map<?, ?> map) {
+            return (Map<String, Object>) map;
+        }
+        return null;
+    }
+
+    private String stringOrDefault(Map<String, Object> source, String key, String fallback) {
+        String value = stringValue(source == null ? null : source.get(key));
+        return value == null || value.isBlank() ? fallback : value;
     }
 
     private String stringValue(Object value) {
