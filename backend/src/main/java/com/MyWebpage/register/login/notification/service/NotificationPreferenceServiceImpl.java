@@ -54,10 +54,7 @@ public class NotificationPreferenceServiceImpl implements NotificationPreference
                 .orElse(null);
 
         if (deliveryType == MessageDeliveryType.ALERT && (existing == null || existing.getDeliveryType() != MessageDeliveryType.ALERT)) {
-            long alertCount = preferenceRepository.countByUserIdAndDeliveryType(userId, MessageDeliveryType.ALERT);
-            if (alertCount >= MAX_ALERT_CATEGORY_SELECTIONS) {
-                throw new IllegalArgumentException("You can set at most 5 categories as ALERT.");
-            }
+            validateAlertLimit(userId, categoryName, deliveryType);
         }
 
         if (existing == null) {
@@ -68,6 +65,52 @@ public class NotificationPreferenceServiceImpl implements NotificationPreference
         existing.setDeliveryType(deliveryType);
         UserCategoryPreference saved = preferenceRepository.save(existing);
         return toResponse(category, saved);
+    }
+
+    private void validateAlertLimit(Long userId,
+                                    String categoryName,
+                                    MessageDeliveryType newDeliveryType) {
+
+        // Only validate when trying to set ALERT
+        if (newDeliveryType != MessageDeliveryType.ALERT) {
+            return;
+        }
+
+        // 1. Load user preferences → Map
+        Map<String, UserCategoryPreference> storedByCategory =
+                preferenceRepository.findByUserId(userId).stream()
+                        .collect(Collectors.toMap(
+                                pref -> pref.getCategory().getCategoryName(),
+                                Function.identity()
+                        ));
+
+        // 2. Count effective ALERT values (simulate new change)
+        long alertCount = categoryRepository.findAll().stream()
+                .map(category -> {
+
+                    String currentCategoryName = category.getCategoryName();
+
+                    // simulate the update for THIS category
+                    if (currentCategoryName.equalsIgnoreCase(categoryName)) {
+                        return newDeliveryType;
+                    }
+
+                    // existing preference or default
+                    UserCategoryPreference pref = storedByCategory.get(currentCategoryName);
+
+                    return (pref != null)
+                            ? pref.getDeliveryType()
+                            : category.getDefaultDeliveryType();
+                })
+                .filter(type -> type == MessageDeliveryType.ALERT)
+                .count();
+
+        // 3. Validate
+        if (alertCount > MAX_ALERT_CATEGORY_SELECTIONS) {
+            throw new IllegalArgumentException(
+                    "You can set at most " + MAX_ALERT_CATEGORY_SELECTIONS + " categories as ALERT."
+            );
+        }
     }
 
     @Override
