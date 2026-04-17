@@ -176,7 +176,7 @@ export default function Notifications() {
       setLoading(true);
 
       const [notificationsResult, alertsResult, unreadResult] = await Promise.allSettled([
-        getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 30 }),
+        getNotifications({ deliveryType: '', page: 0, size: 30 }),
         getActiveAlerts(),
         countUnread(),
       ]);
