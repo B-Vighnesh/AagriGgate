@@ -25,14 +25,20 @@ import ViewApproach from './components/ViewApproach';
 import ViewApproachByFarmerAndCrop from './components/ViewApproachByFarmerAndCrop';
 import DeleteApproach from './components/DeleteApproach';
 import ViewApproachForUser from './components/ViewApproachForUser';
+import RequestDetails from './components/RequestDetails';
 import Settings from './components/Settings';
 import Enquiry from './components/Enquiry';
 import Error from './components/Error';
+import Chat from './components/Chat';
+import Notifications from './components/Notifications';
+import NotificationPreferencesPage from './components/NotificationPreferencesPage';
 import ValidateToken from './components/ValidateToken';
 import BuyerDetails from './components/BuyerDetails';
 import Favorites from './components/Favorites';
 import Cart from './components/Cart';
 import News from './pages/News';
+import NewsDetails from './components/NewsDetails';
+import MarketDetails from './components/MarketDetails';
 import './index.css';
 
 function ScrollManager() {
@@ -59,12 +65,16 @@ function ScrollManager() {
 
 function AppRoutes() {
   const location = useLocation();
+  const isChatRoute = location.pathname.startsWith('/chat');
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isChatRoute ? 'app-shell--chat' : ''}`.trim()}>
       <ScrollManager />
       <Navbar />
-      <main className="app-main app-main--transition" key={`${location.pathname}${location.hash}`}>
+      <main
+        className={`app-main app-main--transition ${isChatRoute ? 'app-main--chat' : ''}`.trim()}
+        key={`${location.pathname}${location.hash}`}
+      >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/account" element={<Account />} />
@@ -92,9 +102,15 @@ function AppRoutes() {
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/news" element={<News />} />
+            <Route path="/news/:newsId" element={<NewsDetails />} />
             <Route path="/delete-approach/:approachId" element={<DeleteApproach />} />
             <Route path="/view-approaches/farmer/:farmerId/crop/:cropId" element={<ViewApproachByFarmerAndCrop />} />
+            <Route path="/requests/:approachId" element={<RequestDetails />} />
+            <Route path="/market/:marketId" element={<MarketDetails />} />
             <Route path="/enquiry" element={<Enquiry />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/notification-preferences" element={<NotificationPreferencesPage />} />
+            <Route path="/chat/:conversationId?" element={<Chat />} />
             <Route path="/validate-token" element={<ValidateToken />} />
             <Route path="/404" element={<Error />} />
             <Route path="*" element={<Error />} />

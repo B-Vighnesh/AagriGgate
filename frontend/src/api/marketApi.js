@@ -12,6 +12,9 @@ export const getMarketPrice = async ({ crop, state, district, fromDate, toDate, 
   return requestJson(`/market?${params.toString()}`);
 };
 
+export const getMarketById = async (marketId) =>
+  requestJson(`/market/${marketId}`);
+
 export const getMarketPriceTrend = async ({ commodity, state, district, fromDate, toDate }) => {
   const params = new URLSearchParams();
   params.append('commodity', commodity);

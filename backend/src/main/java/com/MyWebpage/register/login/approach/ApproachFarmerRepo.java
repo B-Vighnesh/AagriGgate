@@ -213,4 +213,56 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
             @Param("status") String status,
             Pageable pageable
     );
+
+    @Query("""
+            SELECT new com.MyWebpage.register.login.approach.ApproachRequestDTO(
+                a.approachId,
+                a.cropId,
+                a.cropName,
+                a.farmerId,
+                a.farmerName,
+                a.userId,
+                a.userName,
+                a.requestedQuantity,
+                a.status
+            )
+            FROM ApproachFarmer a
+            WHERE a.approachId = :approachId
+              AND a.farmerId = :farmerId
+              AND a.active = true
+              AND a.deletedAt IS NULL
+              AND EXISTS (SELECT 1 FROM Farmer f WHERE f.farmerId = a.farmerId AND f.active = true)
+              AND EXISTS (SELECT 1 FROM Farmer u WHERE u.farmerId = a.userId AND u.active = true)
+              AND EXISTS (SELECT 1 FROM Crop c WHERE c.cropID = a.cropId AND c.active = true AND c.deletedAt IS NULL AND c.farmer.active = true)
+            """)
+    Optional<ApproachRequestDTO> findRequestViewByFarmerIdAndApproachId(
+            @Param("farmerId") Long farmerId,
+            @Param("approachId") Long approachId
+    );
+
+    @Query("""
+            SELECT new com.MyWebpage.register.login.approach.ApproachRequestDTO(
+                a.approachId,
+                a.cropId,
+                a.cropName,
+                a.farmerId,
+                a.farmerName,
+                a.userId,
+                a.userName,
+                a.requestedQuantity,
+                a.status
+            )
+            FROM ApproachFarmer a
+            WHERE a.approachId = :approachId
+              AND a.userId = :userId
+              AND a.active = true
+              AND a.deletedAt IS NULL
+              AND EXISTS (SELECT 1 FROM Farmer f WHERE f.farmerId = a.farmerId AND f.active = true)
+              AND EXISTS (SELECT 1 FROM Farmer u WHERE u.farmerId = a.userId AND u.active = true)
+              AND EXISTS (SELECT 1 FROM Crop c WHERE c.cropID = a.cropId AND c.active = true AND c.deletedAt IS NULL AND c.farmer.active = true)
+            """)
+    Optional<ApproachRequestDTO> findRequestViewByUserIdAndApproachId(
+            @Param("userId") Long userId,
+            @Param("approachId") Long approachId
+    );
 }

@@ -24,7 +24,8 @@ public class BuyerController {
 
     @GetMapping("/{buyerId}")
     public BuyerResponseDTO getBuyer(@PathVariable Long buyerId) {
-        return buyerService.getProfile(buyerId);
+
+        return buyerService.getProfileForFarmers(buyerId);
     }
 
     @PutMapping("/me")

@@ -1,3 +1,9 @@
+app:
+  flyway:
+    repair-on-validation-error: true
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
+
 spring:
   datasource:
     url: ${DB_URL}

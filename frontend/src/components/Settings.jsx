@@ -263,6 +263,28 @@ export default function Settings() {
               </div>
             </Card>
 
+            <Card className="settings-card settings-card--soft">
+              <div className="settings-card__head">
+                <div>
+                  <h2>Notification Settings</h2>
+                  <p>Review your alert, notification, and off preferences in one dedicated place.</p>
+                </div>
+              </div>
+              <div className="settings-tips-list">
+                <div className="settings-tip-item">
+                  <strong>Set alert priorities</strong>
+                  <span>Choose which categories should remain standard notifications and which should be urgent alerts.</span>
+                </div>
+                <div className="settings-tip-item">
+                  <strong>Understand the 5-alert limit</strong>
+                  <span>Only the most important categories should stay in alert mode.</span>
+                </div>
+              </div>
+              <Button variant="outline" onClick={() => navigate('/notification-preferences')}>
+                Manage Notification Settings
+              </Button>
+            </Card>
+
             <Card className="settings-card danger-card">
               <div className="settings-card__head">
                 <div>

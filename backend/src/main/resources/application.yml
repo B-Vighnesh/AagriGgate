@@ -22,6 +22,7 @@ weather:
   api:
     url: ${WEATHER_API_URL}
     key: ${WEATHER_API_KEY}
+    ingest-on-startup: ${WEATHER_API_INGEST_ON_STARTUP}
 
 market:
   api:
@@ -34,6 +35,7 @@ news:
   api:
     key: ${NEWS_API_KEY}
     gnews-url: ${NEWS_GNEWS_URL}
+    ingest-on-startup: ${NEWS_API_INGEST_ON_STARTUP}
     rss-timeout-seconds: 10
     max-items-per-source: 100
 

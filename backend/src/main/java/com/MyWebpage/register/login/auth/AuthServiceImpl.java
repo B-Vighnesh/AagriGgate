@@ -13,8 +13,8 @@ import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.favorite.FavoriteRepo;
 import com.MyWebpage.register.login.market.saved.SavedMarketRepository;
 import com.MyWebpage.register.login.news.repository.SavedNewsRepository;
-import com.MyWebpage.register.login.notification.repository.NotificationRepository;
-import com.MyWebpage.register.login.notification.repository.UserNotificationPreferenceRepository;
+import com.MyWebpage.register.login.notification.repository.UserCategoryPreferenceRepository;
+import com.MyWebpage.register.login.notification.repository.UserMessageRepository;
 import com.MyWebpage.register.login.security.jwt.JWTService;
 import com.MyWebpage.register.login.common.EmailService;
 import com.MyWebpage.register.login.otp.OtpPurpose;
@@ -42,8 +42,8 @@ public class AuthServiceImpl implements AuthService {
     private final CartItemRepo cartItemRepo;
     private final FavoriteRepo favoriteRepo;
     private final SavedNewsRepository savedNewsRepository;
-    private final NotificationRepository notificationRepository;
-    private final UserNotificationPreferenceRepository notificationPreferenceRepository;
+    private final UserMessageRepository userMessageRepository;
+    private final UserCategoryPreferenceRepository notificationPreferenceRepository;
     private final SavedMarketRepository savedMarketRepository;
 
     private final PasswordEncoder passwordEncoder;
@@ -217,7 +217,7 @@ public class AuthServiceImpl implements AuthService {
         cartItemRepo.deleteByBuyerId(farmerId);
         favoriteRepo.deleteByBuyerId(farmerId);
         savedNewsRepository.deleteByUserId(farmerId);
-        notificationRepository.deleteByUserId(farmerId);
+        userMessageRepository.deleteByUserId(farmerId);
         notificationPreferenceRepository.deleteByUserId(farmerId);
         savedMarketRepository.deleteByUserId(farmerId);
         approachFarmerService.softDeleteApproach(farmerId, role);

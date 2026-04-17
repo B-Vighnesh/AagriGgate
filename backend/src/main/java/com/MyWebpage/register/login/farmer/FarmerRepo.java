@@ -4,9 +4,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface FarmerRepo extends JpaRepository<Farmer,Long> {
@@ -31,4 +33,13 @@ public interface FarmerRepo extends JpaRepository<Farmer,Long> {
     boolean existsByEmailAndActiveTrue(@Email @NotBlank String email);
 
     Farmer findByUsernameAndActiveTrue(String principal);
+
+    @Query("select f.farmerId from Farmer f where f.active = true")
+    List<Long> findActiveUserIds();
+
+    @Query("select f.farmerId from Farmer f where f.active = true and lower(f.district) = lower(:district)")
+    List<Long> findActiveUserIdsByDistrict(@Param("district") String district);
+
+    @Query("select f.farmerId from Farmer f where f.active = true and lower(f.state) = lower(:state)")
+    List<Long> findActiveUserIdsByState(@Param("state") String state);
 }

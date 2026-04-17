@@ -1,85 +1,131 @@
 package com.MyWebpage.register.login.notification.service;
 
 import com.MyWebpage.register.login.notification.dto.response.NotificationPreferenceResponse;
-import com.MyWebpage.register.login.notification.entity.UserNotificationPreference;
-import com.MyWebpage.register.login.notification.enums.NotificationType;
-import com.MyWebpage.register.login.notification.mapper.NotificationPreferenceMapper;
-import com.MyWebpage.register.login.notification.repository.UserNotificationPreferenceRepository;
+import com.MyWebpage.register.login.notification.entity.NotificationCategory;
+import com.MyWebpage.register.login.notification.entity.UserCategoryPreference;
+import com.MyWebpage.register.login.notification.enums.MessageDeliveryType;
+import com.MyWebpage.register.login.notification.repository.NotificationCategoryRepository;
+import com.MyWebpage.register.login.notification.repository.UserCategoryPreferenceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.EnumMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class NotificationPreferenceServiceImpl implements NotificationPreferenceService {
 
-    private final UserNotificationPreferenceRepository preferenceRepository;
-    private final NotificationPreferenceMapper preferenceMapper;
+    private static final long MAX_ALERT_CATEGORY_SELECTIONS = 5;
+
+    private final NotificationCategoryRepository categoryRepository;
+    private final UserCategoryPreferenceRepository preferenceRepository;
 
     public NotificationPreferenceServiceImpl(
-            UserNotificationPreferenceRepository preferenceRepository,
-            NotificationPreferenceMapper preferenceMapper
+            NotificationCategoryRepository categoryRepository,
+            UserCategoryPreferenceRepository preferenceRepository
     ) {
+        this.categoryRepository = categoryRepository;
         this.preferenceRepository = preferenceRepository;
-        this.preferenceMapper = preferenceMapper;
     }
 
     @Override
-    public boolean isTypeEnabled(Long userId, NotificationType type) {
-        if (type == NotificationType.ADMIN_MESSAGE) {
-            return true;
-        }
-        return preferenceRepository.findByUserIdAndNotificationType(userId, type)
-                .map(UserNotificationPreference::getEnabled)
-                .orElse(true);
-    }
-
-    @Override
+    @Transactional(readOnly = true)
     public List<NotificationPreferenceResponse> getPreferences(Long userId) {
-        Map<NotificationType, UserNotificationPreference> storedByType = new EnumMap<>(NotificationType.class);
-        for (UserNotificationPreference preference : preferenceRepository.findByUserId(userId)) {
-            storedByType.put(preference.getNotificationType(), preference);
-        }
+        Map<String, UserCategoryPreference> storedByCategory = preferenceRepository.findByUserId(userId).stream()
+                .collect(Collectors.toMap(pref -> pref.getCategory().getCategoryName(), Function.identity()));
 
-        return java.util.Arrays.stream(NotificationType.values())
-                .map(type -> {
-                    UserNotificationPreference stored = storedByType.get(type);
-                    NotificationPreferenceResponse response = stored != null
-                            ? preferenceMapper.toResponse(stored)
-                            : preferenceMapper.toDefaultResponse(type);
-                    if (type == NotificationType.ADMIN_MESSAGE) {
-                        response.setEnabled(true);
-                    }
-                    return response;
-                })
+        return categoryRepository.findAll().stream()
+                .sorted(Comparator.comparing(NotificationCategory::getCategoryName))
+                .map(category -> toResponse(category, storedByCategory.get(category.getCategoryName())))
                 .toList();
     }
 
     @Override
     @Transactional
-    public NotificationPreferenceResponse setPreference(Long userId, NotificationType type, boolean enabled) {
-        if (type == NotificationType.ADMIN_MESSAGE && !enabled) {
-            throw new IllegalArgumentException("Admin messages cannot be disabled");
+    public NotificationPreferenceResponse setPreference(Long userId, String categoryName, MessageDeliveryType deliveryType) {
+        NotificationCategory category = categoryRepository.findByCategoryNameIgnoreCase(categoryName)
+                .orElseThrow(() -> new IllegalArgumentException("Notification category not found: " + categoryName));
+
+        UserCategoryPreference existing = preferenceRepository
+                .findByUserIdAndCategory_CategoryNameIgnoreCase(userId, category.getCategoryName())
+                .orElse(null);
+
+        if (deliveryType == MessageDeliveryType.ALERT && (existing == null || existing.getDeliveryType() != MessageDeliveryType.ALERT)) {
+            validateAlertLimit(userId, categoryName, deliveryType);
         }
 
-        UserNotificationPreference preference = preferenceRepository.findByUserIdAndNotificationType(userId, type)
-                .orElseGet(() -> {
-                    UserNotificationPreference created = new UserNotificationPreference();
-                    created.setUserId(userId);
-                    created.setNotificationType(type);
-                    return created;
-                });
+        if (existing == null) {
+            existing = new UserCategoryPreference();
+            existing.setUserId(userId);
+            existing.setCategory(category);
+        }
+        existing.setDeliveryType(deliveryType);
+        UserCategoryPreference saved = preferenceRepository.save(existing);
+        return toResponse(category, saved);
+    }
 
-        preference.setEnabled(enabled || type == NotificationType.ADMIN_MESSAGE);
-        UserNotificationPreference saved = preferenceRepository.save(preference);
-        return preferenceMapper.toResponse(saved);
+    private void validateAlertLimit(Long userId,
+                                    String categoryName,
+                                    MessageDeliveryType newDeliveryType) {
+
+        // Only validate when trying to set ALERT
+        if (newDeliveryType != MessageDeliveryType.ALERT) {
+            return;
+        }
+
+        // 1. Load user preferences → Map
+        Map<String, UserCategoryPreference> storedByCategory =
+                preferenceRepository.findByUserId(userId).stream()
+                        .collect(Collectors.toMap(
+                                pref -> pref.getCategory().getCategoryName(),
+                                Function.identity()
+                        ));
+
+        // 2. Count effective ALERT values (simulate new change)
+        long alertCount = categoryRepository.findAll().stream()
+                .map(category -> {
+
+                    String currentCategoryName = category.getCategoryName();
+
+                    // simulate the update for THIS category
+                    if (currentCategoryName.equalsIgnoreCase(categoryName)) {
+                        return newDeliveryType;
+                    }
+
+                    // existing preference or default
+                    UserCategoryPreference pref = storedByCategory.get(currentCategoryName);
+
+                    return (pref != null)
+                            ? pref.getDeliveryType()
+                            : category.getDefaultDeliveryType();
+                })
+                .filter(type -> type == MessageDeliveryType.ALERT)
+                .count();
+
+        // 3. Validate
+        if (alertCount > MAX_ALERT_CATEGORY_SELECTIONS) {
+            throw new IllegalArgumentException(
+                    "You can set at most " + MAX_ALERT_CATEGORY_SELECTIONS + " categories as ALERT."
+            );
+        }
     }
 
     @Override
     @Transactional
     public void resetToDefaults(Long userId) {
         preferenceRepository.deleteByUserId(userId);
+    }
+
+    private NotificationPreferenceResponse toResponse(NotificationCategory category, UserCategoryPreference preference) {
+        NotificationPreferenceResponse response = new NotificationPreferenceResponse();
+        response.setCategoryName(category.getCategoryName());
+        response.setDescription(category.getDescription());
+        response.setDefaultDeliveryType(category.getDefaultDeliveryType().name());
+        response.setEffectiveDeliveryType(preference == null ? category.getDefaultDeliveryType().name() : preference.getDeliveryType().name());
+        response.setUserSelectedDeliveryType(preference == null ? null : preference.getDeliveryType().name());
+        return response;
     }
 }

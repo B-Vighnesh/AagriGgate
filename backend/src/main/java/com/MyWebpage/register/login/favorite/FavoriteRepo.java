@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface FavoriteRepo extends JpaRepository<Favorite, Long> {
     boolean existsByBuyerIdAndCropId(Long buyerId, Long cropId);
@@ -101,4 +102,14 @@ public interface FavoriteRepo extends JpaRepository<Favorite, Long> {
             )
             """)
     int deleteByFarmerCropOwnerId(@Param("farmerId") Long farmerId);
+
+    @Query("""
+            SELECT DISTINCT f.buyerId
+            FROM Favorite f
+            JOIN Crop c ON c.cropID = f.cropId
+            WHERE c.active = true
+              AND c.deletedAt IS NULL
+              AND lower(c.cropName) = lower(:cropName)
+            """)
+    List<Long> findDistinctBuyerIdsByCropName(@Param("cropName") String cropName);
 }

@@ -138,6 +138,17 @@ public class NewsIngestionScheduler {
     @EventListener(ApplicationReadyEvent.class)
     public void onStartup() {
         registerCanonicalSources();
+        if (!newsApiProperties.isIngestOnStartup()) {
+            log.info("news.startup.ingestion.skipped", keyValue("event", "startup_ingestion_skipped"));
+            return;
+        }
+        if (!newsApiProperties.isSchedulerEnabled()) {
+            log.info("news.startup.ingestion.scheduler_disabled", keyValue("event", "startup_ingestion_scheduler_disabled"));
+            return;
+        }
+        log.info("news.startup.ingestion.started", keyValue("event", "startup_ingestion_started"));
+        fetchAllSources();
+        log.info("news.startup.ingestion.completed", keyValue("event", "startup_ingestion_completed"));
     }
 
     @Scheduled(cron = "${news.api.scheduler-cron}")
@@ -203,7 +214,6 @@ public class NewsIngestionScheduler {
             int dedupedCount = 0;
 
             for (NewsRequest item : fetchedItems) {
-                System.out.println("Hellooooooooo"+item);
                 String sourceUrl = normalize(item.getSourceUrl());
                 String title = normalize(item.getTitle());
                 if (sourceUrl == null || title == null) {
