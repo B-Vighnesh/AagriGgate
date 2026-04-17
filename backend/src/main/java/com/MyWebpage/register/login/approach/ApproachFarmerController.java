@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1/seller/approach")
@@ -62,6 +63,20 @@ public class ApproachFarmerController {
         try {
             Long farmerId = Long.parseLong(authentication.getName());
             return ResponseEntity.ok(approachFarmerService.getRequestsByFarmerId(farmerId, status, page, size));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/requests/{approachId}")
+    public ResponseEntity<ApproachRequestDTO> getRequestByFarmerId(
+            @PathVariable Long approachId,
+            Authentication authentication) {
+        try {
+            Long farmerId = Long.parseLong(authentication.getName());
+            return ResponseEntity.ok(approachFarmerService.getRequestByFarmerId(farmerId, approachId));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

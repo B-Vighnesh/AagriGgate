@@ -2,11 +2,13 @@ package com.MyWebpage.register.login.market.mandi;
 
 import com.MyWebpage.register.login.news.util.NewsTime;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -89,5 +91,11 @@ public class MarketQueryService {
                 resultPage.getTotalPages(),
                 resultPage.hasNext()
         );
+    }
+
+    public MarketResultResponse getById(Long marketId) {
+        return marketRepository.findById(marketId)
+                .map(MarketResultResponse::from)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Market record not found."));
     }
 }

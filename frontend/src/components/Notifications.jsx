@@ -31,14 +31,17 @@ function formatTimestamp(value) {
 }
 
 function resolveRoute(notification, role) {
-  if (notification?.redirectUrl) return notification.redirectUrl;
-  if (notification?.referenceType === 'NEWS') return '/news';
+  const referenceId = notification?.referenceId;
+  if (notification?.referenceType === 'CROP' && referenceId) return `/view-details/${referenceId}`;
+  if (notification?.referenceType === 'NEWS' && referenceId) return `/news/${referenceId}`;
   if (notification?.referenceType === 'REQUEST') {
-    return role === 'farmer' ? '/view-approach' : '/view-approaches-user';
+    return referenceId ? `/requests/${referenceId}` : (role === 'farmer' ? '/view-approach' : '/view-approaches-user');
   }
-  if (notification?.referenceType === 'MARKET') return '/market';
+  if (notification?.referenceType === 'MARKET' && referenceId) return `/market/${referenceId}`;
+  if (notification?.referenceType === 'CHAT' && referenceId) return `/chat/${referenceId}`;
   if (notification?.referenceType === 'WEATHER') return '/weather';
   if (notification?.referenceType === 'ADMIN') return '/account';
+  if (notification?.referenceType === 'USER') return '/account';
   return null;
 }
 
@@ -75,9 +78,9 @@ function NotificationItem({ notification, isRead, onRead }) {
   );
 }
 
-function AlertItem({ alert, onAcknowledge, onNavigate }) {
+function AlertItem({ alert, onOpen }) {
   return (
-    <article className="ntf-alert">
+    <button type="button" className="ntf-alert" onClick={() => onOpen(alert)}>
       <div className="ntf-alert__body">
         <div className="ntf-alert__title-row">
           <strong className="ntf-alert__title">{alert.title}</strong>
@@ -96,17 +99,10 @@ function AlertItem({ alert, onAcknowledge, onNavigate }) {
           {formatTimestamp(alert.createdAt)}
         </time>
       </div>
-      <div className="ntf-alert__actions">
-        {onNavigate ? (
-          <button type="button" className="ntf-alert__btn ntf-alert__btn--ghost" onClick={onNavigate}>
-            View
-          </button>
-        ) : null}
-        <button type="button" className="ntf-alert__btn" onClick={() => onAcknowledge(alert)}>
-          Acknowledge
-        </button>
+      <div className="ntf-alert__actions" aria-hidden="true">
+        <span className="ntf-alert__btn ntf-alert__btn--ghost">Open</span>
       </div>
-    </article>
+    </button>
   );
 }
 
@@ -176,7 +172,7 @@ export default function Notifications() {
       setLoading(true);
 
       const [notificationsResult, alertsResult, unreadResult] = await Promise.allSettled([
-        getNotifications({ deliveryType: '', page: 0, size: 30 }),
+        getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 30 }),
         getActiveAlerts(),
         countUnread(),
       ]);
@@ -269,14 +265,18 @@ export default function Notifications() {
   }, [notifications, showToast]);
 
   const handleAlertAck = useCallback(async (alert) => {
+    const target = resolveRoute(alert, role);
     try {
       await acknowledgeAlert(alert.id);
       setAlerts((prev) => prev.filter((entry) => entry.id !== alert.id));
       showToast('Alert acknowledged.', 'success');
+      if (target) {
+        navigate(target);
+      }
     } catch (err) {
       showToast(err.message || 'Failed to acknowledge alert.', 'error');
     }
-  }, [showToast]);
+  }, [navigate, role, showToast]);
 
   const isNotificationRead = useCallback((notification) => (
     readIds.has(notification.id) || notification.isRead === true
@@ -347,8 +347,7 @@ export default function Notifications() {
                         <AlertItem
                           key={alert.id}
                           alert={alert}
-                          onAcknowledge={handleAlertAck}
-                          onNavigate={resolveRoute(alert, role) ? () => navigate(resolveRoute(alert, role)) : undefined}
+                          onOpen={handleAlertAck}
                         />
                       ))}
                     </div>
