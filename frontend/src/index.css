@@ -64,7 +64,7 @@ a {
 }
 
 .ag-container {
-  width: min(1440px, 95%);
+  width: 98%;
   margin: 0 auto;
 }
 
@@ -4933,7 +4933,7 @@ a {
 }
 
 .enquiry-card {
-  width: min(1040px, 96%);
+  width: 100%;
 }
 
 .enquiry-card h1 {
