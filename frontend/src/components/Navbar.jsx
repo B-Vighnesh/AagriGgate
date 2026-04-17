@@ -362,14 +362,7 @@ export default function Navbar() {
                     <i className="fa-solid fa-gear" aria-hidden="true" />
                     <span>Account Settings</span>
                   </Link>
-                  <Link
-                    to="/notifications"
-                    className={`profile-menu__item ${isActive('/notifications') ? 'profile-menu__item--active' : ''}`}
-                    onClick={() => setProfileMenuOpen(false)}
-                  >
-                    <i className="fa-regular fa-bell" aria-hidden="true" />
-                    <span>Notifications</span>
-                  </Link>
+                  
                   <Link
                     to="/enquiry"
                     className={`profile-menu__item ${isActive('/enquiry') ? 'profile-menu__item--active' : ''}`}
