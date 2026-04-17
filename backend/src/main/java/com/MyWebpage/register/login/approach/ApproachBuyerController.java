@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1/buyer/approach")
@@ -64,6 +65,21 @@ public class ApproachBuyerController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @GetMapping("/requests/{approachId}")
+    public ResponseEntity<ApproachRequestDTO> getRequestByUserId(
+            @PathVariable Long approachId,
+            Authentication authentication) {
+        try {
+            Long userId = Long.parseLong(authentication.getName());
+            return ResponseEntity.ok(approachFarmerService.getRequestByUserId(userId, approachId));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @GetMapping("/requests/me/{cropId}")
     public ResponseEntity<Boolean> isApproachAccepted(
             @PathVariable Long cropId,

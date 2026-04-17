@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -159,6 +160,18 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                 normalizeStatus(status),
                 buildPageRequest(page, size)
         );
+    }
+
+    @Override
+    public ApproachRequestDTO getRequestByFarmerId(Long farmerId, Long approachId) {
+        return approachFarmerRepository.findRequestViewByFarmerIdAndApproachId(farmerId, approachId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found."));
+    }
+
+    @Override
+    public ApproachRequestDTO getRequestByUserId(Long userId, Long approachId) {
+        return approachFarmerRepository.findRequestViewByUserIdAndApproachId(userId, approachId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found."));
     }
 
     @Override

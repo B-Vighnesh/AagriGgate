@@ -1,6 +1,7 @@
 package com.MyWebpage.register.login.market.mandi;
 
 import com.MyWebpage.register.login.common.ApiResponse;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -58,5 +59,10 @@ public class MarketController {
                         priceMax
                 ), page, size)
         );
+    }
+
+    @GetMapping("/{id}")
+    public ApiResponse<MarketResultResponse> getMarketById(@PathVariable Long id) {
+        return ApiResponse.success("Market record fetched", marketQueryService.getById(id));
     }
 }

@@ -25,6 +25,7 @@ import ViewApproach from './components/ViewApproach';
 import ViewApproachByFarmerAndCrop from './components/ViewApproachByFarmerAndCrop';
 import DeleteApproach from './components/DeleteApproach';
 import ViewApproachForUser from './components/ViewApproachForUser';
+import RequestDetails from './components/RequestDetails';
 import Settings from './components/Settings';
 import Enquiry from './components/Enquiry';
 import Error from './components/Error';
@@ -36,6 +37,8 @@ import BuyerDetails from './components/BuyerDetails';
 import Favorites from './components/Favorites';
 import Cart from './components/Cart';
 import News from './pages/News';
+import NewsDetails from './components/NewsDetails';
+import MarketDetails from './components/MarketDetails';
 import './index.css';
 
 function ScrollManager() {
@@ -99,8 +102,11 @@ function AppRoutes() {
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/news" element={<News />} />
+            <Route path="/news/:newsId" element={<NewsDetails />} />
             <Route path="/delete-approach/:approachId" element={<DeleteApproach />} />
             <Route path="/view-approaches/farmer/:farmerId/crop/:cropId" element={<ViewApproachByFarmerAndCrop />} />
+            <Route path="/requests/:approachId" element={<RequestDetails />} />
+            <Route path="/market/:marketId" element={<MarketDetails />} />
             <Route path="/enquiry" element={<Enquiry />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/notification-preferences" element={<NotificationPreferencesPage />} />
