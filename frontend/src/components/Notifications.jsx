@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import '../assets/Notifications.css';
-import NotificationPreferences from './NotificationPreferences';
 import Toast from './common/Toast';
 import { getRole, isLoggedIn } from '../lib/auth';
 import {
@@ -44,19 +43,14 @@ function resolveRoute(notification, role) {
 }
 
 function NotificationItem({ notification, isRead, onRead }) {
-  const handleClick = () => {
-    if (!isRead) onRead(notification);
-    else onRead(notification, true);
-  };
-
   return (
     <button
       type="button"
       className={`ntf-item ${isRead ? 'ntf-item--read' : 'ntf-item--unread'}`}
-      onClick={handleClick}
+      onClick={() => onRead(notification, isRead)}
       aria-label={`${isRead ? '' : 'Unread: '}${notification.title}`}
     >
-      {!isRead && <span className="ntf-item__dot" aria-hidden="true" />}
+      {!isRead ? <span className="ntf-item__dot" aria-hidden="true" /> : null}
       <div className="ntf-item__body">
         <div className="ntf-item__title-row">
           <span className={`ntf-item__title ${isRead ? '' : 'ntf-item__title--bold'}`}>
@@ -180,30 +174,50 @@ export default function Notifications() {
 
     (async () => {
       setLoading(true);
-      try {
-        const [page, activeAlerts, unread] = await Promise.all([
-          getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 30 }),
-          getActiveAlerts(),
-          countUnread(),
-        ]);
 
-        if (active) {
-          const unreadValue = Number(unread?.count ?? 0);
-          setNotifications(Array.isArray(page?.content) ? page.content : []);
-          setAlerts(Array.isArray(activeAlerts) ? activeAlerts : []);
-          setUnreadCount(unreadValue);
-          syncNotificationCount(unreadValue);
-        }
-      } catch (err) {
-        if (active) showToast(err.message || 'Failed to load notifications.', 'error');
-      } finally {
-        if (active) setLoading(false);
-        loadingRef.current = false;
+      const [notificationsResult, alertsResult, unreadResult] = await Promise.allSettled([
+        getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 30 }),
+        getActiveAlerts(),
+        countUnread(),
+      ]);
+
+      if (!active) return;
+
+      if (notificationsResult.status === 'fulfilled') {
+        const page = notificationsResult.value;
+        const items = Array.isArray(page?.content) ? page.content : Array.isArray(page) ? page : [];
+        setNotifications(items);
+      } else {
+        setNotifications([]);
+        showToast(notificationsResult.reason?.message || 'Failed to load notifications.', 'error');
       }
+
+      if (alertsResult.status === 'fulfilled') {
+        setAlerts(Array.isArray(alertsResult.value) ? alertsResult.value : []);
+      } else {
+        setAlerts([]);
+      }
+
+      if (unreadResult.status === 'fulfilled') {
+        const nextUnread = Number(unreadResult.value?.count ?? 0);
+        setUnreadCount(nextUnread);
+        syncNotificationCount(nextUnread);
+      } else {
+        const fallbackUnread = (notificationsResult.status === 'fulfilled'
+          ? (Array.isArray(notificationsResult.value?.content) ? notificationsResult.value.content : [])
+          : []
+        ).filter((item) => item?.isRead !== true).length;
+        setUnreadCount(fallbackUnread);
+        syncNotificationCount(fallbackUnread);
+      }
+
+      setLoading(false);
+      loadingRef.current = false;
     })();
 
     return () => {
       active = false;
+      loadingRef.current = false;
     };
   }, [loggedIn, showToast]);
 
@@ -305,14 +319,15 @@ export default function Notifications() {
               >
                 Mark all read
               </button>
-              <a
-                href="#notification-preferences"
+              <button
+                type="button"
                 className="ntf-panel__action ntf-panel__action--prefs"
-                aria-label="Jump to notification settings"
+                onClick={() => navigate('/notification-preferences')}
+                aria-label="Open notification preferences"
               >
                 <i className="fa-solid fa-gear" aria-hidden="true" />
-                <span>Settings</span>
-              </a>
+                <span>Preferences</span>
+              </button>
             </div>
           </header>
 
@@ -363,10 +378,6 @@ export default function Notifications() {
               </>
             ) : null}
           </div>
-        </section>
-
-        <section className="ntf-preferences-panel">
-          <NotificationPreferences onToast={showToast} />
         </section>
       </div>
       <Toast message={toast.message} type={toast.type} />

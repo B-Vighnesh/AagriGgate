@@ -280,7 +280,7 @@ export default function Settings() {
                   <span>Only the most important categories should stay in alert mode.</span>
                 </div>
               </div>
-              <Button variant="outline" onClick={() => navigate('/notifications#notification-preferences')}>
+              <Button variant="outline" onClick={() => navigate('/notification-preferences')}>
                 Manage Notification Settings
               </Button>
             </Card>

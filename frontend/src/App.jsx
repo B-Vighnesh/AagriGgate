@@ -30,6 +30,7 @@ import Enquiry from './components/Enquiry';
 import Error from './components/Error';
 import Chat from './components/Chat';
 import Notifications from './components/Notifications';
+import NotificationPreferencesPage from './components/NotificationPreferencesPage';
 import ValidateToken from './components/ValidateToken';
 import BuyerDetails from './components/BuyerDetails';
 import Favorites from './components/Favorites';
@@ -102,6 +103,7 @@ function AppRoutes() {
             <Route path="/view-approaches/farmer/:farmerId/crop/:cropId" element={<ViewApproachByFarmerAndCrop />} />
             <Route path="/enquiry" element={<Enquiry />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/notification-preferences" element={<NotificationPreferencesPage />} />
             <Route path="/chat/:conversationId?" element={<Chat />} />
             <Route path="/validate-token" element={<ValidateToken />} />
             <Route path="/404" element={<Error />} />
