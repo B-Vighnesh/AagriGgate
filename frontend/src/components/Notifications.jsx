@@ -14,38 +14,39 @@ import {
   markAsRead,
 } from '../lib/notificationApi';
 
-/* ── helpers ─────────────────────────────────────────────── */
-
 const TIME_FORMATTER = new Intl.DateTimeFormat('en-GB', {
   day: '2-digit',
   month: 'short',
   year: 'numeric',
 });
 
+const syncNotificationCount = (count) => {
+  window.dispatchEvent(new CustomEvent('notifications:count-updated', { detail: { count } }));
+};
+
 function formatTimestamp(value) {
   if (!value) return '';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  return TIME_FORMATTER.format(d);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return TIME_FORMATTER.format(date);
 }
 
 function resolveRoute(notification, role) {
   if (notification?.redirectUrl) return notification.redirectUrl;
   if (notification?.referenceType === 'NEWS') return '/news';
-  if (notification?.referenceType === 'REQUEST')
+  if (notification?.referenceType === 'REQUEST') {
     return role === 'farmer' ? '/view-approach' : '/view-approaches-user';
+  }
   if (notification?.referenceType === 'MARKET') return '/market';
   if (notification?.referenceType === 'WEATHER') return '/weather';
   if (notification?.referenceType === 'ADMIN') return '/account';
   return null;
 }
 
-/* ── sub-components ──────────────────────────────────────── */
-
 function NotificationItem({ notification, isRead, onRead }) {
   const handleClick = () => {
     if (!isRead) onRead(notification);
-    else onRead(notification, true); // already read — navigate only
+    else onRead(notification, true);
   };
 
   return (
@@ -57,10 +58,21 @@ function NotificationItem({ notification, isRead, onRead }) {
     >
       {!isRead && <span className="ntf-item__dot" aria-hidden="true" />}
       <div className="ntf-item__body">
-        <span className={`ntf-item__title ${isRead ? '' : 'ntf-item__title--bold'}`}>
-          {notification.title}
-        </span>
+        <div className="ntf-item__title-row">
+          <span className={`ntf-item__title ${isRead ? '' : 'ntf-item__title--bold'}`}>
+            {notification.title}
+          </span>
+          {notification.severity ? (
+            <span className={`ntf-item__pill ntf-item__pill--${String(notification.severity).toLowerCase()}`}>
+              {notification.severity}
+            </span>
+          ) : null}
+        </div>
         <p className="ntf-item__message">{notification.message}</p>
+        <div className="ntf-item__meta">
+          <span className="ntf-item__type">{notification.deliveryType || 'NOTIFICATION'}</span>
+          {notification.categoryName ? <span>{notification.categoryName}</span> : null}
+        </div>
       </div>
       <time className="ntf-item__time" dateTime={notification.createdAt}>
         {formatTimestamp(notification.createdAt)}
@@ -73,18 +85,29 @@ function AlertItem({ alert, onAcknowledge, onNavigate }) {
   return (
     <article className="ntf-alert">
       <div className="ntf-alert__body">
-        <strong className="ntf-alert__title">{alert.title}</strong>
+        <div className="ntf-alert__title-row">
+          <strong className="ntf-alert__title">{alert.title}</strong>
+          {alert.severity ? (
+            <span className={`ntf-alert__pill ntf-alert__pill--${String(alert.severity).toLowerCase()}`}>
+              {alert.severity}
+            </span>
+          ) : null}
+        </div>
         <p className="ntf-alert__message">{alert.message}</p>
+        <div className="ntf-alert__meta">
+          <span>{alert.deliveryType || 'ALERT'}</span>
+          {alert.categoryName ? <span>{alert.categoryName}</span> : null}
+        </div>
         <time className="ntf-alert__time" dateTime={alert.createdAt}>
           {formatTimestamp(alert.createdAt)}
         </time>
       </div>
       <div className="ntf-alert__actions">
-        {onNavigate && (
+        {onNavigate ? (
           <button type="button" className="ntf-alert__btn ntf-alert__btn--ghost" onClick={onNavigate}>
             View
           </button>
-        )}
+        ) : null}
         <button type="button" className="ntf-alert__btn" onClick={() => onAcknowledge(alert)}>
           Acknowledge
         </button>
@@ -100,7 +123,7 @@ function EmptyState() {
         <i className="fa-regular fa-bell-slash" />
       </div>
       <strong>Nothing new right now</strong>
-      <p>Your notifications will appear here when there's something important.</p>
+      <p>Your notifications will appear here when there&apos;s something important.</p>
     </div>
   );
 }
@@ -108,8 +131,8 @@ function EmptyState() {
 function SkeletonLoader() {
   return (
     <div className="ntf-skeleton" aria-busy="true" aria-label="Loading notifications">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="ntf-skeleton__row">
+      {[1, 2, 3, 4].map((item) => (
+        <div key={item} className="ntf-skeleton__row">
           <div className="ntf-skeleton__dot" />
           <div className="ntf-skeleton__lines">
             <div className="ntf-skeleton__line ntf-skeleton__line--short" />
@@ -121,8 +144,6 @@ function SkeletonLoader() {
     </div>
   );
 }
-
-/* ── main component ──────────────────────────────────────── */
 
 export default function Notifications() {
   const navigate = useNavigate();
@@ -144,13 +165,13 @@ export default function Notifications() {
     window.setTimeout(() => setToast({ message: '', type: 'info' }), 2400);
   }, []);
 
-  /* load data */
   useEffect(() => {
     if (!loggedIn) {
       setNotifications([]);
       setAlerts([]);
       setUnreadCount(0);
       setLoading(false);
+      syncNotificationCount(0);
       return undefined;
     }
 
@@ -166,10 +187,13 @@ export default function Notifications() {
           getActiveAlerts(),
           countUnread(),
         ]);
+
         if (active) {
+          const unreadValue = Number(unread?.count ?? 0);
           setNotifications(Array.isArray(page?.content) ? page.content : []);
           setAlerts(Array.isArray(activeAlerts) ? activeAlerts : []);
-          setUnreadCount(Number(unread?.count ?? 0));
+          setUnreadCount(unreadValue);
+          syncNotificationCount(unreadValue);
         }
       } catch (err) {
         if (active) showToast(err.message || 'Failed to load notifications.', 'error');
@@ -179,78 +203,76 @@ export default function Notifications() {
       }
     })();
 
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [loggedIn, showToast]);
 
-  /* mark as read on click */
-  const handleNotificationRead = useCallback(
-    async (notification, alreadyRead = false) => {
-      if (!alreadyRead) {
-        // Optimistic UI update
-        setReadIds((prev) => new Set(prev).add(notification.id));
-        setUnreadCount((prev) => Math.max(prev - 1, 0));
+  const handleNotificationRead = useCallback(async (notification, alreadyRead = false) => {
+    if (!alreadyRead) {
+      setReadIds((prev) => new Set(prev).add(notification.id));
+      setUnreadCount((prev) => {
+        const next = Math.max(prev - 1, 0);
+        syncNotificationCount(next);
+        return next;
+      });
 
-        try {
-          await markAsRead(notification.id);
-        } catch (err) {
-          // Revert on failure
-          setReadIds((prev) => {
-            const next = new Set(prev);
-            next.delete(notification.id);
-            return next;
-          });
-          setUnreadCount((prev) => prev + 1);
-          showToast(err.message || 'Failed to mark as read.', 'error');
-          return;
-        }
+      try {
+        await markAsRead(notification.id);
+      } catch (err) {
+        setReadIds((prev) => {
+          const next = new Set(prev);
+          next.delete(notification.id);
+          return next;
+        });
+        setUnreadCount((prev) => {
+          const next = prev + 1;
+          syncNotificationCount(next);
+          return next;
+        });
+        showToast(err.message || 'Failed to mark as read.', 'error');
+        return;
       }
+    }
 
-      const target = resolveRoute(notification, role);
-      if (target) navigate(target);
-    },
-    [role, navigate, showToast],
-  );
+    const target = resolveRoute(notification, role);
+    if (target) navigate(target);
+  }, [navigate, role, showToast]);
 
-  /* mark all read */
   const handleMarkAllRead = useCallback(async () => {
     try {
       await markAllAsRead();
       setReadIds((prev) => {
         const next = new Set(prev);
-        notifications.forEach((n) => next.add(n.id));
+        notifications.forEach((notification) => next.add(notification.id));
         return next;
       });
       setUnreadCount(0);
+      syncNotificationCount(0);
       showToast('All notifications marked as read.', 'success');
     } catch (err) {
       showToast(err.message || 'Failed to mark all as read.', 'error');
     }
   }, [notifications, showToast]);
 
-  /* acknowledge alert */
-  const handleAlertAck = useCallback(
-    async (alert) => {
-      try {
-        await acknowledgeAlert(alert.id);
-        setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
-        showToast('Alert acknowledged.', 'success');
-      } catch (err) {
-        showToast(err.message || 'Failed to acknowledge alert.', 'error');
-      }
-    },
-    [showToast],
-  );
+  const handleAlertAck = useCallback(async (alert) => {
+    try {
+      await acknowledgeAlert(alert.id);
+      setAlerts((prev) => prev.filter((entry) => entry.id !== alert.id));
+      showToast('Alert acknowledged.', 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to acknowledge alert.', 'error');
+    }
+  }, [showToast]);
 
-  /* derived */
-  const isNotificationRead = useCallback(
-    (n) => readIds.has(n.id) || n.read === true,
-    [readIds],
-  );
+  const isNotificationRead = useCallback((notification) => (
+    readIds.has(notification.id) || notification.isRead === true
+  ), [readIds]);
 
   const unreadDisplay = useMemo(() => {
-    const count = notifications.filter((n) => !isNotificationRead(n)).length;
+    const count = notifications.filter((notification) => !isNotificationRead(notification)).length;
     return Math.max(count, unreadCount);
-  }, [notifications, unreadCount, isNotificationRead]);
+  }, [isNotificationRead, notifications, unreadCount]);
 
   if (!loggedIn) {
     return (
@@ -265,17 +287,15 @@ export default function Notifications() {
   return (
     <div className="ntf-page page">
       <div className="ntf-layout ag-container">
-        {/* ── sidebar / main panel ── */}
         <section className="ntf-panel" aria-label="Notifications">
-          {/* header */}
           <header className="ntf-panel__header">
             <div className="ntf-panel__title-group">
               <h1 className="ntf-panel__title">Notifications</h1>
-              {unreadDisplay > 0 && (
+              {unreadDisplay > 0 ? (
                 <span className="ntf-panel__badge" aria-label={`${unreadDisplay} unread`}>
                   {unreadDisplay}
                 </span>
-              )}
+              ) : null}
             </div>
             <div className="ntf-panel__actions">
               <button
@@ -298,14 +318,12 @@ export default function Notifications() {
             </div>
           </header>
 
-          {/* body */}
           <div className="ntf-panel__body">
-            {loading && <SkeletonLoader />}
+            {loading ? <SkeletonLoader /> : null}
 
-            {!loading && (
+            {!loading ? (
               <>
-                {/* alerts section */}
-                {alerts.length > 0 && (
+                {alerts.length > 0 ? (
                   <section className="ntf-section" aria-label="Active alerts">
                     <div className="ntf-section__head">
                       <strong>Active Alerts</strong>
@@ -317,46 +335,39 @@ export default function Notifications() {
                           key={alert.id}
                           alert={alert}
                           onAcknowledge={handleAlertAck}
-                          onNavigate={
-                            resolveRoute(alert, role)
-                              ? () => navigate(resolveRoute(alert, role))
-                              : undefined
-                          }
+                          onNavigate={resolveRoute(alert, role) ? () => navigate(resolveRoute(alert, role)) : undefined}
                         />
                       ))}
                     </div>
                   </section>
-                )}
+                ) : null}
 
-                {/* notifications list */}
-                {notifications.length > 0 && (
+                {notifications.length > 0 ? (
                   <section className="ntf-section" aria-label="Recent notifications">
                     <div className="ntf-section__head">
                       <strong>Recent</strong>
                       <span className="ntf-section__count">{notifications.length}</span>
                     </div>
                     <div className="ntf-section__list">
-                      {notifications.map((n) => (
+                      {notifications.map((notification) => (
                         <NotificationItem
-                          key={n.id}
-                          notification={n}
-                          isRead={isNotificationRead(n)}
+                          key={notification.id}
+                          notification={notification}
+                          isRead={isNotificationRead(notification)}
                           onRead={handleNotificationRead}
                         />
                       ))}
                     </div>
                   </section>
-                )}
+                ) : null}
 
-                {/* empty */}
-                {alerts.length === 0 && notifications.length === 0 && <EmptyState />}
+                {alerts.length === 0 && notifications.length === 0 ? <EmptyState /> : null}
               </>
-            )}
+            ) : null}
           </div>
         </section>
       </div>
 
-      {/* preferences overlay */}
       <NotificationPreferences
         open={prefsOpen}
         onClose={() => setPrefsOpen(false)}

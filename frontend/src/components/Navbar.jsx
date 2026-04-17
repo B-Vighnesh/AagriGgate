@@ -123,9 +123,14 @@ export default function Navbar() {
 
     loadUnreadCount();
     const interval = window.setInterval(loadUnreadCount, 60000);
+    const handleCountUpdate = (event) => {
+      setUnreadCount(Number(event?.detail?.count ?? 0));
+    };
+    window.addEventListener('notifications:count-updated', handleCountUpdate);
     return () => {
       active = false;
       window.clearInterval(interval);
+      window.removeEventListener('notifications:count-updated', handleCountUpdate);
     };
   }, [loggedIn]);
 
