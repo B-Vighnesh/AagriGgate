@@ -3,18 +3,12 @@ package com.MyWebpage.register.login.notification.controller;
 import com.MyWebpage.register.login.common.ApiResponse;
 import com.MyWebpage.register.login.notification.dto.request.NotificationPreferenceRequest;
 import com.MyWebpage.register.login.notification.dto.response.NotificationPreferenceResponse;
-import com.MyWebpage.register.login.notification.enums.NotificationType;
+import com.MyWebpage.register.login.notification.enums.MessageDeliveryType;
 import com.MyWebpage.register.login.notification.service.NotificationPreferenceService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Locale;
@@ -35,15 +29,15 @@ public class NotificationPreferenceController {
         return ResponseEntity.ok(ApiResponse.success("Notification preferences fetched", preferenceService.getPreferences(userId)));
     }
 
-    @PatchMapping("/{type}")
+    @PatchMapping("/{categoryName}")
     public ResponseEntity<ApiResponse<NotificationPreferenceResponse>> setPreference(
-            @PathVariable String type,
+            @PathVariable String categoryName,
             @Valid @RequestBody NotificationPreferenceRequest request,
             Authentication authentication
     ) {
         Long userId = Long.parseLong(authentication.getName());
-        NotificationType notificationType = NotificationType.valueOf(type.trim().toUpperCase(Locale.ROOT));
-        NotificationPreferenceResponse response = preferenceService.setPreference(userId, notificationType, request.getEnabled());
+        MessageDeliveryType deliveryType = MessageDeliveryType.valueOf(request.getDeliveryType().trim().toUpperCase(Locale.ROOT));
+        NotificationPreferenceResponse response = preferenceService.setPreference(userId, categoryName, deliveryType);
         return ResponseEntity.ok(ApiResponse.success("Notification preference updated", response));
     }
 

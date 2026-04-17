@@ -13,6 +13,8 @@ public interface ApproachFarmerService {
     Page<ApproachRequestDTO> getRequestsByFarmerId(Long farmerId, String status, int page, int size);
     Page<ApproachRequestDTO> getRequestsByFarmerIdAndCropId(Long farmerId, Long cropId, String status, int page, int size);
     Page<ApproachRequestDTO> getRequestsByUserId(Long userId, String status, int page, int size);
+    ApproachRequestDTO getRequestByFarmerId(Long farmerId, Long approachId);
+    ApproachRequestDTO getRequestByUserId(Long userId, Long approachId);
     boolean deleteApproach(Long approachId, Long userId);
 
     boolean deleteApproach(Long farmerId, String role);

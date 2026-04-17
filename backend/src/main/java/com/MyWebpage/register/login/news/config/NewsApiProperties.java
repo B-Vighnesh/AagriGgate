@@ -47,6 +47,8 @@ public class NewsApiProperties {
 
     private boolean gnewsEnabled = true;
 
+    private boolean ingestOnStartup = false;
+
     @Min(1)
     @Max(50)
     private int executorPoolSize = 5;
@@ -156,6 +158,14 @@ public class NewsApiProperties {
 
     public void setGnewsEnabled(boolean gnewsEnabled) {
         this.gnewsEnabled = gnewsEnabled;
+    }
+
+    public boolean isIngestOnStartup() {
+        return ingestOnStartup;
+    }
+
+    public void setIngestOnStartup(boolean ingestOnStartup) {
+        this.ingestOnStartup = ingestOnStartup;
     }
 
     public int getExecutorPoolSize() {

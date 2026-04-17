@@ -21,12 +21,77 @@ CREATE TABLE IF NOT EXISTS news (
     CONSTRAINT uk_news_source_url_hash UNIQUE (source_url_hash)
 ) ENGINE=InnoDB;
 
-CREATE INDEX idx_news_category ON news (category);
-CREATE INDEX idx_news_news_type ON news (news_type);
-CREATE INDEX idx_news_is_important ON news (is_important);
-CREATE INDEX idx_news_created_at ON news (created_at);
-CREATE INDEX idx_news_language ON news (language);
-CREATE INDEX idx_news_status ON news (status);
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'news'
+      AND index_name = 'idx_news_category'
+);
+SET @sql = IF(@index_exists = 0, 'CREATE INDEX idx_news_category ON news (category)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'news'
+      AND index_name = 'idx_news_news_type'
+);
+SET @sql = IF(@index_exists = 0, 'CREATE INDEX idx_news_news_type ON news (news_type)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'news'
+      AND index_name = 'idx_news_is_important'
+);
+SET @sql = IF(@index_exists = 0, 'CREATE INDEX idx_news_is_important ON news (is_important)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'news'
+      AND index_name = 'idx_news_created_at'
+);
+SET @sql = IF(@index_exists = 0, 'CREATE INDEX idx_news_created_at ON news (created_at)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'news'
+      AND index_name = 'idx_news_language'
+);
+SET @sql = IF(@index_exists = 0, 'CREATE INDEX idx_news_language ON news (language)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'news'
+      AND index_name = 'idx_news_status'
+);
+SET @sql = IF(@index_exists = 0, 'CREATE INDEX idx_news_status ON news (status)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 CREATE TABLE IF NOT EXISTS trusted_source (
     id BIGINT NOT NULL AUTO_INCREMENT,
@@ -43,7 +108,17 @@ CREATE TABLE IF NOT EXISTS trusted_source (
     PRIMARY KEY (id)
 ) ENGINE=InnoDB;
 
-CREATE INDEX idx_trusted_source_is_active ON trusted_source (is_active);
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'trusted_source'
+      AND index_name = 'idx_trusted_source_is_active'
+);
+SET @sql = IF(@index_exists = 0, 'CREATE INDEX idx_trusted_source_is_active ON trusted_source (is_active)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 CREATE TABLE IF NOT EXISTS saved_news (
     id BIGINT NOT NULL AUTO_INCREMENT,
@@ -68,8 +143,33 @@ CREATE TABLE IF NOT EXISTS notification (
     PRIMARY KEY (id)
 ) ENGINE=InnoDB;
 
-CREATE INDEX idx_notification_user_status_type_created ON notification (user_id, status, type, created_at);
-CREATE INDEX idx_notification_user_id ON notification (user_id);
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'notification'
+      AND index_name = 'idx_notification_user_status_type_created'
+);
+SET @sql = IF(
+    @index_exists = 0,
+    'CREATE INDEX idx_notification_user_status_type_created ON notification (user_id, status, type, created_at)',
+    'SELECT 1'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'notification'
+      AND index_name = 'idx_notification_user_id'
+);
+SET @sql = IF(@index_exists = 0, 'CREATE INDEX idx_notification_user_id ON notification (user_id)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 CREATE TABLE IF NOT EXISTS user_notification_preference (
     id BIGINT NOT NULL AUTO_INCREMENT,
@@ -81,7 +181,21 @@ CREATE TABLE IF NOT EXISTS user_notification_preference (
     CONSTRAINT uk_user_notification_preference UNIQUE (user_id, notification_type)
 ) ENGINE=InnoDB;
 
-CREATE INDEX idx_user_notification_preference_user_id ON user_notification_preference (user_id);
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'user_notification_preference'
+      AND index_name = 'idx_user_notification_preference_user_id'
+);
+SET @sql = IF(
+    @index_exists = 0,
+    'CREATE INDEX idx_user_notification_preference_user_id ON user_notification_preference (user_id)',
+    'SELECT 1'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 INSERT INTO trusted_source (name, domain, source_url, category_scope, source_type, fetch_keyword, is_active, created_at, updated_at)
 SELECT 'PIB Agriculture', 'pib.gov.in', 'https://gnews.io/api/v4/top-headlines', 'SUBSIDY,LAW', 'GNEWS_TOPIC', 'agriculture', 1, NOW(), NOW()

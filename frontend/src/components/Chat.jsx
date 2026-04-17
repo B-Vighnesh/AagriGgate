@@ -1,0 +1,1472 @@
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import Button from './common/Button';
+import Card from './common/Card';
+import Toast from './common/Toast';
+import ValidateToken from './ValidateToken';
+import {
+  archiveChatConversation,
+  confirmChatDeal,
+  failChatConversation,
+  deleteChatConversation,
+  blockChatUser,
+  unblockChatUser,
+  reportChatUser,
+  getChatConversation,
+  getChatConversations,
+  getChatMessages,
+  openChatSocket,
+  unarchiveChatConversation,
+} from '../api/chatApi';
+import { getFarmerId, getRole, getToken } from '../lib/auth';
+import '../assets/Chat.css';
+
+/* ─── helpers ─────────────────────────────────────────────────────────────── */
+
+function sortConversations(items) {
+  return [...items].sort((left, right) => {
+    const leftTime = new Date(left.lastMessageAt || left.updatedAt || left.createdAt || 0).getTime();
+    const rightTime = new Date(right.lastMessageAt || right.updatedAt || right.createdAt || 0).getTime();
+    return rightTime - leftTime;
+  });
+}
+
+function groupConversationsByStatus(items) {
+  const buckets = { active: [], archived: [], completed: [], expired: [], failed: [] };
+  items.forEach((item) => {
+    if (item.archived) { buckets.archived.push(item); return; }
+    const status = String(item.status || 'ACTIVE').toUpperCase();
+    if (status === 'COMPLETED') { buckets.completed.push(item); return; }
+    if (status === 'EXPIRED')   { buckets.expired.push(item);   return; }
+    if (status === 'FAILED')    { buckets.failed.push(item);    return; }
+    buckets.active.push(item);
+  });
+  return buckets;
+}
+
+function formatQuantity(value) {
+  if (value == null || Number.isNaN(Number(value))) return 'Not set';
+  const numeric = Number(value);
+  return Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(2);
+}
+
+function buildConversationPreview(item) {
+  if (item.status === 'COMPLETED') return `Deal closed for ${formatQuantity(item.pendingDealQuantity ?? item.requestedQuantity)} quantity.`;
+  if (item.status === 'EXPIRED')   return 'Conversation expired.';
+  if (item.status === 'FAILED')    return 'Deal was not completed.';
+  if (item.pendingDealQuantity)    return `Offer: ${formatQuantity(item.pendingDealQuantity)} quantity.`;
+  return 'Continue negotiation...';
+}
+
+const initialsFor = (name) => {
+  if (!name) return '??';
+  const parts = String(name).trim().split(/\s+/).slice(0, 2);
+  return parts.map((p) => p[0]?.toUpperCase()).join('');
+};
+
+const colorFor = (name) => {
+  const palette = ['#e3f2f1', '#e9f1ff', '#f1e9ff', '#fff1e9', '#e9f7ed', '#ffe9f1'];
+  const text    = ['#1f6f54', '#2d5ea7', '#6a3e91', '#b1562f', '#2f7a4f', '#9b2f5c'];
+  const value   = String(name || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const index   = value % palette.length;
+  return { backgroundColor: palette[index], color: text[index] };
+};
+
+const formatTime = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+const isSameDay = (d1, d2) => {
+  return d1.getFullYear() === d2.getFullYear() &&
+         d1.getMonth() === d2.getMonth() &&
+         d1.getDate() === d2.getDate();
+};
+
+const getRelativeDate = (dateStr) => {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (isSameDay(date, today)) return 'Today';
+  if (isSameDay(date, yesterday)) return 'Yesterday';
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+/* ─── Tooltip icon button ─────────────────────────────────────────────────── */
+function IconBtn({ icon, label, onClick, disabled = false, className = '', danger = false }) {
+  return (
+    <button
+      type="button"
+      className={`chat-icon-btn${danger ? ' chat-icon-btn--danger' : ''} ${className}`.trim()}
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      data-tip={label}
+    >
+      <span className="chat-icon-btn__glyph" aria-hidden="true">{icon}</span>
+    </button>
+  );
+}
+
+/* ─── 3-dot dropdown menu ─────────────────────────────────────────────────── */
+function PanelMenu({ items }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div className="chat-panel-menu" ref={ref}>
+      <button
+        type="button"
+        className="chat-icon-btn chat-icon-btn--dots"
+        aria-label="More options"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        data-tip="More options"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="chat-icon-btn__glyph" aria-hidden="true">
+          <i className="fa-solid fa-ellipsis-vertical" />
+        </span>
+      </button>
+      {open && (
+        <div className="chat-panel-menu__dropdown">
+          {items.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              className={`chat-panel-menu__item${item.danger ? ' chat-panel-menu__item--danger' : ''}`}
+              onClick={() => { item.action(); setOpen(false); }}
+              disabled={item.disabled}
+            >
+              <span className="chat-panel-menu__item-icon" aria-hidden="true">{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── main component ──────────────────────────────────────────────────────── */
+export default function Chat() {
+  const { conversationId } = useParams();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const token = getToken();
+  const role  = getRole();
+  const currentUserId = Number(getFarmerId() || 0);
+
+  const [conversations,      setConversations]      = useState([]);
+  const [activeConversation, setActiveConversation] = useState(null);
+  const [messages,           setMessages]           = useState([]);
+  const [loadingList,        setLoadingList]        = useState(true);
+  const [loadingMessages,    setLoadingMessages]    = useState(false);
+  const [composer,           setComposer]           = useState('');
+  const [toast,              setToast]              = useState({ message: '', type: 'info' });
+  const [socketReady,        setSocketReady]        = useState(false);
+  const [dealModalOpen,      setDealModalOpen]      = useState(false);
+  const [dealDrawerOpen,     setDealDrawerOpen]     = useState(false);
+  const [useRequestedQty,    setUseRequestedQty]    = useState(true);
+  const [dealQuantity,       setDealQuantity]       = useState('');
+  const [dealLoading,        setDealLoading]        = useState(false);
+  const [showScrollDown,     setShowScrollDown]     = useState(false);
+  const [isTyping,           setIsTyping]           = useState(false);
+  const [actionDialog,       setActionDialog]       = useState({ open: false, type: '', conversation: null, step: 1 });
+  const [actionLoading,      setActionLoading]      = useState(false);
+  const [blockReason,        setBlockReason]        = useState('');
+  const [reportDialog,       setReportDialog]       = useState({ open: false, reason: '', message: '', imageUrl: '', loading: false });
+  const [chatFilter,         setChatFilter]         = useState('active');
+  const [activeSubFilter,    setActiveSubFilter]    = useState('active');
+  const [isFilterNavigating, setIsFilterNavigating] = useState(false);
+  const [suppressConversation, setSuppressConversation] = useState(false);
+  const [searchTerm,         setSearchTerm]         = useState('');
+  const [dateFrom,           setDateFrom]           = useState('');
+  const [dateTo,             setDateTo]             = useState('');
+
+  const socketRef               = useRef(null);
+  const messageListRef          = useRef(null);
+  const activeConversationIdRef = useRef(null);
+  const stickToBottomRef        = useRef(true);
+  const composerRef             = useRef(null);
+  const filterNavRef            = useRef(false);
+  const filterOverrideRef       = useRef(false);
+  const loadSeqRef              = useRef(0);
+  const didSyncFilterRef        = useRef(false);
+  const initialScrollRef        = useRef(null);
+
+  /* ── toast ── */
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    window.setTimeout(() => setToast({ message: '', type: 'info' }), 2800);
+  };
+
+  /* ── scroll ── */
+  const scrollMessagesToBottom = (behavior = 'auto') => {
+    const container = messageListRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior });
+  };
+
+  const updateStickiness = () => {
+    const container = messageListRef.current;
+    if (!container) { stickToBottomRef.current = true; return; }
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    stickToBottomRef.current = distanceFromBottom < 80;
+    setShowScrollDown(distanceFromBottom > 300);
+  };
+
+  /* ── auto-resize textarea ── */
+  useEffect(() => {
+    if (composerRef.current) {
+      composerRef.current.style.height = 'auto';
+      composerRef.current.style.height = `${Math.min(composerRef.current.scrollHeight, 120)}px`;
+    }
+  }, [composer]);
+
+  /* ── derived ── */
+  const resolvedConversationId = useMemo(() => {
+    if (suppressConversation) return null;
+    if (conversationId) return Number(conversationId);
+    return activeConversation?.conversationId || null;
+  }, [conversationId, activeConversation, suppressConversation]);
+
+  const counterpartyName = activeConversation
+    ? (currentUserId === activeConversation.buyerId ? activeConversation.farmerName : activeConversation.buyerName)
+    : '';
+
+  const isBuyer       = activeConversation ? currentUserId === activeConversation.buyerId : false;
+  const counterpartyId = activeConversation
+    ? (isBuyer ? activeConversation.farmerId : activeConversation.buyerId)
+    : null;
+  const counterpartyRoleLabel = isBuyer ? 'Farmer' : 'Buyer';
+  const isBlocked = Boolean(activeConversation?.blockedByMe || activeConversation?.blockedMe);
+  const agreedQuantity = activeConversation?.pendingDealQuantity ?? activeConversation?.requestedQuantity ?? null;
+
+  const dealStatusText = activeConversation
+    ? activeConversation.status === 'COMPLETED'
+      ? 'Deal completed'
+      : activeConversation.status === 'EXPIRED'
+        ? 'Conversation expired'
+        : activeConversation.status === 'FAILED'
+          ? 'Deal failed'
+          : activeConversation.buyerDealConfirmed && activeConversation.farmerDealConfirmed
+            ? 'Ready to close'
+            : activeConversation.buyerDealConfirmed || activeConversation.farmerDealConfirmed
+              ? 'Waiting for counterparty'
+              : 'Negotiating'
+    : '';
+
+  const groupedConversations = useMemo(
+    () => groupConversationsByStatus(conversations),
+    [conversations]
+  );
+
+  const filterOptions = useMemo(() => ([
+    { key: 'active',    label: 'Active',    count: groupedConversations.active.length + groupedConversations.archived.length },
+    { key: 'completed', label: 'Completed', count: groupedConversations.completed.length },
+    { key: 'failed',    label: 'Failed',    count: groupedConversations.failed.length },
+    { key: 'expired',   label: 'Expired',   count: groupedConversations.expired.length },
+  ]), [groupedConversations]);
+
+  const filteredConversations = useMemo(() => {
+    if (chatFilter === 'active') {
+      return activeSubFilter === 'archived'
+        ? groupedConversations.archived
+        : groupedConversations.active;
+    }
+    return groupedConversations[chatFilter] || [];
+  }, [chatFilter, activeSubFilter, groupedConversations]);
+
+  const resolveCounterpartyName = (item) => {
+    if (!item) return '';
+    return currentUserId === item.buyerId ? item.farmerName : item.buyerName;
+  };
+
+  const isConversationWithUser = (item, userId) => {
+    if (!item || !userId) return false;
+    return item.buyerId === userId || item.farmerId === userId;
+  };
+
+  const visibleConversations = useMemo(() => {
+    const searchValue = searchTerm.trim().toLowerCase();
+    const fromDate = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
+    const toDate = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
+
+    return filteredConversations.filter((item) => {
+      const counterparty = resolveCounterpartyName(item);
+      const text = `${item.listingName || ''} ${counterparty || ''}`.toLowerCase();
+      if (searchValue && !text.includes(searchValue)) return false;
+
+      const dateValue = item.lastMessageAt || item.updatedAt || item.createdAt || null;
+      if ((fromDate || toDate) && !dateValue) return false;
+      if (fromDate && new Date(dateValue) < fromDate) return false;
+      if (toDate && new Date(dateValue) > toDate) return false;
+
+      return true;
+    });
+  }, [filteredConversations, searchTerm, dateFrom, dateTo]);
+
+  useEffect(() => {
+    if (!activeConversation || loadingList) return;
+    if (conversationId) return;
+    const stillVisible = visibleConversations.some(
+      (item) => item.conversationId === activeConversation.conversationId
+    );
+    if (!stillVisible) {
+      setActiveConversation(null);
+      setMessages([]);
+      navigate('/chat');
+    }
+  }, [chatFilter, visibleConversations, activeConversation, loadingList, conversationId, navigate]);
+
+  const buyerStatusLabel  = activeConversation?.buyerDealConfirmed  ? 'Confirmed' : 'Pending';
+  const farmerStatusLabel = activeConversation?.farmerDealConfirmed ? 'Confirmed' : 'Pending';
+  const canDeleteConversation = (conversation) => ['COMPLETED', 'FAILED', 'EXPIRED'].includes(String(conversation?.status || '').toUpperCase());
+  const canArchiveConversation = (conversation) => String(conversation?.status || '').toUpperCase() === 'ACTIVE';
+
+  const resolveFilterParams = () => {
+    if (chatFilter === 'active') {
+      return {
+        status: 'ACTIVE',
+        archived: activeSubFilter === 'archived',
+      };
+    }
+    return {
+      status: chatFilter.toUpperCase(),
+      archived: null,
+    };
+  };
+
+  const syncFilterToConversation = (conversation) => {
+    if (!conversation) return;
+    const status = String(conversation.status || '').toLowerCase();
+    if (status === 'active') {
+      setChatFilter('active');
+      setActiveSubFilter(conversation.archived ? 'archived' : 'active');
+      return;
+    }
+    if (status === 'completed' || status === 'failed' || status === 'expired') {
+      setChatFilter(status);
+    }
+  };
+
+  /* ── buyer profile route ── */
+  const buyerProfilePath = activeConversation?.buyerId && !isBuyer
+    ? `/view-buyer/${activeConversation.buyerId}`
+    : null;
+
+  const handleBackNavigation = () => {
+    setActiveConversation(null);
+    setMessages([]);
+    if (chatFilter === 'active') {
+      navigate(`/chat?filter=active&sub=${activeSubFilter}`);
+      return;
+    }
+    navigate(`/chat?filter=${chatFilter}`);
+  };
+
+  /* ── sync ref ── */
+  useEffect(() => {
+    activeConversationIdRef.current = resolvedConversationId;
+  }, [resolvedConversationId]);
+
+  useEffect(() => {
+    if (!conversationId) {
+      if (isFilterNavigating) {
+        setIsFilterNavigating(false);
+        filterNavRef.current = false;
+      }
+      if (suppressConversation) {
+        setSuppressConversation(false);
+      }
+      if (filterOverrideRef.current) {
+        filterOverrideRef.current = false;
+      }
+    }
+  }, [conversationId, isFilterNavigating, suppressConversation]);
+
+  /* ── load conversations ── */
+  const loadConversations = async () => {
+    const loadSeq = ++loadSeqRef.current;
+    setLoadingList(true);
+    try {
+      const { status, archived } = resolveFilterParams();
+      const data   = await getChatConversations({ status, archived });
+      if (loadSeq !== loadSeqRef.current) return;
+      const list   = Array.isArray(data) ? data : [];
+      const sorted = sortConversations(list);
+      setConversations(sorted);
+
+      const targetId = conversationId ? Number(conversationId) : null;
+      if (targetId && !filterNavRef.current && !suppressConversation && !filterOverrideRef.current) {
+        const selected = sorted.find((item) => item.conversationId === targetId) || null;
+        if (selected) {
+          if (!didSyncFilterRef.current) {
+            syncFilterToConversation(selected);
+            didSyncFilterRef.current = true;
+          }
+          setActiveConversation(selected);
+        } else {
+          const fetched = await getChatConversation(targetId);
+          if (loadSeq !== loadSeqRef.current) return;
+          if (!didSyncFilterRef.current) {
+            syncFilterToConversation(fetched);
+            didSyncFilterRef.current = true;
+          }
+          setActiveConversation(fetched);
+          setConversations((prev) => sortConversations([...prev, fetched]));
+        }
+      } else if (filterNavRef.current || suppressConversation || filterOverrideRef.current) {
+        setActiveConversation(null);
+        setMessages([]);
+      } else {
+        setActiveConversation(null);
+      }
+    } catch (error) {
+      showToast(error.message || 'Unable to load conversations.', 'error');
+      setConversations([]);
+      setActiveConversation(null);
+    } finally {
+      setLoadingList(false);
+    }
+  };
+
+  /* ── load messages ── */
+  const loadMessages = async (targetConversationId) => {
+    if (!targetConversationId) { setMessages([]); return; }
+    setLoadingMessages(true);
+    initialScrollRef.current = targetConversationId;
+    try {
+      const data = await getChatMessages(targetConversationId);
+      setMessages(Array.isArray(data) ? data : []);
+      stickToBottomRef.current = true;
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => scrollMessagesToBottom('auto'));
+      });
+    } catch (error) {
+      showToast(error.message || 'Unable to load chat messages.', 'error');
+      setMessages([]);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  /* ── mobile breakpoint ── */
+
+  /* ── on mount / conversationId change ── */
+  useEffect(() => {
+    if (!role) { navigate('/login'); return; }
+    loadConversations();
+  }, [conversationId, chatFilter, activeSubFilter]);
+
+  useEffect(() => {
+    const filterParam = (searchParams.get('filter') || '').toLowerCase();
+    const subParam = (searchParams.get('sub') || '').toLowerCase();
+    if (filterParam && ['active', 'completed', 'failed', 'expired'].includes(filterParam)) {
+      setChatFilter(filterParam);
+      if (filterParam === 'active') {
+        setActiveSubFilter(subParam === 'archived' ? 'archived' : 'active');
+      }
+    }
+  }, [searchParams]);
+
+  /* ── load messages on conversation switch ── */
+  useEffect(() => {
+    if (!resolvedConversationId) return;
+    loadMessages(resolvedConversationId);
+  }, [resolvedConversationId]);
+
+  useLayoutEffect(() => {
+    if (!resolvedConversationId) return;
+    if (loadingMessages) return;
+    if (initialScrollRef.current && initialScrollRef.current !== resolvedConversationId) return;
+    if (!stickToBottomRef.current) return;
+    scrollMessagesToBottom('auto');
+    initialScrollRef.current = null;
+  }, [messages, loadingMessages, resolvedConversationId]);
+
+  /* ── websocket ── */
+  useEffect(() => {
+    if (!token || !role) return undefined;
+    try {
+      const socket = openChatSocket({
+        onOpen:  () => setSocketReady(true),
+        onClose: () => setSocketReady(false),
+        onError: () => setSocketReady(false),
+        onMessage: (payload) => {
+          if (payload?.type === 'CHAT_MESSAGE' && payload.data) {
+            const incoming = payload.data;
+            setConversations((prev) => sortConversations(prev.map((item) =>
+              item.conversationId === incoming.conversationId
+                ? { ...item, lastMessageAt: incoming.createdAt, updatedAt: incoming.createdAt }
+                : item
+            )));
+            setMessages((prev) => {
+              if (incoming.conversationId !== activeConversationIdRef.current) return prev;
+              if (prev.some((item) => item.messageId === incoming.messageId)) return prev;
+              return [...prev, incoming];
+            });
+            if (incoming.conversationId === activeConversationIdRef.current && stickToBottomRef.current) {
+              window.requestAnimationFrame(() => scrollMessagesToBottom('smooth'));
+            }
+          }
+
+          if (payload?.type === 'CONVERSATION_UPDATE' && payload.data) {
+            const updated = payload.data;
+            mergeConversationUpdate(updated);
+            if (payload.message) showToast(payload.message, updated.status === 'COMPLETED' ? 'success' : 'info');
+          }
+
+          if (payload?.type === 'CONVERSATION_REMOVED' && payload.data?.conversationId) {
+            removeConversationLocally(payload.data.conversationId);
+            if (payload.message) showToast(payload.message, 'info');
+          }
+
+          if (payload?.type === 'ERROR' && payload.message) showToast(payload.message, 'error');
+        },
+      });
+      socketRef.current = socket;
+      return () => { socket.close(); socketRef.current = null; };
+    } catch (error) {
+      showToast(error.message || 'Unable to connect chat.', 'error');
+      return undefined;
+    }
+  }, [token, role]);
+
+  /* ── handlers ── */
+  const openConversation = (targetConversation) => {
+    didSyncFilterRef.current = true;
+    setIsFilterNavigating(false);
+    filterNavRef.current = false;
+    stickToBottomRef.current = true;
+    navigate(`/chat/${targetConversation.conversationId}`);
+  };
+
+  const mergeConversationUpdate = (updatedConversation) => {
+    setConversations((prev) => {
+      const rest = prev.filter((item) => item.conversationId !== updatedConversation.conversationId);
+      return sortConversations([updatedConversation, ...rest]);
+    });
+    if (updatedConversation.conversationId === resolvedConversationId) {
+      setActiveConversation(updatedConversation);
+    }
+  };
+
+  const moveConversationsForUserToFailed = (userId) => {
+    if (!userId) return;
+    const nowIso = new Date().toISOString();
+
+    setConversations((prev) => sortConversations(
+      prev.map((item) => {
+        if (!isConversationWithUser(item, userId)) return item;
+        if (String(item.status || '').toUpperCase() !== 'ACTIVE') return item;
+        return {
+          ...item,
+          status: 'FAILED',
+          active: false,
+          failedAt: nowIso,
+          updatedAt: nowIso,
+          lastMessageAt: nowIso,
+        };
+      })
+    ));
+
+    setActiveConversation((prev) => {
+      if (!prev || !isConversationWithUser(prev, userId)) return prev;
+      return {
+        ...prev,
+        status: 'FAILED',
+        active: false,
+        failedAt: nowIso,
+        updatedAt: nowIso,
+        lastMessageAt: nowIso,
+      };
+    });
+  };
+
+  const removeConversationLocally = (conversationIdToRemove) => {
+    setConversations((prev) => prev.filter((item) => item.conversationId !== conversationIdToRemove));
+    if (resolvedConversationId === conversationIdToRemove) {
+      setActiveConversation(null);
+      setMessages([]);
+      navigate('/chat');
+    }
+  };
+
+  const openActionDialog = (type, conversation = activeConversation) => {
+    if (!conversation) return;
+    if (type === 'block') {
+      setBlockReason('');
+    }
+    setActionDialog({ open: true, type, conversation, step: 1 });
+  };
+
+  const closeActionDialog = () => {
+    setActionDialog({ open: false, type: '', conversation: null, step: 1 });
+  };
+
+  const openReportDialog = () => {
+    setReportDialog({ open: true, reason: '', message: '', imageUrl: '', loading: false });
+  };
+
+  const closeReportDialog = () => {
+    setReportDialog({ open: false, reason: '', message: '', imageUrl: '', loading: false });
+  };
+
+  const handleConversationAction = async () => {
+    if (!actionDialog.conversation) return;
+    setActionLoading(true);
+    try {
+      if (actionDialog.type === 'archive') {
+        const updated = await archiveChatConversation(actionDialog.conversation.conversationId);
+        mergeConversationUpdate(updated);
+        if (resolvedConversationId === actionDialog.conversation.conversationId) {
+          navigate('/chat');
+        }
+        showToast('Conversation archived.', 'success');
+      } else if (actionDialog.type === 'unarchive') {
+        const updated = await unarchiveChatConversation(actionDialog.conversation.conversationId);
+        mergeConversationUpdate(updated);
+        showToast('Conversation moved back to active.', 'success');
+      } else if (actionDialog.type === 'delete') {
+        const result = await deleteChatConversation(actionDialog.conversation.conversationId);
+        removeConversationLocally(actionDialog.conversation.conversationId);
+        showToast(result?.message || 'Conversation deleted.', 'success');
+      } else if (actionDialog.type === 'fail') {
+        const updated = await failChatConversation(actionDialog.conversation.conversationId);
+        mergeConversationUpdate(updated);
+        showToast('Deal cancelled. Conversation moved to failed.', 'success');
+      } else if (actionDialog.type === 'block') {
+        const updated = await blockChatUser(counterpartyId, blockReason);
+        if (updated) {
+          mergeConversationUpdate(updated);
+        }
+        moveConversationsForUserToFailed(counterpartyId);
+        didSyncFilterRef.current = true;
+        filterNavRef.current = true;
+        filterOverrideRef.current = true;
+        setIsFilterNavigating(true);
+        setSuppressConversation(true);
+        setActiveConversation(null);
+        setMessages([]);
+        setChatFilter('failed');
+        navigate('/chat?filter=failed');
+        showToast(`${counterpartyRoleLabel} blocked.`, 'success');
+      } else if (actionDialog.type === 'unblock') {
+        const updated = await unblockChatUser(counterpartyId);
+        if (updated) {
+          mergeConversationUpdate(updated);
+        }
+        showToast(`${counterpartyRoleLabel} unblocked.`, 'success');
+      }
+      closeActionDialog();
+    } catch (error) {
+      showToast(error.message || 'Unable to update conversation.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReportSubmit = async () => {
+    if (!counterpartyId) return;
+    if (!reportDialog.reason.trim() || !reportDialog.message.trim()) {
+      showToast('Please provide a reason and message.', 'error');
+      return;
+    }
+    setReportDialog((prev) => ({ ...prev, loading: true }));
+    try {
+      await reportChatUser(counterpartyId, {
+        reason: reportDialog.reason.trim(),
+        message: reportDialog.message.trim(),
+        imageUrl: reportDialog.imageUrl.trim() || null,
+      });
+      showToast('Report submitted.', 'success');
+      closeReportDialog();
+    } catch (error) {
+      showToast(error.message || 'Unable to submit report.', 'error');
+      setReportDialog((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleSend = () => {
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+      showToast('Connection not ready.', 'error');
+      return;
+    }
+    if (!resolvedConversationId) { showToast('Choose a conversation.', 'error'); return; }
+    if (!composer.trim()) return;
+    socketRef.current.send(JSON.stringify({
+      conversationId: resolvedConversationId,
+      messageText: composer.trim(),
+    }));
+    stickToBottomRef.current = true;
+    setComposer('');
+  };
+
+  const handleComposerKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  };
+
+  const handleDealConfirm = async () => {
+    if (!activeConversation) return;
+    if (!useRequestedQty) {
+      const numericQty = Number(dealQuantity);
+      if (!Number.isFinite(numericQty) || numericQty <= 0) {
+        showToast('Enter a valid quantity.', 'error');
+        return;
+      }
+    }
+    setDealLoading(true);
+    try {
+      const result = await confirmChatDeal(activeConversation.conversationId, {
+        useRequestedQuantity: useRequestedQty,
+        quantity: useRequestedQty ? null : Number(dealQuantity),
+      });
+      if (result?.conversation) {
+        setActiveConversation(result.conversation);
+        setConversations((prev) => {
+          const rest = prev.filter((item) => item.conversationId !== result.conversation.conversationId);
+          return sortConversations([result.conversation, ...rest]);
+        });
+      }
+      showToast(result?.message || 'Deal updated.', result?.completed ? 'success' : 'info');
+      setDealModalOpen(false);
+      setUseRequestedQty(true);
+      setDealQuantity('');
+    } catch (error) {
+      showToast(error.message || 'Unable to confirm deal.', 'error');
+    } finally {
+      setDealLoading(false);
+    }
+  };
+
+  const openDealModal = () => {
+    setDealDrawerOpen(false);
+    setDealModalOpen(true);
+  };
+
+  /* ── conversation sidebar section ── */
+  const renderConversationSection = (title, tone, items) => {
+    if (!items.length) return null;
+    return (
+      <div className="chat-section">
+        <div className={`chat-section__head chat-section__head--${tone}`}>
+          <strong>{title}</strong>
+          <span>{items.length}</span>
+        </div>
+        <div className="chat-conversation-list">
+          {items.map((item) => {
+            const active       = item.conversationId === resolvedConversationId;
+            const counterpart  = currentUserId === item.buyerId ? item.farmerName : item.buyerName;
+            const statusTone   = String(item.status || 'ACTIVE').toLowerCase();
+            const lastTime     = item.lastMessageAt || item.updatedAt || item.createdAt;
+            return (
+              <button
+                key={item.conversationId}
+                type="button"
+                className={`chat-conversation-card chat-conversation-card--${statusTone}${active ? ' chat-conversation-card--active' : ''}`}
+                onClick={() => openConversation(item)}
+              >
+                <div className="chat-conversation-card__avatar" aria-hidden="true" style={colorFor(counterpart)}>
+                  {initialsFor(counterpart)}
+                </div>
+                <div className="chat-conversation-card__content">
+                  <div className="chat-conversation-card__top">
+                    <div>
+                      <strong>{counterpart}</strong>
+                      <span className="chat-conversation-card__listing">{item.listingName}</span>
+                    </div>
+                    <div className="chat-conversation-card__meta">
+                      <time>{lastTime ? getRelativeDate(lastTime) : ''}</time>
+                    </div>
+                  </div>
+                  <small>{buildConversationPreview(item)}</small>
+                </div>
+                <div className="chat-conversation-card__quick-actions">
+                  {canArchiveConversation(item) && (
+                    <button
+                      type="button"
+                      className="chat-conversation-card__quick-btn"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openActionDialog(item.archived ? 'unarchive' : 'archive', item);
+                      }}
+                      aria-label={item.archived ? 'Unarchive chat' : 'Archive chat'}
+                      title={item.archived ? 'Unarchive chat' : 'Archive chat'}
+                    >
+                      <i className={`fa-solid ${item.archived ? 'fa-box-open' : 'fa-box-archive'}`} />
+                      <span>{item.archived ? 'Unarchive' : 'Archive'}</span>
+                    </button>
+                  )}
+                  {canDeleteConversation(item) && (
+                    <button
+                      type="button"
+                      className="chat-conversation-card__quick-btn chat-conversation-card__quick-btn--danger"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openActionDialog('delete', item);
+                      }}
+                      aria-label="Delete chat"
+                      title="Delete chat"
+                    >
+                      <i className="fa-solid fa-trash" />
+                      <span>Delete</span>
+                    </button>
+                  )}
+                </div>
+                {active && <div className="chat-conversation-card__active-indicator" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const DealSummaryBody = () => (
+    <>
+      <div className="chat-deal-summary">
+        <div className="chat-deal-summary__row">
+          <span>Requested</span>
+          <strong>{formatQuantity(activeConversation.requestedQuantity)}</strong>
+        </div>
+        <div className="chat-deal-summary__row">
+          <span>Agreed</span>
+          <strong>{formatQuantity(agreedQuantity)}</strong>
+        </div>
+        <div className="chat-deal-summary__row">
+          <span>Buyer</span>
+          <strong className={`status-pill status-pill--${activeConversation.buyerDealConfirmed ? 'success' : 'pending'}`}>
+            {buyerStatusLabel}
+          </strong>
+        </div>
+        <div className="chat-deal-summary__row">
+          <span>Farmer</span>
+          <strong className={`status-pill status-pill--${activeConversation.farmerDealConfirmed ? 'success' : 'pending'}`}>
+            {farmerStatusLabel}
+          </strong>
+        </div>
+      </div>
+
+      <div className="chat-deal-panel__card">
+        <strong>Next Steps</strong>
+        <p>
+          {activeConversation.status !== 'ACTIVE'
+            ? 'Deal closed.'
+            : isBuyer
+              ? activeConversation.buyerDealConfirmed
+                ? 'Waiting for farmer.'
+                : 'Confirm the final quantity.'
+              : activeConversation.farmerDealConfirmed
+                ? 'Waiting for buyer.'
+                : 'Confirm the final quantity.'}
+        </p>
+      </div>
+
+      <div className="chat-deal-panel__actions">
+        <Button onClick={openDealModal} disabled={activeConversation.status !== 'ACTIVE'}>
+          {activeConversation.status === 'COMPLETED' ? 'Deal Completed' : 'Confirm Deal'}
+        </Button>
+        <Button variant="outline" onClick={() => navigate(`/view-details/${activeConversation.listingId}`)}>
+          View Listing
+        </Button>
+      </div>
+    </>
+  );
+
+  const renderedMessages = useMemo(() => {
+    const groups = [];
+    let lastDate = null;
+
+    messages.forEach((msg) => {
+      const msgDate = new Date(msg.createdAt);
+      const dateStr = getRelativeDate(msg.createdAt);
+
+      if (dateStr !== lastDate) {
+        groups.push({ type: 'DATE', label: dateStr, key: `date-${msg.messageId}` });
+        lastDate = dateStr;
+      }
+      groups.push({ type: 'MSG', ...msg, key: msg.messageId });
+    });
+
+    return groups.map((item) => {
+      if (item.type === 'DATE') {
+        return (
+          <div key={item.key} className="chat-date-separator">
+            <span>{item.label}</span>
+          </div>
+        );
+      }
+
+      const isSystem = item.messageType === 'SYSTEM';
+      const mine     = item.senderId === currentUserId;
+
+      if (isSystem) {
+        return (
+          <div key={item.key} className="chat-event-pill">
+            <span>{item.messageText}</span>
+            <em>{formatTime(item.createdAt)}</em>
+          </div>
+        );
+      }
+
+      return (
+        <div key={item.key} className={`chat-message-row ${mine ? 'chat-message-row--mine' : 'chat-message-row--other'}`}>
+          {!mine && (
+            <div className="chat-message-avatar" style={colorFor(counterpartyName)}>
+              {initialsFor(counterpartyName)}
+            </div>
+          )}
+          <div className="chat-message-bubble">
+            <p>{item.messageText}</p>
+            <div className="chat-message-footer">
+              <time>{formatTime(item.createdAt)}</time>
+              {mine && <i className="fa-solid fa-check-double chat-message-status" />}
+            </div>
+          </div>
+        </div>
+      );
+    });
+  }, [messages, currentUserId, counterpartyName]);
+
+  /* ─────────────────────────────── render ─────────────────────────────────── */
+  if (loadingList) {
+    return (
+      <section className="page page--center chat-loading-page">
+        <div className="ui-spinner ui-spinner--lg" />
+        <p>Loading your conversations...</p>
+      </section>
+    );
+  }
+
+  const isMobileConversation = Boolean(activeConversation);
+
+  return (
+    <section className="page chat-page premium-chat">
+      <ValidateToken token={token} role={role} />
+
+      <div className={`ag-container chat-shell${isMobileConversation ? ' chat-shell--conversation' : ''}${dealDrawerOpen ? ' chat-shell--dealopen' : ''}`}>
+
+        {/* ── sidebar ── */}
+        <Card className="chat-sidebar">
+          <div className="chat-sidebar__header">
+            <div className="chat-sidebar__header-top">
+              <h1>Messages</h1>
+              <div className="chat-connection-status">
+                <span className={`status-dot ${socketReady ? 'status-dot--online' : 'status-dot--offline'}`} />
+                {socketReady ? 'Live' : 'Connecting...'}
+              </div>
+            </div>
+            <div className="chat-search">
+              <i className="fa-solid fa-magnifying-glass" />
+              <input
+                type="text"
+                placeholder="Search by farmer or crop..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                aria-label="Search chats"
+              />
+            </div>
+          </div>
+
+          <div className="chat-sidebar__content">
+            <>
+              <div className="chat-sidebar__filters">
+                  {filterOptions.map((option) => (
+                    <button
+                      key={option.key}
+                      type="button"
+                      className={`chat-filter-chip${chatFilter === option.key ? ' chat-filter-chip--active' : ''}`}
+                      onClick={() => {
+                        setChatFilter(option.key);
+                        if (option.key === 'active') {
+                          setActiveSubFilter('active');
+                        }
+                        didSyncFilterRef.current = true;
+                        filterNavRef.current = true;
+                        filterOverrideRef.current = true;
+                        setIsFilterNavigating(true);
+                        setSuppressConversation(true);
+                        setActiveConversation(null);
+                        setMessages([]);
+                        navigate(`/chat?filter=${option.key}`);
+                      }}
+                    >
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="chat-sidebar__filters chat-sidebar__filters--tools">
+                  <label className="chat-filter-label">
+                    <span>From</span>
+                    <input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(event) => setDateFrom(event.target.value)}
+                    />
+                  </label>
+                  <label className="chat-filter-label">
+                    <span>To</span>
+                    <input
+                      type="date"
+                      value={dateTo}
+                      onChange={(event) => setDateTo(event.target.value)}
+                    />
+                  </label>
+                </div>
+                {chatFilter === 'active' && (
+                  <div className="chat-sidebar__filters chat-sidebar__filters--sub">
+                    <button
+                      type="button"
+                      className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'active' ? ' chat-filter-chip--active' : ''}`}
+                      onClick={() => {
+                        setActiveSubFilter('active');
+                        didSyncFilterRef.current = true;
+                        filterNavRef.current = true;
+                        filterOverrideRef.current = true;
+                        setIsFilterNavigating(true);
+                        setSuppressConversation(true);
+                        setActiveConversation(null);
+                        setMessages([]);
+                        navigate('/chat?filter=active&sub=active');
+                      }}
+                    >
+                      <span>Active</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`chat-filter-chip chat-filter-chip--sub${activeSubFilter === 'archived' ? ' chat-filter-chip--active' : ''}`}
+                      onClick={() => {
+                        setActiveSubFilter('archived');
+                        didSyncFilterRef.current = true;
+                        filterNavRef.current = true;
+                        filterOverrideRef.current = true;
+                        setIsFilterNavigating(true);
+                        setSuppressConversation(true);
+                        setActiveConversation(null);
+                        setMessages([]);
+                        navigate('/chat?filter=active&sub=archived');
+                      }}
+                    >
+                      <span>Archived</span>
+                    </button>
+                  </div>
+                )}
+              <div className="chat-sidebar__sections">
+                {renderConversationSection(
+                  chatFilter === 'active'
+                    ? (activeSubFilter === 'archived' ? 'Archived' : 'Active')
+                    : (filterOptions.find((item) => item.key === chatFilter)?.label || 'Active'),
+                  chatFilter === 'active' ? activeSubFilter : chatFilter,
+                  visibleConversations
+                )}
+                {visibleConversations.length === 0 && (
+                  <div className="chat-empty-sidebar">
+                    <p>No conversations match your filters.</p>
+                  </div>
+                )}
+              </div>
+            </>
+          </div>
+        </Card>
+
+        {/* ── chat panel ── */}
+        <Card className="chat-panel">
+          {!activeConversation ? (
+            <div className="chat-panel__empty">
+              <div className="chat-panel__empty-content">
+                <div className="chat-illustration">
+                  <i className="fa-regular fa-comments" />
+                </div>
+                <h2>Your Negotiation Space</h2>
+                <p>Select a chat from the sidebar to start negotiating deals with farmers or buyers.</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* panel header */}
+              <div className="chat-panel__header">
+                <div className="chat-header__info">
+                  <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={handleBackNavigation}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+                  </button>
+                  <div 
+                    className={`chat-header__avatar${buyerProfilePath ? ' chat-header__avatar--clickable' : ''}`}
+                    style={colorFor(counterpartyName)}
+                    onClick={() => buyerProfilePath && navigate(buyerProfilePath)}
+                  >
+                    {initialsFor(counterpartyName)}
+                  </div>
+                  <div className="chat-header__details">
+                    <h3
+                      className={buyerProfilePath ? 'chat-header__name--clickable' : ''}
+                      onClick={() => buyerProfilePath && navigate(buyerProfilePath)}
+                    >
+                      {counterpartyName}
+                    </h3>
+                    <p>{activeConversation.listingName}</p>
+                  </div>
+                </div>
+
+                <div className="chat-header__actions">
+                  <div className="chat-status-badge">
+                    {activeConversation.status}
+                  </div>
+                  <IconBtn
+                    icon={<i className="fa-solid fa-handshake" />}
+                    label="Confirm deal"
+                    onClick={openDealModal}
+                    disabled={activeConversation.status !== 'ACTIVE' || isBlocked}
+                  />
+                  <IconBtn
+                    icon={<i className="fa-solid fa-ban" />}
+                    label="Cancel deal"
+                    danger
+                    onClick={() => openActionDialog('fail')}
+                    disabled={activeConversation.status !== 'ACTIVE' || isBlocked}
+                  />
+                  <PanelMenu
+                    items={[
+                      {
+                        icon: <i className="fa-solid fa-circle-info" />,
+                        label: 'Listing Details',
+                        action: () => navigate(`/view-details/${activeConversation.listingId}`),
+                      },
+                      {
+                        icon: <i className="fa-solid fa-chart-simple" />,
+                        label: 'Deal Summary',
+                        action: () => setDealDrawerOpen(true),
+                      },
+                      ...(canArchiveConversation(activeConversation) ? [{
+                        icon: <i className={`fa-solid ${activeConversation.archived ? 'fa-box-open' : 'fa-box-archive'}`} />,
+                        label: activeConversation.archived ? 'Unarchive Chat' : 'Archive Chat',
+                        action: () => openActionDialog(activeConversation.archived ? 'unarchive' : 'archive'),
+                      }] : []),
+                      ...(canDeleteConversation(activeConversation) ? [{
+                        icon: <i className="fa-solid fa-trash" />,
+                        label: 'Delete Chat',
+                        action: () => openActionDialog('delete'),
+                        danger: true,
+                      }] : []),
+                      ...(buyerProfilePath ? [{
+                        icon: <i className="fa-solid fa-user" />,
+                        label: 'View Buyer Profile',
+                        action: () => navigate(buyerProfilePath),
+                      }] : []),
+                      ...(counterpartyId ? [{
+                        icon: <i className="fa-solid fa-user-slash" />,
+                        label: activeConversation?.blockedByMe
+                          ? `Unblock ${counterpartyRoleLabel}`
+                          : `Block ${counterpartyRoleLabel}`,
+                        action: () => openActionDialog(activeConversation?.blockedByMe ? 'unblock' : 'block'),
+                        danger: true,
+                      }] : []),
+                      ...(counterpartyId ? [{
+                        icon: <i className="fa-solid fa-flag" />,
+                        label: `Report ${counterpartyRoleLabel}`,
+                        action: () => openReportDialog(),
+                        danger: true,
+                      }] : []),
+                    ]}
+                  />
+                </div>
+              </div>
+
+              {/* message list */}
+              <div className="chat-message-list-container">
+                {isBlocked && (
+                  <div className="chat-blocked-banner">
+                    {activeConversation?.blockedByMe
+                      ? `You blocked this ${counterpartyRoleLabel.toLowerCase()}.`
+                      : `${counterpartyRoleLabel} blocked you. You cannot send messages.`}
+                  </div>
+                )}
+                <div className="chat-message-list" ref={messageListRef} onScroll={updateStickiness}>
+                  {loadingMessages ? (
+                    <div className="chat-messages-loading">
+                      <div className="ui-spinner" />
+                    </div>
+                  ) : (
+                    <>
+                      {renderedMessages}
+                      {isTyping && (
+                        <div className="chat-message-row chat-message-row--other">
+                          <div className="chat-message-avatar" style={colorFor(counterpartyName)}>
+                            {initialsFor(counterpartyName)}
+                          </div>
+                          <div className="chat-typing-indicator">
+                            <span></span><span></span><span></span>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                {showScrollDown && (
+                  <button className="chat-scroll-down" onClick={() => scrollMessagesToBottom('smooth')}>
+                    <i className="fa-solid fa-chevron-down" />
+                  </button>
+                )}
+              </div>
+
+              {/* composer */}
+              <div className="chat-composer-area">
+                <div className="chat-composer__inner">
+                  <div className="chat-composer__tools">
+                    <button className="chat-tool-btn" title="Add file" disabled><i className="fa-solid fa-paperclip" /></button>
+                    <button className="chat-tool-btn" title="Add emoji" disabled><i className="fa-regular fa-face-smile" /></button>
+                  </div>
+                  <textarea
+                    ref={composerRef}
+                    value={composer}
+                    onChange={(e) => setComposer(e.target.value)}
+                    onKeyDown={handleComposerKeyDown}
+                    placeholder={activeConversation.status === 'ACTIVE'
+                      ? (isBlocked ? 'Messaging disabled' : 'Type a message...')
+                      : 'Conversation closed'}
+                    disabled={activeConversation.status !== 'ACTIVE' || isBlocked}
+                    rows={1}
+                  />
+                  <button
+                    className="chat-send-button"
+                    onClick={handleSend}
+                    disabled={activeConversation.status !== 'ACTIVE' || isBlocked || !composer.trim()}
+                  >
+                    <i className="fa-solid fa-paper-plane" />
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </Card>
+
+        
+      </div>
+
+      {/* ── Deal Modal ── */}
+      {dealModalOpen && activeConversation && (
+        <div className="premium-modal-overlay" onClick={() => setDealModalOpen(false)}>
+          <Card className="premium-modal chat-deal-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Confirm Deal Terms</h2>
+              <button className="modal-close" onClick={() => setDealModalOpen(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <p>Finalize the quantity before closing the deal.</p>
+              
+              <div className="deal-option-grid">
+                <div 
+                  className={`deal-option ${useRequestedQty ? 'deal-option--active' : ''}`}
+                  onClick={() => setUseRequestedQty(true)}
+                >
+                  <div className="deal-option__check"><i className="fa-solid fa-check" /></div>
+                  <div className="deal-option__info">
+                    <strong>Requested Quantity</strong>
+                    <span>{activeConversation.requestedQuantity} units</span>
+                  </div>
+                </div>
+
+                <div 
+                  className={`deal-option ${!useRequestedQty ? 'deal-option--active' : ''}`}
+                  onClick={() => setUseRequestedQty(false)}
+                >
+                  <div className="deal-option__check"><i className="fa-solid fa-check" /></div>
+                  <div className="deal-option__info">
+                    <strong>Updated Quantity</strong>
+                    <span>Enter manually below</span>
+                  </div>
+                </div>
+              </div>
+
+              {!useRequestedQty && (
+                <div className="deal-quantity-input">
+                  <label>Agreed Quantity</label>
+                  <input
+                    type="number"
+                    value={dealQuantity}
+                    onChange={(e) => setDealQuantity(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <Button variant="outline" onClick={() => setDealModalOpen(false)}>Cancel</Button>
+              <Button onClick={handleDealConfirm} loading={dealLoading}>Confirm Deal</Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* ── Mobile Summary Drawer ── */}
+      {dealDrawerOpen && activeConversation && (
+        <div className="premium-modal-overlay" onClick={() => setDealDrawerOpen(false)}>
+          <div className="mobile-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="drawer-handle" />
+            <div className="drawer-header">
+              <h2>Deal Summary</h2>
+              <button className="drawer-close" onClick={() => setDealDrawerOpen(false)}>✕</button>
+            </div>
+            <div className="drawer-body">
+              <DealSummaryBody />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {actionDialog.open && actionDialog.conversation && (
+        <div className="premium-modal-overlay" onClick={closeActionDialog}>
+          <Card className="premium-modal chat-action-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                {actionDialog.type === 'delete'
+                  ? 'Delete Conversation'
+                  : actionDialog.type === 'unarchive'
+                    ? 'Unarchive Conversation'
+                    : actionDialog.type === 'fail'
+                      ? 'Cancel Deal'
+                      : actionDialog.type === 'unblock'
+                        ? `Unblock ${counterpartyRoleLabel}`
+                      : actionDialog.type === 'block'
+                        ? `Block ${counterpartyRoleLabel}`
+                    : 'Archive Conversation'}
+              </h2>
+              <button className="modal-close" onClick={closeActionDialog}>âœ•</button>
+            </div>
+            <div className="modal-body">
+              <p>
+                {actionDialog.type === 'delete'
+                  ? 'This will soft delete the conversation only for you. The other participant will still keep their copy.'
+                  : actionDialog.type === 'unarchive'
+                    ? 'This will move the conversation back into your active list.'
+                    : actionDialog.type === 'fail'
+                      ? actionDialog.step === 1
+                        ? 'This is the first confirmation. Click Continue to confirm you want to cancel the deal for both participants.'
+                        : 'This will mark the deal as failed for both participants and move the chat into the failed section.'
+                      : actionDialog.type === 'unblock'
+                        ? `Unblocking will allow this ${counterpartyRoleLabel.toLowerCase()} to interact with you again.`
+                      : actionDialog.type === 'block'
+                        ? `Blocking will prevent this ${counterpartyRoleLabel.toLowerCase()} from interacting with you.`
+                    : 'This will move the active conversation into your archived section without deleting it.'}
+              </p>
+              {actionDialog.type === 'block' && (
+                <div className="chat-action-modal__field">
+                  <label>Reason (optional)</label>
+                  <input
+                    type="text"
+                    value={blockReason}
+                    onChange={(event) => setBlockReason(event.target.value)}
+                    placeholder="e.g. Spam messages"
+                  />
+                </div>
+              )}
+              <div className="chat-action-modal__meta">
+                <strong>{actionDialog.conversation.listingName}</strong>
+                <span>{actionDialog.conversation.status}</span>
+              </div>
+            </div>
+              <div className="modal-footer">
+                <Button variant="outline" onClick={closeActionDialog} disabled={actionLoading}>Cancel</Button>
+              <Button
+                onClick={() => {
+                  if (actionDialog.type === 'fail' && actionDialog.step === 1) {
+                    setActionDialog((prev) => ({ ...prev, step: 2 }));
+                    return;
+                  }
+                  handleConversationAction();
+                }}
+                loading={actionLoading}
+                className={actionDialog.type === 'delete' || actionDialog.type === 'fail' || actionDialog.type === 'block' ? 'chat-action-modal__danger-btn' : ''}
+              >
+                {actionDialog.type === 'delete'
+                  ? 'Delete'
+                  : actionDialog.type === 'unarchive'
+                    ? 'Unarchive'
+                    : actionDialog.type === 'fail'
+                      ? actionDialog.step === 1
+                        ? 'Continue'
+                        : 'Cancel Deal'
+                    : actionDialog.type === 'unblock'
+                      ? `Unblock ${counterpartyRoleLabel}`
+                    : actionDialog.type === 'block'
+                      ? `Block ${counterpartyRoleLabel}`
+                    : 'Archive'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {reportDialog.open && (
+        <div className="premium-modal-overlay" onClick={closeReportDialog}>
+          <Card className="premium-modal chat-report-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Report {counterpartyRoleLabel}</h2>
+              <button className="modal-close" onClick={closeReportDialog}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="chat-action-modal__field">
+                <label>Reason</label>
+                <select
+                  value={reportDialog.reason}
+                  onChange={(event) => setReportDialog((prev) => ({ ...prev, reason: event.target.value }))}
+                >
+                  <option value="">Select a reason</option>
+                  <option value="Spam">Spam</option>
+                  <option value="Abuse">Abuse</option>
+                  <option value="Scam">Scam</option>
+                  <option value="Offensive content">Offensive content</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="chat-action-modal__field">
+                <label>Message</label>
+                <textarea
+                  rows={4}
+                  value={reportDialog.message}
+                  onChange={(event) => setReportDialog((prev) => ({ ...prev, message: event.target.value }))}
+                  placeholder="Describe the issue"
+                />
+              </div>
+              <div className="chat-action-modal__field">
+                <label>Screenshot URL (optional)</label>
+                <input
+                  type="text"
+                  value={reportDialog.imageUrl}
+                  onChange={(event) => setReportDialog((prev) => ({ ...prev, imageUrl: event.target.value }))}
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <Button variant="outline" onClick={closeReportDialog} disabled={reportDialog.loading}>Cancel</Button>
+              <Button onClick={handleReportSubmit} loading={reportDialog.loading}>Submit Report</Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      <Toast message={toast.message} type={toast.type} />
+    </section>
+  );
+}

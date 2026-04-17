@@ -7,4 +7,5 @@ public interface BuyerService {
     BuyerResponseDTO updateProfile(Long farmerId, BuyerRequestDTO request);
 
 
+    BuyerResponseDTO getProfileForFarmers(Long buyerId);
 }

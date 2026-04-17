@@ -2,8 +2,6 @@ package com.MyWebpage.register.login.news.service;
 
 import com.MyWebpage.register.login.exception.DuplicateNewsException;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
-import com.MyWebpage.register.login.farmer.Farmer;
-import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.news.dto.request.NewsRequest;
 import com.MyWebpage.register.login.news.dto.request.TrustedSourceRequest;
 import com.MyWebpage.register.login.news.dto.response.NewsResponse;
@@ -18,7 +16,12 @@ import com.MyWebpage.register.login.news.repository.NewsRepository;
 import com.MyWebpage.register.login.news.repository.SavedNewsRepository;
 import com.MyWebpage.register.login.news.repository.TrustedSourceRepository;
 import com.MyWebpage.register.login.news.scheduler.NewsIngestionScheduler;
-import com.MyWebpage.register.login.notification.enums.NotificationType;
+import com.MyWebpage.register.login.notification.enums.MessageSeverity;
+import com.MyWebpage.register.login.notification.enums.NotificationReferenceType;
+import com.MyWebpage.register.login.notification.enums.NotificationTargetType;
+import com.MyWebpage.register.login.notification.event.NotificationEvent;
+import com.MyWebpage.register.login.notification.event.NotificationEventReference;
+import com.MyWebpage.register.login.notification.event.NotificationEventTarget;
 import com.MyWebpage.register.login.notification.service.NotificationService;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
@@ -44,7 +47,6 @@ public class NewsServiceImpl implements NewsService {
     private final SavedNewsRepository savedNewsRepository;
     private final TrustedSourceRepository trustedSourceRepository;
     private final NotificationService notificationService;
-    private final FarmerRepo farmerRepo;
     private final NewsIngestionScheduler newsFetchScheduler;
     public NewsServiceImpl(
             NewsRepository newsRepository,
@@ -52,7 +54,6 @@ public class NewsServiceImpl implements NewsService {
             SavedNewsRepository savedNewsRepository,
             TrustedSourceRepository trustedSourceRepository,
             NotificationService notificationService,
-            FarmerRepo farmerRepo,
             NewsIngestionScheduler newsFetchScheduler
     ) {
         this.newsRepository = newsRepository;
@@ -60,7 +61,6 @@ public class NewsServiceImpl implements NewsService {
         this.savedNewsRepository = savedNewsRepository;
         this.trustedSourceRepository = trustedSourceRepository;
         this.notificationService = notificationService;
-        this.farmerRepo = farmerRepo;
         this.newsFetchScheduler = newsFetchScheduler;
     }
 
@@ -367,16 +367,26 @@ public class NewsServiceImpl implements NewsService {
         }
 
         String body = buildImportantNotificationBody(news);
-        for (Farmer farmer : farmerRepo.findAll()) {
-            notificationService.createNotification(
-                    farmer.getFarmerId(),
-                    news.getTitle(),
-                    body,
-                    NotificationType.NEWS_IMPORTANT,
-                    String.valueOf(news.getId()),
-                    "NEWS"
-            );
+        NotificationEvent event = new NotificationEvent();
+        event.setEventType("NEWS_IMPORTANT");
+        event.setCategoryName(news.getCategory().name());
+        event.setSeverity(resolveNewsSeverity(news));
+        event.setTitle(news.getTitle());
+        event.setMessage(body);
+        event.setTarget(new NotificationEventTarget(NotificationTargetType.ALL, "ALL"));
+        event.setReference(new NotificationEventReference(NotificationReferenceType.NEWS, news.getId()));
+        event.setCreatedAt(LocalDateTime.now(com.MyWebpage.register.login.news.util.NewsTime.IST));
+        notificationService.publishEvent(event);
+    }
+
+    private MessageSeverity resolveNewsSeverity(News news) {
+        if (news.getCategory() == NewsCategory.WEATHER || news.getCategory() == NewsCategory.LAW) {
+            return MessageSeverity.HIGH;
         }
+        if (news.getCategory() == NewsCategory.SUBSIDY || news.getCategory() == NewsCategory.LOAN) {
+            return MessageSeverity.MEDIUM;
+        }
+        return MessageSeverity.LOW;
     }
 
     private String buildImportantNotificationBody(News news) {

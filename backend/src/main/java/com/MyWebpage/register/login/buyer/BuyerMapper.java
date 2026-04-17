@@ -19,6 +19,7 @@ public class BuyerMapper {
         farmer.setDistrict(dto.getDistrict());
         farmer.setDob(dto.getDob());
         farmer.setAadharNo(dto.getAadharNo());
+        farmer.setCity(dto.getCity());
         return farmer;
     }
 
@@ -35,6 +36,7 @@ public class BuyerMapper {
                 .district(farmer.getDistrict())
                 .dob(farmer.getDob())
                 .aadharNo(farmer.getAadharNo())
+                .city((farmer.getCity()))
                 .build();
     }
 

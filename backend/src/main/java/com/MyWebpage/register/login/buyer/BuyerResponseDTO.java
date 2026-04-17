@@ -27,6 +27,9 @@ public class BuyerResponseDTO {
 
     private String aadharNo;
 
+    private String city;
+
+
 
 
 }
