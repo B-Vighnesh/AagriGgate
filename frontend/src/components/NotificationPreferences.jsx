@@ -1,9 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import '../assets/NotificationPreferences.css';
 import { getPreferences, resetPreferences, setPreference } from '../lib/notificationApi';
 
-/* ── category metadata ───────────────────────────────────── */
+const DELIVERY_OPTIONS = [
+  {
+    key: 'NOTIFICATION',
+    label: 'Notification',
+    icon: 'fa-regular fa-bell',
+    description: 'Show it in your in-app notifications list.',
+  },
+  {
+    key: 'ALERT',
+    label: 'Alert',
+    icon: 'fa-solid fa-triangle-exclamation',
+    description: 'Treat it as a higher-priority actionable alert.',
+  },
+  {
+    key: 'OFF',
+    label: 'Off',
+    icon: 'fa-regular fa-bell-slash',
+    description: 'Do not deliver this category unless the system forces it.',
+  },
+];
 
 const CATEGORY_META = {
   NEWS_IMPORTANT: {
@@ -48,47 +67,31 @@ const prettifyCategory = (value) =>
     .toLowerCase()
     .split('_')
     .filter(Boolean)
-    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 
 const getMeta = (item) => {
-  const cat = CATEGORY_META[item?.categoryName];
+  const category = CATEGORY_META[item?.categoryName];
   return {
-    title: cat?.title || prettifyCategory(item?.categoryName) || 'Notification',
-    description: item?.description || cat?.description || '',
-    icon: cat?.icon || 'fa-regular fa-bell',
+    title: category?.title || prettifyCategory(item?.categoryName) || 'Notification',
+    description: item?.description || category?.description || 'Choose how this category should reach you.',
+    icon: category?.icon || 'fa-regular fa-bell',
   };
 };
 
-/* ── toggle switch ───────────────────────────────────────── */
+const getEffectiveDeliveryType = (item) => item?.effectiveDeliveryType || item?.defaultDeliveryType || 'NOTIFICATION';
 
-function Toggle({ checked, onChange, disabled, id, label }) {
-  return (
-    <label className="ntf-toggle" htmlFor={id}>
-      <input
-        id={id}
-        type="checkbox"
-        className="ntf-toggle__input"
-        checked={checked}
-        onChange={onChange}
-        disabled={disabled}
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-      />
-      <span className="ntf-toggle__track" aria-hidden="true">
-        <span className="ntf-toggle__thumb" />
-      </span>
-    </label>
-  );
-}
-
-/* ── main component ──────────────────────────────────────── */
+const getTone = (deliveryType) => {
+  if (deliveryType === 'ALERT') return 'alert';
+  if (deliveryType === 'OFF') return 'off';
+  return 'notification';
+};
 
 export default function NotificationPreferences({ open, onClose, onToast }) {
   const [preferences, setPreferences] = useState([]);
   const [loading, setLoading] = useState(false);
   const [savingCategory, setSavingCategory] = useState('');
+  const [savedCategory, setSavedCategory] = useState('');
 
   useEffect(() => {
     if (!open) return undefined;
@@ -106,29 +109,33 @@ export default function NotificationPreferences({ open, onClose, onToast }) {
       }
     })();
 
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [open, onToast]);
+
+  const counts = useMemo(() => preferences.reduce((acc, item) => {
+    const key = getEffectiveDeliveryType(item);
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, { NOTIFICATION: 0, ALERT: 0, OFF: 0 }), [preferences]);
 
   if (!open) return null;
 
-  const isEnabled = (item) => {
-    const effective = item.effectiveDeliveryType || item.defaultDeliveryType || 'NOTIFICATION';
-    return effective !== 'OFF';
+  const flashSaved = (categoryName) => {
+    setSavedCategory(categoryName);
+    window.setTimeout(() => setSavedCategory(''), 1500);
   };
 
-  const handleToggle = async (item) => {
+  const handleSelect = async (item, deliveryType) => {
     const categoryName = item.categoryName;
     if (savingCategory === categoryName) return;
 
-    const currentlyEnabled = isEnabled(item);
-    const newDelivery = currentlyEnabled ? 'OFF' : (item.defaultDeliveryType || 'NOTIFICATION');
-
-    // optimistic update
     const previous = item;
     const optimistic = {
       ...item,
-      effectiveDeliveryType: newDelivery,
-      userSelectedDeliveryType: newDelivery === item.defaultDeliveryType ? null : newDelivery,
+      effectiveDeliveryType: deliveryType,
+      userSelectedDeliveryType: deliveryType === item.defaultDeliveryType ? null : deliveryType,
     };
 
     setPreferences((prev) =>
@@ -137,10 +144,11 @@ export default function NotificationPreferences({ open, onClose, onToast }) {
     setSavingCategory(categoryName);
 
     try {
-      const updated = await setPreference(categoryName, newDelivery);
+      const updated = await setPreference(categoryName, deliveryType);
       setPreferences((prev) =>
         prev.map((entry) => (entry.categoryName === categoryName ? updated : entry)),
       );
+      flashSaved(categoryName);
     } catch (err) {
       setPreferences((prev) =>
         prev.map((entry) => (entry.categoryName === categoryName ? previous : entry)),
@@ -165,19 +173,38 @@ export default function NotificationPreferences({ open, onClose, onToast }) {
     }
   };
 
-  const enabledCount = preferences.filter(isEnabled).length;
-
   return (
-    <div className="ntf-prefs-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Notification Preferences">
+    <div
+      className="ntf-prefs-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Notification Preferences"
+    >
       <div className="ntf-prefs" onClick={(e) => e.stopPropagation()}>
-        {/* header */}
         <header className="ntf-prefs__header">
-          <div className="ntf-prefs__header-text">
+          <div className="ntf-prefs__hero">
+            <span className="ntf-prefs__eyebrow">Delivery Controls</span>
             <h2 className="ntf-prefs__title">Notification Preferences</h2>
             <p className="ntf-prefs__subtitle">
-              {enabledCount} of {preferences.length} categories enabled
+              Choose whether each category should reach you as a notification, an alert, or stay off.
             </p>
+            <div className="ntf-prefs__summary">
+              <div className="ntf-prefs__summary-card">
+                <span>Notifications</span>
+                <strong>{counts.NOTIFICATION}</strong>
+              </div>
+              <div className="ntf-prefs__summary-card ntf-prefs__summary-card--alert">
+                <span>Alerts</span>
+                <strong>{counts.ALERT}</strong>
+              </div>
+              <div className="ntf-prefs__summary-card ntf-prefs__summary-card--off">
+                <span>Off</span>
+                <strong>{counts.OFF}</strong>
+              </div>
+            </div>
           </div>
+
           <button
             type="button"
             className="ntf-prefs__close"
@@ -188,12 +215,11 @@ export default function NotificationPreferences({ open, onClose, onToast }) {
           </button>
         </header>
 
-        {/* body */}
         <div className="ntf-prefs__body">
           {loading && (
             <div className="ntf-prefs__loading">
               <span className="ui-spinner" aria-hidden="true" />
-              <span>Loading preferences…</span>
+              <span>Loading preferences...</span>
             </div>
           )}
 
@@ -201,37 +227,66 @@ export default function NotificationPreferences({ open, onClose, onToast }) {
             <div className="ntf-prefs__list" role="list">
               {preferences.map((item) => {
                 const meta = getMeta(item);
-                const enabled = isEnabled(item);
+                const effective = getEffectiveDeliveryType(item);
                 const saving = savingCategory === item.categoryName;
+                const tone = getTone(effective);
+                const customized = Boolean(item.userSelectedDeliveryType);
 
                 return (
-                  <div
+                  <section
                     key={item.categoryName}
-                    className={`ntf-prefs__row ${enabled ? '' : 'ntf-prefs__row--off'}`}
+                    className={`ntf-prefs__row ntf-prefs__row--${tone}`}
                     role="listitem"
                   >
-                    <div className="ntf-prefs__row-icon" aria-hidden="true">
-                      <i className={meta.icon} />
+                    <div className="ntf-prefs__row-head">
+                      <div className="ntf-prefs__row-icon" aria-hidden="true">
+                        <i className={meta.icon} />
+                      </div>
+                      <div className="ntf-prefs__row-copy">
+                        <div className="ntf-prefs__row-title">
+                          <strong>{meta.title}</strong>
+                          <span className={`ntf-prefs__pill ntf-prefs__pill--${tone}`}>{effective}</span>
+                          {savedCategory === item.categoryName ? <span className="ntf-prefs__saved">Saved</span> : null}
+                        </div>
+                        <span>{meta.description}</span>
+                      </div>
                     </div>
-                    <div className="ntf-prefs__row-copy">
-                      <strong>{meta.title}</strong>
-                      <span>{meta.description}</span>
+
+                    <div className="ntf-prefs__meta">
+                      <span>Default: <strong>{item.defaultDeliveryType}</strong></span>
+                      <span>{customized ? 'Custom selection' : 'Using system default'}</span>
                     </div>
-                    <Toggle
-                      id={`pref-toggle-${item.categoryName}`}
-                      checked={enabled}
-                      onChange={() => handleToggle(item)}
-                      disabled={saving}
-                      label={`${meta.title} ${enabled ? 'enabled' : 'disabled'}`}
-                    />
-                  </div>
+
+                    <div className="ntf-prefs__options" role="radiogroup" aria-label={`${meta.title} delivery type`}>
+                      {DELIVERY_OPTIONS.map((option) => {
+                        const selected = effective === option.key;
+                        return (
+                          <button
+                            key={option.key}
+                            type="button"
+                            className={`ntf-prefs__option ${selected ? 'ntf-prefs__option--selected' : ''}`}
+                            onClick={() => handleSelect(item, option.key)}
+                            disabled={saving}
+                            aria-pressed={selected}
+                          >
+                            <div className="ntf-prefs__option-icon" aria-hidden="true">
+                              <i className={option.icon} />
+                            </div>
+                            <div className="ntf-prefs__option-copy">
+                              <strong>{option.label}</strong>
+                              <small>{option.description}</small>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
                 );
               })}
             </div>
           )}
         </div>
 
-        {/* footer */}
         <footer className="ntf-prefs__footer">
           <button
             type="button"
