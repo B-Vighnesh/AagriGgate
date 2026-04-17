@@ -167,6 +167,10 @@
   box-shadow: 0 14px 36px rgba(22, 67, 49, 0.06);
 }
 
+.ntf-preferences-panel .ntf-prefs-page-section {
+  width: 100%;
+}
+
 .ntf-item {
   position: relative;
   display: grid;
