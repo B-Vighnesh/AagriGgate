@@ -198,12 +198,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     private LocalDateTime defaultExpiry(MessageSeverity severity, LocalDateTime createdAt) {
         LocalDateTime base = createdAt == null ? LocalDateTime.now() : createdAt;
-        return switch (severity) {
-            case CRITICAL -> base.plusDays(1);
-            case HIGH -> base.plusHours(12);
-            case MEDIUM -> base.plusHours(6);
-            case LOW -> base.plusHours(3);
-        };
+//        return switch (severity) {
+//            case CRITICAL -> base.plusDays(1);
+//            case HIGH -> base.plusHours(12);
+//            case MEDIUM -> base.plusHours(6);
+//            case LOW -> base.plusHours(3);
+//        };
+        return null;
     }
 
     private void populateLocationData(UserMessage message, NotificationEvent event) {
