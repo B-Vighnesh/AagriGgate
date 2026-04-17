@@ -155,7 +155,6 @@ export default function Notifications() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [prefsOpen, setPrefsOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
 
   const loadingRef = useRef(false);
@@ -306,15 +305,14 @@ export default function Notifications() {
               >
                 Mark all read
               </button>
-              <button
-                type="button"
+              <a
+                href="#notification-preferences"
                 className="ntf-panel__action ntf-panel__action--prefs"
-                onClick={() => setPrefsOpen(true)}
-                aria-label="Notification preferences"
+                aria-label="Jump to notification settings"
               >
                 <i className="fa-solid fa-gear" aria-hidden="true" />
-                <span>Preferences</span>
-              </button>
+                <span>Settings</span>
+              </a>
             </div>
           </header>
 
@@ -366,13 +364,11 @@ export default function Notifications() {
             ) : null}
           </div>
         </section>
-      </div>
 
-      <NotificationPreferences
-        open={prefsOpen}
-        onClose={() => setPrefsOpen(false)}
-        onToast={showToast}
-      />
+        <section className="ntf-preferences-panel">
+          <NotificationPreferences onToast={showToast} />
+        </section>
+      </div>
       <Toast message={toast.message} type={toast.type} />
     </div>
   );

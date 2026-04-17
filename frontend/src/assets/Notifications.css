@@ -18,6 +18,8 @@
 .ntf-layout {
   max-width: 920px;
   margin: 0 auto;
+  display: grid;
+  gap: 18px;
 }
 
 .ntf-panel {
@@ -151,6 +153,18 @@
 .ntf-section__list {
   display: grid;
   gap: 10px;
+}
+
+.ntf-preferences-panel {
+  display: grid;
+  gap: 14px;
+  padding: 22px 24px;
+  border-radius: 24px;
+  border: 1px solid var(--color-border);
+  background:
+    radial-gradient(circle at top right, rgba(234, 143, 68, 0.06), transparent 24%),
+    linear-gradient(180deg, #ffffff, #f9fcfb);
+  box-shadow: 0 14px 36px rgba(22, 67, 49, 0.06);
 }
 
 .ntf-item {
@@ -491,6 +505,14 @@
     border-left: 0;
     border-right: 0;
     box-shadow: none;
+  }
+
+  .ntf-preferences-panel {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    box-shadow: none;
+    padding: 16px 12px 24px;
   }
 
   .ntf-panel__header {
