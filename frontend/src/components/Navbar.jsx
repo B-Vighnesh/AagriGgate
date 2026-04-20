@@ -246,7 +246,7 @@ export default function Navbar() {
     setNotificationPreviewLoading(true);
     try {
       const [notificationsResult, alertsResult] = await Promise.allSettled([
-        getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 5 }),
+        getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 10 }),
         getActiveAlerts(),
       ]);
 
@@ -257,7 +257,9 @@ export default function Navbar() {
         ? (Array.isArray(alertsResult.value) ? alertsResult.value : [])
         : [];
 
-      setNotificationPreview(sortNotificationsByDate([...alerts, ...notifications]).slice(0, 5));
+      const unreadNotifications = notifications.filter((item) => item?.isRead !== true);
+      const unreadAlerts = alerts.filter((item) => item?.isAcknowledged !== true);
+      setNotificationPreview(sortNotificationsByDate([...unreadAlerts, ...unreadNotifications]).slice(0, 5));
     } catch {
       setNotificationPreview([]);
     } finally {
@@ -408,13 +410,7 @@ export default function Navbar() {
               {notificationOverlayOpen ? (
                 <div className="notification-overlay" role="dialog" aria-label="Latest notifications">
                   <div className="notification-overlay__head">
-                    <strong>Latest Updates</strong>
-                    <button type="button" className="notification-overlay__show-all" onClick={() => {
-                      setNotificationOverlayOpen(false);
-                      navigate('/notifications');
-                    }}>
-                      Show All
-                    </button>
+                    <strong>Unread Notifications</strong>
                   </div>
 
                   <div className="notification-overlay__body">
@@ -423,7 +419,7 @@ export default function Navbar() {
                     ) : null}
 
                     {!notificationPreviewLoading && notificationPreview.length === 0 ? (
-                      <div className="notification-overlay__state">No recent notifications.</div>
+                      <div className="notification-overlay__state">No new notifications.</div>
                     ) : null}
 
                     {!notificationPreviewLoading && notificationPreview.length > 0 ? (
@@ -446,6 +442,19 @@ export default function Navbar() {
                         ))}
                       </div>
                     ) : null}
+                  </div>
+
+                  <div className="notification-overlay__footer">
+                    <button
+                      type="button"
+                      className="notification-overlay__show-all"
+                      onClick={() => {
+                        setNotificationOverlayOpen(false);
+                        navigate('/notifications');
+                      }}
+                    >
+                      {notificationPreview.length >= 5 ? 'Show More' : 'Show All'}
+                    </button>
                   </div>
                 </div>
               ) : null}
