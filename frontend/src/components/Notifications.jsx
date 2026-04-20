@@ -7,7 +7,6 @@ import { getRole, isLoggedIn } from '../lib/auth';
 import {
   acknowledgeAlert,
   countUnread,
-  getActiveAlerts,
   getNotifications,
   markAllAsRead,
   markAsRead,
@@ -31,65 +30,42 @@ function formatTimestamp(value) {
   return TIME_FORMATTER.format(date);
 }
 
-function NotificationItem({ notification, isRead, onRead }) {
+function NotificationItem({ item, isSeen, onOpen }) {
+  const deliveryType = String(item.deliveryType || 'NOTIFICATION').toUpperCase();
+
   return (
     <button
       type="button"
-      className={`ntf-item ${isRead ? 'ntf-item--read' : 'ntf-item--unread'}`}
-      onClick={() => onRead(notification, isRead)}
-      aria-label={`${isRead ? '' : 'Unread: '}${notification.title}`}
+      className={`ntf-item ${isSeen ? 'ntf-item--read' : 'ntf-item--unread'}`}
+      onClick={() => onOpen(item, isSeen)}
+      aria-label={`${isSeen ? '' : 'Unread: '}${item.title}`}
     >
-      <span className={`ntf-item__dot ${isRead ? 'ntf-item__dot--read' : 'ntf-item__dot--unread'}`} aria-hidden="true" />
+      <span className={`ntf-item__dot ${isSeen ? 'ntf-item__dot--read' : 'ntf-item__dot--unread'}`} aria-hidden="true" />
       <div className="ntf-item__body">
         <div className="ntf-item__title-row">
-          <span className={`ntf-item__title ${isRead ? '' : 'ntf-item__title--bold'}`}>
-            {notification.title}
+          <span className={`ntf-item__title ${isSeen ? '' : 'ntf-item__title--bold'}`}>
+            {item.title}
           </span>
           <div className="ntf-item__title-meta">
-            {notification.severity ? (
-              <span className={`ntf-item__pill ntf-item__pill--${String(notification.severity).toLowerCase()}`}>
-                {notification.severity}
+            <span className={`ntf-item__state ${isSeen ? 'ntf-item__state--read' : 'ntf-item__state--unread'}`}>
+              {isSeen ? 'Read' : 'Unread'}
+            </span>
+            {item.severity ? (
+              <span className={`ntf-item__pill ntf-item__pill--${String(item.severity).toLowerCase()}`}>
+                {item.severity}
               </span>
             ) : null}
-            <time className="ntf-item__time" dateTime={notification.createdAt}>
-              {formatTimestamp(notification.createdAt)}
+            <time className="ntf-item__time" dateTime={item.createdAt}>
+              {formatTimestamp(item.createdAt)}
             </time>
           </div>
         </div>
-        <p className="ntf-item__message">{notification.message}</p>
+        <p className="ntf-item__message">{item.message}</p>
         <div className="ntf-item__meta">
-          <span className="ntf-item__type">{notification.deliveryType || 'NOTIFICATION'}</span>
-          {notification.categoryName ? <span>{notification.categoryName}</span> : null}
+          <span className="ntf-item__type">{deliveryType}</span>
+          {item.categoryName ? <span>{item.categoryName}</span> : null}
         </div>
         <span className="ntf-item__cta">View Details</span>
-      </div>
-    </button>
-  );
-}
-
-function AlertItem({ alert, onOpen }) {
-  return (
-    <button type="button" className="ntf-alert" onClick={() => onOpen(alert)}>
-      <div className="ntf-alert__body">
-        <div className="ntf-alert__title-row">
-          <strong className="ntf-alert__title">{alert.title}</strong>
-          {alert.severity ? (
-            <span className={`ntf-alert__pill ntf-alert__pill--${String(alert.severity).toLowerCase()}`}>
-              {alert.severity}
-            </span>
-          ) : null}
-        </div>
-        <p className="ntf-alert__message">{alert.message}</p>
-        <div className="ntf-alert__meta">
-          <span>{alert.deliveryType || 'ALERT'}</span>
-          {alert.categoryName ? <span>{alert.categoryName}</span> : null}
-        </div>
-        <time className="ntf-alert__time" dateTime={alert.createdAt}>
-          {formatTimestamp(alert.createdAt)}
-        </time>
-      </div>
-      <div className="ntf-alert__actions" aria-hidden="true">
-        <span className="ntf-alert__btn ntf-alert__btn--ghost">Open</span>
       </div>
     </button>
   );
@@ -129,9 +105,8 @@ export default function Notifications() {
   const role = getRole();
   const loggedIn = isLoggedIn();
 
-  const [notifications, setNotifications] = useState([]);
-  const [readIds, setReadIds] = useState(new Set());
-  const [alerts, setAlerts] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [seenIds, setSeenIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(0);
@@ -149,8 +124,7 @@ export default function Notifications() {
 
   useEffect(() => {
     if (!loggedIn) {
-      setNotifications([]);
-      setAlerts([]);
+      setMessages([]);
       setUnreadCount(0);
       setLoading(false);
       syncNotificationCount(0);
@@ -164,31 +138,24 @@ export default function Notifications() {
     (async () => {
       setLoading(true);
 
-      const [notificationsResult, alertsResult, unreadResult] = await Promise.allSettled([
-        getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 12 }),
-        getActiveAlerts(),
+      const [messagesResult, unreadResult] = await Promise.allSettled([
+        getNotifications({ page: 0, size: 12 }),
         countUnread(),
       ]);
 
       if (!active) return;
 
-      if (notificationsResult.status === 'fulfilled') {
-        const page = notificationsResult.value;
-        const items = Array.isArray(page?.content) ? page.content : Array.isArray(page) ? page : [];
-        setNotifications(items);
-        setPage(Number(page?.number ?? 0));
-        setHasMore(page?.last === false || Number(page?.totalPages ?? 0) > 1);
+      if (messagesResult.status === 'fulfilled') {
+        const resultPage = messagesResult.value;
+        const items = Array.isArray(resultPage?.content) ? resultPage.content : Array.isArray(resultPage) ? resultPage : [];
+        setMessages(items);
+        setPage(Number(resultPage?.number ?? 0));
+        setHasMore(resultPage?.last === false || Number(resultPage?.totalPages ?? 0) > 1);
       } else {
-        setNotifications([]);
+        setMessages([]);
         setPage(0);
         setHasMore(false);
-        showToast(notificationsResult.reason?.message || 'Failed to load notifications.', 'error');
-      }
-
-      if (alertsResult.status === 'fulfilled') {
-        setAlerts(Array.isArray(alertsResult.value) ? alertsResult.value : []);
-      } else {
-        setAlerts([]);
+        showToast(messagesResult.reason?.message || 'Failed to load notifications.', 'error');
       }
 
       if (unreadResult.status === 'fulfilled') {
@@ -196,10 +163,10 @@ export default function Notifications() {
         setUnreadCount(nextUnread);
         syncNotificationCount(nextUnread);
       } else {
-        const fallbackUnread = (notificationsResult.status === 'fulfilled'
-          ? (Array.isArray(notificationsResult.value?.content) ? notificationsResult.value.content : [])
+        const fallbackUnread = (messagesResult.status === 'fulfilled'
+          ? (Array.isArray(messagesResult.value?.content) ? messagesResult.value.content : [])
           : []
-        ).filter((item) => item?.isRead !== true).length;
+        ).filter((item) => String(item?.deliveryType || '').toUpperCase() === 'NOTIFICATION' && item?.isRead !== true).length;
         setUnreadCount(fallbackUnread);
         syncNotificationCount(fallbackUnread);
       }
@@ -221,12 +188,12 @@ export default function Notifications() {
       if (!entries[0]?.isIntersecting) return;
 
       setLoadingMore(true);
-      getNotifications({ deliveryType: 'NOTIFICATION', page: page + 1, size: 12 })
+      getNotifications({ page: page + 1, size: 12 })
         .then((result) => {
           const items = Array.isArray(result?.content) ? result.content : [];
-          setNotifications((prev) => {
-            const seen = new Set(prev.map((item) => item.id));
-            const nextItems = items.filter((item) => !seen.has(item.id));
+          setMessages((prev) => {
+            const existing = new Set(prev.map((item) => item.id));
+            const nextItems = items.filter((item) => !existing.has(item.id));
             return [...prev, ...nextItems];
           });
           setPage(Number(result?.number ?? page + 1));
@@ -245,43 +212,60 @@ export default function Notifications() {
     return () => observer.disconnect();
   }, [hasMore, loading, loadingMore, loggedIn, page, showToast]);
 
-  const handleNotificationRead = useCallback(async (notification, alreadyRead = false) => {
-    if (!alreadyRead) {
-      setReadIds((prev) => new Set(prev).add(notification.id));
-      setUnreadCount((prev) => {
-        const next = Math.max(prev - 1, 0);
-        syncNotificationCount(next);
-        return next;
-      });
+  const isSeen = useCallback((item) => {
+    const isAlert = String(item.deliveryType || '').toUpperCase() === 'ALERT';
+    return seenIds.has(item.id) || (isAlert ? item.isAcknowledged === true : item.isRead === true);
+  }, [seenIds]);
 
-      try {
-        await markAsRead(notification.id);
-      } catch (err) {
-        setReadIds((prev) => {
-          const next = new Set(prev);
-          next.delete(notification.id);
-          return next;
-        });
+  const handleItemOpen = useCallback(async (item, alreadySeen = false) => {
+    const isAlert = String(item.deliveryType || '').toUpperCase() === 'ALERT';
+
+    if (!alreadySeen) {
+      setSeenIds((prev) => new Set(prev).add(item.id));
+      if (!isAlert) {
         setUnreadCount((prev) => {
-          const next = prev + 1;
+          const next = Math.max(prev - 1, 0);
           syncNotificationCount(next);
           return next;
         });
-        showToast(err.message || 'Failed to mark as read.', 'error');
+      }
+
+      try {
+        if (isAlert) {
+          await acknowledgeAlert(item.id);
+        } else {
+          await markAsRead(item.id);
+        }
+      } catch (err) {
+        setSeenIds((prev) => {
+          const next = new Set(prev);
+          next.delete(item.id);
+          return next;
+        });
+        if (!isAlert) {
+          setUnreadCount((prev) => {
+            const next = prev + 1;
+            syncNotificationCount(next);
+            return next;
+          });
+        }
+        showToast(err.message || 'Failed to update notification.', 'error');
         return;
       }
     }
 
-    const target = resolveNotificationRoute(notification, role);
+    const target = resolveNotificationRoute(item, role);
     if (target) navigate(target);
   }, [navigate, role, showToast]);
 
   const handleMarkAllRead = useCallback(async () => {
     try {
       await markAllAsRead();
-      setReadIds((prev) => {
+      setSeenIds((prev) => {
         const next = new Set(prev);
-        notifications.forEach((notification) => next.add(notification.id));
+        messages
+          .filter((item) => String(item.deliveryType || '').toUpperCase() === 'NOTIFICATION')
+          .forEach((item) => next.add(item.id));
         return next;
       });
       setUnreadCount(0);
@@ -290,30 +274,15 @@ export default function Notifications() {
     } catch (err) {
       showToast(err.message || 'Failed to mark all as read.', 'error');
     }
-  }, [notifications, showToast]);
-
-  const handleAlertAck = useCallback(async (alert) => {
-    const target = resolveNotificationRoute(alert, role);
-    try {
-      await acknowledgeAlert(alert.id);
-      setAlerts((prev) => prev.filter((entry) => entry.id !== alert.id));
-      showToast('Alert acknowledged.', 'success');
-      if (target) {
-        navigate(target);
-      }
-    } catch (err) {
-      showToast(err.message || 'Failed to acknowledge alert.', 'error');
-    }
-  }, [navigate, role, showToast]);
-
-  const isNotificationRead = useCallback((notification) => (
-    readIds.has(notification.id) || notification.isRead === true
-  ), [readIds]);
+  }, [messages, showToast]);
 
   const unreadDisplay = useMemo(() => {
-    const count = notifications.filter((notification) => !isNotificationRead(notification)).length;
+    const count = messages.filter((item) => {
+      const isAlert = String(item.deliveryType || '').toUpperCase() === 'ALERT';
+      return !isAlert && !isSeen(item);
+    }).length;
     return Math.max(count, unreadCount);
-  }, [isNotificationRead, notifications, unreadCount]);
+  }, [isSeen, messages, unreadCount]);
 
   if (!loggedIn) {
     return (
@@ -331,7 +300,6 @@ export default function Notifications() {
         <section className="ntf-panel" aria-label="Notifications">
           <header className="ntf-panel__header">
             <div className="ntf-panel__title-group">
-             
               <h1 className="ntf-panel__title">Notifications</h1>
               {unreadDisplay > 0 ? (
                 <span className="ntf-panel__badge" aria-label={`${unreadDisplay} unread`}>
@@ -361,43 +329,23 @@ export default function Notifications() {
           </header>
 
           <div className="ntf-panel__body">
-            
-
             {loading ? <SkeletonLoader /> : null}
 
             {!loading ? (
               <>
-                {alerts.length > 0 ? (
-                  <section className="ntf-section" aria-label="Active alerts">
+                {messages.length > 0 ? (
+                  <section className="ntf-section" aria-label="All messages">
                     <div className="ntf-section__head">
-                      <strong>Active Alerts</strong>
-                      <span className="ntf-section__count">{alerts.length}</span>
+                      <strong>All Messages</strong>
+                      <span className="ntf-section__count">{messages.length}</span>
                     </div>
                     <div className="ntf-section__list">
-                      {alerts.map((alert) => (
-                        <AlertItem
-                          key={alert.id}
-                          alert={alert}
-                          onOpen={handleAlertAck}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                ) : null}
-
-                {notifications.length > 0 ? (
-                  <section className="ntf-section" aria-label="Recent notifications">
-                    <div className="ntf-section__head">
-                      <strong>Recent</strong>
-                      <span className="ntf-section__count">{notifications.length}</span>
-                    </div>
-                    <div className="ntf-section__list">
-                      {notifications.map((notification) => (
+                      {messages.map((item) => (
                         <NotificationItem
-                          key={notification.id}
-                          notification={notification}
-                          isRead={isNotificationRead(notification)}
-                          onRead={handleNotificationRead}
+                          key={`${item.deliveryType}-${item.id}`}
+                          item={item}
+                          isSeen={isSeen(item)}
+                          onOpen={handleItemOpen}
                         />
                       ))}
                     </div>
@@ -411,7 +359,7 @@ export default function Notifications() {
                   </section>
                 ) : null}
 
-                {alerts.length === 0 && notifications.length === 0 ? <EmptyState /> : null}
+                {messages.length === 0 ? <EmptyState /> : null}
               </>
             ) : null}
           </div>
