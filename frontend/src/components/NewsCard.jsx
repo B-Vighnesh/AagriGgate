@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../assets/NewsCard.css';
 import { formatNewsDate } from '../lib/dateUtils';
 
@@ -47,6 +48,7 @@ export default function NewsCard({
   onUnsave,
   showSaveButton = true,
 }) {
+  const navigate = useNavigate();
   const [imageFailed, setImageFailed] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -55,8 +57,9 @@ export default function NewsCard({
   const categoryClass = category.toLowerCase();
 
   const handleOpen = () => {
-    if (news?.sourceUrl) {
-      window.open(news.sourceUrl, '_blank', 'noopener,noreferrer');
+    const newsId = news?.newsId ?? news?.id;
+    if (newsId) {
+      navigate(`/news/${newsId}`);
     }
   };
 
