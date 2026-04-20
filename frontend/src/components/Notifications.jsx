@@ -39,17 +39,22 @@ function NotificationItem({ notification, isRead, onRead }) {
       onClick={() => onRead(notification, isRead)}
       aria-label={`${isRead ? '' : 'Unread: '}${notification.title}`}
     >
-      {!isRead ? <span className="ntf-item__dot" aria-hidden="true" /> : null}
+      <span className={`ntf-item__dot ${isRead ? 'ntf-item__dot--read' : 'ntf-item__dot--unread'}`} aria-hidden="true" />
       <div className="ntf-item__body">
         <div className="ntf-item__title-row">
           <span className={`ntf-item__title ${isRead ? '' : 'ntf-item__title--bold'}`}>
             {notification.title}
           </span>
-          {notification.severity ? (
-            <span className={`ntf-item__pill ntf-item__pill--${String(notification.severity).toLowerCase()}`}>
-              {notification.severity}
-            </span>
-          ) : null}
+          <div className="ntf-item__title-meta">
+            {notification.severity ? (
+              <span className={`ntf-item__pill ntf-item__pill--${String(notification.severity).toLowerCase()}`}>
+                {notification.severity}
+              </span>
+            ) : null}
+            <time className="ntf-item__time" dateTime={notification.createdAt}>
+              {formatTimestamp(notification.createdAt)}
+            </time>
+          </div>
         </div>
         <p className="ntf-item__message">{notification.message}</p>
         <div className="ntf-item__meta">
@@ -58,9 +63,6 @@ function NotificationItem({ notification, isRead, onRead }) {
         </div>
         <span className="ntf-item__cta">View Details</span>
       </div>
-      <time className="ntf-item__time" dateTime={notification.createdAt}>
-        {formatTimestamp(notification.createdAt)}
-      </time>
     </button>
   );
 }
@@ -366,9 +368,7 @@ export default function Notifications() {
           </header>
 
           <div className="ntf-panel__body">
-            <div className="ntf-panel__note">
-              <strong>Notifications</strong> stay inside AagriGgate, while <strong>alerts</strong> are the urgent items intended for device-level attention.
-            </div>
+            
 
             {loading ? <SkeletonLoader /> : null}
 
