@@ -192,6 +192,9 @@ export default function ViewApproach() {
               </div>
 
               <div className="approach-actions">
+                <Button variant="outline" size="sm" onClick={() => navigate(`/requests/${item.approachId}`)}>
+                  Request Details
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${item.cropId}`)}>View Crop</Button>
                 <Button variant="ghost" size="sm" onClick={() => onViewBuyer(item.userId)}>
                   View Buyer

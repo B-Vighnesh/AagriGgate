@@ -172,6 +172,9 @@ export default function ViewApproachForUser() {
                 </span>
 
                 <div className="user-requests-actions">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/requests/${item.approachId}`)}>
+                    Request Details
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${item.cropId}`)}>
                     View Crop
                   </Button>
