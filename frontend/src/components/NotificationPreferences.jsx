@@ -103,7 +103,6 @@ export default function NotificationPreferences({ onToast }) {
   const [savedCategory, setSavedCategory] = useState('');
   const [inlineError, setInlineError] = useState('');
   const [bulkLoading, setBulkLoading] = useState('');
-  const [expandedCategory, setExpandedCategory] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -133,10 +132,6 @@ export default function NotificationPreferences({ onToast }) {
 
   const alertLimitExceeded = counts.ALERT > ALERT_LIMIT;
   const alertLimitReached = counts.ALERT >= ALERT_LIMIT;
-
-  const toggleExpanded = (categoryName) => {
-    setExpandedCategory((current) => (current === categoryName ? '' : categoryName));
-  };
 
   const flashSaved = (categoryName) => {
     setSavedCategory(categoryName);
@@ -353,21 +348,14 @@ export default function NotificationPreferences({ onToast }) {
             const saving = savingCategory === item.categoryName;
             const tone = getTone(effective);
             const customized = Boolean(item.userSelectedDeliveryType);
-            const expanded = expandedCategory === item.categoryName;
 
             return (
               <section
                 key={item.categoryName}
-                className={`ntf-prefs-row ntf-prefs-row--${tone}${expanded ? ' ntf-prefs-row--expanded' : ''}`}
+                className={`ntf-prefs-row ntf-prefs-row--${tone}`}
                 role="listitem"
               >
-                <button
-                  type="button"
-                  className="ntf-prefs-row__summary"
-                  onClick={() => toggleExpanded(item.categoryName)}
-                  aria-expanded={expanded}
-                  aria-controls={`pref-options-${item.categoryName}`}
-                >
+                <div className="ntf-prefs-row__summary">
                   <div className="ntf-prefs-row__identity">
                     <div className="ntf-prefs-row__icon" aria-hidden="true">
                       <i className={meta.icon} />
@@ -384,43 +372,37 @@ export default function NotificationPreferences({ onToast }) {
                       <span>{meta.description}</span>
                     </div>
                   </div>
-                  <span className={`ntf-prefs-row__chevron${expanded ? ' ntf-prefs-row__chevron--open' : ''}`} aria-hidden="true">
-                    <i className="fa-solid fa-chevron-down" />
-                  </span>
-                </button>
+                </div>
 
-                <div
-                  id={`pref-options-${item.categoryName}`}
-                  className={`ntf-prefs-row__panel${expanded ? ' ntf-prefs-row__panel--open' : ''}`}
-                >
+                <div className="ntf-prefs-row__panel ntf-prefs-row__panel--open">
                   <div className="ntf-prefs-row__options" role="radiogroup" aria-label={`${meta.title} delivery type`}>
-                  {DELIVERY_OPTIONS.map((option) => {
-                    const selected = effective === option.key;
-                    const disableAlertChoice = option.key === 'ALERT' && effective !== 'ALERT' && alertLimitReached;
+                    {DELIVERY_OPTIONS.map((option) => {
+                      const selected = effective === option.key;
+                      const disableAlertChoice = option.key === 'ALERT' && effective !== 'ALERT' && alertLimitReached;
 
-                    return (
-                      <button
-                        key={option.key}
-                        type="button"
-                        className={`ntf-prefs-option ntf-prefs-option--${option.key.toLowerCase()} ${selected ? 'ntf-prefs-option--selected' : ''}`}
-                        onClick={() => handleSelect(item, option.key)}
-                        disabled={saving || disableAlertChoice}
-                        aria-pressed={selected}
-                        title={disableAlertChoice ? `Maximum ${ALERT_LIMIT} alert categories reached` : option.label}
-                      >
-                        <span className="ntf-prefs-option__radio" aria-hidden="true">
-                          <span />
-                        </span>
-                        <div className="ntf-prefs-option__copy">
-                          <strong>{option.label}</strong>
-                          <small>{option.description}</small>
-                        </div>
-                        <div className="ntf-prefs-option__icon" aria-hidden="true">
-                          <i className={selected ? 'fa-solid fa-check' : option.icon} />
-                        </div>
-                      </button>
-                    );
-                  })}
+                      return (
+                        <button
+                          key={option.key}
+                          type="button"
+                          className={`ntf-prefs-option ntf-prefs-option--${option.key.toLowerCase()} ${selected ? 'ntf-prefs-option--selected' : ''}`}
+                          onClick={() => handleSelect(item, option.key)}
+                          disabled={saving || disableAlertChoice}
+                          aria-pressed={selected}
+                          title={disableAlertChoice ? `Maximum ${ALERT_LIMIT} alert categories reached` : option.label}
+                        >
+                          <span className="ntf-prefs-option__radio" aria-hidden="true">
+                            <span />
+                          </span>
+                          <div className="ntf-prefs-option__copy">
+                            <strong>{option.label}</strong>
+                            <small>{option.description}</small>
+                          </div>
+                          <div className="ntf-prefs-option__icon" aria-hidden="true">
+                            <i className={selected ? 'fa-solid fa-check' : option.icon} />
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </section>
