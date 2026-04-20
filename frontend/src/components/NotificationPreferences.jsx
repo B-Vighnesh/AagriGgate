@@ -194,7 +194,7 @@ export default function NotificationPreferences({ onToast }) {
         <div>
           <span className="ntf-prefs-page-section__eyebrow">Preference Controls</span>
           <h2>Notification Settings</h2>
-          <p>Set how each category should reach you. Choose carefully so only the most urgent items become alerts.</p>
+          <p>Notifications stay inside the app, alerts are the urgent option, and off silences that category. Keep alerts only for things you want to notice fast.</p>
         </div>
         <button
           type="button"
@@ -204,6 +204,30 @@ export default function NotificationPreferences({ onToast }) {
         >
           Reset to defaults
         </button>
+      </div>
+
+      <div className="ntf-prefs-guide">
+        <article className="ntf-prefs-guide__card">
+          <div className="ntf-prefs-guide__top">
+            <div className="ntf-prefs-guide__icon"><i className="fa-regular fa-bell" /></div>
+            <strong>Notification</strong>
+          </div>
+          <p>Regular in-app update. Best for routine activity you can check later.</p>
+        </article>
+        <article className="ntf-prefs-guide__card ntf-prefs-guide__card--alert">
+          <div className="ntf-prefs-guide__top">
+            <div className="ntf-prefs-guide__icon"><i className="fa-solid fa-triangle-exclamation" /></div>
+            <strong>Alert</strong>
+          </div>
+          <p>High-priority signal. You can keep at most {ALERT_LIMIT} categories here.</p>
+        </article>
+        <article className="ntf-prefs-guide__card ntf-prefs-guide__card--off">
+          <div className="ntf-prefs-guide__top">
+            <div className="ntf-prefs-guide__icon"><i className="fa-regular fa-bell-slash" /></div>
+            <strong>Off</strong>
+          </div>
+          <p>Stops that category from appearing in your feed unless the platform must force it.</p>
+        </article>
       </div>
 
       <div className="ntf-prefs-summary">
@@ -270,8 +294,8 @@ export default function NotificationPreferences({ onToast }) {
                 </div>
 
                 <div className="ntf-prefs-row__meta">
-                  <span>Default: <strong>{item.defaultDeliveryType}</strong></span>
-                  <span>{customized ? 'Custom selection' : 'Using system default'}</span>
+                  <span>Default <strong>{item.defaultDeliveryType}</strong></span>
+                  <span>{customized ? 'Custom choice active' : 'Using default'}</span>
                 </div>
 
                 <div className="ntf-prefs-row__options" role="radiogroup" aria-label={`${meta.title} delivery type`}>
