@@ -62,7 +62,7 @@ function NotificationItem({ item, isSeen, onOpen }) {
         </div>
         <p className="ntf-item__message">{item.message}</p>
         <div className="ntf-item__meta">
-          <span className="ntf-item__type">{deliveryType}</span>
+          <span className={`ntf-item__type ntf-item__type--${deliveryType.toLowerCase()}`}>{deliveryType}</span>
           {item.categoryName ? <span>{item.categoryName}</span> : null}
         </div>
         <span className="ntf-item__cta">View Details</span>
