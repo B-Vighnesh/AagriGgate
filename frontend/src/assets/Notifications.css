@@ -392,6 +392,14 @@
   font-weight: 800;
 }
 
+.ntf-item__type--alert {
+  color: #b14c3a;
+}
+
+.ntf-item__type--notification {
+  color: var(--color-primary);
+}
+
 .ntf-item__time {
   color: var(--color-muted);
   font-size: 0.7rem;
