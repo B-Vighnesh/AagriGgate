@@ -67,6 +67,29 @@ public class NotificationPreferenceServiceImpl implements NotificationPreference
         return toResponse(category, saved);
     }
 
+    @Override
+    @Transactional
+    public List<NotificationPreferenceResponse> setAllToNotifications(Long userId) {
+        return applyBulkPreferenceUpdate(userId, category -> MessageDeliveryType.NOTIFICATION);
+    }
+
+    @Override
+    @Transactional
+    public List<NotificationPreferenceResponse> turnAlertsOff(Long userId) {
+        return applyBulkPreferenceUpdate(userId, category -> {
+            MessageDeliveryType effectiveCurrent = resolveEffectiveDeliveryType(userId, category);
+            return effectiveCurrent == MessageDeliveryType.ALERT
+                    ? MessageDeliveryType.NOTIFICATION
+                    : effectiveCurrent;
+        });
+    }
+
+    @Override
+    @Transactional
+    public List<NotificationPreferenceResponse> turnAllOff(Long userId) {
+        return applyBulkPreferenceUpdate(userId, category -> MessageDeliveryType.OFF);
+    }
+
     private void validateAlertLimit(Long userId,
                                     String categoryName,
                                     MessageDeliveryType newDeliveryType) {
@@ -117,6 +140,46 @@ public class NotificationPreferenceServiceImpl implements NotificationPreference
     @Transactional
     public void resetToDefaults(Long userId) {
         preferenceRepository.deleteByUserId(userId);
+    }
+
+    private List<NotificationPreferenceResponse> applyBulkPreferenceUpdate(
+            Long userId,
+            Function<NotificationCategory, MessageDeliveryType> deliveryTypeResolver
+    ) {
+        Map<String, UserCategoryPreference> existingByCategory = preferenceRepository.findByUserId(userId).stream()
+                .collect(Collectors.toMap(pref -> pref.getCategory().getCategoryName(), Function.identity()));
+
+        List<NotificationCategory> categories = categoryRepository.findAll().stream()
+                .sorted(Comparator.comparing(NotificationCategory::getCategoryName))
+                .toList();
+
+        List<UserCategoryPreference> preferencesToSave = categories.stream()
+                .map(category -> {
+                    MessageDeliveryType nextType = deliveryTypeResolver.apply(category);
+                    UserCategoryPreference preference = existingByCategory.get(category.getCategoryName());
+                    if (preference == null) {
+                        preference = new UserCategoryPreference();
+                        preference.setUserId(userId);
+                        preference.setCategory(category);
+                    }
+                    preference.setDeliveryType(nextType);
+                    return preference;
+                })
+                .toList();
+
+        List<UserCategoryPreference> saved = preferenceRepository.saveAll(preferencesToSave);
+        Map<String, UserCategoryPreference> savedByCategory = saved.stream()
+                .collect(Collectors.toMap(pref -> pref.getCategory().getCategoryName(), Function.identity()));
+
+        return categories.stream()
+                .map(category -> toResponse(category, savedByCategory.get(category.getCategoryName())))
+                .toList();
+    }
+
+    private MessageDeliveryType resolveEffectiveDeliveryType(Long userId, NotificationCategory category) {
+        return preferenceRepository.findByUserIdAndCategory_CategoryNameIgnoreCase(userId, category.getCategoryName())
+                .map(UserCategoryPreference::getDeliveryType)
+                .orElse(category.getDefaultDeliveryType());
     }
 
     private NotificationPreferenceResponse toResponse(NotificationCategory category, UserCategoryPreference preference) {

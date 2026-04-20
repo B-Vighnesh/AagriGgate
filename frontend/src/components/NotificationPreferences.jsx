@@ -1,7 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import '../assets/NotificationPreferences.css';
-import { getPreferences, resetPreferences, setPreference } from '../lib/notificationApi';
+import {
+  getPreferences,
+  resetPreferences,
+  setAllPreferencesToNotifications,
+  setPreference,
+  turnAlertsOff,
+  turnAllPreferencesOff,
+} from '../lib/notificationApi';
 
 const ALERT_LIMIT = 5;
 
@@ -131,38 +138,16 @@ export default function NotificationPreferences({ onToast }) {
     window.setTimeout(() => setSavedCategory(''), 1500);
   };
 
-  const applyBulkUpdate = async ({ key, successMessage, resolveNextDeliveryType }) => {
+  const applyBulkUpdate = async ({ key, successMessage, request }) => {
     if (!preferences.length || bulkLoading) return;
     setBulkLoading(key);
     setInlineError('');
 
-    const previous = preferences;
-    const optimistic = previous.map((item) => ({
-      ...item,
-      effectiveDeliveryType: resolveNextDeliveryType(item),
-      userSelectedDeliveryType:
-        resolveNextDeliveryType(item) === item.defaultDeliveryType ? null : resolveNextDeliveryType(item),
-    }));
-
-    setPreferences(optimistic);
-
     try {
-      const results = await Promise.allSettled(
-        previous.map((item) => setPreference(item.categoryName, resolveNextDeliveryType(item))),
-      );
-
-      const failed = results.filter((result) => result.status === 'rejected');
-      if (failed.length) {
-        setPreferences(previous);
-        onToast?.(failed[0].reason?.message || 'Failed to update all preferences.', 'error');
-        return;
-      }
-
-      const updated = results.map((result) => result.value);
+      const updated = await request();
       setPreferences(updated);
       onToast?.(successMessage, 'success');
     } catch (err) {
-      setPreferences(previous);
       onToast?.(err.message || 'Failed to update all preferences.', 'error');
     } finally {
       setBulkLoading('');
@@ -296,7 +281,7 @@ export default function NotificationPreferences({ onToast }) {
           onClick={() => applyBulkUpdate({
             key: 'NOTIFICATION',
             successMessage: 'All categories set to notifications.',
-            resolveNextDeliveryType: () => 'NOTIFICATION',
+            request: setAllPreferencesToNotifications,
           })}
           disabled={loading || Boolean(bulkLoading)}
         >
@@ -309,7 +294,7 @@ export default function NotificationPreferences({ onToast }) {
           onClick={() => applyBulkUpdate({
             key: 'ALERTS_OFF',
             successMessage: 'Alert categories changed to notifications.',
-            resolveNextDeliveryType: (item) => (getEffectiveDeliveryType(item) === 'ALERT' ? 'NOTIFICATION' : getEffectiveDeliveryType(item)),
+            request: turnAlertsOff,
           })}
           disabled={loading || Boolean(bulkLoading)}
         >
@@ -322,7 +307,7 @@ export default function NotificationPreferences({ onToast }) {
           onClick={() => applyBulkUpdate({
             key: 'OFF',
             successMessage: 'All categories turned off.',
-            resolveNextDeliveryType: () => 'OFF',
+            request: turnAllPreferencesOff,
           })}
           disabled={loading || Boolean(bulkLoading)}
         >
