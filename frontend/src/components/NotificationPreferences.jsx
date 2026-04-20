@@ -95,6 +95,7 @@ export default function NotificationPreferences({ onToast }) {
   const [savingCategory, setSavingCategory] = useState('');
   const [savedCategory, setSavedCategory] = useState('');
   const [inlineError, setInlineError] = useState('');
+  const [bulkLoading, setBulkLoading] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -128,6 +129,44 @@ export default function NotificationPreferences({ onToast }) {
   const flashSaved = (categoryName) => {
     setSavedCategory(categoryName);
     window.setTimeout(() => setSavedCategory(''), 1500);
+  };
+
+  const applyBulkUpdate = async ({ key, successMessage, resolveNextDeliveryType }) => {
+    if (!preferences.length || bulkLoading) return;
+    setBulkLoading(key);
+    setInlineError('');
+
+    const previous = preferences;
+    const optimistic = previous.map((item) => ({
+      ...item,
+      effectiveDeliveryType: resolveNextDeliveryType(item),
+      userSelectedDeliveryType:
+        resolveNextDeliveryType(item) === item.defaultDeliveryType ? null : resolveNextDeliveryType(item),
+    }));
+
+    setPreferences(optimistic);
+
+    try {
+      const results = await Promise.allSettled(
+        previous.map((item) => setPreference(item.categoryName, resolveNextDeliveryType(item))),
+      );
+
+      const failed = results.filter((result) => result.status === 'rejected');
+      if (failed.length) {
+        setPreferences(previous);
+        onToast?.(failed[0].reason?.message || 'Failed to update all preferences.', 'error');
+        return;
+      }
+
+      const updated = results.map((result) => result.value);
+      setPreferences(updated);
+      onToast?.(successMessage, 'success');
+    } catch (err) {
+      setPreferences(previous);
+      onToast?.(err.message || 'Failed to update all preferences.', 'error');
+    } finally {
+      setBulkLoading('');
+    }
   };
 
   const handleSelect = async (item, deliveryType) => {
@@ -191,22 +230,13 @@ export default function NotificationPreferences({ onToast }) {
   return (
     <section id="notification-preferences" className="ntf-prefs-page-section" aria-label="Notification preferences">
       <div className="ntf-prefs-page-section__head">
-        <div>
-          <span className="ntf-prefs-page-section__eyebrow">Preference Controls</span>
+        <div className="ntf-prefs-page-section__intro">
           <h2>Notification Settings</h2>
-          <p>Notifications stay inside the app, alerts are the urgent option, and off silences that category. Keep alerts only for things you want to notice fast.</p>
+          <p>Choose how each category reaches you. Keep alerts only for items that deserve faster attention.</p>
         </div>
-        <button
-          type="button"
-          className="ntf-prefs-page-section__reset"
-          onClick={handleReset}
-          disabled={loading}
-        >
-          Reset to defaults
-        </button>
       </div>
 
-      <div className="ntf-prefs-guide">
+      <div className="ntf-prefs-guide" aria-label="Preference guide">
         <article className="ntf-prefs-guide__card">
           <div className="ntf-prefs-guide__top">
             <div className="ntf-prefs-guide__icon"><i className="fa-regular fa-bell" /></div>
@@ -230,19 +260,80 @@ export default function NotificationPreferences({ onToast }) {
         </article>
       </div>
 
-      <div className="ntf-prefs-summary">
-        <div className="ntf-prefs-summary__card">
-          <span>Notifications</span>
-          <strong>{counts.NOTIFICATION}</strong>
+      <div className="ntf-prefs-toolbar">
+        <div className="ntf-prefs-summary">
+          <div className="ntf-prefs-summary__card">
+            <span>Notifications</span>
+            <strong>{counts.NOTIFICATION}</strong>
+          </div>
+          <div className="ntf-prefs-summary__card ntf-prefs-summary__card--alert">
+            <span>Alerts</span>
+            <strong>{counts.ALERT} / {ALERT_LIMIT}</strong>
+          </div>
+          <div className="ntf-prefs-summary__card ntf-prefs-summary__card--off">
+            <span>Off</span>
+            <strong>{counts.OFF}</strong>
+          </div>
         </div>
-        <div className="ntf-prefs-summary__card ntf-prefs-summary__card--alert">
-          <span>Alerts</span>
-          <strong>{counts.ALERT} / {ALERT_LIMIT}</strong>
+
+        <div className="ntf-prefs-toolbar__actions">
+          <button
+            type="button"
+            className="ntf-prefs-page-section__reset"
+            onClick={handleReset}
+            disabled={loading || Boolean(bulkLoading)}
+          >
+            <i className="fa-solid fa-rotate-left" aria-hidden="true" />
+            <span>Reset to defaults</span>
+          </button>
         </div>
-        <div className="ntf-prefs-summary__card ntf-prefs-summary__card--off">
-          <span>Off</span>
-          <strong>{counts.OFF}</strong>
-        </div>
+      </div>
+
+      <div className="ntf-prefs-bulk">
+        <button
+          type="button"
+          className={`ntf-prefs-bulk__action ${bulkLoading === 'NOTIFICATION' ? 'is-loading' : ''}`}
+          onClick={() => applyBulkUpdate({
+            key: 'NOTIFICATION',
+            successMessage: 'All categories set to notifications.',
+            resolveNextDeliveryType: () => 'NOTIFICATION',
+          })}
+          disabled={loading || Boolean(bulkLoading)}
+        >
+          <i className="fa-regular fa-bell" aria-hidden="true" />
+          <span>All Notifications</span>
+        </button>
+        <button
+          type="button"
+          className={`ntf-prefs-bulk__action ${bulkLoading === 'ALERTS_OFF' ? 'is-loading' : ''}`}
+          onClick={() => applyBulkUpdate({
+            key: 'ALERTS_OFF',
+            successMessage: 'Alert categories changed to notifications.',
+            resolveNextDeliveryType: (item) => (getEffectiveDeliveryType(item) === 'ALERT' ? 'NOTIFICATION' : getEffectiveDeliveryType(item)),
+          })}
+          disabled={loading || Boolean(bulkLoading)}
+        >
+          <i className="fa-solid fa-volume-xmark" aria-hidden="true" />
+          <span>Alerts Off</span>
+        </button>
+        <button
+          type="button"
+          className={`ntf-prefs-bulk__action ntf-prefs-bulk__action--danger ${bulkLoading === 'OFF' ? 'is-loading' : ''}`}
+          onClick={() => applyBulkUpdate({
+            key: 'OFF',
+            successMessage: 'All categories turned off.',
+            resolveNextDeliveryType: () => 'OFF',
+          })}
+          disabled={loading || Boolean(bulkLoading)}
+        >
+          <i className="fa-regular fa-bell-slash" aria-hidden="true" />
+          <span>Turn Off All</span>
+        </button>
+      </div>
+
+      <div className="ntf-prefs-bulk__hint">
+        <span>Quick controls</span>
+        <p>Use these when you want a clean reset without opening each category one by one.</p>
       </div>
 
       {alertLimitExceeded ? (
@@ -280,22 +371,22 @@ export default function NotificationPreferences({ onToast }) {
                 role="listitem"
               >
                 <div className="ntf-prefs-row__head">
-                  <div className="ntf-prefs-row__icon" aria-hidden="true">
-                    <i className={meta.icon} />
-                  </div>
-                  <div className="ntf-prefs-row__copy">
-                    <div className="ntf-prefs-row__title">
-                      <strong>{meta.title}</strong>
-                      <span className={`ntf-prefs-row__pill ntf-prefs-row__pill--${tone}`}>{effective}</span>
-                      {savedCategory === item.categoryName ? <span className="ntf-prefs-row__saved">Saved</span> : null}
+                  <div className="ntf-prefs-row__identity">
+                    <div className="ntf-prefs-row__icon" aria-hidden="true">
+                      <i className={meta.icon} />
                     </div>
-                    <span>{meta.description}</span>
+                    <div className="ntf-prefs-row__copy">
+                      <div className="ntf-prefs-row__title">
+                        <strong>{meta.title}</strong>
+                        <span className={`ntf-prefs-row__pill ntf-prefs-row__pill--${tone}`}>{effective}</span>
+                        <span className={`ntf-prefs-row__state ${customized ? 'ntf-prefs-row__state--custom' : ''}`}>
+                          {customized ? 'Customized' : 'Default'}
+                        </span>
+                        {savedCategory === item.categoryName ? <span className="ntf-prefs-row__saved">Saved</span> : null}
+                      </div>
+                      <span>{meta.description}</span>
+                    </div>
                   </div>
-                </div>
-
-                <div className="ntf-prefs-row__meta">
-                  <span>Default <strong>{item.defaultDeliveryType}</strong></span>
-                  <span>{customized ? 'Custom choice active' : 'Using default'}</span>
                 </div>
 
                 <div className="ntf-prefs-row__options" role="radiogroup" aria-label={`${meta.title} delivery type`}>
@@ -307,18 +398,21 @@ export default function NotificationPreferences({ onToast }) {
                       <button
                         key={option.key}
                         type="button"
-                        className={`ntf-prefs-option ${selected ? 'ntf-prefs-option--selected' : ''}`}
+                        className={`ntf-prefs-option ntf-prefs-option--${option.key.toLowerCase()} ${selected ? 'ntf-prefs-option--selected' : ''}`}
                         onClick={() => handleSelect(item, option.key)}
                         disabled={saving || disableAlertChoice}
                         aria-pressed={selected}
                         title={disableAlertChoice ? `Maximum ${ALERT_LIMIT} alert categories reached` : option.label}
                       >
-                        <div className="ntf-prefs-option__icon" aria-hidden="true">
-                          <i className={option.icon} />
-                        </div>
+                        <span className="ntf-prefs-option__radio" aria-hidden="true">
+                          <span />
+                        </span>
                         <div className="ntf-prefs-option__copy">
                           <strong>{option.label}</strong>
-                          <small>{option.description}</small>
+                          <small>{selected ? 'Selected' : option.description}</small>
+                        </div>
+                        <div className="ntf-prefs-option__icon" aria-hidden="true">
+                          <i className={selected ? 'fa-solid fa-check' : option.icon} />
                         </div>
                       </button>
                     );
