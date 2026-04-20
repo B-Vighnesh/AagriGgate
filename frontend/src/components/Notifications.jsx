@@ -389,13 +389,6 @@ export default function Notifications() {
                         />
                       ))}
                     </div>
-                    {hasMore ? <div ref={loadMoreRef} className="ntf-load-trigger" /> : null}
-                    {loadingMore ? (
-                      <div className="ntf-load-more">
-                        <span className="ui-spinner" aria-hidden="true" />
-                        <span>Loading more notifications...</span>
-                      </div>
-                    ) : null}
                   </section>
                 ) : null}
 
@@ -415,6 +408,13 @@ export default function Notifications() {
                         />
                       ))}
                     </div>
+                    {hasMore ? <div ref={loadMoreRef} className="ntf-load-trigger" /> : null}
+                    {loadingMore ? (
+                      <div className="ntf-load-more">
+                        <span className="ui-spinner" aria-hidden="true" />
+                        <span>Loading more notifications...</span>
+                      </div>
+                    ) : null}
                   </section>
                 ) : null}
 
