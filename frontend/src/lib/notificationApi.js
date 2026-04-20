@@ -34,6 +34,15 @@ export const setPreference = (categoryName, deliveryType) =>
 export const resetPreferences = () =>
   unwrap(requestJson('/notifications/preferences/reset', { method: 'POST' }));
 
+export const setAllPreferencesToNotifications = () =>
+  unwrap(requestJson('/notifications/preferences/bulk/all-notifications', { method: 'POST' }));
+
+export const turnAlertsOff = () =>
+  unwrap(requestJson('/notifications/preferences/bulk/alerts-off', { method: 'POST' }));
+
+export const turnAllPreferencesOff = () =>
+  unwrap(requestJson('/notifications/preferences/bulk/off', { method: 'POST' }));
+
 export const getActiveAlerts = () =>
   unwrap(requestJson('/notifications/alerts/active', { method: 'GET' }));
 

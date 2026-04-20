@@ -41,6 +41,33 @@ public class NotificationPreferenceController {
         return ResponseEntity.ok(ApiResponse.success("Notification preference updated", response));
     }
 
+    @PostMapping("/bulk/all-notifications")
+    public ResponseEntity<ApiResponse<List<NotificationPreferenceResponse>>> setAllToNotifications(Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success(
+                "All categories updated to notification delivery",
+                preferenceService.setAllToNotifications(userId)
+        ));
+    }
+
+    @PostMapping("/bulk/alerts-off")
+    public ResponseEntity<ApiResponse<List<NotificationPreferenceResponse>>> turnAlertsOff(Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success(
+                "Alert categories changed to notifications",
+                preferenceService.turnAlertsOff(userId)
+        ));
+    }
+
+    @PostMapping("/bulk/off")
+    public ResponseEntity<ApiResponse<List<NotificationPreferenceResponse>>> turnAllOff(Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success(
+                "All categories turned off",
+                preferenceService.turnAllOff(userId)
+        ));
+    }
+
     @PostMapping("/reset")
     public ResponseEntity<ApiResponse<String>> resetToDefaults(Authentication authentication) {
         Long userId = Long.parseLong(authentication.getName());
