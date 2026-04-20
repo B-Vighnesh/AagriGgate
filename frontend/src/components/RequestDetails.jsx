@@ -55,6 +55,8 @@ export default function RequestDetails() {
     ? requestDetails?.userName
     : requestDetails?.farmerName;
 
+  const statusText = requestDetails?.status || 'Pending';
+
   if (loading) {
     return (
       <section className="page page--center">
@@ -81,36 +83,62 @@ export default function RequestDetails() {
   return (
     <section className="page ntf-detail-page">
       <div className="ag-container ntf-detail-wrap">
-        <Card className="ntf-detail-card">
+        <Card className="ntf-detail-card request-detail-card">
           <div className="ntf-detail-head">
             <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
             <span className={`user-requests-status ${STATUS_CLASS[(requestDetails.status || '').toLowerCase()] || ''}`}>
-              {requestDetails.status || 'Pending'}
+              {statusText}
             </span>
           </div>
 
-          <div className="ntf-detail-content">
-            <h1>{requestDetails.cropName}</h1>
-            <div className="ntf-detail-grid">
-              <div className="ntf-detail-stat">
-                <span>Request ID</span>
-                <strong>#{requestDetails.approachId}</strong>
+          <div className="ntf-detail-content request-detail-content">
+            <div className="request-detail-hero">
+              <div className="request-detail-hero__copy">
+                <span className="request-detail-hero__eyebrow">Request Details</span>
+                <h1>{requestDetails.cropName}</h1>
+                <p>Review the buyer request, requested quantity, and crop context in one place.</p>
               </div>
-              <div className="ntf-detail-stat">
-                <span>{counterpartLabel}</span>
-                <strong>{counterpartName || 'Not available'}</strong>
-              </div>
-              <div className="ntf-detail-stat">
-                <span>Requested Quantity</span>
-                <strong>{requestDetails.requestedQuantity ?? 'Not set'}</strong>
-              </div>
-              <div className="ntf-detail-stat">
-                <span>Crop</span>
-                <strong>{requestDetails.cropName}</strong>
+
+              <div className="request-detail-hero__chips">
+                <span className="request-detail-chip">
+                  <span>Request</span>
+                  <strong>#{requestDetails.approachId}</strong>
+                </span>
+                <span className="request-detail-chip">
+                  <span>{counterpartLabel}</span>
+                  <strong>{counterpartName || 'Not available'}</strong>
+                </span>
+                <span className="request-detail-chip">
+                  <span>Quantity</span>
+                  <strong>{requestDetails.requestedQuantity ?? 'Not set'}</strong>
+                </span>
               </div>
             </div>
 
-            <div className="ntf-detail-actions">
+            <div className="ntf-detail-grid request-detail-grid">
+              <div className="ntf-detail-stat request-detail-stat request-detail-stat--emphasis">
+                <span>Requested Quantity</span>
+                <strong>{requestDetails.requestedQuantity ?? 'Not set'}</strong>
+                <small>Units requested in this approach.</small>
+              </div>
+              <div className="ntf-detail-stat request-detail-stat">
+                <span>{counterpartLabel}</span>
+                <strong>{counterpartName || 'Not available'}</strong>
+                <small>The person connected to this request.</small>
+              </div>
+              <div className="ntf-detail-stat request-detail-stat">
+                <span>Crop</span>
+                <strong>{requestDetails.cropName}</strong>
+                <small>The listing this request belongs to.</small>
+              </div>
+              <div className="ntf-detail-stat request-detail-stat">
+                <span>Status</span>
+                <strong>{statusText}</strong>
+                <small>Current request decision.</small>
+              </div>
+            </div>
+
+            <div className="ntf-detail-actions request-detail-actions">
               <Button onClick={() => navigate(`/view-details/${requestDetails.cropId}`)}>View Crop</Button>
             </div>
           </div>
