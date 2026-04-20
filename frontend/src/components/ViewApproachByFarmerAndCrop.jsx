@@ -197,6 +197,9 @@ export default function ViewApproachByFarmerAndCrop() {
                   </span>
 
                   <div className="approach-crop-actions">
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/requests/${approach.approachId}`)}>
+                      Request Details
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${approach.cropId}`)}>
                       View Crop
                     </Button>
