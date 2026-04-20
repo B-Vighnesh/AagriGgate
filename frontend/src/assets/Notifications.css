@@ -306,6 +306,34 @@
   color: var(--color-primary-dark);
 }
 
+.ntf-item__state {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.ntf-item__state--unread {
+  background: #e6f6ee;
+  border-color: #c5e4d5;
+  color: #16543f;
+  box-shadow: 0 6px 14px rgba(22, 84, 63, 0.08);
+}
+
+.ntf-item__state--read {
+  background: #f2f5f3;
+  border-color: #dce6e0;
+  color: #667b72;
+}
+
 .ntf-item__pill,
 .ntf-alert__pill {
   display: inline-flex;
