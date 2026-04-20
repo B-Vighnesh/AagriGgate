@@ -7551,6 +7551,52 @@ a {
     height: 38px;
   }
 
+  .notification-bell {
+    position: static;
+  }
+
+  .notification-overlay {
+    position: fixed;
+    top: 74px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(360px, calc(100vw - 16px));
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 92px);
+    border-radius: 18px;
+  }
+
+  .notification-overlay__body {
+    max-height: calc(100dvh - 170px);
+  }
+
+  .notification-overlay__head,
+  .notification-overlay__footer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .notification-overlay__item {
+    padding: 12px 14px;
+  }
+
+  .notification-overlay__item-main {
+    gap: 8px;
+  }
+
+  .notification-overlay__item-title {
+    font-size: 0.84rem;
+  }
+
+  .notification-overlay__item-message {
+    font-size: 0.76rem;
+  }
+
+  .notification-overlay__item-meta {
+    font-size: 0.66rem;
+  }
+
   .site-nav {
     top: 62px;
     max-height: calc(100vh - 62px);
