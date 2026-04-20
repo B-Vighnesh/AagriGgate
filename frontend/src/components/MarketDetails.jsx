@@ -62,7 +62,7 @@ export default function MarketDetails() {
           <Card className="ntf-detail-card ntf-detail-card--empty">
             <h1>Market record not found</h1>
             <p>This market record may have expired or is no longer available.</p>
-            <Button variant="outline" onClick={() => navigate('/market')}>Back to Market</Button>
+            <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
           </Card>
         </div>
         <Toast message={toast.message} type={toast.type} />
@@ -75,7 +75,8 @@ export default function MarketDetails() {
       <div className="ag-container ntf-detail-wrap">
         <Card className="ntf-detail-card">
           <div className="ntf-detail-head">
-            <Button variant="outline" onClick={() => navigate('/market')}>Back to Market</Button>
+                        <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
+
             <div className="ntf-detail-badges">
               <span className="ntf-detail-badge">{market.Commodity || market.commodity}</span>
               {market.Grade || market.grade ? <span className="ntf-detail-badge">{market.Grade || market.grade}</span> : null}

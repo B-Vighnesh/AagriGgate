@@ -206,24 +206,6 @@ export default function NotificationPreferences({ onToast }) {
         </button>
       </div>
 
-      <div className="ntf-prefs-guide">
-        <article className="ntf-prefs-guide__card">
-          <div className="ntf-prefs-guide__icon"><i className="fa-regular fa-bell" /></div>
-          <strong>Notification</strong>
-          <p>Best for routine updates you want to check when convenient.</p>
-        </article>
-        <article className="ntf-prefs-guide__card ntf-prefs-guide__card--alert">
-          <div className="ntf-prefs-guide__icon"><i className="fa-solid fa-triangle-exclamation" /></div>
-          <strong>Alert</strong>
-          <p>Use only for urgent categories. You can keep at most {ALERT_LIMIT} alert categories.</p>
-        </article>
-        <article className="ntf-prefs-guide__card ntf-prefs-guide__card--off">
-          <div className="ntf-prefs-guide__icon"><i className="fa-regular fa-bell-slash" /></div>
-          <strong>Off</strong>
-          <p>Turns that category off so it does not clutter your feed.</p>
-        </article>
-      </div>
-
       <div className="ntf-prefs-summary">
         <div className="ntf-prefs-summary__card">
           <span>Notifications</span>
