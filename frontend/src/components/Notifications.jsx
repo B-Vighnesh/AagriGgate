@@ -331,14 +331,7 @@ export default function Notifications() {
         <section className="ntf-panel" aria-label="Notifications">
           <header className="ntf-panel__header">
             <div className="ntf-panel__title-group">
-              <button
-                type="button"
-                className="ntf-panel__back"
-                onClick={() => navigate(-1)}
-                aria-label="Go back"
-              >
-                <i className="fa-solid fa-chevron-left" aria-hidden="true" />
-              </button>
+             
               <h1 className="ntf-panel__title">Notifications</h1>
               {unreadDisplay > 0 ? (
                 <span className="ntf-panel__badge" aria-label={`${unreadDisplay} unread`}>
