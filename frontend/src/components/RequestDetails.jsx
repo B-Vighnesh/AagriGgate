@@ -55,8 +55,6 @@ export default function RequestDetails() {
     ? requestDetails?.userName
     : requestDetails?.farmerName;
 
-  const backPath = role === 'farmer' ? '/view-approach' : '/view-approaches-user';
-
   if (loading) {
     return (
       <section className="page page--center">
@@ -72,7 +70,7 @@ export default function RequestDetails() {
           <Card className="ntf-detail-card ntf-detail-card--empty">
             <h1>Request not found</h1>
             <p>This request may have been deleted or is no longer available for your account.</p>
-            <Button variant="outline" onClick={() => navigate(backPath)}>Back to Requests</Button>
+            <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
           </Card>
         </div>
         <Toast message={toast.message} type={toast.type} />
@@ -85,7 +83,7 @@ export default function RequestDetails() {
       <div className="ag-container ntf-detail-wrap">
         <Card className="ntf-detail-card">
           <div className="ntf-detail-head">
-            <Button variant="outline" onClick={() => navigate(backPath)}>Back to Requests</Button>
+            <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
             <span className={`user-requests-status ${STATUS_CLASS[(requestDetails.status || '').toLowerCase()] || ''}`}>
               {requestDetails.status || 'Pending'}
             </span>

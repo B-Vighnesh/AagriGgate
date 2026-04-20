@@ -69,7 +69,7 @@ export default function NewsDetails() {
           <Card className="ntf-detail-card ntf-detail-card--empty">
             <h1>News not found</h1>
             <p>This article may have been removed or is no longer available.</p>
-            <Button variant="outline" onClick={() => navigate('/news')}>Back to News</Button>
+            <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
           </Card>
         </div>
         <Toast message={toast.message} type={toast.type} />
@@ -82,7 +82,7 @@ export default function NewsDetails() {
       <div className="ag-container ntf-detail-wrap">
         <Card className="ntf-detail-card">
           <div className="ntf-detail-head">
-            <Button variant="outline" onClick={() => navigate('/news')}>Back to News</Button>
+            <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
             <div className="ntf-detail-badges">
               {badges.map((badge) => (
                 <span key={badge} className="ntf-detail-badge">{badge}</span>

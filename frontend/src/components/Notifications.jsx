@@ -12,6 +12,7 @@ import {
   markAllAsRead,
   markAsRead,
 } from '../lib/notificationApi';
+import { resolveNotificationRoute } from '../lib/notificationRouting';
 
 const TIME_FORMATTER = new Intl.DateTimeFormat('en-GB', {
   day: '2-digit',
@@ -28,21 +29,6 @@ function formatTimestamp(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
   return TIME_FORMATTER.format(date);
-}
-
-function resolveRoute(notification, role) {
-  const referenceId = notification?.referenceId;
-  if (notification?.referenceType === 'CROP' && referenceId) return `/view-details/${referenceId}`;
-  if (notification?.referenceType === 'NEWS' && referenceId) return `/news/${referenceId}`;
-  if (notification?.referenceType === 'REQUEST') {
-    return referenceId ? `/requests/${referenceId}` : (role === 'farmer' ? '/view-approach' : '/view-approaches-user');
-  }
-  if (notification?.referenceType === 'MARKET' && referenceId) return `/market/${referenceId}`;
-  if (notification?.referenceType === 'CHAT' && referenceId) return `/chat/${referenceId}`;
-  if (notification?.referenceType === 'WEATHER') return '/weather';
-  if (notification?.referenceType === 'ADMIN') return '/account';
-  if (notification?.referenceType === 'USER') return '/account';
-  return null;
 }
 
 function NotificationItem({ notification, isRead, onRead }) {
@@ -70,6 +56,7 @@ function NotificationItem({ notification, isRead, onRead }) {
           <span className="ntf-item__type">{notification.deliveryType || 'NOTIFICATION'}</span>
           {notification.categoryName ? <span>{notification.categoryName}</span> : null}
         </div>
+        <span className="ntf-item__cta">View Details</span>
       </div>
       <time className="ntf-item__time" dateTime={notification.createdAt}>
         {formatTimestamp(notification.createdAt)}
@@ -144,10 +131,14 @@ export default function Notifications() {
   const [readIds, setReadIds] = useState(new Set());
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [toast, setToast] = useState({ message: '', type: 'info' });
 
   const loadingRef = useRef(false);
+  const loadMoreRef = useRef(null);
 
   const showToast = useCallback((message, type = 'info') => {
     setToast({ message, type });
@@ -172,7 +163,7 @@ export default function Notifications() {
       setLoading(true);
 
       const [notificationsResult, alertsResult, unreadResult] = await Promise.allSettled([
-        getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 30 }),
+        getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 12 }),
         getActiveAlerts(),
         countUnread(),
       ]);
@@ -183,8 +174,12 @@ export default function Notifications() {
         const page = notificationsResult.value;
         const items = Array.isArray(page?.content) ? page.content : Array.isArray(page) ? page : [];
         setNotifications(items);
+        setPage(Number(page?.number ?? 0));
+        setHasMore(page?.last === false || Number(page?.totalPages ?? 0) > 1);
       } else {
         setNotifications([]);
+        setPage(0);
+        setHasMore(false);
         showToast(notificationsResult.reason?.message || 'Failed to load notifications.', 'error');
       }
 
@@ -217,6 +212,37 @@ export default function Notifications() {
     };
   }, [loggedIn, showToast]);
 
+  useEffect(() => {
+    if (!loggedIn || !hasMore || loading || loadingMore || !loadMoreRef.current) return undefined;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries[0]?.isIntersecting) return;
+
+      setLoadingMore(true);
+      getNotifications({ deliveryType: 'NOTIFICATION', page: page + 1, size: 12 })
+        .then((result) => {
+          const items = Array.isArray(result?.content) ? result.content : [];
+          setNotifications((prev) => {
+            const seen = new Set(prev.map((item) => item.id));
+            const nextItems = items.filter((item) => !seen.has(item.id));
+            return [...prev, ...nextItems];
+          });
+          setPage(Number(result?.number ?? page + 1));
+          setHasMore(result?.last === false);
+        })
+        .catch((error) => {
+          showToast(error.message || 'Failed to load more notifications.', 'error');
+          setHasMore(false);
+        })
+        .finally(() => {
+          setLoadingMore(false);
+        });
+    }, { rootMargin: '200px 0px' });
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore, loggedIn, page, showToast]);
+
   const handleNotificationRead = useCallback(async (notification, alreadyRead = false) => {
     if (!alreadyRead) {
       setReadIds((prev) => new Set(prev).add(notification.id));
@@ -244,7 +270,7 @@ export default function Notifications() {
       }
     }
 
-    const target = resolveRoute(notification, role);
+    const target = resolveNotificationRoute(notification, role);
     if (target) navigate(target);
   }, [navigate, role, showToast]);
 
@@ -265,7 +291,7 @@ export default function Notifications() {
   }, [notifications, showToast]);
 
   const handleAlertAck = useCallback(async (alert) => {
-    const target = resolveRoute(alert, role);
+    const target = resolveNotificationRoute(alert, role);
     try {
       await acknowledgeAlert(alert.id);
       setAlerts((prev) => prev.filter((entry) => entry.id !== alert.id));
@@ -303,6 +329,14 @@ export default function Notifications() {
         <section className="ntf-panel" aria-label="Notifications">
           <header className="ntf-panel__header">
             <div className="ntf-panel__title-group">
+              <button
+                type="button"
+                className="ntf-panel__back"
+                onClick={() => navigate(-1)}
+                aria-label="Go back"
+              >
+                <i className="fa-solid fa-chevron-left" aria-hidden="true" />
+              </button>
               <h1 className="ntf-panel__title">Notifications</h1>
               {unreadDisplay > 0 ? (
                 <span className="ntf-panel__badge" aria-label={`${unreadDisplay} unread`}>
@@ -332,6 +366,10 @@ export default function Notifications() {
           </header>
 
           <div className="ntf-panel__body">
+            <div className="ntf-panel__note">
+              <strong>Notifications</strong> stay inside AagriGgate, while <strong>alerts</strong> are the urgent items intended for device-level attention.
+            </div>
+
             {loading ? <SkeletonLoader /> : null}
 
             {!loading ? (
@@ -351,6 +389,13 @@ export default function Notifications() {
                         />
                       ))}
                     </div>
+                    {hasMore ? <div ref={loadMoreRef} className="ntf-load-trigger" /> : null}
+                    {loadingMore ? (
+                      <div className="ntf-load-more">
+                        <span className="ui-spinner" aria-hidden="true" />
+                        <span>Loading more notifications...</span>
+                      </div>
+                    ) : null}
                   </section>
                 ) : null}
 

@@ -3,7 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import agrigateIcon from '../images/agrigate.jpg';
 import { getRole, isLoggedIn } from '../lib/auth';
-import { countUnread } from '../lib/notificationApi';
+import {
+  acknowledgeAlert,
+  countUnread,
+  getActiveAlerts,
+  getNotifications,
+  markAsRead,
+} from '../lib/notificationApi';
+import { resolveNotificationRoute, sortNotificationsByDate } from '../lib/notificationRouting';
 
 function navByRole(role) {
   if (!role) {
@@ -70,10 +77,14 @@ export default function Navbar() {
   const [hoverLockedDropdownKey, setHoverLockedDropdownKey] = useState('');
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationOverlayOpen, setNotificationOverlayOpen] = useState(false);
+  const [notificationPreviewLoading, setNotificationPreviewLoading] = useState(false);
+  const [notificationPreview, setNotificationPreview] = useState([]);
   const mobileNavRef = useRef(null);
   const toggleRef = useRef(null);
   const navRef = useRef(null);
   const profileMenuRef = useRef(null);
+  const notificationOverlayRef = useRef(null);
   const dropdownCloseTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -95,6 +106,7 @@ export default function Navbar() {
     setOpenDropdownKey('');
     setHoverLockedDropdownKey('');
     setProfileMenuOpen(false);
+    setNotificationOverlayOpen(false);
   }, [location.pathname]);
 
   useEffect(() => () => {
@@ -146,6 +158,19 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [profileMenuOpen]);
+
+  useEffect(() => {
+    if (!notificationOverlayOpen) return undefined;
+
+    const handleClickOutside = (event) => {
+      if (notificationOverlayRef.current && !notificationOverlayRef.current.contains(event.target)) {
+        setNotificationOverlayOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [notificationOverlayOpen]);
 
   useEffect(() => {
     if (!mobileOpen) return undefined;
@@ -213,7 +238,65 @@ export default function Navbar() {
 
   const handleAccountButtonClick = () => {
     setMobileOpen(false);
+    setNotificationOverlayOpen(false);
     setProfileMenuOpen((prev) => !prev);
+  };
+
+  const loadNotificationPreview = async () => {
+    setNotificationPreviewLoading(true);
+    try {
+      const [notificationsResult, alertsResult] = await Promise.allSettled([
+        getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 5 }),
+        getActiveAlerts(),
+      ]);
+
+      const notifications = notificationsResult.status === 'fulfilled'
+        ? (Array.isArray(notificationsResult.value?.content) ? notificationsResult.value.content : [])
+        : [];
+      const alerts = alertsResult.status === 'fulfilled'
+        ? (Array.isArray(alertsResult.value) ? alertsResult.value : [])
+        : [];
+
+      setNotificationPreview(sortNotificationsByDate([...alerts, ...notifications]).slice(0, 5));
+    } catch {
+      setNotificationPreview([]);
+    } finally {
+      setNotificationPreviewLoading(false);
+    }
+  };
+
+  const handleNotificationBellClick = async () => {
+    setProfileMenuOpen(false);
+    setMobileOpen(false);
+    const nextOpen = !notificationOverlayOpen;
+    setNotificationOverlayOpen(nextOpen);
+    if (nextOpen) {
+      await loadNotificationPreview();
+    }
+  };
+
+  const handlePreviewOpen = async (item) => {
+    try {
+      if ((item.deliveryType || '').toUpperCase() === 'ALERT') {
+        await acknowledgeAlert(item.id);
+      } else if (item.isRead !== true) {
+        await markAsRead(item.id);
+        setUnreadCount((prev) => Math.max(prev - 1, 0));
+        window.dispatchEvent(new CustomEvent('notifications:count-updated', {
+          detail: { count: Math.max(unreadCount - 1, 0) },
+        }));
+      }
+    } catch {
+      // still navigate when possible so the click does not feel broken
+    }
+
+    setNotificationOverlayOpen(false);
+    const target = resolveNotificationRoute(item, role);
+    if (target) {
+      navigate(target);
+    } else {
+      navigate('/notifications');
+    }
   };
 
   return (
@@ -290,18 +373,7 @@ export default function Navbar() {
               );
             })}
 
-            {loggedIn ? (
-              <Link
-                to="/chat"
-                className={`site-nav__utility ${isActive('/chat') ? 'site-nav__utility--active' : ''}`}
-                onClick={() => {
-                  setMobileOpen(false);
-                  setOpenDropdownKey('');
-                }}
-              >
-                💬 Chat
-              </Link>
-            ) : null}
+            
           </nav>
 
           {loggedIn ? (
@@ -320,15 +392,64 @@ export default function Navbar() {
           ) : null}
 
           {loggedIn ? (
-            <Link
-              to="/notifications"
-              className={`notification-bell__button ${isActive('/notifications') ? 'notification-bell__button--active' : ''}`}
-              aria-label="View notifications"
-              data-tooltip="Notifications"
-            >
-              <i className="fa-regular fa-bell" aria-hidden="true" />
-              {unreadCount > 0 ? <span className="notification-bell__badge">{unreadCount}</span> : null}
-            </Link>
+            <div className="notification-bell" ref={notificationOverlayRef}>
+              <button
+                type="button"
+                className={`notification-bell__button ${isActive('/notifications') || notificationOverlayOpen ? 'notification-bell__button--active' : ''}`}
+                aria-label="View notifications"
+                data-tooltip="Notifications"
+                aria-expanded={notificationOverlayOpen}
+                onClick={handleNotificationBellClick}
+              >
+                <i className="fa-regular fa-bell" aria-hidden="true" />
+                {unreadCount > 0 ? <span className="notification-bell__badge">{unreadCount}</span> : null}
+              </button>
+
+              {notificationOverlayOpen ? (
+                <div className="notification-overlay" role="dialog" aria-label="Latest notifications">
+                  <div className="notification-overlay__head">
+                    <strong>Latest Updates</strong>
+                    <button type="button" className="notification-overlay__show-all" onClick={() => {
+                      setNotificationOverlayOpen(false);
+                      navigate('/notifications');
+                    }}>
+                      Show All
+                    </button>
+                  </div>
+
+                  <div className="notification-overlay__body">
+                    {notificationPreviewLoading ? (
+                      <div className="notification-overlay__state">Loading latest updates...</div>
+                    ) : null}
+
+                    {!notificationPreviewLoading && notificationPreview.length === 0 ? (
+                      <div className="notification-overlay__state">No recent notifications.</div>
+                    ) : null}
+
+                    {!notificationPreviewLoading && notificationPreview.length > 0 ? (
+                      <div className="notification-overlay__list">
+                        {notificationPreview.map((item) => (
+                          <button
+                            key={`${item.deliveryType}-${item.id}`}
+                            type="button"
+                            className={`notification-overlay__item ${item.isRead === true ? '' : 'notification-overlay__item--unread'}`}
+                            onClick={() => handlePreviewOpen(item)}
+                          >
+                            <div className="notification-overlay__item-main">
+                              <span className="notification-overlay__item-title">{item.title}</span>
+                              <span className="notification-overlay__item-meta">
+                                {item.deliveryType || 'NOTIFICATION'}
+                              </span>
+                            </div>
+                            <span className="notification-overlay__item-message">{item.message}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+            </div>
           ) : null}
 
           {loggedIn ? (
