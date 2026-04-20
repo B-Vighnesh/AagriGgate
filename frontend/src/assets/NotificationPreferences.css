@@ -133,32 +133,33 @@
 }
 
 .ntf-prefs-summary__card {
-  min-width: 120px;
-  display: grid;
-  gap: 2px;
-  padding: 11px 14px;
-  border-radius: 18px;
-  background: #f5faf7;
-  border: 1px solid #ddeae3;
+  min-width: 100px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .ntf-prefs-summary__card--alert {
-  background: #fff8f4;
-  border-color: #efd8cb;
+  color: #9a5c41;
 }
 
 .ntf-prefs-summary__card--off {
-  background: #fafcfa;
+  color: #698076;
 }
 
 .ntf-prefs-summary__card span {
-  color: var(--color-muted);
-  font-size: 0.76rem;
+  color: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
 .ntf-prefs-summary__card strong {
-  color: var(--color-primary-dark);
-  font-size: 1.1rem;
+  color: inherit;
+  font-size: 1rem;
 }
 
 .ntf-prefs-bulk {
@@ -183,6 +184,11 @@
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
 
+.ntf-prefs-bulk__action:first-child {
+  background: #eef7f2;
+  border-color: #c9dfd3;
+}
+
 .ntf-prefs-bulk__action:hover {
   transform: translateY(-1px);
   border-color: #bfd6cb;
@@ -200,7 +206,7 @@
 .ntf-prefs-bulk__action--danger {
   color: #915041;
   border-color: #ead1c6;
-  background: #fffaf7;
+  background: #fff6f2;
 }
 
 .ntf-prefs-bulk__hint {
@@ -254,17 +260,17 @@
 
 .ntf-prefs-row {
   display: grid;
-  gap: 10px;
-  padding: 14px 15px;
+  gap: 0;
+  padding: 0;
   border-radius: 22px;
-  border: 1px solid #dfeae4;
+  border: 1px solid #e2ece7;
   background: #ffffff;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .ntf-prefs-row:hover {
-  border-color: #cfe2d8;
-  box-shadow: 0 14px 30px rgba(16, 57, 40, 0.05);
+  border-color: #d1e2d9;
+  box-shadow: 0 12px 24px rgba(16, 57, 40, 0.04);
 }
 
 .ntf-prefs-row--alert {
@@ -276,11 +282,17 @@
   background: #fbfcfb;
 }
 
-.ntf-prefs-row__head {
+.ntf-prefs-row__summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  width: 100%;
+  padding: 14px 15px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
 }
 
 .ntf-prefs-row__identity {
@@ -375,10 +387,43 @@
   font-weight: 800;
 }
 
+.ntf-prefs-row__chevron {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f8f6;
+  color: #688177;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.ntf-prefs-row__chevron--open {
+  transform: rotate(180deg);
+  background: #eaf4ef;
+}
+
+.ntf-prefs-row__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.22s ease;
+}
+
+.ntf-prefs-row__panel--open {
+  grid-template-rows: 1fr;
+}
+
+.ntf-prefs-row__panel > .ntf-prefs-row__options {
+  overflow: hidden;
+}
+
 .ntf-prefs-row__options {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  padding: 0 15px 15px;
 }
 
 .ntf-prefs-option {
@@ -391,7 +436,7 @@
   text-align: left;
   padding: 12px 14px;
   border-radius: 18px;
-  border: 1px solid #e2ece7;
+  border: 1px solid #e6efea;
   background: #fbfdfc;
   cursor: pointer;
   transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease, border-color 0.18s ease;
@@ -412,22 +457,25 @@
 
 .ntf-prefs-option--selected {
   background: #ffffff;
-  border-color: #1f6f54;
-  box-shadow: 0 16px 26px rgba(20, 63, 47, 0.1);
+  box-shadow: 0 12px 20px rgba(20, 63, 47, 0.08);
 }
 
 .ntf-prefs-option--notification.ntf-prefs-option--selected {
   background: linear-gradient(180deg, #f5fcf8 0%, #ffffff 100%);
+  border-color: #2a7b5d;
+  color: #205e47;
 }
 
 .ntf-prefs-option--alert.ntf-prefs-option--selected {
   background: linear-gradient(180deg, #fff8f4 0%, #ffffff 100%);
   border-color: #cf8f73;
+  color: #9a5b3d;
 }
 
 .ntf-prefs-option--off.ntf-prefs-option--selected {
   background: linear-gradient(180deg, #f5f8f6 0%, #ffffff 100%);
   border-color: #8ea79d;
+  color: #587166;
 }
 
 .ntf-prefs-option__radio {
@@ -516,16 +564,17 @@
 
   .ntf-prefs-summary__card {
     min-width: 0;
-    padding: 10px 12px;
+    display: grid;
+    gap: 2px;
   }
 
   .ntf-prefs-row {
-    padding: 12px;
     border-radius: 18px;
   }
 
-  .ntf-prefs-row__head {
+  .ntf-prefs-row__summary {
     align-items: flex-start;
+    padding: 12px;
   }
 
   .ntf-prefs-row__identity {
@@ -541,6 +590,10 @@
   .ntf-prefs-bulk {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .ntf-prefs-row__options {
+    padding: 0 12px 12px;
   }
 
   .ntf-prefs-option {
