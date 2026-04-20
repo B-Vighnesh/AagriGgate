@@ -225,7 +225,7 @@
 
 .news-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  grid-template-columns: 1fr;
   gap: 20px;
 }
 
@@ -539,7 +539,7 @@
 
 @media (max-width: 1199px) {
   .news-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 
