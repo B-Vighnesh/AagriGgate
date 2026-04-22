@@ -99,10 +99,23 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
                         a.cropName,
                         a.farmerId,
                         a.farmerName,
+                        a.farmerPhoneNo,
+                        a.farmerEmail,
+                        a.farmerLocation,
                         a.userId,
                         a.userName,
+                        a.userPhoneNo,
+                        a.userEmail,
                         a.requestedQuantity,
-                        a.status
+                        a.status,
+                        a.requestedAt,
+                        a.acceptedAt,
+                        a.rejectedAt,
+                        a.lastMessageAt,
+                        a.notifiedAt,
+                        a.completedAt,
+                        a.failedAt,
+                        a.expiredAt
                     )
                     FROM ApproachFarmer a
                     WHERE a.farmerId = :farmerId
@@ -139,10 +152,23 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
                         a.cropName,
                         a.farmerId,
                         a.farmerName,
+                        a.farmerPhoneNo,
+                        a.farmerEmail,
+                        a.farmerLocation,
                         a.userId,
                         a.userName,
+                        a.userPhoneNo,
+                        a.userEmail,
                         a.requestedQuantity,
-                        a.status
+                        a.status,
+                        a.requestedAt,
+                        a.acceptedAt,
+                        a.rejectedAt,
+                        a.lastMessageAt,
+                        a.notifiedAt,
+                        a.completedAt,
+                        a.failedAt,
+                        a.expiredAt
                     )
                     FROM ApproachFarmer a
                     WHERE a.farmerId = :farmerId
@@ -182,10 +208,23 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
                         a.cropName,
                         a.farmerId,
                         a.farmerName,
+                        a.farmerPhoneNo,
+                        a.farmerEmail,
+                        a.farmerLocation,
                         a.userId,
                         a.userName,
+                        a.userPhoneNo,
+                        a.userEmail,
                         a.requestedQuantity,
-                        a.status
+                        a.status,
+                        a.requestedAt,
+                        a.acceptedAt,
+                        a.rejectedAt,
+                        a.lastMessageAt,
+                        a.notifiedAt,
+                        a.completedAt,
+                        a.failedAt,
+                        a.expiredAt
                     )
                     FROM ApproachFarmer a
                     WHERE a.userId = :userId
@@ -221,10 +260,23 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
                 a.cropName,
                 a.farmerId,
                 a.farmerName,
+                a.farmerPhoneNo,
+                a.farmerEmail,
+                a.farmerLocation,
                 a.userId,
                 a.userName,
+                a.userPhoneNo,
+                a.userEmail,
                 a.requestedQuantity,
-                a.status
+                a.status,
+                a.requestedAt,
+                a.acceptedAt,
+                a.rejectedAt,
+                a.lastMessageAt,
+                a.notifiedAt,
+                a.completedAt,
+                a.failedAt,
+                a.expiredAt
             )
             FROM ApproachFarmer a
             WHERE a.approachId = :approachId
@@ -247,10 +299,23 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
                 a.cropName,
                 a.farmerId,
                 a.farmerName,
+                a.farmerPhoneNo,
+                a.farmerEmail,
+                a.farmerLocation,
                 a.userId,
                 a.userName,
+                a.userPhoneNo,
+                a.userEmail,
                 a.requestedQuantity,
-                a.status
+                a.status,
+                a.requestedAt,
+                a.acceptedAt,
+                a.rejectedAt,
+                a.lastMessageAt,
+                a.notifiedAt,
+                a.completedAt,
+                a.failedAt,
+                a.expiredAt
             )
             FROM ApproachFarmer a
             WHERE a.approachId = :approachId
@@ -265,4 +330,30 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
             @Param("userId") Long userId,
             @Param("approachId") Long approachId
     );
+
+    @Query("""
+            SELECT a
+            FROM ApproachFarmer a
+            WHERE a.active = true
+              AND a.deletedAt IS NULL
+              AND lower(a.status) = 'accepted'
+              AND (
+                    (a.lastMessageAt IS NULL AND a.acceptedAt <= :notifyBefore)
+                 OR (a.lastMessageAt IS NOT NULL AND a.lastMessageAt <= :notifyBefore)
+              )
+              AND a.notifiedAt IS NULL
+            """)
+    List<ApproachFarmer> findAcceptedRequestsNeedingInactivityNotification(@Param("notifyBefore") LocalDateTime notifyBefore);
+
+    @Query("""
+            SELECT a
+            FROM ApproachFarmer a
+            WHERE a.active = true
+              AND a.deletedAt IS NULL
+              AND lower(a.status) = 'accepted'
+              AND a.notifiedAt IS NOT NULL
+              AND a.notifiedAt <= :expireBefore
+              AND (a.lastMessageAt IS NULL OR a.lastMessageAt <= a.notifiedAt)
+            """)
+    List<ApproachFarmer> findAcceptedRequestsNeedingExpiration(@Param("expireBefore") LocalDateTime expireBefore);
 }
