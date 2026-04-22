@@ -181,7 +181,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                 userId,
                 normalizeStatus(status),
                 buildPageRequest(page, size)
-        );
+        ).map(this::sanitizeBuyerRequestView);
     }
 
     @Override
@@ -193,6 +193,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     @Override
     public ApproachRequestDTO getRequestByUserId(Long userId, Long approachId) {
         return approachFarmerRepository.findRequestViewByUserIdAndApproachId(userId, approachId)
+                .map(this::sanitizeBuyerRequestView)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found."));
     }
 
@@ -335,5 +336,14 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             throw new IllegalArgumentException("Requested quantity exceeds available crop quantity.");
         }
         return quantity;
+    }
+
+    private ApproachRequestDTO sanitizeBuyerRequestView(ApproachRequestDTO dto) {
+        dto.setFarmerId(null);
+        dto.setFarmerName(null);
+        dto.setFarmerPhoneNo(null);
+        dto.setFarmerEmail(null);
+        dto.setFarmerLocation(null);
+        return dto;
     }
 }
