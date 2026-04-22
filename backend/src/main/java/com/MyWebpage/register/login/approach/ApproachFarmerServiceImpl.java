@@ -88,6 +88,15 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             approachFarmer.setStatus("pending");
             approachFarmer.setActive(true);
             approachFarmer.setDeletedAt(null);
+            approachFarmer.setRequestedAt(LocalDateTime.now());
+            approachFarmer.setAcceptedAt(null);
+            approachFarmer.setRejectedAt(null);
+            approachFarmer.setLastMessageAt(null);
+            approachFarmer.setLastMessageSenderId(null);
+            approachFarmer.setNotifiedAt(null);
+            approachFarmer.setCompletedAt(null);
+            approachFarmer.setFailedAt(null);
+            approachFarmer.setExpiredAt(null);
 
             approachFarmerRepository.save(approachFarmer);
             logger.info("Approach created: {}", approachFarmer.getApproachId());
@@ -114,8 +123,21 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             if (!"pending".equalsIgnoreCase(approach.getStatus())) {
                 return false;
             }
+            LocalDateTime now = LocalDateTime.now();
             approach.setAccept(accept);
             approach.setStatus(accept ? "Accepted" : "Rejected");
+            if (accept) {
+                approach.setAcceptedAt(now);
+                approach.setRejectedAt(null);
+                approach.setNotifiedAt(null);
+                approach.setCompletedAt(null);
+                approach.setFailedAt(null);
+                approach.setExpiredAt(null);
+                approach.setLastMessageAt(null);
+                approach.setLastMessageSenderId(null);
+            } else {
+                approach.setRejectedAt(now);
+            }
             approachFarmerRepository.save(approach);
             logger.info("Approach status updated: {} -> {}", approachId, approach.getStatus());
             return true;
@@ -244,6 +266,51 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
         } catch (Exception e) {
             throw new RuntimeException("Error occurred while checking the approach status: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public void recordChatActivity(Long approachId, Long senderId, LocalDateTime messageAt) {
+        approachFarmerRepository.findById(approachId).ifPresent(approach -> {
+            approach.setLastMessageAt(messageAt);
+            approach.setLastMessageSenderId(senderId);
+            approach.setNotifiedAt(null);
+            approachFarmerRepository.save(approach);
+        });
+    }
+
+    @Override
+    public void markApproachCompleted(Long approachId, LocalDateTime completedAt) {
+        approachFarmerRepository.findById(approachId).ifPresent(approach -> {
+            approach.setStatus("Completed");
+            approach.setCompletedAt(completedAt);
+            approachFarmerRepository.save(approach);
+        });
+    }
+
+    @Override
+    public void markApproachFailed(Long approachId, LocalDateTime failedAt) {
+        approachFarmerRepository.findById(approachId).ifPresent(approach -> {
+            approach.setStatus("Failed");
+            approach.setFailedAt(failedAt);
+            approachFarmerRepository.save(approach);
+        });
+    }
+
+    @Override
+    public void markApproachExpired(Long approachId, LocalDateTime expiredAt) {
+        approachFarmerRepository.findById(approachId).ifPresent(approach -> {
+            approach.setStatus("Expired");
+            approach.setExpiredAt(expiredAt);
+            approachFarmerRepository.save(approach);
+        });
+    }
+
+    @Override
+    public void markApproachNotified(Long approachId, LocalDateTime notifiedAt) {
+        approachFarmerRepository.findById(approachId).ifPresent(approach -> {
+            approach.setNotifiedAt(notifiedAt);
+            approachFarmerRepository.save(approach);
+        });
     }
 
     private PageRequest buildPageRequest(int page, int size) {

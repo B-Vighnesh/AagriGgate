@@ -2,6 +2,7 @@ package com.MyWebpage.register.login.chat;
 
 import com.MyWebpage.register.login.approach.ApproachFarmer;
 import com.MyWebpage.register.login.approach.ApproachFarmerRepo;
+import com.MyWebpage.register.login.approach.ApproachFarmerService;
 import com.MyWebpage.register.login.chat.dto.ChatMessageDTO;
 import com.MyWebpage.register.login.chat.dto.ConversationSummaryDTO;
 import com.MyWebpage.register.login.chat.dto.DealConfirmationRequestDTO;
@@ -27,6 +28,7 @@ public class ChatServiceImpl implements ChatService {
     private final ChatRealtimeService chatRealtimeService;
     private final UserBlockRepository userBlockRepository;
     private final UserReportRepository userReportRepository;
+    private final ApproachFarmerService approachFarmerService;
 
     public ChatServiceImpl(
             ConversationRepository conversationRepository,
@@ -35,7 +37,8 @@ public class ChatServiceImpl implements ChatService {
             CropDealService cropDealService,
             ChatRealtimeService chatRealtimeService,
             UserBlockRepository userBlockRepository,
-            UserReportRepository userReportRepository) {
+            UserReportRepository userReportRepository,
+            ApproachFarmerService approachFarmerService) {
         this.conversationRepository = conversationRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.approachFarmerRepo = approachFarmerRepo;
@@ -43,6 +46,7 @@ public class ChatServiceImpl implements ChatService {
         this.chatRealtimeService = chatRealtimeService;
         this.userBlockRepository = userBlockRepository;
         this.userReportRepository = userReportRepository;
+        this.approachFarmerService = approachFarmerService;
     }
 
     @Override
@@ -117,6 +121,7 @@ public class ChatServiceImpl implements ChatService {
 
         touchConversation(conversation, chatMessage.getCreatedAt());
         Conversation savedConversation = conversationRepository.save(conversation);
+        approachFarmerService.recordChatActivity(savedConversation.getApproachId(), senderId, chatMessage.getCreatedAt());
         ChatMessageDTO dto = toMessageDto(chatMessage);
         chatRealtimeService.sendToConversation(savedConversation, "CHAT_MESSAGE", dto, null);
         chatRealtimeService.sendToUser(savedConversation.getBuyerId(), "CONVERSATION_UPDATE", toSummary(savedConversation, savedConversation.getBuyerId()), null);
@@ -160,11 +165,7 @@ public class ChatServiceImpl implements ChatService {
             conversation.setActive(false);
             conversation.setCompletedAt(LocalDateTime.now());
             touchConversation(conversation, LocalDateTime.now());
-
-            ApproachFarmer approach = approachFarmerRepo.findById(conversation.getApproachId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Request not found"));
-            approach.setStatus("Completed");
-            approachFarmerRepo.save(approach);
+            approachFarmerService.markApproachCompleted(conversation.getApproachId(), conversation.getCompletedAt());
 
             systemMessage = createSystemMessage(conversation.getConversationId(),
                     "Deal confirmed for " + agreedQuantity + " units. Listing updated successfully.");
@@ -239,17 +240,13 @@ public class ChatServiceImpl implements ChatService {
         String actorName = Objects.equals(actorId, conversation.getBuyerId())
                 ? conversation.getBuyerName()
                 : conversation.getFarmerName();
+        LocalDateTime now = LocalDateTime.now();
 
         conversation.setStatus(ConversationStatus.FAILED);
         conversation.setActive(false);
-        conversation.setFailedAt(LocalDateTime.now());
-        touchConversation(conversation, LocalDateTime.now());
-
-        ApproachFarmer approach = approachFarmerRepo.findById(conversation.getApproachId()).orElse(null);
-        if (approach != null) {
-            approach.setStatus("Failed");
-            approachFarmerRepo.save(approach);
-        }
+        conversation.setFailedAt(now);
+        touchConversation(conversation, now);
+        approachFarmerService.markApproachFailed(conversation.getApproachId(), now);
 
         ChatMessage systemMessage = createSystemMessage(conversation.getConversationId(),
                 actorName + " cancelled the deal. Conversation moved to failed.");
@@ -297,6 +294,7 @@ public class ChatServiceImpl implements ChatService {
                 item.setActive(false);
                 item.setFailedAt(now);
                 touchConversation(item, now);
+                approachFarmerService.markApproachFailed(item.getApproachId(), now);
                 Conversation savedConversation = conversationRepository.save(item);
                 ChatMessage savedSystemMessage = chatMessageRepository.save(
                         createSystemMessage(item.getConversationId(),

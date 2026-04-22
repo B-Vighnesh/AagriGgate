@@ -1,5 +1,6 @@
 package com.MyWebpage.register.login.approach;
 
+import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
@@ -29,4 +30,9 @@ public interface ApproachFarmerService {
 
     boolean sendMail(ApproachFarmer approachFarmer);
     boolean isApproachAccepted(Long userId, Long cropId);
+    void recordChatActivity(Long approachId, Long senderId, LocalDateTime messageAt);
+    void markApproachCompleted(Long approachId, LocalDateTime completedAt);
+    void markApproachFailed(Long approachId, LocalDateTime failedAt);
+    void markApproachExpired(Long approachId, LocalDateTime expiredAt);
+    void markApproachNotified(Long approachId, LocalDateTime notifiedAt);
 }
