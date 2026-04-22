@@ -174,6 +174,7 @@ export default function RequestDetails() {
   const counterpartPhone = isFarmer ? requestDetails?.userPhoneNo : requestDetails?.farmerPhoneNo;
   const counterpartEmail = isFarmer ? requestDetails?.userEmail : requestDetails?.farmerEmail;
   const buyerProfilePath = isFarmer && requestDetails?.userId ? `/view-buyer/${requestDetails.userId}` : null;
+  const activeTimelineCount = timelineItemsWithValuesCount(requestDetails);
 
   const timelineItems = useMemo(() => ([
     { label: 'Requested At', value: requestDetails?.requestedAt },
@@ -306,6 +307,17 @@ export default function RequestDetails() {
                   Track the full lifecycle of this request, from the initial approach to chat activity,
                   inactivity notices, and final outcome.
                 </p>
+                <div className="request-detail-hero__meta">
+                  <span className="request-detail-hero__meta-pill">
+                    {isFarmer ? 'Seller view' : 'Buyer view'}
+                  </span>
+                  <span className="request-detail-hero__meta-pill">
+                    {activeTimelineCount} lifecycle updates recorded
+                  </span>
+                  <span className="request-detail-hero__meta-pill">
+                    {isAccepted ? (socketReady ? 'Chat connected' : 'Chat opening') : STATUS_HINTS[statusKey] || 'Request lifecycle in progress'}
+                  </span>
+                </div>
               </div>
 
               <div className="request-detail-hero__chips">
@@ -334,20 +346,24 @@ export default function RequestDetails() {
                   <div className="request-lifecycle-stat">
                     <span>Crop Name</span>
                     <strong>{requestDetails.cropName}</strong>
+                    <small>Primary crop linked to this buyer-farmer request.</small>
                   </div>
                   <div className="request-lifecycle-stat">
                     <span>Requested Quantity</span>
                     <strong>{requestDetails.requestedQuantity ?? 'Not set'}</strong>
+                    <small>The quantity originally requested when the approach was created.</small>
                   </div>
                   <div className="request-lifecycle-stat">
                     <span>Current Status</span>
                     <strong>{requestDetails.status}</strong>
+                    <small>{STATUS_HINTS[statusKey] || 'Request lifecycle in progress'}</small>
                   </div>
-                  <div className="request-lifecycle-stat">
+                  <div className="request-lifecycle-stat request-lifecycle-stat--action">
                     <span>Crop Redirect</span>
                     <Button size="sm" onClick={() => navigate(`/view-details/${requestDetails.cropId}`)}>
                       View Crop
                     </Button>
+                    <small>Open the crop listing connected to this request.</small>
                   </div>
                 </div>
               </section>
@@ -361,16 +377,19 @@ export default function RequestDetails() {
                   <div className="request-lifecycle-stat">
                     <span>{counterpartLabel} Name</span>
                     <strong>{counterpartName || 'Not available'}</strong>
+                    <small>The person on the other side of this request conversation.</small>
                   </div>
                   <div className="request-lifecycle-stat">
                     <span>Phone Number</span>
                     <strong>{counterpartPhone || 'Not available'}</strong>
+                    <small>Reach out directly if coordination is needed offline.</small>
                   </div>
                   <div className="request-lifecycle-stat">
                     <span>Email</span>
                     <strong>{counterpartEmail || 'Not available'}</strong>
+                    <small>Shown when it is available for this request record.</small>
                   </div>
-                  <div className="request-lifecycle-stat">
+                  <div className="request-lifecycle-stat request-lifecycle-stat--action">
                     <span>Profile</span>
                     {buyerProfilePath ? (
                       <Button size="sm" variant="outline" onClick={() => navigate(buyerProfilePath)}>
@@ -379,6 +398,7 @@ export default function RequestDetails() {
                     ) : (
                       <strong>{requestDetails.farmerLocation || 'Available in chat context'}</strong>
                     )}
+                    <small>{buyerProfilePath ? 'Jump to the buyer profile for more background.' : 'Location context for the farmer on this request.'}</small>
                   </div>
                 </div>
               </section>
@@ -406,7 +426,7 @@ export default function RequestDetails() {
               </div>
               <div className="request-lifecycle-actions">
                 {isFarmer && statusKey === 'pending' && (
-                  <>
+                  <div className="request-lifecycle-action-group">
                     <Button loading={actionLoading === 'accept'} onClick={() => handleFarmerDecision('accept')}>
                       Accept Request
                     </Button>
@@ -417,11 +437,11 @@ export default function RequestDetails() {
                     >
                       Reject Request
                     </Button>
-                  </>
+                  </div>
                 )}
 
                 {isAccepted && (
-                  <>
+                  <div className="request-lifecycle-action-group">
                     <Button variant="outline" onClick={() => navigate(`/chat?approach=${requestDetails.approachId}`)}>
                       Open Full Chat
                     </Button>
@@ -438,13 +458,15 @@ export default function RequestDetails() {
                     >
                       Cancel Deal
                     </Button>
-                  </>
+                  </div>
                 )}
 
                 {isClosed && (
-                  <Button variant="outline" onClick={() => navigate(`/view-details/${requestDetails.cropId}`)}>
-                    View Crop Again
-                  </Button>
+                  <div className="request-lifecycle-action-group">
+                    <Button variant="outline" onClick={() => navigate(`/view-details/${requestDetails.cropId}`)}>
+                      View Crop Again
+                    </Button>
+                  </div>
                 )}
               </div>
             </section>
@@ -494,7 +516,11 @@ export default function RequestDetails() {
                       rows={2}
                       disabled={conversation?.status !== 'ACTIVE'}
                     />
-                    <Button onClick={handleSend} disabled={!composer.trim() || conversation?.status !== 'ACTIVE'}>
+                    <Button
+                      className="request-lifecycle-chat__send"
+                      onClick={handleSend}
+                      disabled={!composer.trim() || conversation?.status !== 'ACTIVE'}
+                    >
                       Send
                     </Button>
                   </div>
@@ -507,4 +533,17 @@ export default function RequestDetails() {
       <Toast message={toast.message} type={toast.type} />
     </section>
   );
+}
+
+function timelineItemsWithValuesCount(requestDetails) {
+  return [
+    requestDetails?.requestedAt,
+    requestDetails?.acceptedAt,
+    requestDetails?.rejectedAt,
+    requestDetails?.lastMessageAt,
+    requestDetails?.notifiedAt,
+    requestDetails?.completedAt,
+    requestDetails?.failedAt,
+    requestDetails?.expiredAt,
+  ].filter(Boolean).length;
 }
