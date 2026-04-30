@@ -69,6 +69,7 @@ public class NotificationController {
     public ResponseEntity<ApiResponse<String>> markAllAsRead(Authentication authentication) {
         Long userId = Long.parseLong(authentication.getName());
         notificationService.markAllAsRead(userId);
+        notificationService.markAllAlertsAsRead(userId);
         return ResponseEntity.ok(ApiResponse.success("All notifications marked as read", "OK"));
     }
 }
