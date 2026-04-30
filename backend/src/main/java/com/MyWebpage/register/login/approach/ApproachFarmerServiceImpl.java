@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,11 @@ import java.util.Optional;
 public class ApproachFarmerServiceImpl implements ApproachFarmerService {
 
     private static final Logger logger = LoggerFactory.getLogger(ApproachFarmerServiceImpl.class);
+    private static final String STATUS_PENDING = "Pending";
+    private static final String STATUS_ACCEPTED = "Accepted";
+    private static final String STATUS_COMPLETED = "Completed";
+    private static final String STATUS_FAILED = "Failed";
+    private static final String STATUS_EXPIRED = "Expired";
 
     private final ApproachFarmerRepo approachFarmerRepository;
     private final CropQueryService cropQueryService;
@@ -53,9 +59,9 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             }
 
             boolean isPending = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatusAndActiveTrue(
-                    farmerId, cropId, userId, "pending");
+                    farmerId, cropId, userId, STATUS_PENDING);
             boolean isAccepted = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatusAndActiveTrue(
-                    farmerId, cropId, userId, "Accepted");
+                    farmerId, cropId, userId, STATUS_ACCEPTED);
 
             if (isPending) {
                 return new ResponseEntity<>(
@@ -84,13 +90,28 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             approachFarmer.setUserPhoneNo(user.getPhoneNo());
             approachFarmer.setUserEmail(user.getEmail());
             approachFarmer.setRequestedQuantity(normalizeRequestedQuantity(requestedQuantity, crop));
-            approachFarmer.setStatus("pending");
+            approachFarmer.setStatus(STATUS_PENDING);
             approachFarmer.setActive(true);
             approachFarmer.setDeletedAt(null);
+            approachFarmer.setRequestedAt(LocalDateTime.now());
+            approachFarmer.setAcceptedAt(null);
+            approachFarmer.setRejectedAt(null);
+            approachFarmer.setLastMessageAt(null);
+            approachFarmer.setLastMessageSenderId(null);
+            approachFarmer.setNotifiedAt(null);
+            approachFarmer.setCompletedAt(null);
+            approachFarmer.setFailedAt(null);
+            approachFarmer.setExpiredAt(null);
 
             approachFarmerRepository.save(approachFarmer);
             logger.info("Approach created: {}", approachFarmer.getApproachId());
             return new ResponseEntity<>("Success", HttpStatus.OK);
+        } catch (ResponseStatusException exception) {
+            logger.warn("Approach creation rejected: {}", exception.getReason());
+            return ResponseEntity.status(exception.getStatusCode()).body(exception.getReason());
+        } catch (IllegalArgumentException exception) {
+            logger.warn("Approach creation validation failed: {}", exception.getMessage());
+            return ResponseEntity.badRequest().body(exception.getMessage());
         } catch (Exception e) {
             logger.error("Failed to create approach", e);
             return new ResponseEntity<>("Server Busy", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -110,11 +131,28 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             if (!farmerId.equals(approach.getFarmerId())) {
                 return false;
             }
-            if (!"pending".equalsIgnoreCase(approach.getStatus())) {
+            if (!STATUS_PENDING.equalsIgnoreCase(approach.getStatus())) {
                 return false;
             }
+            LocalDateTime now = LocalDateTime.now();
             approach.setAccept(accept);
-            approach.setStatus(accept ? "Accepted" : "Rejected");
+            approach.setStatus(accept ? STATUS_ACCEPTED : STATUS_FAILED);
+            if (accept) {
+                approach.setAcceptedAt(now);
+                approach.setRejectedAt(null);
+                approach.setNotifiedAt(null);
+                approach.setCompletedAt(null);
+                approach.setFailedAt(null);
+                approach.setExpiredAt(null);
+                approach.setLastMessageAt(null);
+                approach.setLastMessageSenderId(null);
+            } else {
+                approach.setRejectedAt(now);
+                approach.setFailedAt(now);
+                approach.setNotifiedAt(null);
+                approach.setCompletedAt(null);
+                approach.setExpiredAt(null);
+            }
             approachFarmerRepository.save(approach);
             logger.info("Approach status updated: {} -> {}", approachId, approach.getStatus());
             return true;
@@ -158,7 +196,20 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                 userId,
                 normalizeStatus(status),
                 buildPageRequest(page, size)
-        );
+        ).map(this::sanitizeBuyerRequestView);
+    }
+
+    @Override
+    public ApproachRequestDTO getRequestByFarmerId(Long farmerId, Long approachId) {
+        return approachFarmerRepository.findRequestViewByFarmerIdAndApproachId(farmerId, approachId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found."));
+    }
+
+    @Override
+    public ApproachRequestDTO getRequestByUserId(Long userId, Long approachId) {
+        return approachFarmerRepository.findRequestViewByUserIdAndApproachId(userId, approachId)
+                .map(this::sanitizeBuyerRequestView)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found."));
     }
 
     @Override
@@ -198,7 +249,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
 
     @Override
     public boolean hasRejectedApproach(Long userId, Long cropId) {
-        return approachFarmerRepository.existsByCropIdAndUserIdAndStatusIgnoreCaseAndActiveTrue(cropId, userId, "Rejected");
+        return approachFarmerRepository.existsByCropIdAndUserIdAndStatusIgnoreCaseAndActiveTrue(cropId, userId, STATUS_FAILED);
     }
 
     @Override
@@ -227,10 +278,61 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     @Override
     public boolean isApproachAccepted(Long userId, Long cropId) {
         try {
-            return approachFarmerRepository.existsByCropIdAndUserIdAndStatusAndActiveTrue(cropId, userId, "Accepted");
+            return approachFarmerRepository.existsByCropIdAndUserIdAndStatusAndActiveTrue(cropId, userId, STATUS_ACCEPTED);
         } catch (Exception e) {
             throw new RuntimeException("Error occurred while checking the approach status: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public void recordChatActivity(Long approachId, Long senderId, LocalDateTime messageAt) {
+        approachFarmerRepository.findById(approachId).ifPresent(approach -> {
+            approach.setLastMessageAt(messageAt);
+            approach.setLastMessageSenderId(senderId);
+            approach.setNotifiedAt(null);
+            approachFarmerRepository.save(approach);
+        });
+    }
+
+    @Override
+    public void markApproachCompleted(Long approachId, LocalDateTime completedAt) {
+        approachFarmerRepository.findById(approachId).ifPresent(approach -> {
+            approach.setStatus(STATUS_COMPLETED);
+            approach.setCompletedAt(completedAt);
+            approach.setFailedAt(null);
+            approach.setExpiredAt(null);
+            approachFarmerRepository.save(approach);
+        });
+    }
+
+    @Override
+    public void markApproachFailed(Long approachId, LocalDateTime failedAt) {
+        approachFarmerRepository.findById(approachId).ifPresent(approach -> {
+            approach.setStatus(STATUS_FAILED);
+            approach.setFailedAt(failedAt);
+            approach.setCompletedAt(null);
+            approach.setExpiredAt(null);
+            approachFarmerRepository.save(approach);
+        });
+    }
+
+    @Override
+    public void markApproachExpired(Long approachId, LocalDateTime expiredAt) {
+        approachFarmerRepository.findById(approachId).ifPresent(approach -> {
+            approach.setStatus(STATUS_EXPIRED);
+            approach.setExpiredAt(expiredAt);
+            approach.setCompletedAt(null);
+            approach.setFailedAt(null);
+            approachFarmerRepository.save(approach);
+        });
+    }
+
+    @Override
+    public void markApproachNotified(Long approachId, LocalDateTime notifiedAt) {
+        approachFarmerRepository.findById(approachId).ifPresent(approach -> {
+            approach.setNotifiedAt(notifiedAt);
+            approachFarmerRepository.save(approach);
+        });
     }
 
     private PageRequest buildPageRequest(int page, int size) {
@@ -243,7 +345,14 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
         if (status == null || status.isBlank() || "All".equalsIgnoreCase(status)) {
             return null;
         }
-        return status.trim();
+        return switch (status.trim().toUpperCase()) {
+            case "PENDING" -> STATUS_PENDING;
+            case "ACCEPTED", "ACTIVE" -> STATUS_ACCEPTED;
+            case "COMPLETED" -> STATUS_COMPLETED;
+            case "FAILED", "REJECTED" -> STATUS_FAILED;
+            case "EXPIRED" -> STATUS_EXPIRED;
+            default -> status.trim();
+        };
     }
 
     private Double normalizeRequestedQuantity(Double requestedQuantity, Crop crop) {
@@ -255,5 +364,14 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             throw new IllegalArgumentException("Requested quantity exceeds available crop quantity.");
         }
         return quantity;
+    }
+
+    private ApproachRequestDTO sanitizeBuyerRequestView(ApproachRequestDTO dto) {
+        dto.setFarmerId(null);
+        dto.setFarmerName(null);
+        dto.setFarmerPhoneNo(null);
+        dto.setFarmerEmail(null);
+        dto.setFarmerLocation(null);
+        return dto;
     }
 }

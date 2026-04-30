@@ -29,6 +29,15 @@ public class ApproachFarmer {
     private String status;
     private Boolean active = true;
     private LocalDateTime deletedAt;
+    private LocalDateTime requestedAt;
+    private LocalDateTime acceptedAt;
+    private LocalDateTime rejectedAt;
+    private LocalDateTime lastMessageAt;
+    private Long lastMessageSenderId;
+    private LocalDateTime notifiedAt;
+    private LocalDateTime completedAt;
+    private LocalDateTime failedAt;
+    private LocalDateTime expiredAt;
 
     public String getStatus() {
         return status;
@@ -169,5 +178,77 @@ public class ApproachFarmer {
 
     public void setDeletedAt(LocalDateTime deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public LocalDateTime getRequestedAt() {
+        return requestedAt;
+    }
+
+    public void setRequestedAt(LocalDateTime requestedAt) {
+        this.requestedAt = requestedAt;
+    }
+
+    public LocalDateTime getAcceptedAt() {
+        return acceptedAt;
+    }
+
+    public void setAcceptedAt(LocalDateTime acceptedAt) {
+        this.acceptedAt = acceptedAt;
+    }
+
+    public LocalDateTime getRejectedAt() {
+        return rejectedAt;
+    }
+
+    public void setRejectedAt(LocalDateTime rejectedAt) {
+        this.rejectedAt = rejectedAt;
+    }
+
+    public LocalDateTime getLastMessageAt() {
+        return lastMessageAt;
+    }
+
+    public void setLastMessageAt(LocalDateTime lastMessageAt) {
+        this.lastMessageAt = lastMessageAt;
+    }
+
+    public Long getLastMessageSenderId() {
+        return lastMessageSenderId;
+    }
+
+    public void setLastMessageSenderId(Long lastMessageSenderId) {
+        this.lastMessageSenderId = lastMessageSenderId;
+    }
+
+    public LocalDateTime getNotifiedAt() {
+        return notifiedAt;
+    }
+
+    public void setNotifiedAt(LocalDateTime notifiedAt) {
+        this.notifiedAt = notifiedAt;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
+    }
+
+    public LocalDateTime getFailedAt() {
+        return failedAt;
+    }
+
+    public void setFailedAt(LocalDateTime failedAt) {
+        this.failedAt = failedAt;
+    }
+
+    public LocalDateTime getExpiredAt() {
+        return expiredAt;
+    }
+
+    public void setExpiredAt(LocalDateTime expiredAt) {
+        this.expiredAt = expiredAt;
     }
 }

@@ -47,6 +47,22 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
 
     Optional<ApproachFarmer> findByUserIdAndCropIdAndActiveTrue(Long userId, Long cropId);
 
+    @Query("""
+            SELECT a
+            FROM ApproachFarmer a
+            WHERE a.active = true
+              AND a.deletedAt IS NULL
+              AND lower(a.status) = 'accepted'
+              AND (
+                    (a.userId = :userA AND a.farmerId = :userB)
+                 OR (a.userId = :userB AND a.farmerId = :userA)
+              )
+            """)
+    List<ApproachFarmer> findAcceptedRequestsBetweenUsers(
+            @Param("userA") Long userA,
+            @Param("userB") Long userB
+    );
+
     boolean existsByCropIdAndUserIdAndStatusAndActiveTrue(Long cropId, Long userId, String accepted);
     boolean existsByCropIdAndUserIdAndStatusIgnoreCaseAndActiveTrue(Long cropId, Long userId, String status);
 
@@ -99,10 +115,23 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
                         a.cropName,
                         a.farmerId,
                         a.farmerName,
+                        a.farmerPhoneNo,
+                        a.farmerEmail,
+                        a.farmerLocation,
                         a.userId,
                         a.userName,
+                        a.userPhoneNo,
+                        a.userEmail,
                         a.requestedQuantity,
-                        a.status
+                        a.status,
+                        a.requestedAt,
+                        a.acceptedAt,
+                        a.rejectedAt,
+                        a.lastMessageAt,
+                        a.notifiedAt,
+                        a.completedAt,
+                        a.failedAt,
+                        a.expiredAt
                     )
                     FROM ApproachFarmer a
                     WHERE a.farmerId = :farmerId
@@ -139,10 +168,23 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
                         a.cropName,
                         a.farmerId,
                         a.farmerName,
+                        a.farmerPhoneNo,
+                        a.farmerEmail,
+                        a.farmerLocation,
                         a.userId,
                         a.userName,
+                        a.userPhoneNo,
+                        a.userEmail,
                         a.requestedQuantity,
-                        a.status
+                        a.status,
+                        a.requestedAt,
+                        a.acceptedAt,
+                        a.rejectedAt,
+                        a.lastMessageAt,
+                        a.notifiedAt,
+                        a.completedAt,
+                        a.failedAt,
+                        a.expiredAt
                     )
                     FROM ApproachFarmer a
                     WHERE a.farmerId = :farmerId
@@ -182,10 +224,23 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
                         a.cropName,
                         a.farmerId,
                         a.farmerName,
+                        a.farmerPhoneNo,
+                        a.farmerEmail,
+                        a.farmerLocation,
                         a.userId,
                         a.userName,
+                        a.userPhoneNo,
+                        a.userEmail,
                         a.requestedQuantity,
-                        a.status
+                        a.status,
+                        a.requestedAt,
+                        a.acceptedAt,
+                        a.rejectedAt,
+                        a.lastMessageAt,
+                        a.notifiedAt,
+                        a.completedAt,
+                        a.failedAt,
+                        a.expiredAt
                     )
                     FROM ApproachFarmer a
                     WHERE a.userId = :userId
@@ -213,4 +268,108 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
             @Param("status") String status,
             Pageable pageable
     );
+
+    @Query("""
+            SELECT new com.MyWebpage.register.login.approach.ApproachRequestDTO(
+                a.approachId,
+                a.cropId,
+                a.cropName,
+                a.farmerId,
+                a.farmerName,
+                a.farmerPhoneNo,
+                a.farmerEmail,
+                a.farmerLocation,
+                a.userId,
+                a.userName,
+                a.userPhoneNo,
+                a.userEmail,
+                a.requestedQuantity,
+                a.status,
+                a.requestedAt,
+                a.acceptedAt,
+                a.rejectedAt,
+                a.lastMessageAt,
+                a.notifiedAt,
+                a.completedAt,
+                a.failedAt,
+                a.expiredAt
+            )
+            FROM ApproachFarmer a
+            WHERE a.approachId = :approachId
+              AND a.farmerId = :farmerId
+              AND a.active = true
+              AND a.deletedAt IS NULL
+              AND EXISTS (SELECT 1 FROM Farmer f WHERE f.farmerId = a.farmerId AND f.active = true)
+              AND EXISTS (SELECT 1 FROM Farmer u WHERE u.farmerId = a.userId AND u.active = true)
+              AND EXISTS (SELECT 1 FROM Crop c WHERE c.cropID = a.cropId AND c.active = true AND c.deletedAt IS NULL AND c.farmer.active = true)
+            """)
+    Optional<ApproachRequestDTO> findRequestViewByFarmerIdAndApproachId(
+            @Param("farmerId") Long farmerId,
+            @Param("approachId") Long approachId
+    );
+
+    @Query("""
+            SELECT new com.MyWebpage.register.login.approach.ApproachRequestDTO(
+                a.approachId,
+                a.cropId,
+                a.cropName,
+                a.farmerId,
+                a.farmerName,
+                a.farmerPhoneNo,
+                a.farmerEmail,
+                a.farmerLocation,
+                a.userId,
+                a.userName,
+                a.userPhoneNo,
+                a.userEmail,
+                a.requestedQuantity,
+                a.status,
+                a.requestedAt,
+                a.acceptedAt,
+                a.rejectedAt,
+                a.lastMessageAt,
+                a.notifiedAt,
+                a.completedAt,
+                a.failedAt,
+                a.expiredAt
+            )
+            FROM ApproachFarmer a
+            WHERE a.approachId = :approachId
+              AND a.userId = :userId
+              AND a.active = true
+              AND a.deletedAt IS NULL
+              AND EXISTS (SELECT 1 FROM Farmer f WHERE f.farmerId = a.farmerId AND f.active = true)
+              AND EXISTS (SELECT 1 FROM Farmer u WHERE u.farmerId = a.userId AND u.active = true)
+              AND EXISTS (SELECT 1 FROM Crop c WHERE c.cropID = a.cropId AND c.active = true AND c.deletedAt IS NULL AND c.farmer.active = true)
+            """)
+    Optional<ApproachRequestDTO> findRequestViewByUserIdAndApproachId(
+            @Param("userId") Long userId,
+            @Param("approachId") Long approachId
+    );
+
+    @Query("""
+            SELECT a
+            FROM ApproachFarmer a
+            WHERE a.active = true
+              AND a.deletedAt IS NULL
+              AND lower(a.status) = 'accepted'
+              AND (
+                    (a.lastMessageAt IS NULL AND a.acceptedAt <= :notifyBefore)
+                 OR (a.lastMessageAt IS NOT NULL AND a.lastMessageAt <= :notifyBefore)
+              )
+              AND a.notifiedAt IS NULL
+            """)
+    List<ApproachFarmer> findAcceptedRequestsNeedingInactivityNotification(@Param("notifyBefore") LocalDateTime notifyBefore);
+
+    @Query("""
+            SELECT a
+            FROM ApproachFarmer a
+            WHERE a.active = true
+              AND a.deletedAt IS NULL
+              AND lower(a.status) = 'accepted'
+              AND a.notifiedAt IS NOT NULL
+              AND a.notifiedAt <= :expireBefore
+              AND (a.lastMessageAt IS NULL OR a.lastMessageAt <= a.notifiedAt)
+            """)
+    List<ApproachFarmer> findAcceptedRequestsNeedingExpiration(@Param("expireBefore") LocalDateTime expireBefore);
 }

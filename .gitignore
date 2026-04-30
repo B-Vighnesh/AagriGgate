@@ -1,1 +1,11 @@
-ÿþ
+https://stackblitz.com/storage/blobs/eyJfcmFpbHMiOnsiZGF0YSI6MTU1MDA2NTMxLCJwdXIiOiJibG9iX2lkIn19--4f858d87bb8068975baf5c335d0c757753fc28dd/.gitignore
+.env
+You have access to a precomputed code graph in ./graphify-out.
+
+Workflow:
+- Step 1: Use graph.json to understand structure and dependencies
+- Step 2: Use GRAPH_REPORT.md for summaries
+- Step 3: Use graph queries conceptually (paths, relationships)
+- Step 4: Only read source files if graph is insufficient
+
+Always explain reasoning using graph relationships.

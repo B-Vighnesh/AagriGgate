@@ -54,10 +54,7 @@ public class NotificationPreferenceServiceImpl implements NotificationPreference
                 .orElse(null);
 
         if (deliveryType == MessageDeliveryType.ALERT && (existing == null || existing.getDeliveryType() != MessageDeliveryType.ALERT)) {
-            long alertCount = preferenceRepository.countByUserIdAndDeliveryType(userId, MessageDeliveryType.ALERT);
-            if (alertCount >= MAX_ALERT_CATEGORY_SELECTIONS) {
-                throw new IllegalArgumentException("You can set at most 5 categories as ALERT.");
-            }
+            validateAlertLimit(userId, categoryName, deliveryType);
         }
 
         if (existing == null) {
@@ -72,8 +69,117 @@ public class NotificationPreferenceServiceImpl implements NotificationPreference
 
     @Override
     @Transactional
+    public List<NotificationPreferenceResponse> setAllToNotifications(Long userId) {
+        return applyBulkPreferenceUpdate(userId, category -> MessageDeliveryType.NOTIFICATION);
+    }
+
+    @Override
+    @Transactional
+    public List<NotificationPreferenceResponse> turnAlertsOff(Long userId) {
+        return applyBulkPreferenceUpdate(userId, category -> {
+            MessageDeliveryType effectiveCurrent = resolveEffectiveDeliveryType(userId, category);
+            return effectiveCurrent == MessageDeliveryType.ALERT
+                    ? MessageDeliveryType.NOTIFICATION
+                    : effectiveCurrent;
+        });
+    }
+
+    @Override
+    @Transactional
+    public List<NotificationPreferenceResponse> turnAllOff(Long userId) {
+        return applyBulkPreferenceUpdate(userId, category -> MessageDeliveryType.OFF);
+    }
+
+    private void validateAlertLimit(Long userId,
+                                    String categoryName,
+                                    MessageDeliveryType newDeliveryType) {
+
+        // Only validate when trying to set ALERT
+        if (newDeliveryType != MessageDeliveryType.ALERT) {
+            return;
+        }
+
+        // 1. Load user preferences → Map
+        Map<String, UserCategoryPreference> storedByCategory =
+                preferenceRepository.findByUserId(userId).stream()
+                        .collect(Collectors.toMap(
+                                pref -> pref.getCategory().getCategoryName(),
+                                Function.identity()
+                        ));
+
+        // 2. Count effective ALERT values (simulate new change)
+        long alertCount = categoryRepository.findAll().stream()
+                .map(category -> {
+
+                    String currentCategoryName = category.getCategoryName();
+
+                    // simulate the update for THIS category
+                    if (currentCategoryName.equalsIgnoreCase(categoryName)) {
+                        return newDeliveryType;
+                    }
+
+                    // existing preference or default
+                    UserCategoryPreference pref = storedByCategory.get(currentCategoryName);
+
+                    return (pref != null)
+                            ? pref.getDeliveryType()
+                            : category.getDefaultDeliveryType();
+                })
+                .filter(type -> type == MessageDeliveryType.ALERT)
+                .count();
+
+        // 3. Validate
+        if (alertCount > MAX_ALERT_CATEGORY_SELECTIONS) {
+            throw new IllegalArgumentException(
+                    "You can set at most " + MAX_ALERT_CATEGORY_SELECTIONS + " categories as ALERT."
+            );
+        }
+    }
+
+    @Override
+    @Transactional
     public void resetToDefaults(Long userId) {
         preferenceRepository.deleteByUserId(userId);
+    }
+
+    private List<NotificationPreferenceResponse> applyBulkPreferenceUpdate(
+            Long userId,
+            Function<NotificationCategory, MessageDeliveryType> deliveryTypeResolver
+    ) {
+        Map<String, UserCategoryPreference> existingByCategory = preferenceRepository.findByUserId(userId).stream()
+                .collect(Collectors.toMap(pref -> pref.getCategory().getCategoryName(), Function.identity()));
+
+        List<NotificationCategory> categories = categoryRepository.findAll().stream()
+                .sorted(Comparator.comparing(NotificationCategory::getCategoryName))
+                .toList();
+
+        List<UserCategoryPreference> preferencesToSave = categories.stream()
+                .map(category -> {
+                    MessageDeliveryType nextType = deliveryTypeResolver.apply(category);
+                    UserCategoryPreference preference = existingByCategory.get(category.getCategoryName());
+                    if (preference == null) {
+                        preference = new UserCategoryPreference();
+                        preference.setUserId(userId);
+                        preference.setCategory(category);
+                    }
+                    preference.setDeliveryType(nextType);
+                    return preference;
+                })
+                .toList();
+
+        List<UserCategoryPreference> saved = preferenceRepository.saveAll(preferencesToSave);
+        Map<String, UserCategoryPreference> savedByCategory = saved.stream()
+                .collect(Collectors.toMap(pref -> pref.getCategory().getCategoryName(), Function.identity()));
+
+        return categories.stream()
+                .map(category -> toResponse(category, savedByCategory.get(category.getCategoryName())))
+                .toList();
+    }
+
+    private MessageDeliveryType resolveEffectiveDeliveryType(Long userId, NotificationCategory category) {
+        return preferenceRepository.findByUserIdAndCategory_CategoryNameIgnoreCase(userId, category.getCategoryName())
+                .map(UserCategoryPreference::getDeliveryType)
+                .orElse(category.getDefaultDeliveryType());
     }
 
     private NotificationPreferenceResponse toResponse(NotificationCategory category, UserCategoryPreference preference) {

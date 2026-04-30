@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import ValidateToken from './ValidateToken';
+import { requestJson } from '../lib/api';
 import { getFarmerId, getToken, getRole } from '../lib/auth';
+import { getNews } from '../lib/newsApi';
+import { getRequestStatusLabel, normalizeRequestStatus } from '../lib/requestStatus';
 
 const SLIDES = [
   {
@@ -285,6 +288,271 @@ function Slider({ slides, activeIndex, onPrimary, onSecondary, setActiveIndex, i
   );
 }
 
+function getDayGreeting(date = new Date()) {
+  const hour = date.getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function formatPrice(value) {
+  const numeric = Number(value || 0);
+  if (!Number.isFinite(numeric)) return 'Rs 0';
+  return `Rs ${numeric.toFixed(0)}`;
+}
+
+function formatNewsMeta(item) {
+  const category = item?.category || 'News';
+  const published = item?.publishedAt || item?.createdAt || '';
+  if (!published) {
+    return category;
+  }
+
+  const date = new Date(published);
+  if (Number.isNaN(date.getTime())) {
+    return category;
+  }
+
+  return `${category} · ${date.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+  })}`;
+}
+
+function getNewsDateLabel(item) {
+  const published = item?.publishedAt || item?.createdAt || '';
+  if (!published) {
+    return '';
+  }
+
+  const date = new Date(published);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
+function FarmerQuickActions({ navigate }) {
+  const actions = [
+    { label: 'Add crop', icon: 'fa-solid fa-plus', path: '/add-crop' },
+    { label: 'My crops', icon: 'fa-solid fa-seedling', path: '/view-crop' },
+    { label: 'Requests', icon: 'fa-regular fa-clock', path: '/view-approach' },
+    { label: 'Market', icon: 'fa-solid fa-chart-line', path: '/market' },
+  ];
+
+  return (
+    <section className="dashboard-section">
+      <div className="dashboard-section__header">
+        <p className="dashboard-section__label">Quick actions</p>
+      </div>
+      <div className="dashboard-quick-actions">
+        {actions.map((item) => (
+          <button
+            key={item.label}
+            type="button"
+            className="dashboard-quick-card"
+            onClick={() => navigate(item.path)}
+          >
+            <span className="dashboard-quick-card__icon" aria-hidden="true">
+              <i className={item.icon} />
+            </span>
+            <strong>{item.label}</strong>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function LoggedInDashboard({ role, token, farmerId, navigate }) {
+  const [profile, setProfile] = useState(null);
+  const [recentRequests, setRecentRequests] = useState([]);
+  const [latestCrops, setLatestCrops] = useState([]);
+  const [latestNews, setLatestNews] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const requestPath = role === 'farmer'
+      ? '/seller/approach/requests/me?page=0&size=3'
+      : '/buyer/approach/requests/me?page=0&size=3';
+    const profilePath = role === 'farmer' ? '/farmers/me' : '/buyers/me';
+
+    (async () => {
+      try {
+        const [profileData, requestsData, cropsData, newsData] = await Promise.allSettled([
+          requestJson(profilePath, { method: 'GET' }),
+          requestJson(requestPath, { method: 'GET' }),
+          requestJson(`/crops/legacy?page=0&size=${role === 'buyer' ? 4 : 2}&sortBy=newest`, { method: 'GET' }),
+          getNews({ page: 0, size: 3, sortBy: 'newest' }),
+        ]);
+
+        if (!active) return;
+
+        setProfile(profileData.status === 'fulfilled' ? profileData.value : null);
+        setRecentRequests(
+          requestsData.status === 'fulfilled' && Array.isArray(requestsData.value?.content)
+            ? requestsData.value.content.slice(0, 3)
+            : [],
+        );
+        setLatestCrops(
+          cropsData.status === 'fulfilled' && Array.isArray(cropsData.value?.content)
+            ? cropsData.value.content.slice(0, role === 'buyer' ? 4 : 2)
+            : [],
+        );
+        setLatestNews(
+          newsData.status === 'fulfilled' && Array.isArray(newsData.value?.content)
+            ? newsData.value.content.slice(0, 3)
+            : [],
+        );
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [farmerId, role, token]);
+
+  const isFarmer = role === 'farmer';
+  const displayName = `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim() || 'User';
+  const location = [profile?.district, profile?.state].filter(Boolean).join(', ') || 'Location not added';
+  const requestRoute = isFarmer ? '/view-approach' : '/view-approaches-user';
+
+  if (loading) {
+    return (
+      <section className="page page--center">
+        <div className="ui-spinner ui-spinner--lg" />
+      </section>
+    );
+  }
+
+  return (
+    <section className="page dashboard-home-page">
+      <div className="ag-container dashboard-home">
+        <Card className="dashboard-greeting">
+          <p className="dashboard-greeting__sub">{getDayGreeting()}</p>
+          <h1>{displayName}</h1>
+          <p className="dashboard-greeting__role">
+            {isFarmer ? 'Farmer' : 'Buyer'} {location ? `\u00b7 ${location}` : ''}
+          </p>
+          {!isFarmer && (
+            <p className="dashboard-greeting__welcome">
+              Find fresh crops directly from farmers near you.
+            </p>
+          )}
+        </Card>
+
+        {isFarmer ? (
+          <FarmerQuickActions navigate={navigate} />
+        ) : (
+          <section className="dashboard-section">
+            <div className="dashboard-section__header">
+              <p className="dashboard-section__label">Latest crops</p>
+              <button type="button" className="dashboard-section__link" onClick={() => navigate('/view-all-crops')}>
+                See all
+              </button>
+            </div>
+            <div className="dashboard-crops-grid">
+              {latestCrops.length > 0 ? latestCrops.map((crop) => (
+                <button
+                  key={crop.cropID}
+                  type="button"
+                  className="dashboard-crop-card"
+                  onClick={() => navigate(`/view-details/${crop.cropID}`)}
+                >
+                  <p className="dashboard-crop-card__title">{crop.cropName}</p>
+                  <p className="dashboard-crop-card__meta">{crop.region || crop.cropType || 'Crop listing'}</p>
+                  <p className="dashboard-crop-card__price">{formatPrice(crop.marketPrice)}</p>
+                  <p className="dashboard-crop-card__sub">Qty: {crop.quantity} {crop.unit}</p>
+                </button>
+              )) : (
+                <Card className="dashboard-empty-card">
+                  <p className="dashboard-empty">Latest crop listings will appear here.</p>
+                </Card>
+              )}
+            </div>
+          </section>
+        )}
+
+        <section className="dashboard-section">
+          <div className="dashboard-section__header">
+            <p className="dashboard-section__label">{isFarmer ? 'Recent requests' : 'My requests'}</p>
+            <button type="button" className="dashboard-section__link" onClick={() => navigate(requestRoute)}>
+              See all
+            </button>
+          </div>
+          <Card className="dashboard-list-card">
+            {recentRequests.length > 0 ? recentRequests.map((item) => {
+              const normalized = normalizeRequestStatus(item.status);
+              const counterpartName = isFarmer ? item.userName : item.farmerName;
+              return (
+                <button
+                  key={item.approachId}
+                  type="button"
+                  className="dashboard-request-item"
+                  onClick={() => navigate(`/requests/${item.approachId}`)}
+                >
+                  <div>
+                    <strong>{item.cropName}</strong>
+                    <span>{isFarmer ? 'Buyer' : 'Farmer'}: {counterpartName || 'User'}</span>
+                  </div>
+                  <span className={`approach-badge ${{
+                    pending: 'approach-badge--pending',
+                    accepted: 'approach-badge--accepted',
+                    completed: 'approach-badge--completed',
+                    failed: 'approach-badge--failed',
+                    expired: 'approach-badge--expired',
+                  }[normalized] || ''}`}>
+                    {getRequestStatusLabel(item.status)}
+                  </span>
+                </button>
+              );
+            }) : (
+              <p className="dashboard-empty">Your recent requests will appear here.</p>
+            )}
+          </Card>
+        </section>
+
+        <section className="dashboard-section">
+          <div className="dashboard-section__header">
+            <p className="dashboard-section__label">Latest news</p>
+            <button type="button" className="dashboard-section__link" onClick={() => navigate('/news')}>
+              See all
+            </button>
+          </div>
+          <Card className="dashboard-list-card dashboard-list-card--news">
+            {latestNews.length > 0 ? latestNews.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className="dashboard-news-item"
+                onClick={() => navigate(`/news/${item.id}`)}
+              >
+                <strong>{item.title}</strong>
+                <div className="dashboard-news-item__meta">
+                  <span className="dashboard-news-item__category">{item.category || 'News'}</span>
+                  <span>{getNewsDateLabel(item)}</span>
+                </div>
+              </button>
+            )) : (
+              <p className="dashboard-empty">Latest news updates will appear here.</p>
+            )}
+          </Card>
+        </section>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const farmerId = getFarmerId();
@@ -326,10 +594,23 @@ export default function Home() {
     navigate('/view-all-crops');
   };
 
+  if (isLoggedIn) {
+    return (
+      <div className="home-page">
+        <ValidateToken token={token} role={role} farmerId={farmerId} />
+        <LoggedInDashboard
+          role={role}
+          token={token}
+          farmerId={farmerId}
+          navigate={navigate}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="home-page">
       <ValidateToken token={token} role={role} farmerId={farmerId} />
-
       <Slider
         slides={SLIDES}
         activeIndex={activeSlide}

@@ -2,94 +2,74 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import '../assets/Notifications.css';
-import NotificationPreferences from './NotificationPreferences';
 import Toast from './common/Toast';
 import { getRole, isLoggedIn } from '../lib/auth';
 import {
   acknowledgeAlert,
   countUnread,
-  getActiveAlerts,
   getNotifications,
   markAllAsRead,
   markAsRead,
 } from '../lib/notificationApi';
-
-/* ── helpers ─────────────────────────────────────────────── */
+import { resolveNotificationRoute } from '../lib/notificationRouting';
 
 const TIME_FORMATTER = new Intl.DateTimeFormat('en-GB', {
   day: '2-digit',
   month: 'short',
   year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
 });
+
+const syncNotificationCount = (count) => {
+  window.dispatchEvent(new CustomEvent('notifications:count-updated', { detail: { count } }));
+};
 
 function formatTimestamp(value) {
   if (!value) return '';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  return TIME_FORMATTER.format(d);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return TIME_FORMATTER.format(date);
 }
 
-function resolveRoute(notification, role) {
-  if (notification?.redirectUrl) return notification.redirectUrl;
-  if (notification?.referenceType === 'NEWS') return '/news';
-  if (notification?.referenceType === 'REQUEST')
-    return role === 'farmer' ? '/view-approach' : '/view-approaches-user';
-  if (notification?.referenceType === 'MARKET') return '/market';
-  if (notification?.referenceType === 'WEATHER') return '/weather';
-  if (notification?.referenceType === 'ADMIN') return '/account';
-  return null;
-}
-
-/* ── sub-components ──────────────────────────────────────── */
-
-function NotificationItem({ notification, isRead, onRead }) {
-  const handleClick = () => {
-    if (!isRead) onRead(notification);
-    else onRead(notification, true); // already read — navigate only
-  };
+function NotificationItem({ item, isSeen, onOpen }) {
+  const deliveryType = String(item.deliveryType || 'NOTIFICATION').toUpperCase();
 
   return (
     <button
       type="button"
-      className={`ntf-item ${isRead ? 'ntf-item--read' : 'ntf-item--unread'}`}
-      onClick={handleClick}
-      aria-label={`${isRead ? '' : 'Unread: '}${notification.title}`}
+      className={`ntf-item ${isSeen ? 'ntf-item--read' : 'ntf-item--unread'}`}
+      onClick={() => onOpen(item, isSeen)}
+      aria-label={`${isSeen ? '' : 'Unread: '}${item.title}`}
     >
-      {!isRead && <span className="ntf-item__dot" aria-hidden="true" />}
+      <span className={`ntf-item__dot ${isSeen ? 'ntf-item__dot--read' : 'ntf-item__dot--unread'}`} aria-hidden="true" />
       <div className="ntf-item__body">
-        <span className={`ntf-item__title ${isRead ? '' : 'ntf-item__title--bold'}`}>
-          {notification.title}
-        </span>
-        <p className="ntf-item__message">{notification.message}</p>
+        <div className="ntf-item__title-row">
+          <span className={`ntf-item__title ${isSeen ? '' : 'ntf-item__title--bold'}`}>
+            {item.title}
+          </span>
+          <div className="ntf-item__title-meta">
+            <span className={`ntf-item__state ${isSeen ? 'ntf-item__state--read' : 'ntf-item__state--unread'}`}>
+              {isSeen ? 'Read' : 'Unread'}
+            </span>
+            {item.severity ? (
+              <span className={`ntf-item__pill ntf-item__pill--${String(item.severity).toLowerCase()}`}>
+                {item.severity}
+              </span>
+            ) : null}
+            <time className="ntf-item__time" dateTime={item.createdAt}>
+              {formatTimestamp(item.createdAt)}
+            </time>
+          </div>
+        </div>
+        <p className="ntf-item__message">{item.message}</p>
+        <div className="ntf-item__meta">
+          <span className={`ntf-item__type ntf-item__type--${deliveryType.toLowerCase()}`}>{deliveryType}</span>
+          {item.categoryName ? <span>{item.categoryName}</span> : null}
+        </div>
+        <span className="ntf-item__cta">View Details</span>
       </div>
-      <time className="ntf-item__time" dateTime={notification.createdAt}>
-        {formatTimestamp(notification.createdAt)}
-      </time>
     </button>
-  );
-}
-
-function AlertItem({ alert, onAcknowledge, onNavigate }) {
-  return (
-    <article className="ntf-alert">
-      <div className="ntf-alert__body">
-        <strong className="ntf-alert__title">{alert.title}</strong>
-        <p className="ntf-alert__message">{alert.message}</p>
-        <time className="ntf-alert__time" dateTime={alert.createdAt}>
-          {formatTimestamp(alert.createdAt)}
-        </time>
-      </div>
-      <div className="ntf-alert__actions">
-        {onNavigate && (
-          <button type="button" className="ntf-alert__btn ntf-alert__btn--ghost" onClick={onNavigate}>
-            View
-          </button>
-        )}
-        <button type="button" className="ntf-alert__btn" onClick={() => onAcknowledge(alert)}>
-          Acknowledge
-        </button>
-      </div>
-    </article>
   );
 }
 
@@ -100,7 +80,7 @@ function EmptyState() {
         <i className="fa-regular fa-bell-slash" />
       </div>
       <strong>Nothing new right now</strong>
-      <p>Your notifications will appear here when there's something important.</p>
+      <p>Your notifications will appear here when there&apos;s something important.</p>
     </div>
   );
 }
@@ -108,8 +88,8 @@ function EmptyState() {
 function SkeletonLoader() {
   return (
     <div className="ntf-skeleton" aria-busy="true" aria-label="Loading notifications">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="ntf-skeleton__row">
+      {[1, 2, 3, 4].map((item) => (
+        <div key={item} className="ntf-skeleton__row">
           <div className="ntf-skeleton__dot" />
           <div className="ntf-skeleton__lines">
             <div className="ntf-skeleton__line ntf-skeleton__line--short" />
@@ -122,35 +102,34 @@ function SkeletonLoader() {
   );
 }
 
-/* ── main component ──────────────────────────────────────── */
-
 export default function Notifications() {
   const navigate = useNavigate();
   const role = getRole();
   const loggedIn = isLoggedIn();
 
-  const [notifications, setNotifications] = useState([]);
-  const [readIds, setReadIds] = useState(new Set());
-  const [alerts, setAlerts] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [seenIds, setSeenIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [prefsOpen, setPrefsOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
 
   const loadingRef = useRef(false);
+  const loadMoreRef = useRef(null);
 
   const showToast = useCallback((message, type = 'info') => {
     setToast({ message, type });
     window.setTimeout(() => setToast({ message: '', type: 'info' }), 2400);
   }, []);
 
-  /* load data */
   useEffect(() => {
     if (!loggedIn) {
-      setNotifications([]);
-      setAlerts([]);
+      setMessages([]);
       setUnreadCount(0);
       setLoading(false);
+      syncNotificationCount(0);
       return undefined;
     }
 
@@ -160,97 +139,152 @@ export default function Notifications() {
 
     (async () => {
       setLoading(true);
-      try {
-        const [page, activeAlerts, unread] = await Promise.all([
-          getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 30 }),
-          getActiveAlerts(),
-          countUnread(),
-        ]);
-        if (active) {
-          setNotifications(Array.isArray(page?.content) ? page.content : []);
-          setAlerts(Array.isArray(activeAlerts) ? activeAlerts : []);
-          setUnreadCount(Number(unread?.count ?? 0));
-        }
-      } catch (err) {
-        if (active) showToast(err.message || 'Failed to load notifications.', 'error');
-      } finally {
-        if (active) setLoading(false);
-        loadingRef.current = false;
+
+      const [messagesResult, unreadResult] = await Promise.allSettled([
+        getNotifications({ page: 0, size: 12 }),
+        countUnread(),
+      ]);
+
+      if (!active) return;
+
+      if (messagesResult.status === 'fulfilled') {
+        const resultPage = messagesResult.value;
+        const items = Array.isArray(resultPage?.content) ? resultPage.content : Array.isArray(resultPage) ? resultPage : [];
+        setMessages(items);
+        setPage(Number(resultPage?.number ?? 0));
+        setHasMore(resultPage?.last === false || Number(resultPage?.totalPages ?? 0) > 1);
+      } else {
+        setMessages([]);
+        setPage(0);
+        setHasMore(false);
+        showToast(messagesResult.reason?.message || 'Failed to load notifications.', 'error');
       }
+
+      if (unreadResult.status === 'fulfilled') {
+        const nextUnread = Number(unreadResult.value?.count ?? 0);
+        setUnreadCount(nextUnread);
+        syncNotificationCount(nextUnread);
+      } else {
+        const fallbackUnread = (messagesResult.status === 'fulfilled'
+          ? (Array.isArray(messagesResult.value?.content) ? messagesResult.value.content : [])
+          : []
+        ).filter((item) => String(item?.deliveryType || '').toUpperCase() === 'NOTIFICATION' && item?.isRead !== true).length;
+        setUnreadCount(fallbackUnread);
+        syncNotificationCount(fallbackUnread);
+      }
+
+      setLoading(false);
+      loadingRef.current = false;
     })();
 
-    return () => { active = false; };
+    return () => {
+      active = false;
+      loadingRef.current = false;
+    };
   }, [loggedIn, showToast]);
 
-  /* mark as read on click */
-  const handleNotificationRead = useCallback(
-    async (notification, alreadyRead = false) => {
-      if (!alreadyRead) {
-        // Optimistic UI update
-        setReadIds((prev) => new Set(prev).add(notification.id));
-        setUnreadCount((prev) => Math.max(prev - 1, 0));
+  useEffect(() => {
+    if (!loggedIn || !hasMore || loading || loadingMore || !loadMoreRef.current) return undefined;
 
-        try {
-          await markAsRead(notification.id);
-        } catch (err) {
-          // Revert on failure
-          setReadIds((prev) => {
-            const next = new Set(prev);
-            next.delete(notification.id);
-            return next;
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries[0]?.isIntersecting) return;
+
+      setLoadingMore(true);
+      getNotifications({ page: page + 1, size: 12 })
+        .then((result) => {
+          const items = Array.isArray(result?.content) ? result.content : [];
+          setMessages((prev) => {
+            const existing = new Set(prev.map((item) => item.id));
+            const nextItems = items.filter((item) => !existing.has(item.id));
+            return [...prev, ...nextItems];
           });
-          setUnreadCount((prev) => prev + 1);
-          showToast(err.message || 'Failed to mark as read.', 'error');
-          return;
-        }
+          setPage(Number(result?.number ?? page + 1));
+          setHasMore(result?.last === false);
+        })
+        .catch((error) => {
+          showToast(error.message || 'Failed to load more notifications.', 'error');
+          setHasMore(false);
+        })
+        .finally(() => {
+          setLoadingMore(false);
+        });
+    }, { rootMargin: '200px 0px' });
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore, loggedIn, page, showToast]);
+
+  const isSeen = useCallback((item) => {
+    const isAlert = String(item.deliveryType || '').toUpperCase() === 'ALERT';
+    return seenIds.has(item.id) || (isAlert ? item.isAcknowledged === true : item.isRead === true);
+  }, [seenIds]);
+
+  const handleItemOpen = useCallback(async (item, alreadySeen = false) => {
+    const isAlert = String(item.deliveryType || '').toUpperCase() === 'ALERT';
+
+    if (!alreadySeen) {
+      setSeenIds((prev) => new Set(prev).add(item.id));
+      if (!isAlert) {
+        setUnreadCount((prev) => {
+          const next = Math.max(prev - 1, 0);
+          syncNotificationCount(next);
+          return next;
+        });
       }
 
-      const target = resolveRoute(notification, role);
-      if (target) navigate(target);
-    },
-    [role, navigate, showToast],
-  );
+      try {
+        if (isAlert) {
+          await acknowledgeAlert(item.id);
+        } else {
+          await markAsRead(item.id);
+        }
+      } catch (err) {
+        setSeenIds((prev) => {
+          const next = new Set(prev);
+          next.delete(item.id);
+          return next;
+        });
+        if (!isAlert) {
+          setUnreadCount((prev) => {
+            const next = prev + 1;
+            syncNotificationCount(next);
+            return next;
+          });
+        }
+        showToast(err.message || 'Failed to update notification.', 'error');
+        return;
+      }
+    }
 
-  /* mark all read */
+    const target = resolveNotificationRoute(item, role);
+    if (target) navigate(target);
+  }, [navigate, role, showToast]);
+
   const handleMarkAllRead = useCallback(async () => {
     try {
       await markAllAsRead();
-      setReadIds((prev) => {
+      setSeenIds((prev) => {
         const next = new Set(prev);
-        notifications.forEach((n) => next.add(n.id));
+        messages
+          .filter((item) => String(item.deliveryType || '').toUpperCase() === 'NOTIFICATION')
+          .forEach((item) => next.add(item.id));
         return next;
       });
       setUnreadCount(0);
+      syncNotificationCount(0);
       showToast('All notifications marked as read.', 'success');
     } catch (err) {
       showToast(err.message || 'Failed to mark all as read.', 'error');
     }
-  }, [notifications, showToast]);
-
-  /* acknowledge alert */
-  const handleAlertAck = useCallback(
-    async (alert) => {
-      try {
-        await acknowledgeAlert(alert.id);
-        setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
-        showToast('Alert acknowledged.', 'success');
-      } catch (err) {
-        showToast(err.message || 'Failed to acknowledge alert.', 'error');
-      }
-    },
-    [showToast],
-  );
-
-  /* derived */
-  const isNotificationRead = useCallback(
-    (n) => readIds.has(n.id) || n.read === true,
-    [readIds],
-  );
+  }, [messages, showToast]);
 
   const unreadDisplay = useMemo(() => {
-    const count = notifications.filter((n) => !isNotificationRead(n)).length;
+    const count = messages.filter((item) => {
+      const isAlert = String(item.deliveryType || '').toUpperCase() === 'ALERT';
+      return !isAlert && !isSeen(item);
+    }).length;
     return Math.max(count, unreadCount);
-  }, [notifications, unreadCount, isNotificationRead]);
+  }, [isSeen, messages, unreadCount]);
 
   if (!loggedIn) {
     return (
@@ -265,17 +299,15 @@ export default function Notifications() {
   return (
     <div className="ntf-page page">
       <div className="ntf-layout ag-container">
-        {/* ── sidebar / main panel ── */}
         <section className="ntf-panel" aria-label="Notifications">
-          {/* header */}
           <header className="ntf-panel__header">
             <div className="ntf-panel__title-group">
               <h1 className="ntf-panel__title">Notifications</h1>
-              {unreadDisplay > 0 && (
+              {unreadDisplay > 0 ? (
                 <span className="ntf-panel__badge" aria-label={`${unreadDisplay} unread`}>
                   {unreadDisplay}
                 </span>
-              )}
+              ) : null}
             </div>
             <div className="ntf-panel__actions">
               <button
@@ -289,8 +321,8 @@ export default function Notifications() {
               <button
                 type="button"
                 className="ntf-panel__action ntf-panel__action--prefs"
-                onClick={() => setPrefsOpen(true)}
-                aria-label="Notification preferences"
+                onClick={() => navigate('/notification-preferences')}
+                aria-label="Open notification preferences"
               >
                 <i className="fa-solid fa-gear" aria-hidden="true" />
                 <span>Preferences</span>
@@ -298,70 +330,43 @@ export default function Notifications() {
             </div>
           </header>
 
-          {/* body */}
           <div className="ntf-panel__body">
-            {loading && <SkeletonLoader />}
+            {loading ? <SkeletonLoader /> : null}
 
-            {!loading && (
+            {!loading ? (
               <>
-                {/* alerts section */}
-                {alerts.length > 0 && (
-                  <section className="ntf-section" aria-label="Active alerts">
+                {messages.length > 0 ? (
+                  <section className="ntf-section" aria-label="All messages">
                     <div className="ntf-section__head">
-                      <strong>Active Alerts</strong>
-                      <span className="ntf-section__count">{alerts.length}</span>
+                      <strong>All Messages</strong>
+                      <span className="ntf-section__count">{messages.length}</span>
                     </div>
                     <div className="ntf-section__list">
-                      {alerts.map((alert) => (
-                        <AlertItem
-                          key={alert.id}
-                          alert={alert}
-                          onAcknowledge={handleAlertAck}
-                          onNavigate={
-                            resolveRoute(alert, role)
-                              ? () => navigate(resolveRoute(alert, role))
-                              : undefined
-                          }
-                        />
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {/* notifications list */}
-                {notifications.length > 0 && (
-                  <section className="ntf-section" aria-label="Recent notifications">
-                    <div className="ntf-section__head">
-                      <strong>Recent</strong>
-                      <span className="ntf-section__count">{notifications.length}</span>
-                    </div>
-                    <div className="ntf-section__list">
-                      {notifications.map((n) => (
+                      {messages.map((item) => (
                         <NotificationItem
-                          key={n.id}
-                          notification={n}
-                          isRead={isNotificationRead(n)}
-                          onRead={handleNotificationRead}
+                          key={`${item.deliveryType}-${item.id}`}
+                          item={item}
+                          isSeen={isSeen(item)}
+                          onOpen={handleItemOpen}
                         />
                       ))}
                     </div>
+                    {hasMore ? <div ref={loadMoreRef} className="ntf-load-trigger" /> : null}
+                    {loadingMore ? (
+                      <div className="ntf-load-more">
+                        <span className="ui-spinner" aria-hidden="true" />
+                        <span>Loading more notifications...</span>
+                      </div>
+                    ) : null}
                   </section>
-                )}
+                ) : null}
 
-                {/* empty */}
-                {alerts.length === 0 && notifications.length === 0 && <EmptyState />}
+                {messages.length === 0 ? <EmptyState /> : null}
               </>
-            )}
+            ) : null}
           </div>
         </section>
       </div>
-
-      {/* preferences overlay */}
-      <NotificationPreferences
-        open={prefsOpen}
-        onClose={() => setPrefsOpen(false)}
-        onToast={showToast}
-      />
       <Toast message={toast.message} type={toast.type} />
     </div>
   );
