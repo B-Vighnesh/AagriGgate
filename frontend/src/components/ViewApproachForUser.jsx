@@ -8,12 +8,15 @@ import Card from './common/Card';
 import Modal from './Modal';
 import Toast from './common/Toast';
 import { createOrGetChatConversation } from '../api/chatApi';
+import { getRequestLifecycleStatusLabel, normalizeRequestLifecycleStatus } from '../lib/requestStatus';
 
 const STATUS_CLASS = {
   pending: 'user-requests-status--pending',
-  accepted: 'user-requests-status--accepted',
-  rejected: 'user-requests-status--rejected',
+  active: 'user-requests-status--accepted',
   completed: 'user-requests-status--completed',
+  failed: 'user-requests-status--failed',
+  rejected: 'user-requests-status--failed',
+  expired: 'user-requests-status--expired',
 };
 
 export default function ViewApproachForUser() {
@@ -159,7 +162,9 @@ export default function ViewApproachForUser() {
 
         {!error && approaches.length > 0 && (
           <div className="user-requests-list">
-            {approaches.map((item) => (
+            {approaches.map((item) => {
+              const normalizedStatus = normalizeRequestLifecycleStatus(item.status);
+              return (
               <Card key={item.approachId} className="user-requests-card">
                 <div className="user-requests-card__main">
                   <h3>{item.cropName}</h3>
@@ -167,8 +172,8 @@ export default function ViewApproachForUser() {
                   {item.requestedQuantity ? <p>Requested: <strong>{item.requestedQuantity}</strong></p> : null}
                 </div>
 
-                <span className={`user-requests-status ${STATUS_CLASS[(item.status || '').toLowerCase()] || ''}`}>
-                  {item.status || 'Pending'}
+                <span className={`user-requests-status ${STATUS_CLASS[normalizedStatus] || ''}`}>
+                  {getRequestLifecycleStatusLabel(item.status)}
                 </span>
 
                 <div className="user-requests-actions">
@@ -178,7 +183,7 @@ export default function ViewApproachForUser() {
                   <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${item.cropId}`)}>
                     View Crop
                   </Button>
-                  {(item.status || '').toLowerCase() === 'accepted' || (item.status || '').toLowerCase() === 'completed' ? (
+                  {(normalizedStatus === 'active' || normalizedStatus === 'completed' || normalizedStatus === 'failed' || normalizedStatus === 'expired') ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -191,7 +196,7 @@ export default function ViewApproachForUser() {
                     </Button>
                   ) : null}
 
-                  {(item.status || '').toLowerCase() === 'pending' && (
+                  {normalizedStatus === 'pending' && (
                     <Button
                       variant="danger"
                       size="sm"
@@ -204,7 +209,7 @@ export default function ViewApproachForUser() {
                   )}
                 </div>
               </Card>
-            ))}
+            )})}
           </div>
         )}
 

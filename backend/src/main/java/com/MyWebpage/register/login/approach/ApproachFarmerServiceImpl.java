@@ -1,5 +1,8 @@
 package com.MyWebpage.register.login.approach;
 
+import com.MyWebpage.register.login.chat.Conversation;
+import com.MyWebpage.register.login.chat.ConversationRepository;
+import com.MyWebpage.register.login.chat.ConversationStatus;
 import com.MyWebpage.register.login.crop.Crop;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.crop.CropQueryService;
@@ -35,18 +38,21 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     private final FarmerQueryService farmerQueryService;
     private final EmailService emailService;
     private final UserBlockRepository userBlockRepository;
+    private final ConversationRepository conversationRepository;
 
     public ApproachFarmerServiceImpl(
             ApproachFarmerRepo approachFarmerRepository,
             CropQueryService cropQueryService,
             FarmerQueryService farmerQueryService,
             EmailService emailService,
-            UserBlockRepository userBlockRepository) {
+            UserBlockRepository userBlockRepository,
+            ConversationRepository conversationRepository) {
         this.approachFarmerRepository = approachFarmerRepository;
         this.cropQueryService = cropQueryService;
         this.farmerQueryService = farmerQueryService;
         this.emailService = emailService;
         this.userBlockRepository = userBlockRepository;
+        this.conversationRepository = conversationRepository;
     }
 
     @Override
@@ -171,7 +177,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                 farmerId,
                 normalizeStatus(status),
                 buildPageRequest(page, size)
-        );
+        ).map(this::syncRequestLifecycleView);
     }
 
     @Override
@@ -181,7 +187,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                 cropId,
                 normalizeStatus(status),
                 buildPageRequest(page, size)
-        );
+        ).map(this::syncRequestLifecycleView);
     }
 
     @Override
@@ -190,18 +196,21 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                 userId,
                 normalizeStatus(status),
                 buildPageRequest(page, size)
-        ).map(this::sanitizeBuyerRequestView);
+        ).map(this::syncRequestLifecycleView)
+         .map(this::sanitizeBuyerRequestView);
     }
 
     @Override
     public ApproachRequestDTO getRequestByFarmerId(Long farmerId, Long approachId) {
         return approachFarmerRepository.findRequestViewByFarmerIdAndApproachId(farmerId, approachId)
+                .map(this::syncRequestLifecycleView)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found."));
     }
 
     @Override
     public ApproachRequestDTO getRequestByUserId(Long userId, Long approachId) {
         return approachFarmerRepository.findRequestViewByUserIdAndApproachId(userId, approachId)
+                .map(this::syncRequestLifecycleView)
                 .map(this::sanitizeBuyerRequestView)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found."));
     }
@@ -367,5 +376,44 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
         dto.setFarmerEmail(null);
         dto.setFarmerLocation(null);
         return dto;
+    }
+
+    private ApproachRequestDTO syncRequestLifecycleView(ApproachRequestDTO dto) {
+        if (dto == null || dto.getApproachId() == null) {
+            return dto;
+        }
+
+        conversationRepository.findByApproachId(dto.getApproachId())
+                .ifPresent(conversation -> applyConversationLifecycle(dto, conversation));
+        return dto;
+    }
+
+    private void applyConversationLifecycle(ApproachRequestDTO dto, Conversation conversation) {
+        ConversationStatus status = conversation.getStatus();
+        if (status == null) {
+            return;
+        }
+
+        switch (status) {
+            case ACTIVE -> dto.setStatus(STATUS_ACCEPTED);
+            case COMPLETED -> {
+                dto.setStatus(STATUS_COMPLETED);
+                dto.setCompletedAt(conversation.getCompletedAt() == null ? dto.getCompletedAt() : conversation.getCompletedAt());
+            }
+            case FAILED -> {
+                dto.setStatus(STATUS_FAILED);
+                dto.setFailedAt(conversation.getFailedAt() == null ? dto.getFailedAt() : conversation.getFailedAt());
+            }
+            case EXPIRED -> {
+                dto.setStatus(STATUS_EXPIRED);
+                dto.setExpiredAt(conversation.getExpiredAt() == null ? dto.getExpiredAt() : conversation.getExpiredAt());
+            }
+            default -> {
+            }
+        }
+
+        if (conversation.getLastMessageAt() != null) {
+            dto.setLastMessageAt(conversation.getLastMessageAt());
+        }
     }
 }

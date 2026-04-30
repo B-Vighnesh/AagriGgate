@@ -8,12 +8,15 @@ import ValidateToken from './ValidateToken';
 import { apiFetch, requestJson } from '../lib/api';
 import { createOrGetChatConversation } from '../api/chatApi';
 import { getRole, getToken } from '../lib/auth';
+import { getRequestLifecycleStatusLabel, normalizeRequestLifecycleStatus } from '../lib/requestStatus';
 
 const STATUS_CLASS = {
   pending: 'approach-crop-status--pending',
-  accepted: 'approach-crop-status--accepted',
-  rejected: 'approach-crop-status--rejected',
+  active: 'approach-crop-status--accepted',
   completed: 'approach-crop-status--completed',
+  failed: 'approach-crop-status--failed',
+  rejected: 'approach-crop-status--failed',
+  expired: 'approach-crop-status--expired',
 };
 
 export default function ViewApproachByFarmerAndCrop() {
@@ -178,8 +181,8 @@ export default function ViewApproachByFarmerAndCrop() {
         {!error && approaches.length > 0 ? (
           <div className="approach-crop-list">
             {approaches.map((approach) => {
-              const status = (approach.status || 'pending').toLowerCase();
-              const isPending = status === 'pending';
+              const normalizedStatus = normalizeRequestLifecycleStatus(approach.status);
+              const isPending = normalizedStatus === 'pending';
               const isAccepting = actionLoading.approachId === approach.approachId && actionLoading.type === 'accept';
               const isRejecting = actionLoading.approachId === approach.approachId && actionLoading.type === 'reject';
               const rowBusy = actionLoading.approachId === approach.approachId;
@@ -192,8 +195,8 @@ export default function ViewApproachByFarmerAndCrop() {
                     {approach.requestedQuantity ? <p>Requested: <strong>{approach.requestedQuantity}</strong></p> : null}
                   </div>
 
-                  <span className={`approach-crop-status ${STATUS_CLASS[status] || ''}`}>
-                    {approach.status || 'Pending'}
+                  <span className={`approach-crop-status ${STATUS_CLASS[normalizedStatus] || ''}`}>
+                    {getRequestLifecycleStatusLabel(approach.status)}
                   </span>
 
                   <div className="approach-crop-actions">
@@ -206,7 +209,7 @@ export default function ViewApproachByFarmerAndCrop() {
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/view-buyer/${approach.userId}`)}>
                       View Buyer
                     </Button>
-                    {(status === 'accepted' || status === 'completed') ? (
+                    {(normalizedStatus === 'active' || normalizedStatus === 'completed' || normalizedStatus === 'failed' || normalizedStatus === 'expired') ? (
                       <Button
                         variant="outline"
                         size="sm"

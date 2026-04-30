@@ -4281,8 +4281,8 @@ a {
 
 .approach-badge--expired {
   background: #f1efe8;
-  border-color: rgba(136, 135, 128, 0.16);
-  color: #444441;
+  border-color: rgba(68, 68, 65, 0.14);
+  color: #111111;
 }
 
 .approach-actions {
@@ -4432,8 +4432,8 @@ a {
 
 .approach-crop-status--expired {
   background: #f1efe8;
-  border-color: rgba(136, 135, 128, 0.16);
-  color: #444441;
+  border-color: rgba(68, 68, 65, 0.14);
+  color: #111111;
 }
 
 .approach-crop-actions {
@@ -4578,8 +4578,8 @@ a {
 
 .user-requests-status--expired {
   background: #f1efe8;
-  border-color: rgba(136, 135, 128, 0.16);
-  color: #444441;
+  border-color: rgba(68, 68, 65, 0.14);
+  color: #111111;
 }
 
 .ntf-detail-page {
