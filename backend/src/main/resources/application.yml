@@ -39,6 +39,9 @@ news:
     rss-timeout-seconds: 10
     max-items-per-source: 100
 
+approach:
+  inactivity-check-cron: ${APPROACH_INACTIVITY_CHECK_CRON:0 0 * * * *}
+
 admin:
   username: ${ADMIN_USERNAME}
   password: ${ADMIN_PASSWORD}

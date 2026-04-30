@@ -3,7 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import agrigateIcon from '../images/agrigate.jpg';
 import { getRole, isLoggedIn } from '../lib/auth';
-import { countUnread } from '../lib/notificationApi';
+import {
+  acknowledgeAlert,
+  countUnread,
+  getActiveAlerts,
+  getNotifications,
+  markAsRead,
+} from '../lib/notificationApi';
+import { resolveNotificationRoute, sortNotificationsByDate } from '../lib/notificationRouting';
 
 function navByRole(role) {
   if (!role) {
@@ -60,20 +67,82 @@ function navByRole(role) {
   ];
 }
 
+function mobileDrawerItemsByRole(role, loggedIn) {
+  if (!loggedIn) {
+    return [
+      { type: 'link', label: 'Login', to: '/login' },
+      { type: 'link', label: 'Register', to: '/register' },
+    ];
+  }
+
+  const items = [
+    { type: 'link', label: 'My Account', to: '/account' },
+    { type: 'link', label: 'Account Settings', to: '/settings' },
+    { type: 'link', label: 'Help & Support', to: '/enquiry' },
+  ];
+
+  if (role === 'farmer') {
+    items.splice(1, 0, { type: 'link', label: 'Add Crop', to: '/add-crop' });
+  }
+
+  return items;
+}
+
+function bottomNavItemsByRole(role) {
+  if (!role) {
+    return [];
+  }
+
+  return [
+    { label: 'Home', to: '/', icon: 'fa-solid fa-house' },
+    {
+      label: 'Market',
+      to: '/view-all-crops',
+      icon: 'fa-solid fa-store',
+      matchPrefixes: ['/view-all-crops', '/view-details', '/market'],
+    },
+    {
+      label: 'Crops',
+      to: role === 'farmer' ? '/view-crop' : '/view-all-crops',
+      icon: 'fa-solid fa-seedling',
+      matchPrefixes: role === 'farmer' ? ['/view-crop', '/add-crop', '/update-crop', '/delete-crop'] : ['/view-all-crops'],
+    },
+    {
+      label: 'Requests',
+      to: role === 'farmer' ? '/view-approach' : '/view-approaches-user',
+      icon: 'fa-regular fa-clock',
+      matchPrefixes: ['/view-approach', '/view-approaches-user', '/view-approaches/farmer', '/requests'],
+    },
+    {
+      label: 'Insights',
+      to: '/insights',
+      icon: 'fa-solid fa-chart-line',
+      matchPrefixes: ['/insights', '/weather', '/news'],
+    },
+  ];
+}
+
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [role, setRole] = useState(getRole());
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
+  const [isMobileViewport, setIsMobileViewport] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth <= 760,
+  );
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdownKey, setOpenDropdownKey] = useState('');
   const [hoverLockedDropdownKey, setHoverLockedDropdownKey] = useState('');
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationOverlayOpen, setNotificationOverlayOpen] = useState(false);
+  const [notificationPreviewLoading, setNotificationPreviewLoading] = useState(false);
+  const [notificationPreview, setNotificationPreview] = useState([]);
   const mobileNavRef = useRef(null);
   const toggleRef = useRef(null);
   const navRef = useRef(null);
   const profileMenuRef = useRef(null);
+  const notificationOverlayRef = useRef(null);
   const dropdownCloseTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -91,10 +160,22 @@ export default function Navbar() {
   }, [location.pathname]);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 760px)');
+    const updateViewport = (event) => {
+      setIsMobileViewport(event.matches);
+    };
+
+    setIsMobileViewport(mediaQuery.matches);
+    mediaQuery.addEventListener('change', updateViewport);
+    return () => mediaQuery.removeEventListener('change', updateViewport);
+  }, []);
+
+  useEffect(() => {
     setMobileOpen(false);
     setOpenDropdownKey('');
     setHoverLockedDropdownKey('');
     setProfileMenuOpen(false);
+    setNotificationOverlayOpen(false);
   }, [location.pathname]);
 
   useEffect(() => () => {
@@ -123,9 +204,14 @@ export default function Navbar() {
 
     loadUnreadCount();
     const interval = window.setInterval(loadUnreadCount, 60000);
+    const handleCountUpdate = (event) => {
+      setUnreadCount(Number(event?.detail?.count ?? 0));
+    };
+    window.addEventListener('notifications:count-updated', handleCountUpdate);
     return () => {
       active = false;
       window.clearInterval(interval);
+      window.removeEventListener('notifications:count-updated', handleCountUpdate);
     };
   }, [loggedIn]);
 
@@ -141,6 +227,19 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [profileMenuOpen]);
+
+  useEffect(() => {
+    if (!notificationOverlayOpen) return undefined;
+
+    const handleClickOutside = (event) => {
+      if (notificationOverlayRef.current && !notificationOverlayRef.current.contains(event.target)) {
+        setNotificationOverlayOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [notificationOverlayOpen]);
 
   useEffect(() => {
     if (!mobileOpen) return undefined;
@@ -176,8 +275,21 @@ export default function Navbar() {
   }, [openDropdownKey, mobileOpen]);
 
   const items = navByRole(role);
+  const bottomNavItems = bottomNavItemsByRole(role);
   const isActive = (to) => (to === '/' ? location.pathname === '/' : location.pathname.startsWith(to));
   const isDropdownActive = (item) => item.children?.some((child) => isActive(child.to));
+  const isBottomNavActive = (item) => {
+    if (item.matchPrefixes?.some((prefix) => location.pathname.startsWith(prefix))) {
+      return true;
+    }
+    return isActive(item.to);
+  };
+  const showMobileBottomNav = loggedIn
+    && isMobileViewport
+    && !location.pathname.startsWith('/chat')
+    && !['/login', '/register', '/logout', '/forgot-password', '/404'].includes(location.pathname);
+  const showMobileDrawer = isMobileViewport && !showMobileBottomNav;
+  const navItemsToRender = showMobileDrawer ? mobileDrawerItemsByRole(role, loggedIn) : items;
 
   const toggleDropdown = (key) => {
     setOpenDropdownKey((current) => {
@@ -208,10 +320,71 @@ export default function Navbar() {
 
   const handleAccountButtonClick = () => {
     setMobileOpen(false);
+    setNotificationOverlayOpen(false);
     setProfileMenuOpen((prev) => !prev);
   };
 
+  const loadNotificationPreview = async () => {
+    setNotificationPreviewLoading(true);
+    try {
+      const [notificationsResult, alertsResult] = await Promise.allSettled([
+        getNotifications({ deliveryType: 'NOTIFICATION', page: 0, size: 10 }),
+        getActiveAlerts(),
+      ]);
+
+      const notifications = notificationsResult.status === 'fulfilled'
+        ? (Array.isArray(notificationsResult.value?.content) ? notificationsResult.value.content : [])
+        : [];
+      const alerts = alertsResult.status === 'fulfilled'
+        ? (Array.isArray(alertsResult.value) ? alertsResult.value : [])
+        : [];
+
+      const unreadNotifications = notifications.filter((item) => item?.isRead !== true);
+      const unreadAlerts = alerts.filter((item) => item?.isAcknowledged !== true);
+      setNotificationPreview(sortNotificationsByDate([...unreadAlerts, ...unreadNotifications]).slice(0, 5));
+    } catch {
+      setNotificationPreview([]);
+    } finally {
+      setNotificationPreviewLoading(false);
+    }
+  };
+
+  const handleNotificationBellClick = async () => {
+    setProfileMenuOpen(false);
+    setMobileOpen(false);
+    const nextOpen = !notificationOverlayOpen;
+    setNotificationOverlayOpen(nextOpen);
+    if (nextOpen) {
+      await loadNotificationPreview();
+    }
+  };
+
+  const handlePreviewOpen = async (item) => {
+    try {
+      if ((item.deliveryType || '').toUpperCase() === 'ALERT') {
+        await acknowledgeAlert(item.id);
+      } else if (item.isRead !== true) {
+        await markAsRead(item.id);
+        setUnreadCount((prev) => Math.max(prev - 1, 0));
+        window.dispatchEvent(new CustomEvent('notifications:count-updated', {
+          detail: { count: Math.max(unreadCount - 1, 0) },
+        }));
+      }
+    } catch {
+      // still navigate when possible so the click does not feel broken
+    }
+
+    setNotificationOverlayOpen(false);
+    const target = resolveNotificationRoute(item, role);
+    if (target) {
+      navigate(target);
+    } else {
+      navigate('/notifications');
+    }
+  };
+
   return (
+    <>
     <header className="site-header">
       <div className="site-header__inner ag-container">
         <Link className="brand" to="/" onClick={() => setMobileOpen(false)}>
@@ -220,8 +393,9 @@ export default function Navbar() {
         </Link>
 
         <div className="site-header__actions">
-          <nav ref={(node) => { navRef.current = node; mobileNavRef.current = node; }} className={`site-nav ${mobileOpen ? 'site-nav--open' : ''}`}>
-              {items.map((item) => {
+          {!showMobileBottomNav ? (
+            <nav ref={(node) => { navRef.current = node; mobileNavRef.current = node; }} className={`site-nav ${mobileOpen ? 'site-nav--open' : ''}`}>
+              {navItemsToRender.map((item) => {
                 if (item.type === 'dropdown') {
                   const isOpen = openDropdownKey === item.key;
                   const active = isDropdownActive(item);
@@ -283,21 +457,11 @@ export default function Navbar() {
                   {item.label}
                 </Link>
               );
-            })}
+              })}
 
-            {loggedIn ? (
-              <Link
-                to="/chat"
-                className={`site-nav__utility ${isActive('/chat') ? 'site-nav__utility--active' : ''}`}
-                onClick={() => {
-                  setMobileOpen(false);
-                  setOpenDropdownKey('');
-                }}
-              >
-                💬 Chat
-              </Link>
-            ) : null}
-          </nav>
+            
+            </nav>
+          ) : null}
 
           {loggedIn ? (
             <Link
@@ -315,15 +479,71 @@ export default function Navbar() {
           ) : null}
 
           {loggedIn ? (
-            <Link
-              to="/notifications"
-              className={`notification-bell__button ${isActive('/notifications') ? 'notification-bell__button--active' : ''}`}
-              aria-label="View notifications"
-              data-tooltip="Notifications"
-            >
-              <i className="fa-regular fa-bell" aria-hidden="true" />
-              {unreadCount > 0 ? <span className="notification-bell__badge">{unreadCount}</span> : null}
-            </Link>
+            <div className="notification-bell" ref={notificationOverlayRef}>
+              <button
+                type="button"
+                className={`notification-bell__button ${isActive('/notifications') || notificationOverlayOpen ? 'notification-bell__button--active' : ''}`}
+                aria-label="View notifications"
+                data-tooltip="Notifications"
+                aria-expanded={notificationOverlayOpen}
+                onClick={handleNotificationBellClick}
+              >
+                <i className="fa-regular fa-bell" aria-hidden="true" />
+                {unreadCount > 0 ? <span className="notification-bell__badge">{unreadCount}</span> : null}
+              </button>
+
+              {notificationOverlayOpen ? (
+                <div className="notification-overlay" role="dialog" aria-label="Latest notifications">
+                  <div className="notification-overlay__head">
+                    <strong>Unread Notifications</strong>
+                  </div>
+
+                  <div className="notification-overlay__body">
+                    {notificationPreviewLoading ? (
+                      <div className="notification-overlay__state">Loading latest updates...</div>
+                    ) : null}
+
+                    {!notificationPreviewLoading && notificationPreview.length === 0 ? (
+                      <div className="notification-overlay__state">No new notifications.</div>
+                    ) : null}
+
+                    {!notificationPreviewLoading && notificationPreview.length > 0 ? (
+                      <div className="notification-overlay__list">
+                        {notificationPreview.map((item) => (
+                          <button
+                            key={`${item.deliveryType}-${item.id}`}
+                            type="button"
+                            className={`notification-overlay__item ${item.isRead === true ? '' : 'notification-overlay__item--unread'}`}
+                            onClick={() => handlePreviewOpen(item)}
+                          >
+                            <div className="notification-overlay__item-main">
+                              <span className="notification-overlay__item-title">{item.title}</span>
+                              <span className="notification-overlay__item-meta">
+                                {item.deliveryType || 'NOTIFICATION'}
+                              </span>
+                            </div>
+                            <span className="notification-overlay__item-message">{item.message}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="notification-overlay__footer">
+                    <button
+                      type="button"
+                      className="notification-overlay__show-all"
+                      onClick={() => {
+                        setNotificationOverlayOpen(false);
+                        navigate('/notifications');
+                      }}
+                    >
+                      {notificationPreview.length >= 5 ? 'Show More' : 'Show All'}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
           ) : null}
 
           {loggedIn ? (
@@ -357,14 +577,7 @@ export default function Navbar() {
                     <i className="fa-solid fa-gear" aria-hidden="true" />
                     <span>Account Settings</span>
                   </Link>
-                  <Link
-                    to="/notifications"
-                    className={`profile-menu__item ${isActive('/notifications') ? 'profile-menu__item--active' : ''}`}
-                    onClick={() => setProfileMenuOpen(false)}
-                  >
-                    <i className="fa-regular fa-bell" aria-hidden="true" />
-                    <span>Notifications</span>
-                  </Link>
+                  
                   <Link
                     to="/enquiry"
                     className={`profile-menu__item ${isActive('/enquiry') ? 'profile-menu__item--active' : ''}`}
@@ -389,20 +602,43 @@ export default function Navbar() {
             </div>
           ) : null}
 
-          <button
-            ref={toggleRef}
-            type="button"
-            className="nav-toggle"
-            aria-label="Toggle navigation"
-            aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen((prev) => !prev)}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
+          {showMobileDrawer ? (
+            <button
+              ref={toggleRef}
+              type="button"
+              className="nav-toggle"
+              aria-label="Toggle navigation"
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen((prev) => !prev)}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+          ) : null}
         </div>
       </div>
     </header>
+    {showMobileBottomNav ? (
+      <nav className="mobile-bottom-nav" aria-label="Primary mobile navigation">
+        {bottomNavItems.map((item) => (
+          <Link
+            key={`${item.label}-${item.to}`}
+            to={item.to}
+            className={`mobile-bottom-nav__item ${isBottomNavActive(item) ? 'mobile-bottom-nav__item--active' : ''}`}
+            onClick={() => {
+              setMobileOpen(false);
+              setOpenDropdownKey('');
+              setProfileMenuOpen(false);
+              setNotificationOverlayOpen(false);
+            }}
+          >
+            <i className={item.icon} aria-hidden="true" />
+            <span>{item.label}</span>
+          </Link>
+        ))}
+      </nav>
+    ) : null}
+    </>
   );
 }

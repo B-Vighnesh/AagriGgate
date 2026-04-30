@@ -5,7 +5,7 @@ const unwrap = async (promise) => {
   return response?.data ?? response;
 };
 
-export const getNotifications = ({ deliveryType = 'NOTIFICATION', page = 0, size = 10 } = {}) => {
+export const getNotifications = ({ deliveryType = '', page = 0, size = 10 } = {}) => {
   const searchParams = new URLSearchParams();
   if (deliveryType) searchParams.set('deliveryType', deliveryType);
   searchParams.set('page', String(page));
@@ -33,6 +33,15 @@ export const setPreference = (categoryName, deliveryType) =>
 
 export const resetPreferences = () =>
   unwrap(requestJson('/notifications/preferences/reset', { method: 'POST' }));
+
+export const setAllPreferencesToNotifications = () =>
+  unwrap(requestJson('/notifications/preferences/bulk/all-notifications', { method: 'POST' }));
+
+export const turnAlertsOff = () =>
+  unwrap(requestJson('/notifications/preferences/bulk/alerts-off', { method: 'POST' }));
+
+export const turnAllPreferencesOff = () =>
+  unwrap(requestJson('/notifications/preferences/bulk/off', { method: 'POST' }));
 
 export const getActiveAlerts = () =>
   unwrap(requestJson('/notifications/alerts/active', { method: 'GET' }));

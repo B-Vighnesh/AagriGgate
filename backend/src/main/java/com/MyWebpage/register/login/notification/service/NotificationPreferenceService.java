@@ -11,5 +11,11 @@ public interface NotificationPreferenceService {
 
     NotificationPreferenceResponse setPreference(Long userId, String categoryName, MessageDeliveryType deliveryType);
 
+    List<NotificationPreferenceResponse> setAllToNotifications(Long userId);
+
+    List<NotificationPreferenceResponse> turnAlertsOff(Long userId);
+
+    List<NotificationPreferenceResponse> turnAllOff(Long userId);
+
     void resetToDefaults(Long userId);
 }

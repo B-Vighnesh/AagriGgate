@@ -139,6 +139,17 @@ public class NotificationServiceImpl implements NotificationService {
         unreadNotifications.forEach(message -> message.setIsRead(true));
         userMessageRepository.saveAll(unreadNotifications);
     }
+    @Transactional
+    @Override
+    public void markAllAlertsAsRead(Long userId) {
+        List<UserMessage> unreadNotifications = userMessageRepository.findByUserIdAndDeliveryTypeAndIsReadFalse(
+                userId,
+                MessageDeliveryType.ALERT
+        );
+        unreadNotifications.forEach(message -> message.setIsRead(true));
+        unreadNotifications.forEach(message -> message.setIsAcknowledged(true));
+        userMessageRepository.saveAll(unreadNotifications);
+    }
 
     @Override
     @Transactional
@@ -152,7 +163,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(readOnly = true)
     public long countUnread(Long userId) {
-        return userMessageRepository.countByUserIdAndDeliveryTypeAndIsReadFalse(userId, MessageDeliveryType.NOTIFICATION);
+        return userMessageRepository.countByUserIdAndIsReadFalse(userId);
     }
 
     private void validateEvent(NotificationEvent event) {
@@ -198,12 +209,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     private LocalDateTime defaultExpiry(MessageSeverity severity, LocalDateTime createdAt) {
         LocalDateTime base = createdAt == null ? LocalDateTime.now() : createdAt;
-        return switch (severity) {
-            case CRITICAL -> base.plusDays(1);
-            case HIGH -> base.plusHours(12);
-            case MEDIUM -> base.plusHours(6);
-            case LOW -> base.plusHours(3);
-        };
+//        return switch (severity) {
+//            case CRITICAL -> base.plusDays(1);
+//            case HIGH -> base.plusHours(12);
+//            case MEDIUM -> base.plusHours(6);
+//            case LOW -> base.plusHours(3);
+//        };
+        return null;
     }
 
     private void populateLocationData(UserMessage message, NotificationEvent event) {

@@ -8,12 +8,14 @@ import ValidateToken from './ValidateToken';
 import { apiFetch, requestJson } from '../lib/api';
 import { createOrGetChatConversation } from '../api/chatApi';
 import { getRole, getToken } from '../lib/auth';
+import { getRequestStatusLabel, normalizeRequestStatus } from '../lib/requestStatus';
 
 const STATUS_CLASS = {
   pending: 'approach-crop-status--pending',
   accepted: 'approach-crop-status--accepted',
-  rejected: 'approach-crop-status--rejected',
   completed: 'approach-crop-status--completed',
+  failed: 'approach-crop-status--failed',
+  expired: 'approach-crop-status--expired',
 };
 
 export default function ViewApproachByFarmerAndCrop() {
@@ -157,7 +159,9 @@ export default function ViewApproachByFarmerAndCrop() {
               <option value="All">All</option>
               <option value="Pending">Pending</option>
               <option value="Accepted">Accepted</option>
-              <option value="Rejected">Rejected</option>
+              <option value="Completed">Completed</option>
+              <option value="Failed">Failed</option>
+              <option value="Expired">Expired</option>
             </select>
           </div>
         </div>
@@ -178,8 +182,8 @@ export default function ViewApproachByFarmerAndCrop() {
         {!error && approaches.length > 0 ? (
           <div className="approach-crop-list">
             {approaches.map((approach) => {
-              const status = (approach.status || 'pending').toLowerCase();
-              const isPending = status === 'pending';
+              const normalizedStatus = normalizeRequestStatus(approach.status);
+              const isPending = normalizedStatus === 'pending';
               const isAccepting = actionLoading.approachId === approach.approachId && actionLoading.type === 'accept';
               const isRejecting = actionLoading.approachId === approach.approachId && actionLoading.type === 'reject';
               const rowBusy = actionLoading.approachId === approach.approachId;
@@ -192,18 +196,21 @@ export default function ViewApproachByFarmerAndCrop() {
                     {approach.requestedQuantity ? <p>Requested: <strong>{approach.requestedQuantity}</strong></p> : null}
                   </div>
 
-                  <span className={`approach-crop-status ${STATUS_CLASS[status] || ''}`}>
-                    {approach.status || 'Pending'}
+                  <span className={`approach-crop-status ${STATUS_CLASS[normalizedStatus] || ''}`}>
+                    {getRequestStatusLabel(approach.status)}
                   </span>
 
                   <div className="approach-crop-actions">
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/requests/${approach.approachId}`)}>
+                      Request Details
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${approach.cropId}`)}>
                       View Crop
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/view-buyer/${approach.userId}`)}>
                       View Buyer
                     </Button>
-                    {(status === 'accepted' || status === 'completed') ? (
+                    {(normalizedStatus === 'accepted' || normalizedStatus === 'completed' || normalizedStatus === 'failed' || normalizedStatus === 'expired') ? (
                       <Button
                         variant="outline"
                         size="sm"

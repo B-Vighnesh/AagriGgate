@@ -8,12 +8,14 @@ import ValidateToken from './ValidateToken';
 import { apiFetch, requestJson } from '../lib/api';
 import { createOrGetChatConversation } from '../api/chatApi';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
+import { getRequestStatusLabel, normalizeRequestStatus } from '../lib/requestStatus';
 
 const STATUS_CLASS = {
   pending: 'approach-badge--pending',
   accepted: 'approach-badge--accepted',
-  rejected: 'approach-badge--rejected',
   completed: 'approach-badge--completed',
+  failed: 'approach-badge--failed',
+  expired: 'approach-badge--expired',
 };
 
 export default function ViewApproach() {
@@ -145,7 +147,9 @@ export default function ViewApproach() {
             <option value="All">All</option>
             <option value="Pending">Pending</option>
             <option value="Accepted">Accepted</option>
-            <option value="Rejected">Rejected</option>
+            <option value="Completed">Completed</option>
+            <option value="Failed">Failed</option>
+            <option value="Expired">Expired</option>
           </select>
         </div>
 
@@ -174,6 +178,7 @@ export default function ViewApproach() {
           {approaches.map((item) => (
             <Card key={item.approachId} className="approach-card">
               {(() => {
+                const normalizedStatus = normalizeRequestStatus(item.status);
                 const isAccepting = actionLoading.approachId === item.approachId && actionLoading.type === 'accept';
                 const isRejecting = actionLoading.approachId === item.approachId && actionLoading.type === 'reject';
                 const rowBusy = actionLoading.approachId === item.approachId;
@@ -186,17 +191,20 @@ export default function ViewApproach() {
                   <p>Buyer: <strong>{item.userName}</strong></p>
                   {item.requestedQuantity ? <p>Requested: <strong>{item.requestedQuantity}</strong></p> : null}
                 </div>
-                <span className={`approach-badge ${STATUS_CLASS[(item.status || '').toLowerCase()] || ''}`}>
-                  {item.status}
+                <span className={`approach-badge ${STATUS_CLASS[normalizedStatus] || ''}`}>
+                  {getRequestStatusLabel(item.status)}
                 </span>
               </div>
 
               <div className="approach-actions">
+                <Button variant="outline" size="sm" onClick={() => navigate(`/requests/${item.approachId}`)}>
+                  Request Details
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${item.cropId}`)}>View Crop</Button>
                 <Button variant="ghost" size="sm" onClick={() => onViewBuyer(item.userId)}>
                   View Buyer
                 </Button>
-                {(item.status || '').toLowerCase() === 'accepted' || (item.status || '').toLowerCase() === 'completed' ? (
+                {(normalizedStatus === 'accepted' || normalizedStatus === 'completed' || normalizedStatus === 'failed' || normalizedStatus === 'expired') ? (
                   <Button
                     variant="outline"
                     size="sm"
@@ -208,7 +216,7 @@ export default function ViewApproach() {
                     {chatLoadingId === item.approachId ? 'Opening Chat...' : 'Open Chat'}
                   </Button>
                 ) : null}
-                {(item.status || '').toLowerCase() === 'pending' ? (
+                {normalizedStatus === 'pending' ? (
                   <>
                     <Button
                       size="sm"

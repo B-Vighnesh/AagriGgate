@@ -5,6 +5,7 @@ import com.MyWebpage.register.login.notification.dto.response.NotificationRespon
 import com.MyWebpage.register.login.notification.event.NotificationEvent;
 import com.MyWebpage.register.login.notification.enums.MessageDeliveryType;
 import org.springframework.data.domain.Page;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,6 +22,9 @@ public interface NotificationService {
     void markAsRead(Long notificationId, Long userId);
 
     void markAllAsRead(Long userId);
+
+    @Transactional
+    void markAllAlertsAsRead(Long userId);
 
     void acknowledgeAlert(Long notificationId, Long userId);
 
