@@ -67,11 +67,69 @@ function navByRole(role) {
   ];
 }
 
+function mobileDrawerItemsByRole(role, loggedIn) {
+  if (!loggedIn) {
+    return [
+      { type: 'link', label: 'Login', to: '/login' },
+      { type: 'link', label: 'Register', to: '/register' },
+    ];
+  }
+
+  const items = [
+    { type: 'link', label: 'My Account', to: '/account' },
+    { type: 'link', label: 'Account Settings', to: '/settings' },
+    { type: 'link', label: 'Help & Support', to: '/enquiry' },
+  ];
+
+  if (role === 'farmer') {
+    items.splice(1, 0, { type: 'link', label: 'Add Crop', to: '/add-crop' });
+  }
+
+  return items;
+}
+
+function bottomNavItemsByRole(role) {
+  if (!role) {
+    return [];
+  }
+
+  return [
+    { label: 'Home', to: '/', icon: 'fa-solid fa-house' },
+    {
+      label: 'Market',
+      to: '/view-all-crops',
+      icon: 'fa-solid fa-store',
+      matchPrefixes: ['/view-all-crops', '/view-details', '/market'],
+    },
+    {
+      label: 'Crops',
+      to: role === 'farmer' ? '/view-crop' : '/view-all-crops',
+      icon: 'fa-solid fa-seedling',
+      matchPrefixes: role === 'farmer' ? ['/view-crop', '/add-crop', '/update-crop', '/delete-crop'] : ['/view-all-crops'],
+    },
+    {
+      label: 'Requests',
+      to: role === 'farmer' ? '/view-approach' : '/view-approaches-user',
+      icon: 'fa-regular fa-clock',
+      matchPrefixes: ['/view-approach', '/view-approaches-user', '/view-approaches/farmer', '/requests'],
+    },
+    {
+      label: 'Insights',
+      to: '/insights',
+      icon: 'fa-solid fa-chart-line',
+      matchPrefixes: ['/insights', '/weather', '/news'],
+    },
+  ];
+}
+
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [role, setRole] = useState(getRole());
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
+  const [isMobileViewport, setIsMobileViewport] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth <= 760,
+  );
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdownKey, setOpenDropdownKey] = useState('');
   const [hoverLockedDropdownKey, setHoverLockedDropdownKey] = useState('');
@@ -100,6 +158,17 @@ export default function Navbar() {
       window.removeEventListener('auth:expired', syncRole);
     };
   }, [location.pathname]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 760px)');
+    const updateViewport = (event) => {
+      setIsMobileViewport(event.matches);
+    };
+
+    setIsMobileViewport(mediaQuery.matches);
+    mediaQuery.addEventListener('change', updateViewport);
+    return () => mediaQuery.removeEventListener('change', updateViewport);
+  }, []);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -206,8 +275,21 @@ export default function Navbar() {
   }, [openDropdownKey, mobileOpen]);
 
   const items = navByRole(role);
+  const drawerItems = mobileDrawerItemsByRole(role, loggedIn);
+  const bottomNavItems = bottomNavItemsByRole(role);
   const isActive = (to) => (to === '/' ? location.pathname === '/' : location.pathname.startsWith(to));
   const isDropdownActive = (item) => item.children?.some((child) => isActive(child.to));
+  const isBottomNavActive = (item) => {
+    if (item.matchPrefixes?.some((prefix) => location.pathname.startsWith(prefix))) {
+      return true;
+    }
+    return isActive(item.to);
+  };
+  const showMobileBottomNav = loggedIn
+    && isMobileViewport
+    && !location.pathname.startsWith('/chat')
+    && !['/login', '/register', '/logout', '/forgot-password', '/404'].includes(location.pathname);
+  const navItemsToRender = isMobileViewport ? drawerItems : items;
 
   const toggleDropdown = (key) => {
     setOpenDropdownKey((current) => {
@@ -302,6 +384,7 @@ export default function Navbar() {
   };
 
   return (
+    <>
     <header className="site-header">
       <div className="site-header__inner ag-container">
         <Link className="brand" to="/" onClick={() => setMobileOpen(false)}>
@@ -311,7 +394,7 @@ export default function Navbar() {
 
         <div className="site-header__actions">
           <nav ref={(node) => { navRef.current = node; mobileNavRef.current = node; }} className={`site-nav ${mobileOpen ? 'site-nav--open' : ''}`}>
-              {items.map((item) => {
+              {navItemsToRender.map((item) => {
                 if (item.type === 'dropdown') {
                   const isOpen = openDropdownKey === item.key;
                   const active = isDropdownActive(item);
@@ -532,5 +615,26 @@ export default function Navbar() {
         </div>
       </div>
     </header>
+    {showMobileBottomNav ? (
+      <nav className="mobile-bottom-nav" aria-label="Primary mobile navigation">
+        {bottomNavItems.map((item) => (
+          <Link
+            key={`${item.label}-${item.to}`}
+            to={item.to}
+            className={`mobile-bottom-nav__item ${isBottomNavActive(item) ? 'mobile-bottom-nav__item--active' : ''}`}
+            onClick={() => {
+              setMobileOpen(false);
+              setOpenDropdownKey('');
+              setProfileMenuOpen(false);
+              setNotificationOverlayOpen(false);
+            }}
+          >
+            <i className={item.icon} aria-hidden="true" />
+            <span>{item.label}</span>
+          </Link>
+        ))}
+      </nav>
+    ) : null}
+    </>
   );
 }

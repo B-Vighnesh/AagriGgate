@@ -285,6 +285,74 @@ function Slider({ slides, activeIndex, onPrimary, onSecondary, setActiveIndex, i
   );
 }
 
+function MobileHomePanel({ navigate, role, isLoggedIn }) {
+  const requestRoute = role === 'farmer' ? '/view-approach' : '/view-approaches-user';
+  const primaryRoute = role === 'farmer' ? '/add-crop' : (isLoggedIn ? '/view-all-crops' : '/register');
+
+  const shortcuts = [
+    {
+      icon: 'fa-solid fa-store',
+      title: 'Marketplace',
+      desc: 'Browse crops',
+      action: () => navigate('/view-all-crops'),
+    },
+    {
+      icon: 'fa-regular fa-clock',
+      title: 'Requests',
+      desc: 'Track status',
+      action: () => navigate(requestRoute),
+    },
+    {
+      icon: 'fa-solid fa-chart-line',
+      title: 'Market intel',
+      desc: 'Prices & trends',
+      action: () => navigate('/market'),
+    },
+    {
+      icon: 'fa-regular fa-newspaper',
+      title: 'Insights',
+      desc: 'Weather & news',
+      action: () => navigate('/insights'),
+    },
+  ];
+
+  return (
+    <section className="home-mobile-shell">
+      <div className="ag-container">
+        <Card className="home-mobile-hero">
+          <p className="home-mobile-hero__eyebrow">Direct Trade</p>
+          <h1>Connecting Farmers Directly with Buyers</h1>
+          <div className="home-mobile-hero__actions">
+            <Button variant="accent" onClick={() => navigate(primaryRoute)}>
+              {role === 'farmer' ? 'Sell crop' : 'Browse'}
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/view-all-crops')}>
+              Browse
+            </Button>
+          </div>
+        </Card>
+
+        <div className="home-mobile-grid">
+          {shortcuts.map((item) => (
+            <button
+              key={item.title}
+              type="button"
+              className="home-mobile-shortcut"
+              onClick={item.action}
+            >
+              <span className="home-mobile-shortcut__icon" aria-hidden="true">
+                <i className={item.icon} />
+              </span>
+              <strong>{item.title}</strong>
+              <span>{item.desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const farmerId = getFarmerId();
@@ -330,14 +398,18 @@ export default function Home() {
     <div className="home-page">
       <ValidateToken token={token} role={role} farmerId={farmerId} />
 
-      <Slider
-        slides={SLIDES}
-        activeIndex={activeSlide}
-        onPrimary={onPrimaryAction}
-        onSecondary={onSecondaryAction}
-        setActiveIndex={setActiveSlide}
-        isLoggedIn={isLoggedIn}
-      />
+      <MobileHomePanel navigate={navigate} role={role} isLoggedIn={isLoggedIn} />
+
+      <div className="home-desktop-hero">
+        <Slider
+          slides={SLIDES}
+          activeIndex={activeSlide}
+          onPrimary={onPrimaryAction}
+          onSecondary={onSecondaryAction}
+          setActiveIndex={setActiveSlide}
+          isLoggedIn={isLoggedIn}
+        />
+      </div>
 
       <section className="ag-container section reveal-block">
         <SectionTitle

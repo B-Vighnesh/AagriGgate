@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
+import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { apiGet, apiFetch } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
@@ -28,7 +29,13 @@ export default function ViewCrop() {
   const [totalElements, setTotalElements] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: 'info' });
   const loadMoreRef = useRef(null);
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    window.setTimeout(() => setToast({ message: '', type: 'info' }), 2200);
+  };
 
   const getCardTone = (crop) => {
     if (crop.isUrgent) return 'urgent';
@@ -179,6 +186,28 @@ export default function ViewCrop() {
     );
   }
 
+  const handleShare = async (crop) => {
+    const shareUrl = `${window.location.origin}/view-details/${crop.cropID}`;
+    const shareData = {
+      title: crop.cropName,
+      text: `Check out my crop listing for ${crop.cropName}.`,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        showToast('Crop link shared.', 'success');
+        return;
+      }
+
+      await navigator.clipboard.writeText(shareUrl);
+      showToast('Crop link copied.', 'success');
+    } catch {
+      showToast('Unable to share crop right now.', 'error');
+    }
+  };
+
   return (
     <section className="page view-crop-page">
       <ValidateToken token={token} />
@@ -191,7 +220,7 @@ export default function ViewCrop() {
               {totalElements ? ` | ${totalElements} total` : ''}
             </p>
           </div>
-          <Link to="/add-crop" className="ui-btn ui-btn--primary">Add New Crop</Link>
+          <Link to="/add-crop" className="ui-btn ui-btn--primary view-crop-head__add-btn">Add New Crop</Link>
         </div>
 
         <Card className="view-all-search-card">
@@ -265,6 +294,38 @@ export default function ViewCrop() {
                   </div>
                   {crop.discountPrice ? <p className="view-all-card__discount">Discount: Rs {Number(crop.discountPrice).toFixed(2)}</p> : null}
                   <p className="qty">{crop.quantity} {crop.unit}</p>
+                  <div className="view-crop-card__actions">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        navigate(`/update-crop/${crop.cropID}`);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        navigate(`/view-approaches/farmer/${farmerId}/crop/${crop.cropID}`);
+                      }}
+                    >
+                      Requests
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleShare(crop);
+                      }}
+                    >
+                      Share
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
@@ -286,6 +347,10 @@ export default function ViewCrop() {
           </>
         )}
       </div>
+      <Link to="/add-crop" className="view-crop-fab" aria-label="Add crop">
+        <i className="fa-solid fa-plus" aria-hidden="true" />
+      </Link>
+      {toast.message ? <Toast message={toast.message} type={toast.type} /> : null}
     </section>
   );
 }
