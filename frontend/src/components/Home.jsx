@@ -319,6 +319,23 @@ function formatNewsMeta(item) {
   })}`;
 }
 
+function getNewsDateLabel(item) {
+  const published = item?.publishedAt || item?.createdAt || '';
+  if (!published) {
+    return '';
+  }
+
+  const date = new Date(published);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
 function FarmerQuickActions({ navigate }) {
   const actions = [
     { label: 'Add crop', icon: 'fa-solid fa-plus', path: '/add-crop' },
@@ -423,7 +440,6 @@ function LoggedInDashboard({ role, token, farmerId, navigate }) {
       <div className="ag-container dashboard-home">
         <Card className="dashboard-greeting">
           <p className="dashboard-greeting__sub">{getDayGreeting()}</p>
-          <p className="dashboard-greeting__eyebrow">{isFarmer ? 'Farmer dashboard' : 'Buyer dashboard'}</p>
           <h1>{displayName}</h1>
           <p className="dashboard-greeting__role">
             {isFarmer ? 'Farmer' : 'Buyer'} {location ? `- ${location}` : ''}
@@ -508,7 +524,7 @@ function LoggedInDashboard({ role, token, farmerId, navigate }) {
               See all
             </button>
           </div>
-          <div className="dashboard-news-grid">
+          <Card className="dashboard-list-card dashboard-list-card--news">
             {latestNews.length > 0 ? latestNews.map((item) => (
               <button
                 key={item.id}
@@ -517,14 +533,15 @@ function LoggedInDashboard({ role, token, farmerId, navigate }) {
                 onClick={() => navigate(`/news/${item.id}`)}
               >
                 <strong>{item.title}</strong>
-                <span>{formatNewsMeta(item)}</span>
+                <div className="dashboard-news-item__meta">
+                  <span className="dashboard-news-item__category">{item.category || 'News'}</span>
+                  <span>{getNewsDateLabel(item)}</span>
+                </div>
               </button>
             )) : (
-              <Card className="dashboard-empty-card">
-                <p className="dashboard-empty">Latest news updates will appear here.</p>
-              </Card>
+              <p className="dashboard-empty">Latest news updates will appear here.</p>
             )}
-          </div>
+          </Card>
         </section>
       </div>
     </section>
