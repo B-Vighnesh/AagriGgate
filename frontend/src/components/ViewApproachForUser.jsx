@@ -11,11 +11,11 @@ import { createOrGetChatConversation } from '../api/chatApi';
 import { getRequestStatusLabel, normalizeRequestStatus } from '../lib/requestStatus';
 
 const STATUS_CLASS = {
-  pending: 'user-requests-status--pending',
-  accepted: 'user-requests-status--accepted',
-  completed: 'user-requests-status--completed',
-  failed: 'user-requests-status--failed',
-  expired: 'user-requests-status--expired',
+  pending: 'approach-badge--pending',
+  accepted: 'approach-badge--accepted',
+  completed: 'approach-badge--completed',
+  failed: 'approach-badge--failed',
+  expired: 'approach-badge--expired',
 };
 
 export default function ViewApproachForUser() {
@@ -162,55 +162,56 @@ export default function ViewApproachForUser() {
         )}
 
         {!error && approaches.length > 0 && (
-          <div className="user-requests-list">
+          <div className="view-approach-list">
             {approaches.map((item) => {
               const normalizedStatus = normalizeRequestStatus(item.status);
               return (
-              <Card key={item.approachId} className="user-requests-card">
-                <div className="user-requests-card__main">
-                  <h3>{item.cropName}</h3>
-                  <p>Farmer: <strong>{item.farmerName}</strong></p>
-                  {item.requestedQuantity ? <p>Requested: <strong>{item.requestedQuantity}</strong></p> : null}
-                </div>
+                <Card key={item.approachId} className="approach-card">
+                  <div className="approach-card__head">
+                    <div>
+                      <h3>{item.cropName}</h3>
+                      {item.requestedQuantity ? <p>Requested: <strong>{item.requestedQuantity}</strong></p> : null}
+                    </div>
+                    <span className={`approach-badge ${STATUS_CLASS[normalizedStatus] || ''}`}>
+                      {getRequestStatusLabel(item.status)}
+                    </span>
+                  </div>
 
-                <span className={`user-requests-status ${STATUS_CLASS[normalizedStatus] || ''}`}>
-                  {getRequestStatusLabel(item.status)}
-                </span>
-
-                <div className="user-requests-actions">
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/requests/${item.approachId}`)}>
-                    Request Details
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${item.cropId}`)}>
-                    View Crop
-                  </Button>
-                  {(normalizedStatus === 'accepted' || normalizedStatus === 'completed' || normalizedStatus === 'failed' || normalizedStatus === 'expired') ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="chat-launch-btn"
-                      onClick={() => openChat(item.approachId)}
-                      loading={chatLoadingId === item.approachId}
-                      disabled={chatLoadingId !== null}
-                    >
-                      {chatLoadingId === item.approachId ? 'Opening Chat...' : 'Open Chat'}
+                  <div className="approach-actions">
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/requests/${item.approachId}`)}>
+                      Request Details
                     </Button>
-                  ) : null}
-
-                  {normalizedStatus === 'pending' && (
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => setPendingWithdraw({ approachId: item.approachId, step: 1 })}
-                      loading={withdrawLoading === item.approachId}
-                      disabled={withdrawLoading !== null}
-                    >
-                      {withdrawLoading === item.approachId ? 'Withdrawing...' : 'Withdraw'}
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${item.cropId}`)}>
+                      View Crop
                     </Button>
-                  )}
-                </div>
-              </Card>
-            )})}
+                    {(normalizedStatus === 'accepted' || normalizedStatus === 'completed' || normalizedStatus === 'failed' || normalizedStatus === 'expired') ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="chat-launch-btn"
+                        onClick={() => openChat(item.approachId)}
+                        loading={chatLoadingId === item.approachId}
+                        disabled={chatLoadingId !== null}
+                      >
+                        {chatLoadingId === item.approachId ? 'Opening Chat...' : 'Open Chat'}
+                      </Button>
+                    ) : null}
+
+                    {normalizedStatus === 'pending' && (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => setPendingWithdraw({ approachId: item.approachId, step: 1 })}
+                        loading={withdrawLoading === item.approachId}
+                        disabled={withdrawLoading !== null}
+                      >
+                        {withdrawLoading === item.approachId ? 'Withdrawing...' : 'Withdraw'}
+                      </Button>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         )}
 
