@@ -5,12 +5,12 @@ import Card from './common/Card';
 import Toast from './common/Toast';
 import { getRole } from '../lib/auth';
 import { requestJson } from '../lib/api';
-import { confirmChatDeal, createOrGetChatConversation, failChatConversation } from '../api/chatApi';
+import { createOrGetChatConversation, getChatConversationByApproach } from '../api/chatApi';
 
 const STATUS_CLASS = {
   pending: 'user-requests-status--pending',
+  active: 'user-requests-status--accepted',
   accepted: 'user-requests-status--accepted',
-  rejected: 'user-requests-status--rejected',
   completed: 'user-requests-status--completed',
   failed: 'user-requests-status--failed',
   expired: 'user-requests-status--expired',
@@ -18,8 +18,8 @@ const STATUS_CLASS = {
 
 const STATUS_HINTS = {
   pending: 'Waiting for farmer response',
+  active: 'Chat active',
   accepted: 'Chat active',
-  rejected: 'Closed',
   completed: 'Deal successful',
   failed: 'Cancelled',
   expired: 'Auto closed due to inactivity',
@@ -50,9 +50,15 @@ export default function RequestDetails() {
   const [conversation, setConversation] = useState(null);
 
   const isFarmer = role === 'farmer';
-  const statusKey = String(requestDetails?.status || 'pending').toLowerCase();
-  const isAccepted = statusKey === 'accepted';
-  const isClosed = ['rejected', 'completed', 'failed', 'expired'].includes(statusKey);
+  const conversationStatusKey = String(conversation?.status || '').toLowerCase();
+  const requestStatusKey = String(requestDetails?.status || 'pending').toLowerCase();
+  const fallbackStatusKey = requestStatusKey === 'accepted'
+    ? 'active'
+    : requestStatusKey === 'rejected'
+      ? 'failed'
+      : requestStatusKey;
+  const statusKey = conversationStatusKey || fallbackStatusKey;
+  const canOpenChat = statusKey === 'active' || ['completed', 'failed', 'expired'].includes(statusKey);
 
   useEffect(() => {
     let active = true;
@@ -81,7 +87,7 @@ export default function RequestDetails() {
   }, [approachId, isFarmer]);
 
   useEffect(() => {
-    if (!requestDetails || !isAccepted) {
+    if (!requestDetails || requestStatusKey !== 'accepted') {
       setConversation(null);
       return undefined;
     }
@@ -90,7 +96,15 @@ export default function RequestDetails() {
 
     (async () => {
       try {
-        const summary = await createOrGetChatConversation(requestDetails.approachId);
+        let summary = null;
+        try {
+          summary = await getChatConversationByApproach(requestDetails.approachId);
+        } catch (error) {
+          if (error?.status !== 404) {
+            throw error;
+          }
+          summary = await createOrGetChatConversation(requestDetails.approachId);
+        }
         if (!active) return;
         setConversation(summary);
       } catch (error) {
@@ -102,7 +116,7 @@ export default function RequestDetails() {
     return () => {
       active = false;
     };
-  }, [requestDetails, isAccepted]);
+  }, [requestDetails, requestStatusKey]);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -130,36 +144,23 @@ export default function RequestDetails() {
     }
   };
 
-  const handleMarkCompleted = async () => {
-    if (!conversation) return;
-    setActionLoading('complete');
-    try {
-      const result = await confirmChatDeal(conversation.conversationId, {
-        useRequestedQuantity: true,
-        quantity: null,
-      });
-      if (result?.conversation) {
-        setConversation(result.conversation);
-      }
-      await refreshRequest();
-      showToast(result?.message || 'Deal marked complete.', 'success');
-    } catch (error) {
-      showToast(error.message || 'Unable to complete the deal.', 'error');
-    } finally {
-      setActionLoading('');
+  const handleOpenChat = async () => {
+    if (conversation?.conversationId) {
+      navigate(`/chat/${conversation.conversationId}`);
+      return;
     }
-  };
+    if (requestStatusKey !== 'accepted') {
+      showToast('Chat is available after the request is accepted.', 'info');
+      return;
+    }
 
-  const handleMarkFailed = async () => {
-    if (!conversation) return;
-    setActionLoading('fail');
+    setActionLoading('chat');
     try {
-      const updated = await failChatConversation(conversation.conversationId);
-      setConversation(updated);
-      await refreshRequest();
-      showToast('Deal cancelled successfully.', 'success');
+      const summary = await createOrGetChatConversation(requestDetails.approachId);
+      setConversation(summary);
+      navigate(`/chat/${summary.conversationId}`);
     } catch (error) {
-      showToast(error.message || 'Unable to cancel the deal.', 'error');
+      showToast(error.message || 'Unable to open chat right now.', 'error');
     } finally {
       setActionLoading('');
     }
@@ -196,7 +197,7 @@ export default function RequestDetails() {
             <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
             <div className="request-lifecycle-head__status">
               <span className={`user-requests-status ${STATUS_CLASS[statusKey] || ''}`}>
-                {requestDetails.status}
+                {statusKey.toUpperCase()}
               </span>
               <small>{STATUS_HINTS[statusKey] || 'Request lifecycle in progress'}</small>
             </div>
@@ -252,19 +253,19 @@ export default function RequestDetails() {
                 </div>
                 <div className="request-lifecycle-stat">
                   <span>Status</span>
-                  <strong>{requestDetails.status}</strong>
+                  <strong>{statusKey.toUpperCase()}</strong>
                 </div>
                 <div className="request-lifecycle-stat">
                   <span>Requested Time</span>
                   <strong>{formatDateTime(requestDetails.requestedAt)}</strong>
                 </div>
-                {isAccepted && (
+                {requestStatusKey === 'accepted' && (
                   <div className="request-lifecycle-stat request-lifecycle-stat--highlight">
                     <span>Accepted Time</span>
                     <strong>{formatDateTime(requestDetails.acceptedAt)}</strong>
                   </div>
                 )}
-                {statusKey === 'rejected' && (
+                {requestStatusKey === 'rejected' && (
                   <div className="request-lifecycle-stat">
                     <span>Rejected Time</span>
                     <strong>{formatDateTime(requestDetails.rejectedAt)}</strong>
@@ -281,8 +282,8 @@ export default function RequestDetails() {
 
             <section className="request-lifecycle-panel">
               <div className="request-lifecycle-panel__head">
-                <h2>Actions</h2>
-                <p>Available actions change automatically based on your role and the current request state.</p>
+                <h2>Conversation</h2>
+                <p>This page now shows the conversation lifecycle status and opens the linked chat directly.</p>
               </div>
               <div className="request-lifecycle-actions">
                 {isFarmer && statusKey === 'pending' && (
@@ -300,31 +301,14 @@ export default function RequestDetails() {
                   </div>
                 )}
 
-                {isAccepted && (
+                {canOpenChat && (
                   <div className="request-lifecycle-action-group">
-                    <Button variant="outline" onClick={() => navigate(`/chat?approach=${requestDetails.approachId}`)}>
-                      Open Chat
-                    </Button>
-                    <Button
-                      loading={actionLoading === 'complete'}
-                      onClick={handleMarkCompleted}
-                    >
-                      Mark Deal Complete
-                    </Button>
                     <Button
                       variant="outline"
-                      loading={actionLoading === 'fail'}
-                      onClick={handleMarkFailed}
+                      onClick={handleOpenChat}
+                      loading={actionLoading === 'chat'}
                     >
-                      Cancel Deal
-                    </Button>
-                  </div>
-                )}
-
-                {isClosed && (
-                  <div className="request-lifecycle-action-group">
-                    <Button variant="outline" onClick={() => navigate(`/view-details/${requestDetails.cropId}`)}>
-                      View Crop Again
+                      Open Chat
                     </Button>
                   </div>
                 )}
