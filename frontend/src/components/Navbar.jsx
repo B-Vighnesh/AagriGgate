@@ -275,7 +275,6 @@ export default function Navbar() {
   }, [openDropdownKey, mobileOpen]);
 
   const items = navByRole(role);
-  const drawerItems = mobileDrawerItemsByRole(role, loggedIn);
   const bottomNavItems = bottomNavItemsByRole(role);
   const isActive = (to) => (to === '/' ? location.pathname === '/' : location.pathname.startsWith(to));
   const isDropdownActive = (item) => item.children?.some((child) => isActive(child.to));
@@ -289,7 +288,8 @@ export default function Navbar() {
     && isMobileViewport
     && !location.pathname.startsWith('/chat')
     && !['/login', '/register', '/logout', '/forgot-password', '/404'].includes(location.pathname);
-  const navItemsToRender = isMobileViewport ? drawerItems : items;
+  const showMobileDrawer = isMobileViewport && !showMobileBottomNav;
+  const navItemsToRender = showMobileDrawer ? mobileDrawerItemsByRole(role, loggedIn) : items;
 
   const toggleDropdown = (key) => {
     setOpenDropdownKey((current) => {
@@ -393,7 +393,8 @@ export default function Navbar() {
         </Link>
 
         <div className="site-header__actions">
-          <nav ref={(node) => { navRef.current = node; mobileNavRef.current = node; }} className={`site-nav ${mobileOpen ? 'site-nav--open' : ''}`}>
+          {!showMobileBottomNav ? (
+            <nav ref={(node) => { navRef.current = node; mobileNavRef.current = node; }} className={`site-nav ${mobileOpen ? 'site-nav--open' : ''}`}>
               {navItemsToRender.map((item) => {
                 if (item.type === 'dropdown') {
                   const isOpen = openDropdownKey === item.key;
@@ -456,10 +457,11 @@ export default function Navbar() {
                   {item.label}
                 </Link>
               );
-            })}
+              })}
 
             
-          </nav>
+            </nav>
+          ) : null}
 
           {loggedIn ? (
             <Link
@@ -600,18 +602,20 @@ export default function Navbar() {
             </div>
           ) : null}
 
-          <button
-            ref={toggleRef}
-            type="button"
-            className="nav-toggle"
-            aria-label="Toggle navigation"
-            aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen((prev) => !prev)}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
+          {showMobileDrawer ? (
+            <button
+              ref={toggleRef}
+              type="button"
+              className="nav-toggle"
+              aria-label="Toggle navigation"
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen((prev) => !prev)}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+          ) : null}
         </div>
       </div>
     </header>

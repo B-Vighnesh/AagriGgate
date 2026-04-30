@@ -7629,7 +7629,7 @@ a {
 
 @media (max-width: 760px) {
   .app-main {
-    padding-bottom: 20px;
+    padding-bottom: 24px;
     padding-top: 20px;
   }
 
@@ -7639,6 +7639,33 @@ a {
 
   .site-header__inner {
     gap: 12px;
+  }
+
+  .account-page,
+  .settings-page,
+  .update-account-page,
+  .view-crop-page,
+  .add-crop-page,
+  .update-crop-page,
+  .buyer-profile-page,
+  .buyer-tools-page,
+  .market-page,
+  .view-all-page {
+    padding-bottom: calc(94px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .account-page .ag-container,
+  .settings-page .ag-container,
+  .update-account-page .ag-container,
+  .view-crop-page .ag-container,
+  .add-crop-page .ag-container,
+  .update-crop-page .ag-container,
+  .buyer-profile-page .ag-container,
+  .buyer-tools-page .ag-container,
+  .market-page .ag-container,
+  .view-all-page .ag-container {
+    width: calc(100% - 16px);
+    margin: 8px auto 0;
   }
 
   .nav-toggle {
@@ -7973,6 +8000,16 @@ a {
     justify-content: flex-start;
   }
 
+  .account-panel-card,
+  .account-spotlight-card,
+  .settings-card,
+  .settings-hero-card,
+  .buyer-profile-hero,
+  .buyer-profile-card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
   .account-icon-action--desktop {
     display: none;
   }
@@ -7990,6 +8027,11 @@ a {
   .account-info-row strong {
     text-align: left;
     max-width: 100%;
+  }
+
+  .account-info-list,
+  .buyer-profile-list {
+    gap: 0;
   }
 
   .stats__grid {
