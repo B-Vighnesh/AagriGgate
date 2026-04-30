@@ -602,17 +602,8 @@ a {
   font-weight: 800;
 }
 
-.dashboard-greeting__eyebrow {
-  margin: 0 0 4px;
-  color: rgba(222, 248, 236, 0.88);
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
 .dashboard-greeting h1 {
-  margin: 0 0 2px;
+  margin: 0 0 4px;
   font-size: clamp(1.68rem, 4vw, 2.12rem);
   line-height: 1.05;
   letter-spacing: -0.02em;
@@ -684,12 +675,13 @@ a {
 }
 
 .dashboard-quick-card__icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
   display: grid;
   place-items: center;
-  background: #eef7f1;
+  background: #f4faf6;
+  border: 2px solid rgba(31, 111, 84, 0.12);
   color: var(--color-primary);
 }
 
@@ -697,6 +689,7 @@ a {
   color: var(--color-primary-dark);
   font-size: 0.84rem;
   line-height: 1.15;
+  font-weight: 700;
 }
 
 .dashboard-crop-card {
@@ -777,7 +770,7 @@ a {
   line-height: 1.18;
 }
 
-.dashboard-request-item span,
+.dashboard-request-item > div span,
 .dashboard-news-item span {
   color: var(--color-muted);
   font-size: 0.78rem;
@@ -787,6 +780,7 @@ a {
   flex-shrink: 0;
   font-size: 0.72rem;
   padding: 4px 10px;
+  color: inherit;
 }
 
 .dashboard-request-item > div {
@@ -795,13 +789,10 @@ a {
 
 .dashboard-news-item {
   display: grid;
-  gap: 4px;
+  gap: 6px;
   justify-content: start;
   align-content: start;
-  min-height: 128px;
-  border-radius: 18px;
-  border: 1px solid #dce9e2;
-  box-shadow: 0 12px 22px rgba(22, 63, 44, 0.08);
+  min-height: 0;
 }
 
 .dashboard-empty-card {
@@ -817,10 +808,27 @@ a {
   font-size: 0.86rem;
 }
 
-.dashboard-news-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+.dashboard-list-card--news {
+  border-radius: 18px;
+}
+
+.dashboard-news-item__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dashboard-news-item__category {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #e5efd6;
+  color: #5b7f23;
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .insights-hub-page {
@@ -8393,7 +8401,6 @@ a {
   }
 
   .dashboard-crops-grid,
-  .dashboard-news-grid,
   .dashboard-quick-actions {
     gap: 10px;
   }
@@ -8416,10 +8423,6 @@ a {
   .dashboard-request-item,
   .dashboard-news-item {
     padding: 12px 13px;
-  }
-
-  .dashboard-news-grid {
-    grid-template-columns: 1fr;
   }
 
   .dashboard-quick-actions {
