@@ -7650,7 +7650,14 @@ a {
   .buyer-profile-page,
   .buyer-tools-page,
   .market-page,
-  .view-all-page {
+  .view-all-page,
+  .weather-page,
+  .insights-hub-page,
+  .view-approach-page,
+  .approach-crop-page,
+  .user-requests-page,
+  .ntf-detail-page,
+  .ntf-page {
     padding-bottom: calc(94px + env(safe-area-inset-bottom, 0px));
   }
 
@@ -7663,7 +7670,15 @@ a {
   .buyer-profile-page .ag-container,
   .buyer-tools-page .ag-container,
   .market-page .ag-container,
-  .view-all-page .ag-container {
+  .view-all-page .ag-container,
+  .weather-page .ag-container,
+  .insights-hub-page .ag-container,
+  .view-approach-page .ag-container,
+  .approach-crop-page .ag-container,
+  .user-requests-page .ag-container,
+  .ntf-detail-wrap,
+  .ntf-page.ag-container,
+  .ntf-layout.ag-container {
     width: calc(100% - 16px);
     margin: 8px auto 0;
   }
