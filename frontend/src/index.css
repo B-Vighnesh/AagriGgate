@@ -8115,14 +8115,6 @@ a {
 }
 
 @media (max-width: 640px) {
-  .view-approach-page,
-  .approach-crop-page,
-  .user-requests-page {
-    background:
-      radial-gradient(circle at top left, rgba(52, 111, 74, 0.18), transparent 38%),
-      #242320;
-  }
-
   .view-approach-page .ag-container,
   .approach-crop-page .ag-container,
   .user-requests-page .ag-container {
@@ -8135,9 +8127,6 @@ a {
   .user-requests-head {
     padding: 14px;
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(56, 54, 49, 0.94);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
     gap: 10px;
   }
 
@@ -8150,17 +8139,8 @@ a {
   .view-approach-head h1,
   .approach-crop-head h1,
   .user-requests-head h1 {
-    color: #fff6e8;
     font-size: 1.55rem;
     line-height: 1.05;
-  }
-
-  .view-approach-head p,
-  .approach-crop-head p,
-  .approach-crop-filter label,
-  .user-requests-head p,
-  .view-all-pagination__info {
-    color: rgba(255, 244, 227, 0.78);
   }
 
   .view-approach-head select,
@@ -8169,10 +8149,6 @@ a {
     width: 100%;
     min-height: 42px;
     border-radius: 10px;
-    border-color: rgba(255, 255, 255, 0.12);
-    background: #34322f;
-    color: #fff6e8;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
   .view-approach-list,
@@ -8187,9 +8163,6 @@ a {
     position: relative;
     padding: 14px;
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(56, 54, 49, 0.96);
-    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.2);
   }
 
   .approach-card {
@@ -8206,7 +8179,6 @@ a {
   .approach-card__head h3,
   .approach-crop-card__main h3,
   .user-requests-card__main h3 {
-    color: #fff6e8;
     font-size: 1.08rem;
     line-height: 1.15;
     padding-right: 92px;
@@ -8216,7 +8188,6 @@ a {
   .approach-crop-card__main p,
   .user-requests-card__main p,
   .approach-crop-done {
-    color: rgba(255, 244, 227, 0.82);
     font-size: 0.9rem;
   }
 
@@ -8253,50 +8224,10 @@ a {
     line-height: 1.1;
   }
 
-  .approach-actions .ui-btn--outline,
-  .approach-crop-actions .ui-btn--outline,
-  .user-requests-actions .ui-btn--outline,
-  .approach-actions .ui-btn--ghost,
-  .approach-crop-actions .ui-btn--ghost,
-  .user-requests-actions .ui-btn--ghost {
-    color: #fff6e8;
-    border-color: rgba(255, 255, 255, 0.24);
-    background: rgba(255, 255, 255, 0.02);
-  }
-
-  .approach-actions .ui-btn--primary,
-  .approach-crop-actions .ui-btn--primary,
-  .user-requests-actions .ui-btn--primary {
-    background: #1f8d4e;
-    color: #fff;
-  }
-
-  .approach-actions .ui-btn--danger,
-  .approach-crop-actions .ui-btn--danger,
-  .user-requests-actions .ui-btn--danger {
-    background: #b93f3f;
-    color: #fff;
-  }
-
   .view-approach-empty,
   .approach-crop-empty,
   .user-requests-empty {
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(56, 54, 49, 0.96);
-    color: rgba(255, 244, 227, 0.82);
-  }
-
-  .view-approach-empty h3,
-  .approach-crop-empty h3,
-  .user-requests-empty h3 {
-    color: #fff6e8;
-  }
-
-  .view-approach-empty p,
-  .approach-crop-empty p,
-  .user-requests-empty p {
-    color: rgba(255, 244, 227, 0.78);
   }
 }
 
