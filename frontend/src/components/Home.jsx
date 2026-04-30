@@ -319,6 +319,38 @@ function formatNewsMeta(item) {
   })}`;
 }
 
+function FarmerQuickActions({ navigate }) {
+  const actions = [
+    { label: 'Add crop', icon: 'fa-solid fa-plus', path: '/add-crop' },
+    { label: 'My crops', icon: 'fa-solid fa-seedling', path: '/view-crop' },
+    { label: 'Requests', icon: 'fa-regular fa-clock', path: '/view-approach' },
+    { label: 'Market', icon: 'fa-solid fa-chart-line', path: '/market' },
+  ];
+
+  return (
+    <section className="dashboard-section">
+      <div className="dashboard-section__header">
+        <p className="dashboard-section__label">Quick actions</p>
+      </div>
+      <div className="dashboard-quick-actions">
+        {actions.map((item) => (
+          <button
+            key={item.label}
+            type="button"
+            className="dashboard-quick-card"
+            onClick={() => navigate(item.path)}
+          >
+            <span className="dashboard-quick-card__icon" aria-hidden="true">
+              <i className={item.icon} />
+            </span>
+            <strong>{item.label}</strong>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function LoggedInDashboard({ role, token, farmerId, navigate }) {
   const [profile, setProfile] = useState(null);
   const [recentRequests, setRecentRequests] = useState([]);
@@ -398,33 +430,37 @@ function LoggedInDashboard({ role, token, farmerId, navigate }) {
           </p>
         </Card>
 
-        <section className="dashboard-section">
-          <div className="dashboard-section__header">
-            <p className="dashboard-section__label">Latest crops</p>
-            <button type="button" className="dashboard-section__link" onClick={() => navigate('/view-all-crops')}>
-              See all
-            </button>
-          </div>
-          <div className="dashboard-crops-grid">
-            {latestCrops.length > 0 ? latestCrops.map((crop) => (
-              <button
-                key={crop.cropID}
-                type="button"
-                className="dashboard-crop-card"
-                onClick={() => navigate(`/view-details/${crop.cropID}`)}
-              >
-                <p className="dashboard-crop-card__title">{crop.cropName}</p>
-                <p className="dashboard-crop-card__meta">{crop.region || crop.cropType || 'Crop listing'}</p>
-                <p className="dashboard-crop-card__price">{formatPrice(crop.marketPrice)}</p>
-                <p className="dashboard-crop-card__sub">Qty: {crop.quantity} {crop.unit}</p>
+        {isFarmer ? (
+          <FarmerQuickActions navigate={navigate} />
+        ) : (
+          <section className="dashboard-section">
+            <div className="dashboard-section__header">
+              <p className="dashboard-section__label">Latest crops</p>
+              <button type="button" className="dashboard-section__link" onClick={() => navigate('/view-all-crops')}>
+                See all
               </button>
-            )) : (
-              <Card className="dashboard-empty-card">
-                <p className="dashboard-empty">Latest crop listings will appear here.</p>
-              </Card>
-            )}
-          </div>
-        </section>
+            </div>
+            <div className="dashboard-crops-grid">
+              {latestCrops.length > 0 ? latestCrops.map((crop) => (
+                <button
+                  key={crop.cropID}
+                  type="button"
+                  className="dashboard-crop-card"
+                  onClick={() => navigate(`/view-details/${crop.cropID}`)}
+                >
+                  <p className="dashboard-crop-card__title">{crop.cropName}</p>
+                  <p className="dashboard-crop-card__meta">{crop.region || crop.cropType || 'Crop listing'}</p>
+                  <p className="dashboard-crop-card__price">{formatPrice(crop.marketPrice)}</p>
+                  <p className="dashboard-crop-card__sub">Qty: {crop.quantity} {crop.unit}</p>
+                </button>
+              )) : (
+                <Card className="dashboard-empty-card">
+                  <p className="dashboard-empty">Latest crop listings will appear here.</p>
+                </Card>
+              )}
+            </div>
+          </section>
+        )}
 
         <section className="dashboard-section">
           <div className="dashboard-section__header">
