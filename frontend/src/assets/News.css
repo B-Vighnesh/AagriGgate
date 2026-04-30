@@ -574,10 +574,12 @@
 
 @media (max-width: 767px) {
   .news-page {
-    padding: 14px 0 32px;
+    padding: 12px 0 calc(94px + env(safe-area-inset-bottom, 0px));
   }
 
   .news-page .ag-container {
+    width: calc(100% - 16px);
+    margin: 8px auto 0;
     gap: 14px;
   }
 
@@ -800,7 +802,7 @@
 
 @media (max-width: 480px) {
   .news-page {
-    padding: 10px 0 24px;
+    padding: 10px 0 calc(94px + env(safe-area-inset-bottom, 0px));
   }
 
   .news-header {
