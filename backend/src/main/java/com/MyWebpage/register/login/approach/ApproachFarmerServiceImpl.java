@@ -24,6 +24,11 @@ import java.util.Optional;
 public class ApproachFarmerServiceImpl implements ApproachFarmerService {
 
     private static final Logger logger = LoggerFactory.getLogger(ApproachFarmerServiceImpl.class);
+    private static final String STATUS_PENDING = "Pending";
+    private static final String STATUS_ACCEPTED = "Accepted";
+    private static final String STATUS_COMPLETED = "Completed";
+    private static final String STATUS_FAILED = "Failed";
+    private static final String STATUS_EXPIRED = "Expired";
 
     private final ApproachFarmerRepo approachFarmerRepository;
     private final CropQueryService cropQueryService;
@@ -54,9 +59,9 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             }
 
             boolean isPending = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatusAndActiveTrue(
-                    farmerId, cropId, userId, "pending");
+                    farmerId, cropId, userId, STATUS_PENDING);
             boolean isAccepted = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatusAndActiveTrue(
-                    farmerId, cropId, userId, "Accepted");
+                    farmerId, cropId, userId, STATUS_ACCEPTED);
 
             if (isPending) {
                 return new ResponseEntity<>(
@@ -85,7 +90,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             approachFarmer.setUserPhoneNo(user.getPhoneNo());
             approachFarmer.setUserEmail(user.getEmail());
             approachFarmer.setRequestedQuantity(normalizeRequestedQuantity(requestedQuantity, crop));
-            approachFarmer.setStatus("pending");
+            approachFarmer.setStatus(STATUS_PENDING);
             approachFarmer.setActive(true);
             approachFarmer.setDeletedAt(null);
             approachFarmer.setRequestedAt(LocalDateTime.now());
@@ -120,12 +125,12 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             if (!farmerId.equals(approach.getFarmerId())) {
                 return false;
             }
-            if (!"pending".equalsIgnoreCase(approach.getStatus())) {
+            if (!STATUS_PENDING.equalsIgnoreCase(approach.getStatus())) {
                 return false;
             }
             LocalDateTime now = LocalDateTime.now();
             approach.setAccept(accept);
-            approach.setStatus(accept ? "Accepted" : "Rejected");
+            approach.setStatus(accept ? STATUS_ACCEPTED : STATUS_FAILED);
             if (accept) {
                 approach.setAcceptedAt(now);
                 approach.setRejectedAt(null);
@@ -137,6 +142,10 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                 approach.setLastMessageSenderId(null);
             } else {
                 approach.setRejectedAt(now);
+                approach.setFailedAt(now);
+                approach.setNotifiedAt(null);
+                approach.setCompletedAt(null);
+                approach.setExpiredAt(null);
             }
             approachFarmerRepository.save(approach);
             logger.info("Approach status updated: {} -> {}", approachId, approach.getStatus());
@@ -234,7 +243,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
 
     @Override
     public boolean hasRejectedApproach(Long userId, Long cropId) {
-        return approachFarmerRepository.existsByCropIdAndUserIdAndStatusIgnoreCaseAndActiveTrue(cropId, userId, "Rejected");
+        return approachFarmerRepository.existsByCropIdAndUserIdAndStatusIgnoreCaseAndActiveTrue(cropId, userId, STATUS_FAILED);
     }
 
     @Override
@@ -263,7 +272,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     @Override
     public boolean isApproachAccepted(Long userId, Long cropId) {
         try {
-            return approachFarmerRepository.existsByCropIdAndUserIdAndStatusAndActiveTrue(cropId, userId, "Accepted");
+            return approachFarmerRepository.existsByCropIdAndUserIdAndStatusAndActiveTrue(cropId, userId, STATUS_ACCEPTED);
         } catch (Exception e) {
             throw new RuntimeException("Error occurred while checking the approach status: " + e.getMessage(), e);
         }
@@ -282,8 +291,10 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     @Override
     public void markApproachCompleted(Long approachId, LocalDateTime completedAt) {
         approachFarmerRepository.findById(approachId).ifPresent(approach -> {
-            approach.setStatus("Completed");
+            approach.setStatus(STATUS_COMPLETED);
             approach.setCompletedAt(completedAt);
+            approach.setFailedAt(null);
+            approach.setExpiredAt(null);
             approachFarmerRepository.save(approach);
         });
     }
@@ -291,8 +302,10 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     @Override
     public void markApproachFailed(Long approachId, LocalDateTime failedAt) {
         approachFarmerRepository.findById(approachId).ifPresent(approach -> {
-            approach.setStatus("Failed");
+            approach.setStatus(STATUS_FAILED);
             approach.setFailedAt(failedAt);
+            approach.setCompletedAt(null);
+            approach.setExpiredAt(null);
             approachFarmerRepository.save(approach);
         });
     }
@@ -300,8 +313,10 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     @Override
     public void markApproachExpired(Long approachId, LocalDateTime expiredAt) {
         approachFarmerRepository.findById(approachId).ifPresent(approach -> {
-            approach.setStatus("Expired");
+            approach.setStatus(STATUS_EXPIRED);
             approach.setExpiredAt(expiredAt);
+            approach.setCompletedAt(null);
+            approach.setFailedAt(null);
             approachFarmerRepository.save(approach);
         });
     }
@@ -324,7 +339,14 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
         if (status == null || status.isBlank() || "All".equalsIgnoreCase(status)) {
             return null;
         }
-        return status.trim();
+        return switch (status.trim().toUpperCase()) {
+            case "PENDING" -> STATUS_PENDING;
+            case "ACCEPTED", "ACTIVE" -> STATUS_ACCEPTED;
+            case "COMPLETED" -> STATUS_COMPLETED;
+            case "FAILED", "REJECTED" -> STATUS_FAILED;
+            case "EXPIRED" -> STATUS_EXPIRED;
+            default -> status.trim();
+        };
     }
 
     private Double normalizeRequestedQuantity(Double requestedQuantity, Crop crop) {
