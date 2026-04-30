@@ -65,7 +65,7 @@ a {
 
 .ag-container {
   width: 98%;
-  margin: 0 auto;
+  margin: 10px 10px 10px 10px;
 }
 
 .page {
@@ -8846,6 +8846,15 @@ a {
 }
 
 @media (max-width: 640px) {
+  .dashboard-home-page {
+    padding: 12px 0 88px;
+  }
+
+  .dashboard-home-page .ag-container {
+    width: calc(100% - 16px);
+    margin: 8px auto 0;
+  }
+
   .view-approach-page .ag-container,
   .approach-crop-page .ag-container,
   .user-requests-page .ag-container {
