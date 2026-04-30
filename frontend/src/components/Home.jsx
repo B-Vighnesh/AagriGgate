@@ -388,7 +388,7 @@ function LoggedInDashboard({ role, token, farmerId, navigate }) {
         const [profileData, requestsData, cropsData, newsData] = await Promise.allSettled([
           requestJson(profilePath, { method: 'GET' }),
           requestJson(requestPath, { method: 'GET' }),
-          requestJson('/crops/legacy?page=0&size=2&sortBy=newest', { method: 'GET' }),
+          requestJson(`/crops/legacy?page=0&size=${role === 'buyer' ? 4 : 2}&sortBy=newest`, { method: 'GET' }),
           getNews({ page: 0, size: 3, sortBy: 'newest' }),
         ]);
 
@@ -402,7 +402,7 @@ function LoggedInDashboard({ role, token, farmerId, navigate }) {
         );
         setLatestCrops(
           cropsData.status === 'fulfilled' && Array.isArray(cropsData.value?.content)
-            ? cropsData.value.content.slice(0, 2)
+            ? cropsData.value.content.slice(0, role === 'buyer' ? 4 : 2)
             : [],
         );
         setLatestNews(
@@ -442,8 +442,13 @@ function LoggedInDashboard({ role, token, farmerId, navigate }) {
           <p className="dashboard-greeting__sub">{getDayGreeting()}</p>
           <h1>{displayName}</h1>
           <p className="dashboard-greeting__role">
-            {isFarmer ? 'Farmer' : 'Buyer'} {location ? `- ${location}` : ''}
+            {isFarmer ? 'Farmer' : 'Buyer'} {location ? `\u00b7 ${location}` : ''}
           </p>
+          {!isFarmer && (
+            <p className="dashboard-greeting__welcome">
+              Find fresh crops directly from farmers near you.
+            </p>
+          )}
         </Card>
 
         {isFarmer ? (
@@ -480,7 +485,7 @@ function LoggedInDashboard({ role, token, farmerId, navigate }) {
 
         <section className="dashboard-section">
           <div className="dashboard-section__header">
-            <p className="dashboard-section__label">Recent requests</p>
+            <p className="dashboard-section__label">{isFarmer ? 'Recent requests' : 'My requests'}</p>
             <button type="button" className="dashboard-section__link" onClick={() => navigate(requestRoute)}>
               See all
             </button>
