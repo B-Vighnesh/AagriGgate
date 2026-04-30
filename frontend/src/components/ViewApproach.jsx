@@ -8,12 +8,15 @@ import ValidateToken from './ValidateToken';
 import { apiFetch, requestJson } from '../lib/api';
 import { createOrGetChatConversation } from '../api/chatApi';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
+import { getRequestLifecycleStatusLabel, normalizeRequestLifecycleStatus } from '../lib/requestStatus';
 
 const STATUS_CLASS = {
   pending: 'approach-badge--pending',
-  accepted: 'approach-badge--accepted',
-  rejected: 'approach-badge--rejected',
+  active: 'approach-badge--accepted',
   completed: 'approach-badge--completed',
+  failed: 'approach-badge--failed',
+  rejected: 'approach-badge--failed',
+  expired: 'approach-badge--expired',
 };
 
 export default function ViewApproach() {
@@ -174,6 +177,7 @@ export default function ViewApproach() {
           {approaches.map((item) => (
             <Card key={item.approachId} className="approach-card">
               {(() => {
+                const normalizedStatus = normalizeRequestLifecycleStatus(item.status);
                 const isAccepting = actionLoading.approachId === item.approachId && actionLoading.type === 'accept';
                 const isRejecting = actionLoading.approachId === item.approachId && actionLoading.type === 'reject';
                 const rowBusy = actionLoading.approachId === item.approachId;
@@ -186,8 +190,8 @@ export default function ViewApproach() {
                   <p>Buyer: <strong>{item.userName}</strong></p>
                   {item.requestedQuantity ? <p>Requested: <strong>{item.requestedQuantity}</strong></p> : null}
                 </div>
-                <span className={`approach-badge ${STATUS_CLASS[(item.status || '').toLowerCase()] || ''}`}>
-                  {item.status}
+                <span className={`approach-badge ${STATUS_CLASS[normalizedStatus] || ''}`}>
+                  {getRequestLifecycleStatusLabel(item.status)}
                 </span>
               </div>
 
@@ -199,7 +203,7 @@ export default function ViewApproach() {
                 <Button variant="ghost" size="sm" onClick={() => onViewBuyer(item.userId)}>
                   View Buyer
                 </Button>
-                {(item.status || '').toLowerCase() === 'accepted' || (item.status || '').toLowerCase() === 'completed' ? (
+                {(normalizedStatus === 'active' || normalizedStatus === 'completed' || normalizedStatus === 'failed' || normalizedStatus === 'expired') ? (
                   <Button
                     variant="outline"
                     size="sm"
@@ -211,7 +215,7 @@ export default function ViewApproach() {
                     {chatLoadingId === item.approachId ? 'Opening Chat...' : 'Open Chat'}
                   </Button>
                 ) : null}
-                {(item.status || '').toLowerCase() === 'pending' ? (
+                {normalizedStatus === 'pending' ? (
                   <>
                     <Button
                       size="sm"
