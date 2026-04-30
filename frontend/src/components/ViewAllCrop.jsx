@@ -7,6 +7,13 @@ import Button from './common/Button';
 import Card from './common/Card';
 
 const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect fill="%23e7f4ee" width="360" height="220"/><rect fill="%23cfe7da" x="0" y="160" width="360" height="60"/><text x="180" y="118" font-family="Arial" font-size="24" text-anchor="middle" fill="%232a6e55">Crop Image</text></svg>';
+const QUICK_FILTER_CHIPS = [
+  { label: 'All', category: '', listingType: 'all' },
+  { label: 'Vegetables', category: 'Vegetables', listingType: 'all' },
+  { label: 'Fruits', category: 'Fruits', listingType: 'all' },
+  { label: 'Spices', category: 'Spices', listingType: 'all' },
+  { label: 'Urgent', category: '', listingType: 'urgent' },
+];
 
 function CropCard({ crop, imageUrl, onViewDetails }) {
   const handleOpen = () => onViewDetails(crop.cropID);
@@ -241,6 +248,26 @@ export default function ViewAllCrop() {
     setPage(0);
   };
 
+  const applyQuickChip = (chip) => {
+    const nextFilters = {
+      ...filters,
+      category: chip.category,
+      listingType: chip.listingType,
+    };
+    setFilters(nextFilters);
+    setAppliedFilters((prev) => ({
+      ...prev,
+      category: chip.category,
+      listingType: chip.listingType,
+    }));
+    setPage(0);
+  };
+
+  const isQuickChipActive = (chip) => (
+    (chip.category || '') === (appliedFilters.category || '')
+    && chip.listingType === appliedFilters.listingType
+  );
+
   return (
     <section className="page view-all-page">
       <ValidateToken farmerId={farmerId} token={token} role={role} />
@@ -282,6 +309,19 @@ export default function ViewAllCrop() {
             />
           </div>
         </Card>
+
+        <div className="view-all-chip-row" aria-label="Quick filters">
+          {QUICK_FILTER_CHIPS.map((chip) => (
+            <button
+              key={`${chip.label}-${chip.listingType}-${chip.category}`}
+              type="button"
+              className={`view-all-chip ${isQuickChipActive(chip) ? 'view-all-chip--active' : ''}`}
+              onClick={() => applyQuickChip(chip)}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
 
         <Card className="view-all-filter-card">
           <div className="view-all-toolbar__head">
