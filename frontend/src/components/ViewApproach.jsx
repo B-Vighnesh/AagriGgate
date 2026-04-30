@@ -8,14 +8,13 @@ import ValidateToken from './ValidateToken';
 import { apiFetch, requestJson } from '../lib/api';
 import { createOrGetChatConversation } from '../api/chatApi';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
-import { getRequestLifecycleStatusLabel, normalizeRequestLifecycleStatus } from '../lib/requestStatus';
+import { getRequestStatusLabel, normalizeRequestStatus } from '../lib/requestStatus';
 
 const STATUS_CLASS = {
   pending: 'approach-badge--pending',
-  active: 'approach-badge--accepted',
+  accepted: 'approach-badge--accepted',
   completed: 'approach-badge--completed',
   failed: 'approach-badge--failed',
-  rejected: 'approach-badge--failed',
   expired: 'approach-badge--expired',
 };
 
@@ -148,7 +147,9 @@ export default function ViewApproach() {
             <option value="All">All</option>
             <option value="Pending">Pending</option>
             <option value="Accepted">Accepted</option>
-            <option value="Rejected">Rejected</option>
+            <option value="Completed">Completed</option>
+            <option value="Failed">Failed</option>
+            <option value="Expired">Expired</option>
           </select>
         </div>
 
@@ -177,7 +178,7 @@ export default function ViewApproach() {
           {approaches.map((item) => (
             <Card key={item.approachId} className="approach-card">
               {(() => {
-                const normalizedStatus = normalizeRequestLifecycleStatus(item.status);
+                const normalizedStatus = normalizeRequestStatus(item.status);
                 const isAccepting = actionLoading.approachId === item.approachId && actionLoading.type === 'accept';
                 const isRejecting = actionLoading.approachId === item.approachId && actionLoading.type === 'reject';
                 const rowBusy = actionLoading.approachId === item.approachId;
@@ -191,7 +192,7 @@ export default function ViewApproach() {
                   {item.requestedQuantity ? <p>Requested: <strong>{item.requestedQuantity}</strong></p> : null}
                 </div>
                 <span className={`approach-badge ${STATUS_CLASS[normalizedStatus] || ''}`}>
-                  {getRequestLifecycleStatusLabel(item.status)}
+                  {getRequestStatusLabel(item.status)}
                 </span>
               </div>
 
@@ -203,7 +204,7 @@ export default function ViewApproach() {
                 <Button variant="ghost" size="sm" onClick={() => onViewBuyer(item.userId)}>
                   View Buyer
                 </Button>
-                {(normalizedStatus === 'active' || normalizedStatus === 'completed' || normalizedStatus === 'failed' || normalizedStatus === 'expired') ? (
+                {(normalizedStatus === 'accepted' || normalizedStatus === 'completed' || normalizedStatus === 'failed' || normalizedStatus === 'expired') ? (
                   <Button
                     variant="outline"
                     size="sm"

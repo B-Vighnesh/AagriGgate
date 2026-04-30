@@ -8,14 +8,13 @@ import Card from './common/Card';
 import Modal from './Modal';
 import Toast from './common/Toast';
 import { createOrGetChatConversation } from '../api/chatApi';
-import { getRequestLifecycleStatusLabel, normalizeRequestLifecycleStatus } from '../lib/requestStatus';
+import { getRequestStatusLabel, normalizeRequestStatus } from '../lib/requestStatus';
 
 const STATUS_CLASS = {
   pending: 'user-requests-status--pending',
-  active: 'user-requests-status--accepted',
+  accepted: 'user-requests-status--accepted',
   completed: 'user-requests-status--completed',
   failed: 'user-requests-status--failed',
-  rejected: 'user-requests-status--failed',
   expired: 'user-requests-status--expired',
 };
 
@@ -136,7 +135,9 @@ export default function ViewApproachForUser() {
             <option value="All">All</option>
             <option value="Pending">Pending</option>
             <option value="Accepted">Accepted</option>
-            <option value="Rejected">Rejected</option>
+            <option value="Completed">Completed</option>
+            <option value="Failed">Failed</option>
+            <option value="Expired">Expired</option>
           </select>
         </div>
 
@@ -163,7 +164,7 @@ export default function ViewApproachForUser() {
         {!error && approaches.length > 0 && (
           <div className="user-requests-list">
             {approaches.map((item) => {
-              const normalizedStatus = normalizeRequestLifecycleStatus(item.status);
+              const normalizedStatus = normalizeRequestStatus(item.status);
               return (
               <Card key={item.approachId} className="user-requests-card">
                 <div className="user-requests-card__main">
@@ -173,7 +174,7 @@ export default function ViewApproachForUser() {
                 </div>
 
                 <span className={`user-requests-status ${STATUS_CLASS[normalizedStatus] || ''}`}>
-                  {getRequestLifecycleStatusLabel(item.status)}
+                  {getRequestStatusLabel(item.status)}
                 </span>
 
                 <div className="user-requests-actions">
@@ -183,7 +184,7 @@ export default function ViewApproachForUser() {
                   <Button variant="outline" size="sm" onClick={() => navigate(`/view-details/${item.cropId}`)}>
                     View Crop
                   </Button>
-                  {(normalizedStatus === 'active' || normalizedStatus === 'completed' || normalizedStatus === 'failed' || normalizedStatus === 'expired') ? (
+                  {(normalizedStatus === 'accepted' || normalizedStatus === 'completed' || normalizedStatus === 'failed' || normalizedStatus === 'expired') ? (
                     <Button
                       variant="outline"
                       size="sm"

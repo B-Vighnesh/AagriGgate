@@ -139,6 +139,17 @@ public class NotificationServiceImpl implements NotificationService {
         unreadNotifications.forEach(message -> message.setIsRead(true));
         userMessageRepository.saveAll(unreadNotifications);
     }
+    @Transactional
+    @Override
+    public void markAllAlertsAsRead(Long userId) {
+        List<UserMessage> unreadNotifications = userMessageRepository.findByUserIdAndDeliveryTypeAndIsReadFalse(
+                userId,
+                MessageDeliveryType.ALERT
+        );
+        unreadNotifications.forEach(message -> message.setIsRead(true));
+        unreadNotifications.forEach(message -> message.setIsAcknowledged(true));
+        userMessageRepository.saveAll(unreadNotifications);
+    }
 
     @Override
     @Transactional
@@ -152,7 +163,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(readOnly = true)
     public long countUnread(Long userId) {
-        return userMessageRepository.countByUserIdAndDeliveryTypeAndIsReadFalse(userId, MessageDeliveryType.NOTIFICATION);
+        return userMessageRepository.countByUserIdAndIsReadFalse(userId);
     }
 
     private void validateEvent(NotificationEvent event) {

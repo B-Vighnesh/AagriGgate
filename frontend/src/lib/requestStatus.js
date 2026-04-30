@@ -1,11 +1,10 @@
-export function normalizeRequestLifecycleStatus(status) {
-  const key = String(status || 'pending').toLowerCase();
-  if (key === 'accepted') return 'active';
+export function normalizeRequestStatus(status) {
+  const key = String(status || 'pending').trim().toLowerCase();
   if (key === 'rejected') return 'failed';
-  if (['pending', 'active', 'completed', 'failed', 'expired'].includes(key)) return key;
+  if (['pending', 'accepted', 'completed', 'failed', 'expired'].includes(key)) return key;
   return 'pending';
 }
 
-export function getRequestLifecycleStatusLabel(status) {
-  return normalizeRequestLifecycleStatus(status).toUpperCase();
+export function getRequestStatusLabel(status) {
+  return normalizeRequestStatus(status).toUpperCase();
 }

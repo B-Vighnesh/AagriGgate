@@ -27,4 +27,6 @@ public interface UserMessageRepository extends JpaRepository<UserMessage, Long> 
     List<UserMessage> findByUserIdAndDeliveryTypeAndIsReadFalse(Long userId, MessageDeliveryType deliveryType);
 
     void deleteByUserId(Long userId);
+
+    long countByUserIdAndIsReadFalse(Long userId);
 }
