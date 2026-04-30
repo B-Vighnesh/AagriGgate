@@ -47,6 +47,22 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
 
     Optional<ApproachFarmer> findByUserIdAndCropIdAndActiveTrue(Long userId, Long cropId);
 
+    @Query("""
+            SELECT a
+            FROM ApproachFarmer a
+            WHERE a.active = true
+              AND a.deletedAt IS NULL
+              AND lower(a.status) = 'accepted'
+              AND (
+                    (a.userId = :userA AND a.farmerId = :userB)
+                 OR (a.userId = :userB AND a.farmerId = :userA)
+              )
+            """)
+    List<ApproachFarmer> findAcceptedRequestsBetweenUsers(
+            @Param("userA") Long userA,
+            @Param("userB") Long userB
+    );
+
     boolean existsByCropIdAndUserIdAndStatusAndActiveTrue(Long cropId, Long userId, String accepted);
     boolean existsByCropIdAndUserIdAndStatusIgnoreCaseAndActiveTrue(Long cropId, Long userId, String status);
 

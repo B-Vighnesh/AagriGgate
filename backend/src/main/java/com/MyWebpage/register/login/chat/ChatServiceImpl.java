@@ -288,6 +288,7 @@ public class ChatServiceImpl implements ChatService {
                 : Objects.equals(actorId, conversation.getBuyerId()) ? conversation.getBuyerName() : conversation.getFarmerName();
 
         LocalDateTime now = LocalDateTime.now();
+        failAcceptedRequestsBetweenUsers(actorId, targetUserId, now);
         for (Conversation item : conversations) {
             if (item.getStatus() == ConversationStatus.ACTIVE && Boolean.TRUE.equals(item.getActive())) {
                 item.setStatus(ConversationStatus.FAILED);
@@ -569,5 +570,10 @@ public class ChatServiceImpl implements ChatService {
         dto.setMessageType(chatMessage.getMessageType().name());
         dto.setCreatedAt(chatMessage.getCreatedAt());
         return dto;
+    }
+
+    private void failAcceptedRequestsBetweenUsers(Long actorId, Long targetUserId, LocalDateTime failedAt) {
+        approachFarmerRepo.findAcceptedRequestsBetweenUsers(actorId, targetUserId)
+                .forEach(approach -> approachFarmerService.markApproachFailed(approach.getApproachId(), failedAt));
     }
 }

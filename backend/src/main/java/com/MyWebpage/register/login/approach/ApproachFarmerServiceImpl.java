@@ -112,6 +112,12 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             approachFarmerRepository.save(approachFarmer);
             logger.info("Approach created: {}", approachFarmer.getApproachId());
             return new ResponseEntity<>("Success", HttpStatus.OK);
+        } catch (ResponseStatusException exception) {
+            logger.warn("Approach creation rejected: {}", exception.getReason());
+            return ResponseEntity.status(exception.getStatusCode()).body(exception.getReason());
+        } catch (IllegalArgumentException exception) {
+            logger.warn("Approach creation validation failed: {}", exception.getMessage());
+            return ResponseEntity.badRequest().body(exception.getMessage());
         } catch (Exception e) {
             logger.error("Failed to create approach", e);
             return new ResponseEntity<>("Server Busy", HttpStatus.INTERNAL_SERVER_ERROR);
