@@ -4230,29 +4230,59 @@ a {
 
 .approach-badge {
   border-radius: 999px;
-  padding: 4px 10px;
+  padding: 4px 12px;
   font-size: 0.78rem;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  line-height: 1;
+  border: 1px solid transparent;
+}
+
+.approach-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  flex-shrink: 0;
 }
 
 .approach-badge--pending {
-  background: #fff3d9;
-  color: #9b6a08;
+  background: #faeeda;
+  border-color: rgba(186, 117, 7, 0.12);
+  color: #633806;
 }
 
 .approach-badge--accepted {
-  background: #daf2e8;
-  color: #247757;
+  background: #e6f1fb;
+  border-color: rgba(55, 138, 221, 0.12);
+  color: #0c447c;
 }
 
 .approach-badge--rejected {
-  background: #ffe3e3;
-  color: #9f2b2b;
+  background: #fcebeb;
+  border-color: rgba(226, 75, 74, 0.12);
+  color: #791f1f;
+}
+
+.approach-badge--failed {
+  background: #fcebeb;
+  border-color: rgba(226, 75, 74, 0.12);
+  color: #791f1f;
 }
 
 .approach-badge--completed {
-  background: #e3ecff;
-  color: #2b4aa0;
+  background: #eaf3de;
+  border-color: rgba(99, 146, 34, 0.12);
+  color: #27500a;
+}
+
+.approach-badge--expired {
+  background: #f1efe8;
+  border-color: rgba(136, 135, 128, 0.16);
+  color: #444441;
 }
 
 .approach-actions {
@@ -4350,30 +4380,60 @@ a {
 
 .approach-crop-status {
   border-radius: 999px;
-  padding: 4px 10px;
+  padding: 4px 12px;
   font-size: 0.78rem;
   font-weight: 700;
   text-align: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  line-height: 1;
+  border: 1px solid transparent;
+}
+
+.approach-crop-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  flex-shrink: 0;
 }
 
 .approach-crop-status--pending {
-  background: #fff3d9;
-  color: #9b6a08;
+  background: #faeeda;
+  border-color: rgba(186, 117, 7, 0.12);
+  color: #633806;
 }
 
 .approach-crop-status--accepted {
-  background: #daf2e8;
-  color: #247757;
+  background: #e6f1fb;
+  border-color: rgba(55, 138, 221, 0.12);
+  color: #0c447c;
 }
 
 .approach-crop-status--rejected {
-  background: #ffe3e3;
-  color: #9f2b2b;
+  background: #fcebeb;
+  border-color: rgba(226, 75, 74, 0.12);
+  color: #791f1f;
+}
+
+.approach-crop-status--failed {
+  background: #fcebeb;
+  border-color: rgba(226, 75, 74, 0.12);
+  color: #791f1f;
 }
 
 .approach-crop-status--completed {
-  background: #e3ecff;
-  color: #2b4aa0;
+  background: #eaf3de;
+  border-color: rgba(99, 146, 34, 0.12);
+  color: #27500a;
+}
+
+.approach-crop-status--expired {
+  background: #f1efe8;
+  border-color: rgba(136, 135, 128, 0.16);
+  color: #444441;
 }
 
 .approach-crop-actions {
@@ -4466,30 +4526,60 @@ a {
 
 .user-requests-status {
   border-radius: 999px;
-  padding: 4px 10px;
+  padding: 4px 12px;
   font-size: 0.78rem;
   font-weight: 700;
   text-align: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  line-height: 1;
+  border: 1px solid transparent;
+}
+
+.user-requests-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  flex-shrink: 0;
 }
 
 .user-requests-status--pending {
-  background: #fff3d9;
-  color: #9b6a08;
+  background: #faeeda;
+  border-color: rgba(186, 117, 7, 0.12);
+  color: #633806;
 }
 
 .user-requests-status--accepted {
-  background: #daf2e8;
-  color: #247757;
+  background: #e6f1fb;
+  border-color: rgba(55, 138, 221, 0.12);
+  color: #0c447c;
 }
 
 .user-requests-status--rejected {
-  background: #ffe3e3;
-  color: #9f2b2b;
+  background: #fcebeb;
+  border-color: rgba(226, 75, 74, 0.12);
+  color: #791f1f;
+}
+
+.user-requests-status--failed {
+  background: #fcebeb;
+  border-color: rgba(226, 75, 74, 0.12);
+  color: #791f1f;
 }
 
 .user-requests-status--completed {
-  background: #e3ecff;
-  color: #2b4aa0;
+  background: #eaf3de;
+  border-color: rgba(99, 146, 34, 0.12);
+  color: #27500a;
+}
+
+.user-requests-status--expired {
+  background: #f1efe8;
+  border-color: rgba(136, 135, 128, 0.16);
+  color: #444441;
 }
 
 .ntf-detail-page {
