@@ -553,9 +553,10 @@ a {
   border: 1px solid var(--color-border);
   background: #fff;
   border-radius: 8px;
-  width: 40px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   padding: 6px;
+  cursor: pointer;
 }
 
 .nav-toggle span {
@@ -2129,7 +2130,19 @@ a {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 10px 12px;
-  font-size: 0.95rem;
+  font-size: 16px;
+  min-height: 44px;
+}
+
+.form textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 16px;
+  font-family: inherit;
+  min-height: 100px;
+  resize: vertical;
 }
 
 .form label {
@@ -9308,5 +9321,439 @@ a {
   .request-detail-stat {
     padding: 16px;
     border-radius: 18px;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE OVERHAUL — Phase 2
+   Additive responsive fixes appended to preserve all existing styles.
+   ========================================================================== */
+
+/* --- 1. Global text overflow protection --- */
+body,
+p, span, strong, em, li, td, th,
+h1, h2, h3, h4, h5, h6,
+.ui-card,
+.auth-card,
+.dashboard-crop-card,
+.solution-card,
+.core-feature-card,
+.capability-card,
+.intelligence-card,
+.vision-card,
+.feature-table,
+.faq-card__question,
+.faq-card__answer {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* --- 2. Responsive images --- */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* --- 3. Header icon touch targets (enforce 44px minimum) --- */
+.notification-bell__button,
+.header-account-link,
+.header-utility-link {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* --- 4. Responsive container padding --- */
+@media (min-width: 768px) {
+  .ag-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ag-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .ag-container {
+    max-width: 1440px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+
+  .hero .ag-container {
+    max-width: 1440px;
+  }
+}
+
+/* --- 5. Fluid typography for non-hero headings --- */
+.section-title {
+  font-size: clamp(1.25rem, 3.5vw, 1.6rem);
+}
+
+.account-hero__copy h1 {
+  font-size: clamp(1.5rem, 4vw, 2.35rem);
+}
+
+.insights-hub-head h1 {
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+}
+
+/* --- 6. 480px "large mobile" breakpoint (new) --- */
+@media (max-width: 480px) {
+  :root {
+    font-size: 93%;
+  }
+
+  .hero {
+    padding: 48px 0 40px;
+  }
+
+  .hero__title {
+    font-size: clamp(1.5rem, 7vw, 2rem);
+    min-height: auto;
+  }
+
+  .hero__subtitle {
+    font-size: 0.92rem;
+    min-height: auto;
+  }
+
+  .section {
+    padding: 32px 0;
+  }
+
+  .cta {
+    padding: 32px 0;
+  }
+
+  .cta p {
+    max-width: 100%;
+  }
+
+  /* Form buttons full-width on small mobile */
+  .form .ui-btn {
+    width: 100%;
+  }
+
+  /* Dashboard quick actions: 2-col on very small screens */
+  .dashboard-quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Dashboard crops: single column on small screens */
+  .dashboard-crops-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* View all crops: single column */
+  .view-all-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .view-all-card__image {
+    height: 140px;
+  }
+
+  /* Auth card: slightly wider on very small screens */
+  .auth-card,
+  .auth-card--wide {
+    width: calc(100% - 24px);
+  }
+
+  /* Hero actions: stack buttons */
+  .hero__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero__actions .ui-btn {
+    width: 100%;
+    min-width: auto;
+  }
+
+  /* Approach / request action buttons: 2-col at very small */
+  .approach-actions,
+  .approach-crop-actions,
+  .user-requests-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .approach-actions .ui-btn:last-child:nth-child(odd),
+  .approach-crop-actions .ui-btn:last-child:nth-child(odd),
+  .user-requests-actions .ui-btn:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  /* Insights hub tabs: full width */
+  .insights-hub-tabs {
+    width: 100%;
+    display: grid;
+  }
+
+  /* Footer: tighter spacing */
+  .footer-grid {
+    gap: 18px;
+    padding: 24px 0 18px;
+  }
+
+  .footer-section h4 {
+    font-size: 0.88rem;
+  }
+
+  .site-footer h3 {
+    font-size: 1.25rem;
+  }
+
+  /* Page padding adjustments */
+  .page {
+    padding: 20px 0;
+  }
+
+  .page--center {
+    padding: 16px 8px;
+  }
+
+  /* Profile menu: slightly wider */
+  .profile-menu__panel {
+    width: 200px;
+  }
+}
+
+/* --- 7. 320px "smallest mobile" refinements --- */
+@media (max-width: 360px) {
+  .ag-container {
+    width: calc(100% - 12px);
+    margin-left: 6px;
+    margin-right: 6px;
+  }
+
+  .site-header__inner {
+    min-height: 58px;
+    gap: 8px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .brand__text {
+    max-width: 90px;
+    font-size: 0.88rem;
+  }
+
+  .brand__logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
+  .notification-bell__button,
+  .header-account-link,
+  .nav-toggle,
+  .header-utility-link {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .dashboard-greeting {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .dashboard-greeting h1 {
+    font-size: 1.4rem;
+  }
+
+  .dashboard-quick-card {
+    min-height: 80px;
+    padding: 10px 6px;
+  }
+
+  .dashboard-quick-card strong {
+    font-size: 10.5px;
+  }
+
+  .mobile-bottom-nav {
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-bottom-nav__item {
+    font-size: 0.62rem;
+    padding: 5px 2px;
+  }
+
+  .mobile-bottom-nav__item i {
+    font-size: 0.9rem;
+  }
+
+  /* Notification overlay: full-width on very small screens */
+  .notification-overlay {
+    width: calc(100vw - 12px);
+    max-width: calc(100vw - 12px);
+  }
+
+  /* View crop card actions: 2-col on tiniest screens */
+  .view-crop-card__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .view-crop-card__actions .ui-btn:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* --- 8. 1440px+ desktop upscaling (new) --- */
+@media (min-width: 1440px) {
+  .section {
+    padding: 64px 0;
+  }
+
+  .hero {
+    padding: 96px 0 88px;
+  }
+
+  .cta {
+    padding: 64px 0;
+  }
+
+  .hero-slider {
+    gap: 32px;
+  }
+
+  .solution-grid,
+  .feature-grid,
+  .capability-grid,
+  .intelligence-grid,
+  .tagline-grid {
+    gap: 24px;
+  }
+
+  .core-feature-grid {
+    gap: 22px 32px;
+  }
+
+  .how-grid {
+    gap: 24px;
+  }
+
+  .trust-strip {
+    gap: 20px;
+  }
+
+  .feature-table-grid {
+    gap: 24px;
+  }
+
+  .future-layout {
+    gap: 24px;
+  }
+
+  .footer-grid {
+    padding: 48px 0 32px;
+    gap: 32px 30px;
+  }
+
+  /* Slightly larger section titles on big screens */
+  .section-title {
+    font-size: 1.75rem;
+  }
+
+  .section-subtitle {
+    font-size: 1.05rem;
+  }
+
+  /* Dashboard greeting: more breathing room */
+  .dashboard-greeting,
+  .dashboard-greeting.ui-card {
+    padding: 24px;
+    border-radius: 22px;
+  }
+
+  /* Account hero: larger avatar */
+  .account-avatar-wrap {
+    width: 120px;
+    height: 120px;
+  }
+
+  /* Auth card */
+  .auth-card {
+    width: min(520px, 94%);
+    padding: 24px;
+  }
+
+  .auth-card--wide {
+    width: min(720px, 94%);
+    padding: 24px;
+  }
+
+  /* Cards get a bit more padding */
+  .ui-card {
+    padding: 22px;
+  }
+
+  .solution-card {
+    padding-top: 26px;
+  }
+}
+
+/* --- 9. 1920px+ ultra-wide refinement --- */
+@media (min-width: 1920px) {
+  .ag-container {
+    max-width: 1560px;
+  }
+
+  .hero {
+    padding: 110px 0 100px;
+  }
+
+  .section {
+    padding: 72px 0;
+  }
+
+  .cta {
+    padding: 72px 0;
+  }
+
+  .hero-slider {
+    gap: 40px;
+    min-height: 480px;
+  }
+
+  .hero__title {
+    font-size: clamp(2.4rem, 4vw, 3.6rem);
+  }
+
+  .footer-grid {
+    padding: 56px 0 36px;
+  }
+}
+
+/* --- 10. Print-safe: hide non-essential UI when printing --- */
+@media print {
+  .site-header,
+  .mobile-bottom-nav,
+  .site-footer,
+  .nav-toggle,
+  .notification-bell,
+  .profile-menu,
+  .header-utility-link {
+    display: none !important;
+  }
+
+  .app-main {
+    padding: 0;
+  }
+
+  .ag-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
   }
 }
