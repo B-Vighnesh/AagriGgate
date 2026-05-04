@@ -148,8 +148,9 @@ export default function AddCrop() {
     <section className="page add-crop-page">
       <ValidateToken token={token} />
       <div className="ag-container">
-        <div className="add-crop-head">
           <button type="button" className="link-back" onClick={() => navigate('/view-crop')}>Back to My Crops</button>
+
+        <div className="add-crop-head">
           <div>
             <h1>Add New Crop</h1>
             <p>List your produce for buyers to discover.</p>
