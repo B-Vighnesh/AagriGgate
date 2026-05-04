@@ -1515,6 +1515,18 @@ a {
   gap: 10px;
 }
 
+.feature-table__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.feature-table__head h3 {
+  margin: 0;
+}
+
 .feature-table__row {
   display: grid;
   gap: 4px;
@@ -9567,6 +9579,15 @@ img {
 
   .feature-table__row {
     padding: 10px 0;
+  }
+
+  .feature-table__head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .feature-table__head .ui-btn {
+    width: 100%;
   }
 
   .cta {
