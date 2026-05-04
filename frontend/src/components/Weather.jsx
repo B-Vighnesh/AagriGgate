@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -118,13 +118,13 @@ export default function Weather() {
   const [error, setError] = useState('');
 
   const alert = useMemo(() => getAlert(weather), [weather]);
-  const current = weather?.current || {};
-  const location = weather?.location || {};
+  const current = useMemo(() => weather?.current || {}, [weather]);
+  const location = useMemo(() => weather?.location || {}, [weather]);
   const rainGuidance = useMemo(() => getRainGuidance(current), [current]);
   const humidityGuidance = useMemo(() => getHumidityGuidance(current), [current]);
   const windGuidance = useMemo(() => getWindGuidance(current), [current]);
 
-  const fetchMyLocationWeather = async () => {
+  const fetchMyLocationWeather = useCallback(async () => {
     if (!token) {
       navigate('/login');
       return;
@@ -140,19 +140,15 @@ export default function Weather() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, navigate]);
 
   useEffect(() => {
     if (!role) {
       navigate('/login');
       return;
     }
-    if (role === 'buyer') {
-      navigate('/404');
-      return;
-    }
     fetchMyLocationWeather();
-  }, []);
+  }, [role, navigate, fetchMyLocationWeather]);
 
   return (
     <section className="page weather-page">

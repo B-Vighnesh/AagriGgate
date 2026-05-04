@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
-import statesWithDistricts from './StatesWithDistricts';
+import statesWithDistricts from './statesAndDistricts';
 import { ApiError, requestJson } from '../lib/api';
 
 const INITIAL_FORM = {
@@ -121,7 +121,6 @@ export default function Register() {
         body: JSON.stringify({
           email: form.email,
           firstName: form.firstName,
-          username: form.username,
           role,
         }),
       });

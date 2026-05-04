@@ -8,6 +8,7 @@ import {
   countUnread,
   getActiveAlerts,
   getNotifications,
+  markAllAsRead,
   markAsRead,
 } from '../lib/notificationApi';
 import { resolveNotificationRoute, sortNotificationsByDate } from '../lib/notificationRouting';
@@ -24,7 +25,7 @@ function navByRole(role) {
   const shared = [
     { type: 'link', label: 'Home', to: '/' },
     { type: 'link', label: 'Marketplace', to: '/view-all-crops' },
-    { type: 'link', label: 'Market Intelligence', to: '/market' },
+    { type: 'link', label: 'Mandi Prices', to: '/market' },
   ];
 
   if (role === 'farmer') {
@@ -40,30 +41,16 @@ function navByRole(role) {
         ],
       },
       { type: 'link', label: 'Requests', to: '/view-approach' },
-      {
-        type: 'dropdown',
-        label: 'Insights',
-        key: 'insights',
-        children: [
-          { label: 'Weather', to: '/weather' },
-          { label: 'News', to: '/news' },
-        ],
-      },
+      { type: 'link', label: 'Insights', to: '/insights' },
     ];
   }
 
   return [
     { type: 'link', label: 'Home', to: '/' },
     { type: 'link', label: 'Marketplace', to: '/view-all-crops' },
+    { type: 'link', label: 'Mandi Prices', to: '/market' },
     { type: 'link', label: 'My Requests', to: '/view-approaches-user' },
-    {
-      type: 'dropdown',
-      label: 'Insights',
-      key: 'insights',
-      children: [
-        { label: 'News', to: '/news' },
-      ],
-    },
+    { type: 'link', label: 'Insights', to: '/insights' },
   ];
 }
 
@@ -93,16 +80,46 @@ function bottomNavItemsByRole(role) {
     return [];
   }
 
+  if (role === 'buyer') {
+    return [
+      { label: 'Home', to: '/', icon: 'fa-solid fa-house' },
+      {
+        label: 'Market',
+        to: '/view-all-crops',
+        icon: 'fa-solid fa-store',
+        matchPrefixes: ['/view-all-crops', '/view-details'],
+      },
+      {
+        label: 'Requests',
+        to: '/view-approaches-user',
+        icon: 'fa-regular fa-clock',
+        matchPrefixes: ['/view-approaches-user', '/requests'],
+      },
+      {
+        label: 'News',
+        to: '/news',
+        icon: 'fa-regular fa-newspaper',
+        matchPrefixes: ['/news'],
+      },
+      {
+        label: 'Mandi',
+        to: '/market',
+        icon: 'fa-solid fa-chart-line',
+        matchPrefixes: ['/market'],
+      },
+    ];
+  }
+
   return [
     { label: 'Home', to: '/', icon: 'fa-solid fa-house' },
     {
       label: 'Market',
       to: '/view-all-crops',
       icon: 'fa-solid fa-store',
-      matchPrefixes: ['/view-all-crops', '/view-details', '/market'],
+      matchPrefixes: ['/view-all-crops', '/view-details'],
     },
     {
-      label: 'Crops',
+      label: role === 'farmer' ? 'My Crops' : 'Crops',
       to: role === 'farmer' ? '/view-crop' : '/view-all-crops',
       icon: 'fa-solid fa-seedling',
       matchPrefixes: role === 'farmer' ? ['/view-crop', '/add-crop', '/update-crop', '/delete-crop'] : ['/view-all-crops'],
@@ -117,7 +134,7 @@ function bottomNavItemsByRole(role) {
       label: 'Insights',
       to: '/insights',
       icon: 'fa-solid fa-chart-line',
-      matchPrefixes: ['/insights', '/weather', '/news'],
+      matchPrefixes: ['/insights', '/market', '/weather', '/news'],
     },
   ];
 }
@@ -203,7 +220,7 @@ export default function Navbar() {
     };
 
     loadUnreadCount();
-    const interval = window.setInterval(loadUnreadCount, 60000);
+    const interval = window.setInterval(loadUnreadCount, 30000);
     const handleCountUpdate = (event) => {
       setUnreadCount(Number(event?.detail?.count ?? 0));
     };
@@ -286,7 +303,6 @@ export default function Navbar() {
   };
   const showMobileBottomNav = loggedIn
     && isMobileViewport
-    && !location.pathname.startsWith('/chat')
     && !['/login', '/register', '/logout', '/forgot-password', '/404'].includes(location.pathname);
   const showMobileDrawer = isMobileViewport && !showMobileBottomNav;
   const navItemsToRender = showMobileDrawer ? mobileDrawerItemsByRole(role, loggedIn) : items;
@@ -380,6 +396,19 @@ export default function Navbar() {
       navigate(target);
     } else {
       navigate('/notifications');
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllAsRead();
+      setUnreadCount(0);
+      setNotificationPreview([]);
+      window.dispatchEvent(new CustomEvent('notifications:count-updated', {
+        detail: { count: 0 },
+      }));
+    } catch {
+      // Keep the overlay open so the user can still open the full notifications page.
     }
   };
 
@@ -496,6 +525,15 @@ export default function Navbar() {
                 <div className="notification-overlay" role="dialog" aria-label="Latest notifications">
                   <div className="notification-overlay__head">
                     <strong>Unread Notifications</strong>
+                    {notificationPreview.length > 0 ? (
+                      <button
+                        type="button"
+                        className="notification-overlay__show-all"
+                        onClick={handleMarkAllRead}
+                      >
+                        Mark All Read
+                      </button>
+                    ) : null}
                   </div>
 
                   <div className="notification-overlay__body">

@@ -57,7 +57,7 @@ function StatCard({ title, value, description, tone = 'primary' }) {
   );
 }
 
-function PriceCard({ item, isSaved, deleteId, onSave, onDelete }) {
+function PriceCard({ item, isSaved, deleteId, onSave, onDelete, canSave = true }) {
   return (
     <Card className="market-price-card">
       <div className="market-price-card__head">
@@ -78,11 +78,13 @@ function PriceCard({ item, isSaved, deleteId, onSave, onDelete }) {
         <span className="price-high">High {fmtPrice(item.Max_Price)}</span>
       </div>
 
-      {!isSaved ? (
-        <Button variant="outline" className="full-width" onClick={() => onSave(item)}>Save</Button>
-      ) : (
-        <Button variant="danger" className="full-width" onClick={() => onDelete(deleteId, 1)}>Remove Saved</Button>
-      )}
+      {canSave ? (
+        !isSaved ? (
+          <Button variant="outline" className="full-width" onClick={() => onSave(item)}>Save</Button>
+        ) : (
+          <Button variant="danger" className="full-width" onClick={() => onDelete(deleteId, 1)}>Remove Saved</Button>
+        )
+      ) : null}
     </Card>
   );
 }
@@ -136,6 +138,7 @@ export default function Market() {
   const savedDistricts = useMemo(() => statesAndDistricts[filterState] || [], [filterState]);
 
   const savedMarketIds = useMemo(() => new Set(Object.keys(savedMarketLookup)), [savedMarketLookup]);
+  const canUseSavedMarket = role === 'farmer' && Boolean(token && farmerId);
 
   const stats = useMemo(() => {
     const modal = marketData.map((item) => Number(item.Modal_Price)).filter((n) => !Number.isNaN(n));
@@ -206,7 +209,7 @@ export default function Market() {
         setLoadingSaved(false);
       }
     }
-  }, [farmerId]);
+  }, []);
 
   const fetchMarketData = useCallback(async (manual = false, nextPage = 0, append = false) => {
     if (!state || !district || !commodity || !fromDate || !toDate) {
@@ -261,12 +264,12 @@ export default function Market() {
       if (manual) {
         showToast(`Loaded ${payload.totalElements ?? records.length} records.`, 'success');
       }
-    } catch (err) {
+    } catch {
       if (!append) {
         setMarketData([]);
       }
-      setError('Unable to fetch market data right now. Please try again.');
-      if (manual) showToast('Unable to fetch market prices.', 'error');
+      setError('Unable to fetch mandi price data right now. Please try again.');
+      if (manual) showToast('Unable to fetch mandi prices.', 'error');
     } finally {
       if (append) {
         setLoadingMore(false);
@@ -278,7 +281,7 @@ export default function Market() {
 
   const handleRunAnalysis = useCallback(async () => {
     if (!activeQuery) {
-      showToast('Search market prices first, then run analysis.', 'info');
+      showToast('Search mandi prices first, then run analysis.', 'info');
       return;
     }
     const params = new URLSearchParams({
@@ -299,16 +302,18 @@ export default function Market() {
       navigate('/login');
       return;
     }
-    if (role === 'buyer') {
-      navigate('/404');
-      return;
-    }
   }, [role, navigate]);
 
   useEffect(() => {
-    if (role === 'buyer' || !token || !farmerId) return;
+    if (!canUseSavedMarket) return;
     fetchSavedData(0, false);
-  }, [role, token, farmerId, fetchSavedData]);
+  }, [canUseSavedMarket, fetchSavedData]);
+
+  useEffect(() => {
+    if (!canUseSavedMarket && showSaved) {
+      setShowSaved(false);
+    }
+  }, [canUseSavedMarket, showSaved]);
 
   useEffect(() => {
     if (!state || !district || !commodity || !fromDate || !toDate) return;
@@ -376,7 +381,7 @@ export default function Market() {
         fetchMarketData(false, marketPage + 1, true);
       }
 
-      if (showSaved && hasMoreSavedData && !loadingSaved && !loadingMoreSaved) {
+      if (canUseSavedMarket && showSaved && hasMoreSavedData && !loadingSaved && !loadingMoreSaved) {
         fetchSavedData(savedPage + 1, true);
       }
     };
@@ -389,6 +394,7 @@ export default function Market() {
     fetchSavedData,
     hasMoreMarketData,
     hasMoreSavedData,
+    canUseSavedMarket,
     loading,
     loadingMore,
     loadingMoreSaved,
@@ -488,8 +494,8 @@ export default function Market() {
       <ValidateToken token={token} />
       <div className="ag-container">
         <header className="market-header">
-          <h1>{showSaved ? 'Saved Market Data' : 'Market Prices'}</h1>
-          <p>{showSaved ? 'Your saved market records with filters and scroll pagination.' : 'Track recent mandi prices across districts and compare how markets are moving.'}</p>
+          <h1>{showSaved ? 'Saved Mandi Data' : 'Mandi Prices'}</h1>
+          <p>{showSaved ? 'Your saved mandi records with filters and scroll pagination.' : 'Track APMC and mandi crop prices by commodity, date, state, and district.'}</p>
         </header>
 
         {!showSaved ? (
@@ -558,15 +564,17 @@ export default function Market() {
                 <Button onClick={() => fetchMarketData(true)} disabled={!state || !district || !commodity || !fromDate || !toDate}>
                   Fetch Prices
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowSaved(true);
-                    fetchSavedData(0, false);
-                  }}
-                >
-                  Saved Data
-                </Button>
+                {canUseSavedMarket ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowSaved(true);
+                      fetchSavedData(0, false);
+                    }}
+                  >
+                    Saved Data
+                  </Button>
+                ) : null}
               </div>
             </Card>
 
@@ -594,7 +602,7 @@ export default function Market() {
               <Card className="market-analysis-prompt">
                 <div>
                   <h3>Ready for deeper insights?</h3>
-                  <p>We already fetched the market records. Run AI-style analysis to reveal trend lines, district heatmap, seasonal movement, and supply-price patterns.</p>
+                  <p>We already fetched the mandi records. Run AI-style analysis to reveal trend lines, district heatmap, seasonal movement, and supply-price patterns.</p>
                 </div>
                 <Button onClick={handleRunAnalysis}>
                   Do Analysis
@@ -605,7 +613,7 @@ export default function Market() {
             {loading && (
               <div className="market-loading">
                 <div className="ui-spinner ui-spinner--lg" />
-                <span>Fetching market data...</span>
+                <span>Fetching mandi price data...</span>
               </div>
             )}
 
@@ -620,6 +628,7 @@ export default function Market() {
                       deleteId={savedMarketLookup[String(item.id)]}
                       onSave={handleSave}
                       onDelete={handleDelete}
+                      canSave={canUseSavedMarket}
                     />
                   ))}
                 </div>
@@ -642,7 +651,7 @@ export default function Market() {
         ) : (
           <section className="market-saved">
             <div className="market-saved__head">
-              <h2>Saved Market Data</h2>
+              <h2>Saved Mandi Data</h2>
             </div>
 
             <Card className="market-filter-card">
@@ -697,7 +706,7 @@ export default function Market() {
 
               <div className="market-actions">
                 <Button variant="outline" onClick={() => setShowSaved(false)}>
-                  Back To Market
+                  Back To Mandi
                 </Button>
                 <Button variant="danger" onClick={() => setRemoveAllStep(1)} disabled={savedData.length === 0}>
                   Remove All

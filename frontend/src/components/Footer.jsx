@@ -2,10 +2,78 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { getRole } from '../lib/auth';
 
-export default function Footer() {
-  const year = new Date().getFullYear();
-  const role = getRole();
-  const intelligenceLink = role === 'buyer' ? '/#buyers' : '/#intelligence';
+const insightLinks = [
+  { label: 'Mandi Prices', to: '/market' },
+  { label: 'Weather', to: '/weather' },
+  { label: 'News', to: '/news' },
+  { label: 'Contact Us', to: '/contact-us' },
+];
+
+const roleLinks = {
+  farmer: [
+    { label: 'My Crops', to: '/view-crop' },
+    { label: 'Add Crop', to: '/add-crop' },
+    { label: 'Requests', to: '/view-approach' },
+    { label: 'Account', to: '/account' },
+  ],
+  buyer: [
+    { label: 'Browse Crops', to: '/view-all-crops' },
+    { label: 'My Requests', to: '/view-approaches-user' },
+    { label: 'Account', to: '/account' },
+  ],
+};
+
+function LoggedInFooter({ role, year }) {
+  const primaryLinks = roleLinks[role] || roleLinks.farmer;
+  const roleTitle = role === 'buyer' ? 'Buyer Tools' : 'Farmer Tools';
+
+  return (
+    <footer className="site-footer site-footer--logged-in">
+      <div className="ag-container footer-logged-grid">
+        <div className="footer-logged-brand">
+          <Link to="/" className="footer-logged-brand__mark">
+            <strong>AagriGgate</strong>
+          </Link>
+          <p>Direct trade between farmers and buyers. No middlemen. No hidden charges.</p>
+        </div>
+
+        <div className="footer-logged-column">
+          <h4>{roleTitle}</h4>
+          <ul>
+            {primaryLinks.map((item) => (
+              <li key={item.to}>
+                <Link to={item.to}>{item.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="footer-logged-column">
+          <h4>Insights</h4>
+          <ul>
+            {insightLinks.map((item) => (
+              <li key={item.to}>
+                <Link to={item.to}>{item.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        
+      </div>
+
+      <div className="footer-bottom-wrap">
+        <div className="ag-container footer-bottom footer-logged-bottom">
+          <span className="footer-bottom__copyright">&copy; {year} AagriGgate. All rights reserved.</span>
+          
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+function GuestFooter({ year }) {
+  const intelligenceLink = '/#intelligence';
 
   return (
     <footer className="site-footer">
@@ -64,4 +132,15 @@ export default function Footer() {
       </div>
     </footer>
   );
+}
+
+export default function Footer() {
+  const year = new Date().getFullYear();
+  const role = getRole();
+
+  if (role === 'farmer' || role === 'buyer') {
+    return <LoggedInFooter role={role} year={year} />;
+  }
+
+  return <GuestFooter year={year} />;
 }

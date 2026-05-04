@@ -46,7 +46,7 @@ export default function Settings() {
     if (!role || !token || !farmerId) {
       navigate('/login');
     }
-  }, []);
+  }, [role, token, farmerId, navigate]);
 
   useEffect(() => {
     if (!newPassword && !confirmPassword) {

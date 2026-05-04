@@ -24,10 +24,10 @@ const SLIDES = [
     ],
   },
   {
-    eyebrow: 'Market Intelligence',
-    title: 'Know Market Prices Before You Sell',
-    subtitle: 'Track real-time market prices and demand so you can decide when and where to sell.',
-    primary: 'Check Market Prices',
+    eyebrow: 'Mandi Intelligence',
+    title: 'Know Mandi Prices Before You Sell',
+    subtitle: 'Track recent APMC and mandi crop prices so you can decide when and where to sell.',
+    primary: 'Check Mandi Prices',
     secondary: 'Browse Crops',
     panelKicker: 'Market edge',
     panelTitle: 'Better price visibility improves timing and confidence.',
@@ -341,7 +341,7 @@ function FarmerQuickActions({ navigate }) {
     { label: 'Add crop', icon: 'fa-solid fa-plus', path: '/add-crop' },
     { label: 'My crops', icon: 'fa-solid fa-seedling', path: '/view-crop' },
     { label: 'Requests', icon: 'fa-regular fa-clock', path: '/view-approach' },
-    { label: 'Market', icon: 'fa-solid fa-chart-line', path: '/market' },
+    { label: 'Mandi', icon: 'fa-solid fa-chart-line', path: '/market' },
   ];
 
   return (
@@ -696,7 +696,12 @@ export default function Home() {
         />
         <div className="feature-table-grid feature-table-grid--single">
           <Card className="feature-table feature-table--farmer">
-            <h3>Farmer Tools</h3>
+            <div className="feature-table__head">
+              <h3>Farmer Tools</h3>
+              <Button type="button" size="sm" onClick={() => navigate('/register')}>
+                Add Crop
+              </Button>
+            </div>
             <div className="feature-table__rows">
               {FARMER_FEATURES.map(([feature, why]) => (
                 <div key={feature} className="feature-table__row">
@@ -736,14 +741,14 @@ export default function Home() {
       <section className="ag-container section reveal-block">
         <SectionTitle
           id="intelligence"
-          kicker="Weather + Market Intelligence"
-          title="Market & Weather Intelligence"
+          kicker="Weather + Mandi Intelligence"
+          title="Mandi & Weather Intelligence"
           subtitle="This is the app's smart layer: better timing, better pricing, and better planning."
         />
         <div className="intelligence-grid">
           <Card className="intelligence-card intelligence-card--market">
-            <h3>Market Intelligence</h3>
-            <p>Check real-time market prices before selling and compare trade context with your own listing strategy.</p>
+            <h3>Mandi Intelligence</h3>
+            <p>Check APMC and mandi prices before selling and compare trade context with your own listing strategy.</p>
           </Card>
           <Card className="intelligence-card intelligence-card--weather">
             <h3>Weather Intelligence</h3>

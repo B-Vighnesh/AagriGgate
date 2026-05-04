@@ -4,7 +4,7 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
-import statesWithDistricts from './StatesWithDistricts';
+import statesWithDistricts from './statesAndDistricts';
 import { apiFetch, apiGet } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
@@ -61,7 +61,7 @@ export default function UpdateAccount() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [role, token, farmerId, navigate]);
 
   const validate = (name, value) => {
     setErrors((prev) => {

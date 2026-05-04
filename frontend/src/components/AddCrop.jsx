@@ -52,10 +52,10 @@ export default function AddCrop() {
       return;
     }
     if (role === 'buyer') {
-      navigate('/404');
+      navigate('/view-all-crops', { replace: true });
       return;
     }
-  }, []);
+  }, [token, farmerId, role, navigate]);
 
   useEffect(() => {
     return () => {
@@ -148,8 +148,9 @@ export default function AddCrop() {
     <section className="page add-crop-page">
       <ValidateToken token={token} />
       <div className="ag-container">
+          <button type="button" className="link-back" onClick={() => navigate('/view-crop')}>Back to My Crops</button>
+
         <div className="add-crop-head">
-          {/* <button type="button" className="link-back" onClick={() => navigate(-1)}>Back</button> */}
           <div>
             <h1>Add New Crop</h1>
             <p>List your produce for buyers to discover.</p>
