@@ -25,7 +25,7 @@ function navByRole(role) {
   const shared = [
     { type: 'link', label: 'Home', to: '/' },
     { type: 'link', label: 'Marketplace', to: '/view-all-crops' },
-    { type: 'link', label: 'Market Intelligence', to: '/market' },
+    { type: 'link', label: 'Mandi Prices', to: '/market' },
   ];
 
   if (role === 'farmer') {
@@ -56,6 +56,7 @@ function navByRole(role) {
   return [
     { type: 'link', label: 'Home', to: '/' },
     { type: 'link', label: 'Marketplace', to: '/view-all-crops' },
+    { type: 'link', label: 'Mandi Prices', to: '/market' },
     { type: 'link', label: 'My Requests', to: '/view-approaches-user' },
     {
       type: 'dropdown',
@@ -115,6 +116,12 @@ function bottomNavItemsByRole(role) {
         icon: 'fa-regular fa-newspaper',
         matchPrefixes: ['/news'],
       },
+      {
+        label: 'Mandi',
+        to: '/market',
+        icon: 'fa-solid fa-chart-line',
+        matchPrefixes: ['/market'],
+      },
     ];
   }
 
@@ -124,7 +131,7 @@ function bottomNavItemsByRole(role) {
       label: 'Market',
       to: '/view-all-crops',
       icon: 'fa-solid fa-store',
-      matchPrefixes: ['/view-all-crops', '/view-details', '/market'],
+      matchPrefixes: ['/view-all-crops', '/view-details'],
     },
     {
       label: role === 'farmer' ? 'My Crops' : 'Crops',
@@ -139,10 +146,10 @@ function bottomNavItemsByRole(role) {
       matchPrefixes: ['/view-approach', '/view-approaches-user', '/view-approaches/farmer', '/requests'],
     },
     {
-      label: 'Insights',
-      to: '/insights',
+      label: 'Mandi',
+      to: '/market',
       icon: 'fa-solid fa-chart-line',
-      matchPrefixes: ['/insights', '/weather', '/news'],
+      matchPrefixes: ['/market'],
     },
   ];
 }
