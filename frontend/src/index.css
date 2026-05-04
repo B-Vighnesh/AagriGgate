@@ -8420,6 +8420,7 @@ a {
 
   .footer-logged-bottom {
     align-items: center;
+    padding-block: 12px 14px;
   }
 
   .footer-bottom__copyright {
@@ -8430,6 +8431,10 @@ a {
   .footer-contact-pill {
     width: 100%;
     justify-content: center;
+  }
+
+  .site-footer--logged-in {
+    margin-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   }
 
   .market-filter-grid,
@@ -9888,17 +9893,55 @@ img {
   }
 
   .footer-logged-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-    padding-block: 26px 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 16px;
+    padding-block: 24px 18px;
   }
 
   .footer-logged-brand {
+    grid-column: 1 / -1;
     gap: 10px;
+  }
+
+  .footer-logged-brand__mark span {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+  }
+
+  .footer-logged-brand__mark strong {
+    font-size: 1.08rem;
+  }
+
+  .footer-logged-brand p {
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+
+  .footer-logged-column--connect {
+    grid-column: 1 / -1;
+  }
+
+  .footer-logged-column h4 {
+    font-size: 0.82rem;
   }
 
   .footer-logged-column ul {
     gap: 7px;
+  }
+
+  .footer-logged-column a,
+  .footer-logged-column span,
+  .footer-logged-column--connect span {
+    font-size: 0.84rem;
+  }
+
+  .footer-logged-bottom {
+    gap: 6px;
+  }
+
+  .footer-logged-legal {
+    justify-content: center;
   }
 
   .footer-section h4 {

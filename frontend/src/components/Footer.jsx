@@ -32,7 +32,6 @@ function LoggedInFooter({ role, year }) {
       <div className="ag-container footer-logged-grid">
         <div className="footer-logged-brand">
           <Link to="/" className="footer-logged-brand__mark">
-            <span aria-hidden="true">🌿</span>
             <strong>AagriGgate</strong>
           </Link>
           <p>Direct trade between farmers and buyers. No middlemen. No hidden charges.</p>
@@ -60,24 +59,13 @@ function LoggedInFooter({ role, year }) {
           </ul>
         </div>
 
-        <div className="footer-logged-column footer-logged-column--connect">
-          <h4>Connect</h4>
-          <ul>
-            <li><a href="mailto:webappfarmer@gmail.com">Email</a></li>
-            <li><a href="tel:+918618402581">Phone</a></li>
-            <li><span>Mangalore, Karnataka</span></li>
-          </ul>
-        </div>
+        
       </div>
 
       <div className="footer-bottom-wrap">
         <div className="ag-container footer-bottom footer-logged-bottom">
           <span className="footer-bottom__copyright">&copy; {year} AagriGgate. All rights reserved.</span>
-          <div className="footer-logged-legal" aria-label="Legal links">
-            <Link to="/#privacy">Privacy</Link>
-            <span aria-hidden="true">·</span>
-            <Link to="/#terms">Terms</Link>
-          </div>
+          
         </div>
       </div>
     </footer>
