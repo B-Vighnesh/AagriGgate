@@ -1244,6 +1244,11 @@ a {
   padding: 50px 0;
 }
 
+.ag-container.section {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
 .section--surface {
   background: #f8fcfa;
   border-top: 1px solid var(--color-border);
@@ -9450,10 +9455,20 @@ img {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
   }
+
+  .ag-container.section {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
 }
 
 @media (min-width: 1024px) {
   .ag-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .ag-container.section {
     padding-left: 2rem;
     padding-right: 2rem;
   }
@@ -9470,6 +9485,11 @@ img {
 
   .hero .ag-container {
     max-width: 1440px;
+  }
+
+  .ag-container.section {
+    padding-left: 3rem;
+    padding-right: 3rem;
   }
 }
 
@@ -9504,6 +9524,49 @@ img {
 
   .section {
     padding: 32px 0;
+  }
+
+  .ag-container.section {
+    padding: 32px 16px;
+  }
+
+  .home-page .section--surface > .ag-container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .section-kicker {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+  }
+
+  .section-title {
+    font-size: 1.22rem;
+    line-height: 1.25;
+  }
+
+  .section-subtitle {
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+
+  .solution-card,
+  .core-feature-card,
+  .feature-table,
+  .intelligence-card,
+  .trust-chip-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .core-feature-card,
+  .intelligence-card {
+    height: auto;
+    min-height: 150px;
+  }
+
+  .feature-table__row {
+    padding: 10px 0;
   }
 
   .cta {
