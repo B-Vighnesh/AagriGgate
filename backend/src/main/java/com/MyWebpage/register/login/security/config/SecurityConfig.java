@@ -84,7 +84,7 @@ public class SecurityConfig {
                                 "/api/v1/market/**",
                                 "/api/v1/market-price/**",
                                 "/api/v1/weather/**"
-                        ).hasRole("SELLER")
+                        ).hasAnyRole("SELLER", "BUYER")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
