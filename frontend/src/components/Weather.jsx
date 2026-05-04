@@ -147,10 +147,6 @@ export default function Weather() {
       navigate('/login');
       return;
     }
-    if (role === 'buyer') {
-      navigate('/view-all-crops', { replace: true });
-      return;
-    }
     fetchMyLocationWeather();
   }, [role, navigate, fetchMyLocationWeather]);
 

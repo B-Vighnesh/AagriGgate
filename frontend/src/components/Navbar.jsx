@@ -41,15 +41,7 @@ function navByRole(role) {
         ],
       },
       { type: 'link', label: 'Requests', to: '/view-approach' },
-      {
-        type: 'dropdown',
-        label: 'Insights',
-        key: 'insights',
-        children: [
-          { label: 'Weather', to: '/weather' },
-          { label: 'News', to: '/news' },
-        ],
-      },
+      { type: 'link', label: 'Insights', to: '/insights' },
     ];
   }
 
@@ -58,14 +50,7 @@ function navByRole(role) {
     { type: 'link', label: 'Marketplace', to: '/view-all-crops' },
     { type: 'link', label: 'Mandi Prices', to: '/market' },
     { type: 'link', label: 'My Requests', to: '/view-approaches-user' },
-    {
-      type: 'dropdown',
-      label: 'Insights',
-      key: 'insights',
-      children: [
-        { label: 'News', to: '/news' },
-      ],
-    },
+    { type: 'link', label: 'Insights', to: '/insights' },
   ];
 }
 
@@ -146,10 +131,10 @@ function bottomNavItemsByRole(role) {
       matchPrefixes: ['/view-approach', '/view-approaches-user', '/view-approaches/farmer', '/requests'],
     },
     {
-      label: 'Mandi',
-      to: '/market',
+      label: 'Insights',
+      to: '/insights',
       icon: 'fa-solid fa-chart-line',
-      matchPrefixes: ['/market'],
+      matchPrefixes: ['/insights', '/market', '/weather', '/news'],
     },
   ];
 }

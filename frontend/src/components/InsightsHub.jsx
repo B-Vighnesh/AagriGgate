@@ -1,13 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import ValidateToken from './ValidateToken';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
-function InsightPreviewCard({ icon, title, subtitle, body, primaryLabel, primaryAction, secondaryLabel, secondaryAction }) {
+function InsightPreviewCard({ icon, title, subtitle, body, primaryLabel, primaryAction, tone }) {
   return (
-    <Card className="insights-hub-card">
+    <Card className={`insights-hub-card insights-hub-card--${tone}`}>
       <div className="insights-hub-card__icon" aria-hidden="true">
         <i className={icon} />
       </div>
@@ -18,11 +18,6 @@ function InsightPreviewCard({ icon, title, subtitle, body, primaryLabel, primary
       </div>
       <div className="insights-hub-card__actions">
         <Button onClick={primaryAction}>{primaryLabel}</Button>
-        {secondaryLabel ? (
-          <Button variant="outline" onClick={secondaryAction}>
-            {secondaryLabel}
-          </Button>
-        ) : null}
       </div>
     </Card>
   );
@@ -33,7 +28,6 @@ export default function InsightsHub() {
   const token = getToken();
   const role = getRole();
   const farmerId = getFarmerId();
-  const [activeTab, setActiveTab] = useState(role === 'farmer' ? 'weather' : 'news');
 
   useEffect(() => {
     if (!role) {
@@ -41,20 +35,38 @@ export default function InsightsHub() {
     }
   }, [navigate, role]);
 
-  useEffect(() => {
-    if (role !== 'farmer' && activeTab === 'weather') {
-      setActiveTab('news');
-    }
-  }, [activeTab, role]);
-
-  const tabOptions = useMemo(() => {
-    const options = [];
-    if (role === 'farmer') {
-      options.push({ key: 'weather', label: 'Weather' });
-    }
-    options.push({ key: 'news', label: 'News' });
-    return options;
-  }, [role]);
+  const insights = [
+    {
+      key: 'mandi',
+      icon: 'fa-solid fa-scale-balanced',
+      subtitle: 'Current + Past Prices',
+      title: 'Mandi Prices',
+      body: 'Check recent APMC and mandi crop prices by commodity, date, state, and district before planning a sale or purchase.',
+      primaryLabel: 'Open Mandi',
+      path: '/market',
+      tone: 'mandi',
+    },
+    {
+      key: 'weather',
+      icon: 'fa-solid fa-cloud-sun-rain',
+      subtitle: 'Forecast + Planning',
+      title: 'Weather',
+      body: 'Review district weather, harvest timing signals, rain risk, humidity, and wind guidance for field and logistics planning.',
+      primaryLabel: 'Open Weather',
+      path: '/weather',
+      tone: 'weather',
+    },
+    {
+      key: 'news',
+      icon: 'fa-regular fa-newspaper',
+      subtitle: 'Policy, Agri News, Alerts',
+      title: 'News',
+      body: 'Track policy updates, crop alerts, farming tips, market signals, and important agriculture news in one place.',
+      primaryLabel: 'Open News',
+      path: '/news',
+      tone: 'news',
+    },
+  ];
 
   return (
     <section className="page insights-hub-page">
@@ -63,55 +75,25 @@ export default function InsightsHub() {
         <div className="insights-hub-head">
           <div>
             <p className="insights-hub-kicker">Insights</p>
-            <h1>Weather and market updates in one place</h1>
-            <p>Switch between quick insight panels instead of digging through the mobile drawer.</p>
+            <h1>Mandi, weather, and news in one place</h1>
+            <p>Use the same insight hub for crop prices, field planning, policy updates, agri news, and alerts.</p>
           </div>
         </div>
 
-        <div className="insights-hub-tabs" role="tablist" aria-label="Insights sections">
-          {tabOptions.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === tab.key}
-              className={`insights-hub-tab ${activeTab === tab.key ? 'insights-hub-tab--active' : ''}`}
-              onClick={() => setActiveTab(tab.key)}
-            >
-              {tab.label}
-            </button>
+        <div className="insights-hub-grid" aria-label="Insights sections">
+          {insights.map((item) => (
+            <InsightPreviewCard
+              key={item.key}
+              icon={item.icon}
+              subtitle={item.subtitle}
+              title={item.title}
+              body={item.body}
+              primaryLabel={item.primaryLabel}
+              primaryAction={() => navigate(item.path)}
+              tone={item.tone}
+            />
           ))}
         </div>
-
-        {activeTab === 'weather' ? (
-          <div className="insights-hub-panel" role="tabpanel">
-            <InsightPreviewCard
-              icon="fa-solid fa-cloud-sun-rain"
-              subtitle="Field Planning"
-              title="Weather readiness for sellers"
-              body="Open the weather workspace to review live district conditions, harvest timing alerts, and rain or wind guidance before you move produce."
-              primaryLabel="Open Weather"
-              primaryAction={() => navigate('/weather')}
-              secondaryLabel="View News"
-              secondaryAction={() => setActiveTab('news')}
-            />
-          </div>
-        ) : null}
-
-        {activeTab === 'news' ? (
-          <div className="insights-hub-panel" role="tabpanel">
-            <InsightPreviewCard
-              icon="fa-regular fa-newspaper"
-              subtitle="Agri News"
-              title="Latest market and farming news"
-              body="Track policy updates, farming tips, market signals, and important crop news without leaving the app shell."
-              primaryLabel="Open News"
-              primaryAction={() => navigate('/news')}
-              secondaryLabel={role === 'farmer' ? 'Open Weather' : ''}
-              secondaryAction={() => setActiveTab('weather')}
-            />
-          </div>
-        ) : null}
       </div>
     </section>
   );
