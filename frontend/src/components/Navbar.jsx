@@ -120,12 +120,6 @@ function bottomNavItemsByRole(role) {
       icon: 'fa-solid fa-chart-line',
       matchPrefixes: ['/insights', '/weather', '/news'],
     },
-    {
-      label: 'Chat',
-      to: '/chat',
-      icon: 'fa-regular fa-comments',
-      matchPrefixes: ['/chat'],
-    },
   ];
 }
 
@@ -293,7 +287,6 @@ export default function Navbar() {
   };
   const showMobileBottomNav = loggedIn
     && isMobileViewport
-    && !location.pathname.startsWith('/chat')
     && !['/login', '/register', '/logout', '/forgot-password', '/404'].includes(location.pathname);
   const showMobileDrawer = isMobileViewport && !showMobileBottomNav;
   const navItemsToRender = showMobileDrawer ? mobileDrawerItemsByRole(role, loggedIn) : items;
