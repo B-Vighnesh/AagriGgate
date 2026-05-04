@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -31,6 +31,14 @@ export default function ViewCrop() {
   const [hasMore, setHasMore] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const loadMoreRef = useRef(null);
+  const imageUrlRegistryRef = useRef(new Set());
+
+  const revokeAllImageUrls = useCallback(() => {
+    imageUrlRegistryRef.current.forEach((url) => {
+      try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+    });
+    imageUrlRegistryRef.current.clear();
+  }, []);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -75,6 +83,8 @@ export default function ViewCrop() {
         setLoading(true);
         setError('');
         setCrops([]);
+        setImages({});
+        revokeAllImageUrls();
         setTotalPages(0);
         setTotalElements(0);
         setHasMore(false);
@@ -121,7 +131,15 @@ export default function ViewCrop() {
             if (!imgRes.ok) return;
             const blob = await imgRes.blob();
             if (!mounted) return;
-            setImages((prev) => ({ ...prev, [crop.cropID]: URL.createObjectURL(blob) }));
+            const objectUrl = URL.createObjectURL(blob);
+            imageUrlRegistryRef.current.add(objectUrl);
+            setImages((prev) => {
+              if (prev[crop.cropID]) {
+                try { URL.revokeObjectURL(prev[crop.cropID]); } catch { /* ignore */ }
+                imageUrlRegistryRef.current.delete(prev[crop.cropID]);
+              }
+              return { ...prev, [crop.cropID]: objectUrl };
+            });
           } catch {
             // keep placeholder image on failures
           }
@@ -141,11 +159,12 @@ export default function ViewCrop() {
 
     return () => {
       mounted = false;
-      Object.values(images).forEach((url) => {
-        try { URL.revokeObjectURL(url); } catch { /* ignore */ }
-      });
     };
-  }, [page, token, farmerId, role, navigate, appliedQuery, sortBy, listingFilter]);
+  }, [page, token, farmerId, role, navigate, appliedQuery, sortBy, listingFilter, revokeAllImageUrls]);
+
+  useEffect(() => () => {
+    revokeAllImageUrls();
+  }, [revokeAllImageUrls]);
 
   useEffect(() => {
     if (!loadMoreRef.current || !hasMore || loading || loadingMore) {

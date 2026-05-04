@@ -8,6 +8,7 @@ import {
   countUnread,
   getActiveAlerts,
   getNotifications,
+  markAllAsRead,
   markAsRead,
 } from '../lib/notificationApi';
 import { resolveNotificationRoute, sortNotificationsByDate } from '../lib/notificationRouting';
@@ -119,6 +120,12 @@ function bottomNavItemsByRole(role) {
       icon: 'fa-solid fa-chart-line',
       matchPrefixes: ['/insights', '/weather', '/news'],
     },
+    {
+      label: 'Chat',
+      to: '/chat',
+      icon: 'fa-regular fa-comments',
+      matchPrefixes: ['/chat'],
+    },
   ];
 }
 
@@ -203,7 +210,7 @@ export default function Navbar() {
     };
 
     loadUnreadCount();
-    const interval = window.setInterval(loadUnreadCount, 60000);
+    const interval = window.setInterval(loadUnreadCount, 30000);
     const handleCountUpdate = (event) => {
       setUnreadCount(Number(event?.detail?.count ?? 0));
     };
@@ -383,6 +390,19 @@ export default function Navbar() {
     }
   };
 
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllAsRead();
+      setUnreadCount(0);
+      setNotificationPreview([]);
+      window.dispatchEvent(new CustomEvent('notifications:count-updated', {
+        detail: { count: 0 },
+      }));
+    } catch {
+      // Keep the overlay open so the user can still open the full notifications page.
+    }
+  };
+
   return (
     <>
     <header className="site-header">
@@ -496,6 +516,15 @@ export default function Navbar() {
                 <div className="notification-overlay" role="dialog" aria-label="Latest notifications">
                   <div className="notification-overlay__head">
                     <strong>Unread Notifications</strong>
+                    {notificationPreview.length > 0 ? (
+                      <button
+                        type="button"
+                        className="notification-overlay__show-all"
+                        onClick={handleMarkAllRead}
+                      >
+                        Mark All Read
+                      </button>
+                    ) : null}
                   </div>
 
                   <div className="notification-overlay__body">
