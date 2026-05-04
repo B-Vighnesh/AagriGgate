@@ -5,7 +5,8 @@ import { getRole } from '../lib/auth';
 export default function Footer() {
   const year = new Date().getFullYear();
   const role = getRole();
-  const intelligenceLink = role === 'buyer' ? '/#buyers' : '/#intelligence';
+  const weatherLink = role ? '/weather' : '/#intelligence';
+  const marketLink = role ? '/market' : '/#intelligence';
 
   return (
     <footer className="site-footer">
@@ -27,8 +28,8 @@ export default function Footer() {
         <div className="footer-section">
           <h4>Intelligence</h4>
           <ul>
-            <li><Link to={intelligenceLink}>Weather</Link></li>
-            <li><Link to={intelligenceLink}>Market Prices</Link></li>
+            <li><Link to={weatherLink}>Weather</Link></li>
+            <li><Link to={marketLink}>Market Prices</Link></li>
           </ul>
         </div>
         <div className="footer-section">

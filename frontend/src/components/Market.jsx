@@ -206,7 +206,7 @@ export default function Market() {
         setLoadingSaved(false);
       }
     }
-  }, [farmerId]);
+  }, []);
 
   const fetchMarketData = useCallback(async (manual = false, nextPage = 0, append = false) => {
     if (!state || !district || !commodity || !fromDate || !toDate) {
@@ -261,7 +261,7 @@ export default function Market() {
       if (manual) {
         showToast(`Loaded ${payload.totalElements ?? records.length} records.`, 'success');
       }
-    } catch (err) {
+    } catch {
       if (!append) {
         setMarketData([]);
       }
@@ -300,7 +300,7 @@ export default function Market() {
       return;
     }
     if (role === 'buyer') {
-      navigate('/404');
+      navigate('/view-all-crops', { replace: true });
       return;
     }
   }, [role, navigate]);
