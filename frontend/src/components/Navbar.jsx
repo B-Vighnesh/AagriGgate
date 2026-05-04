@@ -94,6 +94,30 @@ function bottomNavItemsByRole(role) {
     return [];
   }
 
+  if (role === 'buyer') {
+    return [
+      { label: 'Home', to: '/', icon: 'fa-solid fa-house' },
+      {
+        label: 'Market',
+        to: '/view-all-crops',
+        icon: 'fa-solid fa-store',
+        matchPrefixes: ['/view-all-crops', '/view-details'],
+      },
+      {
+        label: 'Requests',
+        to: '/view-approaches-user',
+        icon: 'fa-regular fa-clock',
+        matchPrefixes: ['/view-approaches-user', '/requests'],
+      },
+      {
+        label: 'News',
+        to: '/news',
+        icon: 'fa-regular fa-newspaper',
+        matchPrefixes: ['/news'],
+      },
+    ];
+  }
+
   return [
     { label: 'Home', to: '/', icon: 'fa-solid fa-house' },
     {
