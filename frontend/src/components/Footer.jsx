@@ -21,7 +21,7 @@ export default function Footer() {
           <Link className="footer__link" to="/#problem">Problem</Link>
           <Link className="footer__link" to={weatherLink}>Weather</Link>
           <Link className="footer__link" to="/#features">Features</Link>
-          <Link className="footer__link" to={marketLink}>Market Prices</Link>
+          <Link className="footer__link" to={marketLink}>Mandi Prices</Link>
           <Link className="footer__link" to="/#trust">Trust</Link>
           <Link className="footer__link" to="/#future">Roadmap</Link>
           <Link className="footer__link" to="/#faq">FAQ</Link>
