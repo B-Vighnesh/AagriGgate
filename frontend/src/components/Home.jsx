@@ -696,7 +696,12 @@ export default function Home() {
         />
         <div className="feature-table-grid feature-table-grid--single">
           <Card className="feature-table feature-table--farmer">
-            <h3>Farmer Tools</h3>
+            <div className="feature-table__head">
+              <h3>Farmer Tools</h3>
+              <Button type="button" size="sm" onClick={() => navigate('/register')}>
+                Add Crop
+              </Button>
+            </div>
             <div className="feature-table__rows">
               {FARMER_FEATURES.map(([feature, why]) => (
                 <div key={feature} className="feature-table__row">

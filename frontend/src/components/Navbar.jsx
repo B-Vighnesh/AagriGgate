@@ -103,7 +103,7 @@ function bottomNavItemsByRole(role) {
       matchPrefixes: ['/view-all-crops', '/view-details', '/market'],
     },
     {
-      label: 'Crops',
+      label: role === 'farmer' ? 'My Crops' : 'Crops',
       to: role === 'farmer' ? '/view-crop' : '/view-all-crops',
       icon: 'fa-solid fa-seedling',
       matchPrefixes: role === 'farmer' ? ['/view-crop', '/add-crop', '/update-crop', '/delete-crop'] : ['/view-all-crops'],
