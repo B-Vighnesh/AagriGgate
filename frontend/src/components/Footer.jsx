@@ -25,12 +25,21 @@ const roleLinks = {
 
 function LoggedInFooter({ role, year }) {
   const primaryLinks = roleLinks[role] || roleLinks.farmer;
+  const roleTitle = role === 'buyer' ? 'Buyer Tools' : 'Farmer Tools';
 
   return (
     <footer className="site-footer site-footer--logged-in">
-      <div className="ag-container footer-role-grid">
-        <div className="footer-role-column">
-          <h4>{role === 'buyer' ? 'Buyer Tools' : 'Farmer Tools'}</h4>
+      <div className="ag-container footer-logged-grid">
+        <div className="footer-logged-brand">
+          <Link to="/" className="footer-logged-brand__mark">
+            <span aria-hidden="true">🌿</span>
+            <strong>AagriGgate</strong>
+          </Link>
+          <p>Direct trade between farmers and buyers. No middlemen. No hidden charges.</p>
+        </div>
+
+        <div className="footer-logged-column">
+          <h4>{roleTitle}</h4>
           <ul>
             {primaryLinks.map((item) => (
               <li key={item.to}>
@@ -40,7 +49,7 @@ function LoggedInFooter({ role, year }) {
           </ul>
         </div>
 
-        <div className="footer-role-column">
+        <div className="footer-logged-column">
           <h4>Insights</h4>
           <ul>
             {insightLinks.map((item) => (
@@ -50,11 +59,25 @@ function LoggedInFooter({ role, year }) {
             ))}
           </ul>
         </div>
+
+        <div className="footer-logged-column footer-logged-column--connect">
+          <h4>Connect</h4>
+          <ul>
+            <li><a href="mailto:webappfarmer@gmail.com">Email</a></li>
+            <li><a href="tel:+918618402581">Phone</a></li>
+            <li><span>Mangalore, Karnataka</span></li>
+          </ul>
+        </div>
       </div>
 
       <div className="footer-bottom-wrap">
-        <div className="ag-container footer-bottom footer-bottom--compact">
+        <div className="ag-container footer-bottom footer-logged-bottom">
           <span className="footer-bottom__copyright">&copy; {year} AagriGgate. All rights reserved.</span>
+          <div className="footer-logged-legal" aria-label="Legal links">
+            <Link to="/#privacy">Privacy</Link>
+            <span aria-hidden="true">·</span>
+            <Link to="/#terms">Terms</Link>
+          </div>
         </div>
       </div>
     </footer>
