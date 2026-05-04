@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { getRole } from '../lib/auth';
+import agrigateIcon from '../images/agrigate.jpg';
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -9,59 +10,33 @@ export default function Footer() {
   const marketLink = role ? '/market' : '/#intelligence';
 
   return (
-    <footer className="site-footer">
-      <div className="ag-container footer-grid">
-        <div className="footer-brand">
-          <span className="footer-brand__eyebrow">AagriGgate Intelligence Platform</span>
-          <h3>AagriGgate</h3>
-          <p>Direct trade, smarter decisions, and transparent agriculture workflows in one platform.</p>
-          <p className="footer-brand__note">Built to connect farmers and buyers with more clarity, less friction, and no hidden platform charges.</p>
+    <footer className="footer">
+      <div className="footer__inner">
+        <div className="footer__brand">
+          <img src={agrigateIcon} alt="" className="footer__logo" aria-hidden="true" />
+          <span className="footer__brand-name">AagriGgate</span>
         </div>
-        <div className="footer-section">
-          <h4>Platform</h4>
-          <ul>
-            <li><Link to="/#problem">Problem</Link></li>
-            <li><Link to="/#features">Features</Link></li>
-            <li><Link to="/#trust">Trust</Link></li>
-          </ul>
+
+        <div className="footer__links-grid">
+          <Link className="footer__link" to="/#problem">Problem</Link>
+          <Link className="footer__link" to={weatherLink}>Weather</Link>
+          <Link className="footer__link" to="/#features">Features</Link>
+          <Link className="footer__link" to={marketLink}>Market Prices</Link>
+          <Link className="footer__link" to="/#trust">Trust</Link>
+          <Link className="footer__link" to="/#future">Roadmap</Link>
+          <Link className="footer__link" to="/#faq">FAQ</Link>
+          <Link className="footer__link" to="/contact-us">Contact Us</Link>
         </div>
-        <div className="footer-section">
-          <h4>Intelligence</h4>
-          <ul>
-            <li><Link to={weatherLink}>Weather</Link></li>
-            <li><Link to={marketLink}>Market Prices</Link></li>
-          </ul>
+
+        <hr className="footer__divider" />
+
+        <div className="footer__contact">
+          <a href="mailto:webappfarmer@gmail.com">webappfarmer@gmail.com</a><br />
+          <a href="tel:+918618402581">+91 86184 02581</a><br />
+          <span>Mangalore, Karnataka</span>
         </div>
-        <div className="footer-section">
-          <h4>Future</h4>
-          <ul>
-            <li><Link to="/#future">Roadmap</Link></li>
-          </ul>
-        </div>
-        <div className="footer-section">
-          <h4>Support</h4>
-          <ul>
-            <li><Link to="/#faq">FAQ</Link></li>
-            <li><Link to="/contact-us">Contact Us</Link></li>
-          </ul>
-        </div>
-      </div>
-      <div className="footer-bottom-wrap">
-        <div className="ag-container footer-bottom">
-          <span className="footer-bottom__copyright">&copy; {year} AagriGgate. All rights reserved.</span>
-          <a href="mailto:webappfarmer@gmail.com" className="footer-contact-pill">
-            <span className="footer-contact-pill__label">Email</span>
-            <span className="footer-contact-pill__value">webappfarmer@gmail.com</span>
-          </a>
-          <a href="tel:+918618402581" className="footer-contact-pill">
-            <span className="footer-contact-pill__label">Phone</span>
-            <span className="footer-contact-pill__value">+91 8618402581</span>
-          </a>
-          <span className="footer-contact-pill">
-            <span className="footer-contact-pill__label">Location</span>
-            <span className="footer-contact-pill__value">Mangalore, Karnataka</span>
-          </span>
-        </div>
+
+        <p className="footer__copy">&copy; {year} AagriGgate. All rights reserved.</p>
       </div>
     </footer>
   );
