@@ -336,7 +336,6 @@ OTP_CLEANUP_CRON=0 */5 * * * *
 ## Contributors
 
 * B. Vighnesh Kumar
-* Akash D. Shenvi
 * Joylan Dsouza
 
 ---
