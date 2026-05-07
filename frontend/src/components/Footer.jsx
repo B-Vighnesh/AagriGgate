@@ -2,10 +2,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { getRole } from '../lib/auth';
 
-const insightLinks = [
-  { label: 'Mandi Prices', to: '/market' },
-  { label: 'Weather', to: '/weather' },
-  { label: 'News', to: '/news' },
+const insightLinks = {
+  farmer: [
+    { label: 'Mandi Prices', to: '/market' },
+    { label: 'Weather', to: '/weather' },
+    { label: 'News', to: '/news' },
+  ],
+
+  buyer: [
+    { label: 'Mandi Prices', to: '/market' },
+    { label: 'News', to: '/news' },
+  ],
+};
+
+const companyLinks = [
+  { label: 'About us', to: '/about-us' },
   { label: 'Contact Us', to: '/contact-us' },
 ];
 
@@ -14,7 +25,6 @@ const roleLinks = {
     { label: 'My Crops', to: '/view-crop' },
     { label: 'Add Crop', to: '/add-crop' },
     { label: 'Requests', to: '/view-approach' },
-    { label: 'Account', to: '/account' },
   ],
   buyer: [
     { label: 'Browse Crops', to: '/view-all-crops' },
@@ -34,7 +44,7 @@ function LoggedInFooter({ role, year }) {
           <Link to="/" className="footer-logged-brand__mark">
             <strong>AagriGgate</strong>
           </Link>
-          <p>Direct trade between farmers and buyers. No middlemen. No hidden charges.</p>
+          <p>Trade. Decide. Grow. Everything a farmer needs, in one platform</p>
         </div>
 
         <div className="footer-logged-column">
@@ -51,7 +61,18 @@ function LoggedInFooter({ role, year }) {
         <div className="footer-logged-column">
           <h4>Insights</h4>
           <ul>
-            {insightLinks.map((item) => (
+            {(insightLinks[role] || []).map((item) => (
+              <li key={item.to}>
+                <Link to={item.to}>{item.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="footer-logged-column">
+          <h4>Company</h4>
+          <ul>
+            {companyLinks.map((item) => (
               <li key={item.to}>
                 <Link to={item.to}>{item.label}</Link>
               </li>
@@ -62,10 +83,13 @@ function LoggedInFooter({ role, year }) {
         
       </div>
 
-      <div className="footer-bottom-wrap">
-        <div className="ag-container footer-bottom footer-logged-bottom">
+     <div className="footer-bottom-wrap">
+        <div className="ag-container footer-bottom">
           <span className="footer-bottom__copyright">&copy; {year} AagriGgate. All rights reserved.</span>
-          
+         
+          <span className="footer-contact-pill">
+            <span className="footer-contact-pill__value">Mangalore, Karnataka</span>
+          </span>
         </div>
       </div>
     </footer>
@@ -78,61 +102,71 @@ function GuestFooter({ year }) {
   return (
     <footer className="site-footer">
       <div className="ag-container footer-grid">
+
+        {/* Brand */}
         <div className="footer-brand">
-          <span className="footer-brand__eyebrow">AagriGgate Intelligence Platform</span>
           <h3>AagriGgate</h3>
-          <p>Direct trade, smarter decisions, and transparent agriculture workflows in one platform.</p>
-          <p className="footer-brand__note">Built to connect farmers and buyers with more clarity, less friction, and no hidden platform charges.</p>
+          <p>Trade. Decide. Grow. Everything a farmer needs, in one platform.</p>
         </div>
+
+       
+
+
+        {/* Explore */}
+      <div className="footer-section">
+        <h4>Explore</h4>
+        <ul>
+          <li><Link to="/#problem">Problem</Link></li>
+          <li><Link to="/#solution">Solution</Link></li>
+          <li><Link to="/#features">Features</Link></li>
+          <li><Link to="/#how-it-works">How it works</Link></li>
+        </ul>
+      </div>
+
+      {/* Platform */}
+      <div className="footer-section">
+        <h4>Platform</h4>
+        <ul>
+          <li><Link to="/#farmers">Farmers</Link></li>
+          <li><Link to="/#buyers">Buyers</Link></li>
+          <li><Link to="/#intelligence">Decision Support</Link></li>
+          <li><Link to="/#faq">FAQ</Link></li>
+        </ul>
+      </div>
+
+        {/* Company */}
         <div className="footer-section">
-          <h4>Platform</h4>
+          <h4>Company</h4>
           <ul>
-            <li><Link to="/#problem">Problem</Link></li>
-            <li><Link to="/#features">Features</Link></li>
-            <li><Link to="/#trust">Trust</Link></li>
-          </ul>
-        </div>
-        <div className="footer-section">
-          <h4>Intelligence</h4>
-          <ul>
-            <li><Link to={intelligenceLink}>Weather</Link></li>
-            <li><Link to={intelligenceLink}>Market Prices</Link></li>
-          </ul>
-        </div>
-        <div className="footer-section">
-          <h4>Future</h4>
-          <ul>
-            <li><Link to="/#future">Roadmap</Link></li>
-          </ul>
-        </div>
-        <div className="footer-section">
-          <h4>Support</h4>
-          <ul>
-            <li><Link to="/#faq">FAQ</Link></li>
+            <li><Link to="/about-us">About us</Link></li>
             <li><Link to="/contact-us">Contact Us</Link></li>
           </ul>
         </div>
+
+        {/* Get Started */}
+        <div className="footer-section">
+          <h4>Get Started</h4>
+          <ul>
+            <li><Link to="/register">Sign Up Free</Link></li>
+            <li><Link to="/login">Log In</Link></li>
+          </ul>
+        </div>
+
       </div>
+
       <div className="footer-bottom-wrap">
         <div className="ag-container footer-bottom">
-          <span className="footer-bottom__copyright">&copy; {year} AagriGgate. All rights reserved.</span>
-          <a href="mailto:webappfarmer@gmail.com" className="footer-contact-pill">
-            <span className="footer-contact-pill__label">Email</span>
-            <span className="footer-contact-pill__value">webappfarmer@gmail.com</span>
-          </a>
-          <a href="tel:+918618402581" className="footer-contact-pill">
-            <span className="footer-contact-pill__label">Phone</span>
-            <span className="footer-contact-pill__value">+91 8618402581</span>
-          </a>
+          <span className="footer-bottom__copyright">
+            &copy; {year} AagriGgate. All rights reserved.
+          </span>
           <span className="footer-contact-pill">
-            <span className="footer-contact-pill__label">Location</span>
             <span className="footer-contact-pill__value">Mangalore, Karnataka</span>
           </span>
         </div>
       </div>
     </footer>
   );
-}
+} 
 
 export default function Footer() {
   const year = new Date().getFullYear();

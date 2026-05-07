@@ -8,6 +8,7 @@ import Market from './components/Market';
 import MarketAnalytics from './components/MarketAnalytics';
 import Weather from './components/Weather';
 import InsightsHub from './components/InsightsHub';
+import AboutUs from './components/AboutUs';
 import Login from './components/Login';
 import Logout from './components/Logout';
 import Trade from './components/Trade';
@@ -83,6 +84,7 @@ function AppRoutes() {
             <Route path="/market/analytics" element={<MarketAnalytics />} />
             <Route path="/weather" element={<Weather />} />
             <Route path="/insights" element={<InsightsHub />} />
+            <Route path="/about-us" element={<AboutUs />} />
             <Route path="/trade" element={<Trade />} />
             <Route path="/login" element={<Login />} />
             <Route path="/logout" element={<Logout />} />
