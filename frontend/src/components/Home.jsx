@@ -309,7 +309,7 @@ function QuickLinks() {
     { label: 'Features',     href: '#features' },
     { label: 'Farmers',      href: '#farmers' },
     { label: 'Buyers',       href: '#buyers' },
-    { label: 'Decision Support',        href: '#intelligence' },
+    { label: 'Decision support',        href: '#intelligence' },
     { label: 'How it works', href: '#how-it-works' },
     { label: 'FAQ',          href: '#faq' },
   ];
