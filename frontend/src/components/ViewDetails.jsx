@@ -6,7 +6,7 @@ import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import DeleteCrop from './DeleteCrop';
 import ApproachFarmer from './ApproachFarmer';
-import { getApiBaseUrl } from '../lib/api';
+import { apiFetch } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 import { addFavorite, addToCart, getFavoriteStatus, removeFavorite } from '../api/buyerToolsApi';
 
@@ -44,15 +44,7 @@ export default function ViewDetails() {
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [showApproachModal, setShowApproachModal] = useState(false);
 
-  const safeFetch = (path, options = {}) => {
-    return fetch(`${getApiBaseUrl()}${path}`, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...(options.headers || {}),
-      },
-    });
-  };
+  const safeFetch = (path, options = {}) => apiFetch(path, options);
 
   const parseJsonIfPresent = async (response) => {
     if (response.status === 204) return null;

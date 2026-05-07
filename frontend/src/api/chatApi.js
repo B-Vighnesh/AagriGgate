@@ -1,5 +1,4 @@
 import { getApiBaseUrl, requestJson } from '../lib/api';
-import { getToken } from '../lib/auth';
 
 export const getChatConversations = async ({ status, archived } = {}) => {
   const params = new URLSearchParams();
@@ -71,17 +70,13 @@ export const deleteChatConversation = async (conversationId) =>
 
 export const openChatSocket = ({ onOpen, onMessage, onClose, onError } = {}) => {
   const baseUrl = getApiBaseUrl();
-  const token = getToken();
 
   if (!baseUrl) {
     throw new Error('VITE_API_BASE_URL is not configured.');
   }
-  if (!token) {
-    throw new Error('Missing auth token for chat connection.');
-  }
 
   const wsBase = baseUrl.replace(/^http/i, 'ws').replace(/\/$/, '');
-  const socket = new WebSocket(`${wsBase}/ws/chat?token=${encodeURIComponent(token)}`);
+  const socket = new WebSocket(`${wsBase}/ws/chat`);
 
   socket.onopen = () => onOpen?.();
   socket.onclose = (event) => onClose?.(event);

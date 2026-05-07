@@ -59,6 +59,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/login/send-otp",
                                 "/api/v1/auth/login/otp",
+                                "/api/v1/auth/logout",
                                 "/api/v1/password/**",
                                 "/api/v1/admin/login",
                                 "/api/v1/support/contact",

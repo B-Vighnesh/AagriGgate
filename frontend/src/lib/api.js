@@ -12,20 +12,11 @@ export class ApiError extends Error {
   }
 }
 
-function getAuthToken() {
-  return localStorage.getItem('token');
-}
-
 function buildHeaders(optionsHeaders = {}, isFormData = false) {
-  const token = getAuthToken();
   const headers = { ...optionsHeaders };
 
   if (!isFormData && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
-  }
-
-  if (token && !headers.Authorization) {
-    headers.Authorization = `Bearer ${token}`;
   }
 
   return headers;
@@ -59,6 +50,7 @@ export async function apiFetch(path, options = {}) {
     const headers = buildHeaders(options.headers || {}, isFormData);
     const response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
+      credentials: options.credentials || 'include',
       headers,
       signal: controller.signal,
     });

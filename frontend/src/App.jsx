@@ -41,6 +41,7 @@ import Cart from './components/Cart';
 import News from './pages/News';
 import NewsDetails from './components/NewsDetails';
 import MarketDetails from './components/MarketDetails';
+import { bootstrapSession } from './lib/auth';
 import './index.css';
 
 function ScrollManager() {
@@ -126,6 +127,26 @@ function AppRoutes() {
 }
 
 function App() {
+  const [sessionReady, setSessionReady] = React.useState(false);
+
+  useEffect(() => {
+    let active = true;
+    bootstrapSession().finally(() => {
+      if (active) setSessionReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!sessionReady) {
+    return (
+      <div className="page page--center">
+        <div className="ui-spinner ui-spinner--lg" />
+      </div>
+    );
+  }
+
   return (
     <Router>
       <AppRoutes />

@@ -1,21 +1,81 @@
-export const getToken = () => localStorage.getItem('token');
-export const getRole = () => localStorage.getItem('role') || '';
-export const getFarmerId = () => localStorage.getItem('farmerId') || '';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
-const isUsableToken = (value) => Boolean(value && value !== 'undefined' && value !== 'null');
+let currentSession = null;
 
-export const setAuth = ({ token, role, farmerId }) => {
-  if (isUsableToken(token)) localStorage.setItem('token', token);
-  if (role) localStorage.setItem('role', role);
-  if (farmerId) localStorage.setItem('farmerId', farmerId);
+function clearLegacyLocalAuth() {
+  try {
+    window.localStorage.removeItem('token');
+    window.localStorage.removeItem('role');
+    window.localStorage.removeItem('farmerId');
+  } catch {
+    // Ignore storage access issues; cookie auth does not depend on localStorage.
+  }
+}
+
+function normalizeRole(role) {
+  if (!role) return '';
+  const upper = String(role).toUpperCase();
+  if (upper === 'SELLER') return 'farmer';
+  if (upper === 'BUYER') return 'buyer';
+  return String(role).toLowerCase();
+}
+
+function normalizeSession(session) {
+  if (!session) return null;
+  const role = normalizeRole(session.role);
+  const farmerId = session.farmerId ? String(session.farmerId) : '';
+
+  if (!role || !farmerId) return null;
+
+  return {
+    ...session,
+    role,
+    farmerId,
+  };
+}
+
+export const getToken = () => (currentSession ? 'cookie-session' : '');
+export const getRole = () => currentSession?.role || '';
+export const getFarmerId = () => currentSession?.farmerId || '';
+export const getSession = () => currentSession;
+
+export const setAuth = (session) => {
+  clearLegacyLocalAuth();
+  currentSession = normalizeSession(session);
+  window.dispatchEvent(new Event('auth:changed'));
+  return currentSession;
 };
 
 export const clearAuth = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('role');
-  localStorage.removeItem('farmerId');
+  clearLegacyLocalAuth();
+  currentSession = null;
+  window.dispatchEvent(new Event('auth:changed'));
 };
 
-export const isLoggedIn = () => isUsableToken(getToken());
+export async function bootstrapSession() {
+  clearLegacyLocalAuth();
 
-export const hasCompleteSession = () => isLoggedIn() && Boolean(getRole()) && Boolean(getFarmerId());
+  if (!API_BASE_URL) return null;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      currentSession = null;
+      return null;
+    }
+
+    const session = await response.json();
+    return setAuth(session);
+  } catch {
+    currentSession = null;
+    return null;
+  }
+}
+
+export const isLoggedIn = () => Boolean(currentSession);
+
+export const hasCompleteSession = () => Boolean(currentSession?.role && currentSession?.farmerId);

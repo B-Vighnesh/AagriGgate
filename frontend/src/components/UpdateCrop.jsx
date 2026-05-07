@@ -4,7 +4,7 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
-import { apiFetch, getApiBaseUrl } from '../lib/api';
+import { apiFetch } from '../lib/api';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
 
 const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
@@ -156,9 +156,8 @@ export default function UpdateCrop() {
     if (image) formData.append('imageFile', image);
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/crops/farmer/${cropId}`, {
+      const response = await apiFetch(`/crops/farmer/${cropId}`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 

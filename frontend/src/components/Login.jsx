@@ -5,7 +5,7 @@ import Card from './common/Card';
 import Toast from './common/Toast';
 import { requestJson, ApiError } from '../lib/api';
 import { login as passwordLogin, loginWithOtp, sendLoginOtp } from '../api/authApi';
-import { isLoggedIn, setAuth, clearAuth, hasCompleteSession } from '../lib/auth';
+import { getRole, isLoggedIn, setAuth, clearAuth, hasCompleteSession } from '../lib/auth';
 
 function normalizeRole(role) {
   if (!role) return '';
@@ -45,7 +45,7 @@ export default function Login() {
       }
 
       try {
-        const storedRole = localStorage.getItem('role');
+        const storedRole = getRole();
         const endpoint = storedRole === 'buyer' ? '/buyers/me' : '/farmers/me';
         await requestJson(endpoint, { method: 'GET' });
         setAlreadyIn(true);
@@ -96,11 +96,7 @@ export default function Login() {
       const normalizedRole = normalizeRole(data?.role);
       const farmerId = data?.farmerId ? String(data.farmerId) : '';
 
-      setAuth({
-        token: data?.token,
-        role: normalizedRole,
-        farmerId,
-      });
+      setAuth({ ...data, role: normalizedRole, farmerId });
       showToast('Login successful.', 'success');
       setTimeout(() => navigate('/account'), 700);
     } catch (error) {

@@ -171,10 +171,12 @@ export default function Navbar() {
       setLoggedIn(isLoggedIn());
     };
     window.addEventListener('storage', syncRole);
+    window.addEventListener('auth:changed', syncRole);
     window.addEventListener('auth:expired', syncRole);
     syncRole();
     return () => {
       window.removeEventListener('storage', syncRole);
+      window.removeEventListener('auth:changed', syncRole);
       window.removeEventListener('auth:expired', syncRole);
     };
   }, [location.pathname]);

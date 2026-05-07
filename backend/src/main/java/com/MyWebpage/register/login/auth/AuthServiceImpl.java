@@ -28,7 +28,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -233,6 +235,20 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    @Override
+    public Map<String, Object> getUserDetails(Long farmerId) {
+        Farmer farmer = farmerRepo.findById(farmerId)
+                .filter(Farmer::isActive)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("role", farmer.getRole());
+        response.put("farmerId", farmer.getFarmerId());
+        response.put("firstName", farmer.getFirstName());
+        response.put("lastName", farmer.getLastName());
+        response.put("username", farmer.getUsername());
+        return response;
+    }
+
     private AuthResponseDTO buildResponse(
             Farmer farmer,
             String token) {
@@ -242,6 +258,7 @@ public class AuthServiceImpl implements AuthService {
         dto.setToken(token);
         dto.setFarmerId(farmer.getFarmerId());
         dto.setRole(farmer.getRole());
+        dto.setFirstName(farmer.getFirstName());
 
         return dto;
     }

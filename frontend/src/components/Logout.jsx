@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import { clearAuth } from '../lib/auth';
+import { requestJson } from '../lib/api';
 
 export default function Logout() {
   const navigate = useNavigate();
@@ -10,11 +11,17 @@ export default function Logout() {
 
   const confirmLogout = async () => {
     setLoading(true);
-    clearAuth();
-    window.dispatchEvent(new Event('auth:expired'));
-    setTimeout(() => {
-      navigate('/login');
-    }, 500);
+    try {
+      await requestJson('/auth/logout', { method: 'POST' });
+    } catch {
+      // Local session cleanup should still happen if the cookie is already invalid.
+    } finally {
+      clearAuth();
+      window.dispatchEvent(new Event('auth:expired'));
+      setTimeout(() => {
+        navigate('/login');
+      }, 500);
+    }
   };
 
   return (

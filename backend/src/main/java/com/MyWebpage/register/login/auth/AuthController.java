@@ -1,32 +1,47 @@
 package com.MyWebpage.register.login.auth;
 
 import com.MyWebpage.register.login.auth.dto.*;
+import com.MyWebpage.register.login.farmer.Farmer;
+import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
 import com.MyWebpage.register.login.passwordreset.ResetPasswordRequest;
 import com.MyWebpage.register.login.common.EmailService;
 import com.MyWebpage.register.login.otp.OtpPurpose;
 import com.MyWebpage.register.login.otp.OtpService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Duration;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
+    private static final Duration AUTH_COOKIE_TTL = Duration.ofDays(7);
+
     private final AuthService authService;
     private final EmailService emailService;
     private final OtpService otpService;
+
+    @Value("${app.auth.cookie-secure:false}")
+    private boolean secureAuthCookie;
 
     @PostMapping("/register/send-otp")
     public ResponseEntity<String> sendRegistrationOtp(@RequestBody FarmerRequestDTO dto) {
@@ -47,18 +62,22 @@ public class AuthController {
     }
 
     @PostMapping("/register/seller")
-    public AuthResponseDTO registerSeller(@RequestBody FarmerRequestDTO dto) {
-        return authService.register(dto, "SELLER");
+    public ResponseEntity<Map<String, Object>> registerSeller(@RequestBody FarmerRequestDTO dto) {
+        return ResponseEntity.ok(toSessionResponse(authService.register(dto, "SELLER")));
     }
 
     @PostMapping("/register/buyer")
-    public AuthResponseDTO registerBuyer(@RequestBody FarmerRequestDTO dto) {
-        return authService.register(dto, "BUYER");
+    public ResponseEntity<Map<String, Object>> registerBuyer(@RequestBody FarmerRequestDTO dto) {
+        return ResponseEntity.ok(toSessionResponse(authService.register(dto, "BUYER")));
     }
 
     @PostMapping("/login")
-    public AuthResponseDTO login(@RequestBody AuthRequestDTO dto) {
-        return authService.login(dto);
+    public ResponseEntity<Map<String, Object>> login(
+            @RequestBody AuthRequestDTO dto,
+            HttpServletResponse response) {
+        AuthResponseDTO authResponse = authService.login(dto);
+        addAuthCookie(response, authResponse.getToken(), AUTH_COOKIE_TTL);
+        return ResponseEntity.ok(toSessionResponse(authResponse));
     }
 
     @PostMapping("/login/send-otp")
@@ -68,8 +87,25 @@ public class AuthController {
     }
 
     @PostMapping("/login/otp")
-    public AuthResponseDTO loginWithOtp(@RequestBody OtpLoginRequestDTO dto) {
-        return authService.loginWithOtp(dto);
+    public ResponseEntity<Map<String, Object>> loginWithOtp(
+            @RequestBody OtpLoginRequestDTO dto,
+            HttpServletResponse response) {
+        AuthResponseDTO authResponse = authService.loginWithOtp(dto);
+        addAuthCookie(response, authResponse.getToken(), AUTH_COOKIE_TTL);
+        return ResponseEntity.ok(toSessionResponse(authResponse));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, Object>> me(Authentication authentication) {
+        Long farmerId = Long.parseLong(authentication.getName());
+        Map<String, Object> response =authService.getUserDetails(farmerId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletResponse response) {
+        addAuthCookie(response, "", Duration.ZERO);
+        return ResponseEntity.ok("Logged out");
     }
 
     @PostMapping("/delete-account/send-otp")
@@ -117,5 +153,25 @@ public class AuthController {
             return OtpPurpose.BUYER_REGISTRATION;
         }
         return OtpPurpose.SELLER_REGISTRATION;
+    }
+
+    private void addAuthCookie(HttpServletResponse response, String token, Duration maxAge) {
+        ResponseCookie cookie = ResponseCookie.from("token", token)
+                .httpOnly(true)
+                .secure(secureAuthCookie)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(maxAge)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    private Map<String, Object> toSessionResponse(AuthResponseDTO authResponse) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("role", authResponse.getRole());
+        response.put("farmerId", authResponse.getFarmerId());
+        response.put("firstName", authResponse.getFirstName());
+        return response;
     }
 }
