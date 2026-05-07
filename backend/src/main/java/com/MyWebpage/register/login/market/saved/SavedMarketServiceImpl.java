@@ -66,11 +66,13 @@ public class SavedMarketServiceImpl implements SavedMarketService {
     @Override
     @Transactional(readOnly = true)
     public Page<SavedMarketResponse> getAll(Long userId, int page, int size) {
+        int resolvedPage = Math.max(page, 0);
+        int resolvedSize = Math.min(Math.max(size, 1), 50);
         return savedMarketRepository.findByUserId(
                         userId,
                         PageRequest.of(
-                                page,
-                                size,
+                                resolvedPage,
+                                resolvedSize,
                                 Sort.by(Sort.Order.desc("savedAt"), Sort.Order.desc("id"))
                         )
                 )
