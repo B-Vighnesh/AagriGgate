@@ -6,6 +6,7 @@ import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.approach.ApproachFarmerService;
 import com.MyWebpage.register.login.favorite.FavoriteService;
+import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
+
 import org.springframework.http.HttpStatus;
 
 @Service
@@ -28,7 +31,13 @@ import org.springframework.http.HttpStatus;
 public class CropServiceImpl implements CropService {
 
     private static final Logger logger = LoggerFactory.getLogger(CropServiceImpl.class);
+    private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
 
+    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+    );
     private final CropRepo cropRepo;
     private final FarmerRepo farmerRepo;
     private final CropMapper cropMapper;
@@ -261,11 +270,31 @@ public class CropServiceImpl implements CropService {
     }
 
     private void applyImage(Crop crop, MultipartFile imageFile) throws IOException {
-        if (imageFile != null && !imageFile.isEmpty()) {
-            crop.setImageName(imageFile.getOriginalFilename());
-            crop.setImageType(imageFile.getContentType());
-            crop.setImageData(imageFile.getBytes());
+
+        if (imageFile == null || imageFile.isEmpty()) {
+            return;
         }
+
+        // 1. File size validation
+        if (imageFile.getSize() > MAX_IMAGE_SIZE) {
+            throw new IllegalArgumentException("Image size exceeds 5 MB limit");
+        }
+
+        // 2. Detect actual MIME type from file bytes
+        Tika tika = new Tika();
+        String detectedType = tika.detect(imageFile.getInputStream());
+
+        // 3. Allowlist validation
+        if (!ALLOWED_IMAGE_TYPES.contains(detectedType)) {
+            throw new IllegalArgumentException(
+                    "Only JPG, PNG, and WEBP images are allowed"
+            );
+        }
+
+        // 4. Safe to save
+        crop.setImageName(imageFile.getOriginalFilename());
+        crop.setImageType(detectedType);
+        crop.setImageData(imageFile.getBytes());
     }
 
     private Crop requireOwnedCrop(Long cropId, Long farmerId) {
