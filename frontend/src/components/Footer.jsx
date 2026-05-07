@@ -102,44 +102,67 @@ function GuestFooter({ year }) {
   return (
     <footer className="site-footer">
       <div className="ag-container footer-grid">
+
+        {/* Brand */}
         <div className="footer-brand">
-          {/* <span className="footer-brand__eyebrow">AagriGgate Intelligence Platform</span> */}
           <h3>AagriGgate</h3>
-          <p>Trade. Decide. Grow. Everything a farmer needs, in one platform</p>
+          <p>Trade. Decide. Grow. Everything a farmer needs, in one platform.</p>
         </div>
+
+        {/* Buyer Tools */}
         <div className="footer-section">
-          <h4>Platform</h4>
+          <h4>Buyer Tools</h4>
           <ul>
-            <li><Link to="/#problem">Problem</Link></li>
-            <li><Link to="/#features">Features</Link></li>
-            <li><Link to="/#trust">Trust</Link></li>
+            <li><Link to="/view-all-crops">Browse Crops</Link></li>
+            <li><Link to="/view-all-crops?filter=urgent">Urgent Crops</Link></li>
+            <li><Link to="/view-all-crops?filter=waste">Waste Crops</Link></li>
+            <li><Link to="/view-all-crops?filter=discount">Discount Listings</Link></li>
+            <li><Link to="/view-approach">My Requests</Link></li>
           </ul>
         </div>
+
+        {/* Insights */}
         <div className="footer-section">
-          <h4>Intelligence</h4>
+          <h4>Insights</h4>
           <ul>
-            <li><Link to={intelligenceLink}>Weather</Link></li>
-            <li><Link to={intelligenceLink}>Market Prices</Link></li>
+            <li><Link to="/market">Mandi Prices</Link></li>
+            <li><Link to="/weather">Weather Planner</Link></li>
+            <li><Link to="/news">Agriculture News</Link></li>
+            <li><Link to={intelligenceLink}>Market Intelligence</Link></li>
           </ul>
         </div>
+
+        {/* Company */}
         <div className="footer-section">
-          <h4>Future</h4>
+          <h4>Company</h4>
           <ul>
+            <li><Link to="/about-us">About us</Link></li>
+            <li><Link to="/#problem">Problem we solve</Link></li>
             <li><Link to="/#future">Roadmap</Link></li>
-          </ul>
-        </div>
-        <div className="footer-section">
-          <h4>Support</h4>
-          <ul>
             <li><Link to="/#faq">FAQ</Link></li>
             <li><Link to="/contact-us">Contact Us</Link></li>
           </ul>
         </div>
+
+        {/* Get Started */}
+        <div className="footer-section">
+          <h4>Get Started</h4>
+          <ul>
+            <li><Link to="/register">Sign Up Free</Link></li>
+            <li><Link to="/login">Log In</Link></li>
+            <li><Link to="/add-crop">Sell Your Crop</Link></li>
+            <li><Link to="/#how-it-works">How it works</Link></li>
+            <li><Link to="/#trust">Why trust us</Link></li>
+          </ul>
+        </div>
+
       </div>
+
       <div className="footer-bottom-wrap">
         <div className="ag-container footer-bottom">
-          <span className="footer-bottom__copyright">&copy; {year} AagriGgate. All rights reserved.</span>
-         
+          <span className="footer-bottom__copyright">
+            &copy; {year} AagriGgate. All rights reserved.
+          </span>
           <span className="footer-contact-pill">
             <span className="footer-contact-pill__value">Mangalore, Karnataka</span>
           </span>
