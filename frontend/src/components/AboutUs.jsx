@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from './common/Card';
-import { getRole } from '../lib/auth';
+import ValidateToken from './ValidateToken';
+import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -200,11 +202,21 @@ function PhaseCard({ phase, title, status, statusLabel, desc, items }) {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function AboutUs() {
+  const navigate = useNavigate();
+  const token = getToken();
   const role = getRole();
+  const farmerId = getFarmerId();
   const isFarmer = role === 'farmer';
+
+  useEffect(() => {
+    if (!token || !role) {
+      navigate('/login');
+    }
+  }, [navigate, role, token]);
 
   return (
     <div className="about-page">
+      <ValidateToken token={token} role={role} farmerId={farmerId} />
 
       {/* Hero */}
       <section className="about-hero">
