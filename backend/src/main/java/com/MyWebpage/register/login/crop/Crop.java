@@ -9,7 +9,6 @@ import java.util.Arrays;
 
 
 @Entity
-@Component
 public class Crop {
 
     @Id
