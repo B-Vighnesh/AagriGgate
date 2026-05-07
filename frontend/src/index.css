@@ -9829,6 +9829,7 @@ a {
   .chat-conversation-card {
     grid-template-columns: 34px minmax(0, 1fr);
     padding: 10px;
+    
   }
 
   .chat-conversation-card__avatar {
