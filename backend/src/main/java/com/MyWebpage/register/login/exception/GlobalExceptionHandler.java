@@ -18,7 +18,6 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    // ── Known / expected exceptions — safe to surface message ────────────────
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleNotFound(ResourceNotFoundException ex) {
@@ -51,8 +50,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Object>> handleIllegalArgument(IllegalArgumentException ex) {
-        // IllegalArgumentException is thrown intentionally in your service layer
-        // with controlled messages — safe to surface
         log.warn("Illegal argument: {}", ex.getMessage());
         return ResponseEntity
                 .badRequest()
@@ -61,7 +58,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Object>> handleBadCredentials(BadCredentialsException ex) {
-        // Never reveal whether email or password was wrong
         log.warn("Bad credentials attempt");
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
@@ -91,7 +87,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure("HTTP method not allowed", null));
     }
 
-    // ── Catch-all for unhandled RuntimeExceptions — never leak message ────────
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Object>> handleRuntime(RuntimeException ex) {
@@ -102,7 +97,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure("An unexpected error occurred", null));
     }
 
-    // ── Final fallback ────────────────────────────────────────────────────────
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleException(Exception ex) {
