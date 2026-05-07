@@ -833,41 +833,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Future roadmap */}
-      <section className="ag-container section reveal-block">
+      {/* Roadmap */}
+      <section className="ag-container section reveal-block" id="future">
         <SectionTitle
-          id="future"
-          kicker="Future Vision"
-          title="How We Are Building AagriGgate"
-          subtitle="Six phases from core marketplace to a full agricultural operating system."
+          kicker="Roadmap"
+          title="What Comes Next"
+          subtitle="AagriGgate is growing toward smarter market signals, better farmer support, and safer direct trade."
         />
         <div className="future-layout">
+          <Card className="vision-card vision-card--primary">
+            <p className="vision-card__eyebrow">Future vision</p>
+            <h3>From direct trade to smarter farm decisions</h3>
+            <p>
+              Upcoming tools focus on price intelligence, local support, alerts,
+              payments, logistics, and AI-assisted crop planning.
+            </p>
+          </Card>
           <Card className="feature-table feature-table--roadmap">
-            <h3>Future Roadmap</h3>
+            <div className="feature-table__head">
+              <h3>Planned Capabilities</h3>
+            </div>
             <div className="feature-table__rows">
-              {ROADMAP.map(([feature, impact]) => (
+              {ROADMAP.slice(0, 8).map(([feature, why]) => (
                 <div key={feature} className="feature-table__row">
                   <strong>{feature}</strong>
-                  <span>{impact}</span>
+                  <span>{why}</span>
                 </div>
               ))}
             </div>
           </Card>
-          <div className="vision-cards">
-            <Card className="vision-card vision-card--primary">
-              <p className="vision-card__eyebrow">Smart Selling</p>
-              <h3>AI price prediction and demand heatmaps can become the platform&apos;s strategic edge</h3>
-              <p>These features help farmers decide not just what to sell, but when and where to sell.</p>
-            </Card>
-            <Card className="vision-card vision-card--secondary">
-              <p className="vision-card__eyebrow">Full Ecosystem</p>
-              <h3>Payments, logistics, contracts, and offline access complete the agricultural operating system</h3>
-              <p>
-                That is how AagriGgate evolves from a useful tool into infrastructure
-                for Indian agriculture.
-              </p>
-            </Card>
-          </div>
         </div>
       </section>
 

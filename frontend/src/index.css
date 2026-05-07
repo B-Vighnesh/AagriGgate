@@ -1236,6 +1236,65 @@ a {
   animation: fadeUp 0.45s ease;
 }
 
+.home-quicklinks {
+  position: sticky;
+  top: 66px;
+  z-index: 35;
+  background: rgba(248, 252, 250, 0.96);
+  border-bottom: 1px solid rgba(31, 111, 84, 0.14);
+  box-shadow: 0 10px 24px rgba(22, 67, 49, 0.06);
+  backdrop-filter: blur(10px);
+}
+
+.home-quicklinks__inner {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.home-quicklinks__inner::-webkit-scrollbar {
+  display: none;
+}
+
+.home-quicklinks__link {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid rgba(31, 111, 84, 0.16);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--color-primary-dark);
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 6px 14px rgba(22, 67, 49, 0.05);
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.home-quicklinks__link:hover,
+.home-quicklinks__link:focus-visible {
+  background: #e7f5ee;
+  border-color: rgba(31, 111, 84, 0.32);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.home-page section[id],
+.home-page .section-title-block[id] {
+  scroll-margin-top: 132px;
+}
+
 .stats {
   background: #fff;
   border-bottom: 1px solid var(--color-border);
@@ -2688,6 +2747,21 @@ a {
 }
 
 @media (max-width: 900px) {
+  .home-quicklinks {
+    top: 62px;
+  }
+
+  .home-quicklinks__inner {
+    justify-content: flex-start;
+    padding-inline: 14px;
+  }
+
+  .home-quicklinks__link {
+    min-height: 36px;
+    padding-inline: 12px;
+    font-size: 0.8rem;
+  }
+
   .hero-slider,
   .home-split,
   .solution-grid,
@@ -9995,6 +10069,15 @@ a {
 }
 
 @media (max-width: 420px) {
+  .home-quicklinks {
+    top: 62px;
+  }
+
+  .home-page section[id],
+  .home-page .section-title-block[id] {
+    scroll-margin-top: 118px;
+  }
+
   .site-header__inner {
     min-height: 62px;
     gap: 10px;
@@ -10584,6 +10667,10 @@ img {
 
 /* --- 7. 320px "smallest mobile" refinements --- */
 @media (max-width: 360px) {
+  .home-quicklinks {
+    top: 58px;
+  }
+
   .ag-container {
     width: calc(100% - 12px);
     margin-left: 6px;
