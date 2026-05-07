@@ -312,15 +312,10 @@ export default function AboutUs() {
               <a href="mailto:webappfarmer@gmail.com">webappfarmer@gmail.com</a>
             </Card>
             <Card className="about-contact-card">
-              <p className="about-contact-card__label">Phone</p>
-              <a href="tel:+918618402581">+91 86184 02581</a>
-            </Card>
-            <Card className="about-contact-card">
               <p className="about-contact-card__label">Location</p>
               <span>Mangalore, Karnataka</span>
             </Card>
           </div>
-          <p className="about-legal">&copy; 2026 AagriGgate. All rights reserved.</p>
         </div>
       </section>
 

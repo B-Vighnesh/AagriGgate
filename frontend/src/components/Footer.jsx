@@ -2,10 +2,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { getRole } from '../lib/auth';
 
-const insightLinks = [
-  { label: 'Mandi Prices', to: '/market' },
-  { label: 'Weather', to: '/weather' },
-  { label: 'News', to: '/news' },
+const insightLinks = {
+  farmer: [
+    { label: 'Mandi Prices', to: '/market' },
+    { label: 'Weather', to: '/weather' },
+    { label: 'News', to: '/news' },
+  ],
+
+  buyer: [
+    { label: 'Mandi Prices', to: '/market' },
+    { label: 'News', to: '/news' },
+  ],
+};
+
+const companyLinks = [
+  { label: 'About us', to: '/about-us' },
   { label: 'Contact Us', to: '/contact-us' },
 ];
 
@@ -14,7 +25,6 @@ const roleLinks = {
     { label: 'My Crops', to: '/view-crop' },
     { label: 'Add Crop', to: '/add-crop' },
     { label: 'Requests', to: '/view-approach' },
-    { label: 'Account', to: '/account' },
   ],
   buyer: [
     { label: 'Browse Crops', to: '/view-all-crops' },
@@ -34,7 +44,7 @@ function LoggedInFooter({ role, year }) {
           <Link to="/" className="footer-logged-brand__mark">
             <strong>AagriGgate</strong>
           </Link>
-          <p>Direct trade between farmers and buyers. No middlemen. No hidden charges.</p>
+          <p>Trade. Decide. Grow. Everything a farmer needs, in one platform</p>
         </div>
 
         <div className="footer-logged-column">
@@ -51,7 +61,18 @@ function LoggedInFooter({ role, year }) {
         <div className="footer-logged-column">
           <h4>Insights</h4>
           <ul>
-            {insightLinks.map((item) => (
+            {(insightLinks[role] || []).map((item) => (
+              <li key={item.to}>
+                <Link to={item.to}>{item.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="footer-logged-column">
+          <h4>Company</h4>
+          <ul>
+            {companyLinks.map((item) => (
               <li key={item.to}>
                 <Link to={item.to}>{item.label}</Link>
               </li>
@@ -79,10 +100,9 @@ function GuestFooter({ year }) {
     <footer className="site-footer">
       <div className="ag-container footer-grid">
         <div className="footer-brand">
-          <span className="footer-brand__eyebrow">AagriGgate Intelligence Platform</span>
+          {/* <span className="footer-brand__eyebrow">AagriGgate Intelligence Platform</span> */}
           <h3>AagriGgate</h3>
-          <p>Direct trade, smarter decisions, and transparent agriculture workflows in one platform.</p>
-          <p className="footer-brand__note">Built to connect farmers and buyers with more clarity, less friction, and no hidden platform charges.</p>
+          <p>Trade. Decide. Grow. Everything a farmer needs, in one platform</p>
         </div>
         <div className="footer-section">
           <h4>Platform</h4>
