@@ -309,9 +309,8 @@ function QuickLinks() {
     { label: 'Features',     href: '#features' },
     { label: 'Farmers',      href: '#farmers' },
     { label: 'Buyers',       href: '#buyers' },
-    { label: 'Mandi',        href: '#intelligence' },
+    { label: 'Decision Support',        href: '#intelligence' },
     { label: 'How it works', href: '#how-it-works' },
-    { label: 'Roadmap',      href: '#future' },
     { label: 'FAQ',          href: '#faq' },
   ];
   return (
@@ -833,37 +832,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Roadmap */}
-      <section className="ag-container section reveal-block" id="future">
-        <SectionTitle
-          kicker="Roadmap"
-          title="What Comes Next"
-          subtitle="AagriGgate is growing toward smarter market signals, better farmer support, and safer direct trade."
-        />
-        <div className="future-layout">
-          <Card className="vision-card vision-card--primary">
-            <p className="vision-card__eyebrow">Future vision</p>
-            <h3>From direct trade to smarter farm decisions</h3>
-            <p>
-              Upcoming tools focus on price intelligence, local support, alerts,
-              payments, logistics, and AI-assisted crop planning.
-            </p>
-          </Card>
-          <Card className="feature-table feature-table--roadmap">
-            <div className="feature-table__head">
-              <h3>Planned Capabilities</h3>
-            </div>
-            <div className="feature-table__rows">
-              {ROADMAP.slice(0, 8).map(([feature, why]) => (
-                <div key={feature} className="feature-table__row">
-                  <strong>{feature}</strong>
-                  <span>{why}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-      </section>
+                
 
       {/* FAQ */}
       <section className="section section--surface reveal-block">
