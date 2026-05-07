@@ -43,6 +43,7 @@ function navByRole(role) {
       { type: 'link', label: 'Requests', to: '/view-approach' },
       { type: 'link', label: 'Weather', to: '/weather' },
       { type: 'link', label: 'News', to: '/news' },
+      { type: 'link', label: 'About Us', to: '/about-us' },
     ];
   }
 
@@ -52,6 +53,7 @@ function navByRole(role) {
     { type: 'link', label: 'Mandi Prices', to: '/market' },
     { type: 'link', label: 'My Requests', to: '/view-approaches-user' },
     { type: 'link', label: 'News', to: '/news' },
+    { type: 'link', label: 'About Us', to: '/about-us' },
   ];
 }
 
