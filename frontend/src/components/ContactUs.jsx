@@ -12,12 +12,7 @@ const CONTACT_ITEMS = [
     href: 'mailto:webappfarmer@gmail.com',
     description: 'Best for account issues, platform help, and detailed follow-ups.',
   },
-  {
-    title: 'Call Us',
-    value: '+91 8618402581',
-    href: 'tel:+918618402581',
-    description: 'Useful when you need quick help during working hours.',
-  },
+  
   {
     title: 'Office',
     value: 'Mangalore, Karnataka',
