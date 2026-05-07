@@ -109,37 +109,36 @@ function GuestFooter({ year }) {
           <p>Trade. Decide. Grow. Everything a farmer needs, in one platform.</p>
         </div>
 
-        {/* Buyer Tools */}
-        <div className="footer-section">
-          <h4>Buyer Tools</h4>
-          <ul>
-            <li><Link to="/view-all-crops">Browse Crops</Link></li>
-            <li><Link to="/view-all-crops?filter=urgent">Urgent Crops</Link></li>
-            <li><Link to="/view-all-crops?filter=waste">Waste Crops</Link></li>
-            <li><Link to="/view-all-crops?filter=discount">Discount Listings</Link></li>
-            <li><Link to="/view-approach">My Requests</Link></li>
-          </ul>
-        </div>
+       
 
-        {/* Insights */}
-        <div className="footer-section">
-          <h4>Insights</h4>
-          <ul>
-            <li><Link to="/market">Mandi Prices</Link></li>
-            <li><Link to="/weather">Weather Planner</Link></li>
-            <li><Link to="/news">Agriculture News</Link></li>
-            <li><Link to={intelligenceLink}>Market Intelligence</Link></li>
-          </ul>
-        </div>
+
+        {/* Explore */}
+      <div className="footer-section">
+        <h4>Explore</h4>
+        <ul>
+          <li><Link to="/#problem">Problem</Link></li>
+          <li><Link to="/#solution">Solution</Link></li>
+          <li><Link to="/#features">Features</Link></li>
+          <li><Link to="/#how-it-works">How it works</Link></li>
+        </ul>
+      </div>
+
+      {/* Platform */}
+      <div className="footer-section">
+        <h4>Platform</h4>
+        <ul>
+          <li><Link to="/#farmers">Farmers</Link></li>
+          <li><Link to="/#buyers">Buyers</Link></li>
+          <li><Link to="/#intelligence">Decision Support</Link></li>
+          <li><Link to="/#faq">FAQ</Link></li>
+        </ul>
+      </div>
 
         {/* Company */}
         <div className="footer-section">
           <h4>Company</h4>
           <ul>
             <li><Link to="/about-us">About us</Link></li>
-            <li><Link to="/#problem">Problem we solve</Link></li>
-            <li><Link to="/#future">Roadmap</Link></li>
-            <li><Link to="/#faq">FAQ</Link></li>
             <li><Link to="/contact-us">Contact Us</Link></li>
           </ul>
         </div>
@@ -150,9 +149,6 @@ function GuestFooter({ year }) {
           <ul>
             <li><Link to="/register">Sign Up Free</Link></li>
             <li><Link to="/login">Log In</Link></li>
-            <li><Link to="/add-crop">Sell Your Crop</Link></li>
-            <li><Link to="/#how-it-works">How it works</Link></li>
-            <li><Link to="/#trust">Why trust us</Link></li>
           </ul>
         </div>
 
@@ -170,7 +166,7 @@ function GuestFooter({ year }) {
       </div>
     </footer>
   );
-}
+} 
 
 export default function Footer() {
   const year = new Date().getFullYear();
