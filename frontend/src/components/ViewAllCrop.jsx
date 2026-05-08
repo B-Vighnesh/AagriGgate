@@ -9,9 +9,9 @@ import Card from './common/Card';
 const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect fill="%23e7f4ee" width="360" height="220"/><rect fill="%23cfe7da" x="0" y="160" width="360" height="60"/><text x="180" y="118" font-family="Arial" font-size="24" text-anchor="middle" fill="%232a6e55">Crop Image</text></svg>';
 const QUICK_FILTER_CHIPS = [
   { label: 'All', category: '', listingType: 'all' },
-  { label: 'Vegetables', category: 'Vegetables', listingType: 'all' },
-  { label: 'Fruits', category: 'Fruits', listingType: 'all' },
-  { label: 'Spices', category: 'Spices', listingType: 'all' },
+  { label: 'Vegetables', category: 'Vegetable', listingType: 'all' },
+  { label: 'Fruits', category: 'Fruit', listingType: 'all' },
+  { label: 'Spices', category: 'Spice', listingType: 'all' },
   { label: 'Urgent', category: '', listingType: 'urgent' },
 ];
 
