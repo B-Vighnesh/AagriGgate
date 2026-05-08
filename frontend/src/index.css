@@ -6224,8 +6224,6 @@ a {
 }
 
 .request-lifecycle-panel {
-  display: grid;
-  gap: 18px;
   padding: 22px;
   border-radius: 24px;
   border: 1px solid rgba(23, 78, 61, 0.1);
