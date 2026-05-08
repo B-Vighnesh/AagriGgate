@@ -383,8 +383,8 @@ export default function ViewDetails() {
           cropId={cropId}
           initialQuantity={Number(requestedQuantity || 1)}
           onClose={() => setShowApproachModal(false)}
-          onSuccess={() => {
-            setApproachStatus(false);
+          onSuccess={(quantity, latestApproach) => {
+            setApproachStatus(latestApproach || { status: 'Pending' });
             setInfoAlert('Your request is pending review from the farmer.');
             showToast('Approach request sent.', 'success');
           }}
