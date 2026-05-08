@@ -5209,6 +5209,11 @@ a {
   min-height: 300px;
   width: 100%;
 }
+@media (min-width: 1440px) {
+    .view-all-card {
+        padding: 0;
+    }
+}
 
 .view-all-card--normal {
   border-color: #69b98b;
@@ -5329,7 +5334,6 @@ a {
 }
 
 .view-all-card__price-row {
-  display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 10px;
@@ -9663,7 +9667,7 @@ a {
   }
 
   .view-all-card {
-    min-height: 0;
+    min-height: 280px;
   }
 
   .view-all-card__image-wrap {
