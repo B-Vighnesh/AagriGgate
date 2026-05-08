@@ -287,6 +287,15 @@ export default function ViewAllCrop() {
     && chip.listingType === appliedFilters.listingType
   );
 
+  const hasActiveFilters = Boolean(
+    appliedSearch.trim()
+    || appliedFilters.region.trim()
+    || appliedFilters.price
+    || appliedFilters.category.trim()
+    || appliedFilters.farmerName.trim()
+    || appliedFilters.listingType !== 'all'
+  );
+
   return (
     <section className="page view-all-page">
       <ValidateToken farmerId={farmerId} token={token} role={role} />
@@ -480,8 +489,17 @@ export default function ViewAllCrop() {
         {!loading && !error && crops.length === 0 && (
           <Card className="view-all-empty">
             <p className="view-all-empty__icon">0</p>
-            <p className="view-all-empty__title">No crops match your filters.</p>
-            <p className="view-all-empty__desc">Try different filters or clear the current selection.</p>
+            {hasActiveFilters ? (
+              <>
+                <p className="view-all-empty__title">No crops match your filters.</p>
+                <p className="view-all-empty__desc">Try different filters or clear the current selection.</p>
+              </>
+            ) : (
+              <>
+                <p className="view-all-empty__title">No available crops.</p>
+                <p className="view-all-empty__desc">Please check again later for new listings.</p>
+              </>
+            )}
           </Card>
         )}
 
