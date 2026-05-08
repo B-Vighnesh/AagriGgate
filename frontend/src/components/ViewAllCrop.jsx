@@ -104,6 +104,7 @@ export default function ViewAllCrop() {
   const [totalElements, setTotalElements] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const loadMoreRef = useRef(null);
   const imageUrlRegistryRef = useRef(new Set());
 
@@ -249,6 +250,7 @@ export default function ViewAllCrop() {
   const applyFilters = () => {
     setPage(0);
     setAppliedFilters(filters);
+    setMobileFiltersOpen(false);
   };
 
   const clearFilters = () => {
@@ -265,6 +267,7 @@ export default function ViewAllCrop() {
     setAppliedSearch('');
     setAppliedFilters(emptyFilters);
     setPage(0);
+    setMobileFiltersOpen(false);
   };
 
   const applyQuickChip = (chip) => {
@@ -295,6 +298,15 @@ export default function ViewAllCrop() {
     || appliedFilters.farmerName.trim()
     || appliedFilters.listingType !== 'all'
   );
+
+  const activeFilterCount = [
+    appliedSearch.trim(),
+    appliedFilters.region.trim(),
+    appliedFilters.price,
+    appliedFilters.category.trim(),
+    appliedFilters.farmerName.trim(),
+    appliedFilters.listingType !== 'all' ? appliedFilters.listingType : '',
+  ].filter(Boolean).length;
 
   return (
     <section className="page view-all-page">
@@ -351,7 +363,36 @@ export default function ViewAllCrop() {
           ))}
         </div>
 
-        <Card className="view-all-filter-card">
+        <div className="view-all-mobile-controls">
+          <button
+            type="button"
+            className={`view-all-mobile-filter-btn ${mobileFiltersOpen ? 'view-all-mobile-filter-btn--active' : ''}`}
+            onClick={() => setMobileFiltersOpen((open) => !open)}
+            aria-expanded={mobileFiltersOpen}
+            aria-controls="view-all-filter-panel"
+          >
+            <i className="fa-solid fa-sliders" aria-hidden="true" />
+            <span>Filters</span>
+            {activeFilterCount > 0 ? <strong>{activeFilterCount}</strong> : null}
+          </button>
+          <select
+            className="view-all-mobile-sort"
+            value={filters.sortBy}
+            onChange={(event) => setFilters((prev) => ({ ...prev, sortBy: event.target.value }))}
+            aria-label="Sort crops"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="price-low">Price low</option>
+            <option value="price-high">Price high</option>
+          </select>
+          <span className="view-all-mobile-total">{totalElements} crops</span>
+        </div>
+
+        <Card
+          id="view-all-filter-panel"
+          className={`view-all-filter-card ${mobileFiltersOpen ? 'view-all-filter-card--open' : ''}`}
+        >
           <div className="view-all-toolbar__head">
             <div>
               <h3>Filters</h3>
