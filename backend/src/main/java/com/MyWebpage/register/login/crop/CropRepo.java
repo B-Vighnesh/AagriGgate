@@ -113,6 +113,85 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             @Param("normalOnly") Boolean normalOnly,
             @Param("discountOnly") Boolean discountOnly,
             Pageable pageable);
+    @Query(
+            value = """
+                    SELECT new com.MyWebpage.register.login.crop.CropViewDTO(
+                        c.cropID,
+                        c.cropName,
+                        c.cropType,
+                        c.region,
+                        c.marketPrice,
+                        c.quantity,
+                        c.unit,
+                        c.description,
+                        c.postDate,
+                        CASE
+                            WHEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, ''))) <> ''
+                            THEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, '')))
+                            ELSE c.farmer.username
+                        END,
+                        CASE
+                            WHEN :currentUserId IS NOT NULL AND c.farmer.farmerId = :currentUserId
+                            THEN true
+                            ELSE false
+                        END,
+                        c.isUrgent,
+                        c.isWaste,
+                        c.discountPrice,
+                        c.status
+                    )
+                    FROM Crop c
+                    WHERE  c.active = true
+                      AND c.status = 'available'
+                      AND c.deletedAt IS NULL
+                      AND c.farmer.active = true
+                      AND (:keyword IS NULL
+                           OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%')))
+                      AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
+                      AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
+                      AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
+                      AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
+                      AND (:wasteOnly IS NULL OR c.isWaste = :wasteOnly)
+                      AND (:normalOnly IS NULL OR (coalesce(c.isUrgent, false) = false AND coalesce(c.isWaste, false) = false))
+                      AND (:discountOnly IS NULL OR coalesce(c.discountPrice, 0) > 0)
+                      AND (:farmerName IS NULL
+                           OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
+                           OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
+                           OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :farmerName, '%')))
+                    """,
+            countQuery = """
+                    SELECT COUNT(c) FROM Crop c
+                    WHERE c.active = true
+                      AND c.status = 'available'
+                      AND c.deletedAt IS NULL
+                      AND c.farmer.active = true
+                      AND (:keyword IS NULL
+                           OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%')))
+                      AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
+                      AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
+                      AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
+                      AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
+                      AND (:wasteOnly IS NULL OR c.isWaste = :wasteOnly)
+                      AND (:normalOnly IS NULL OR (coalesce(c.isUrgent, false) = false AND coalesce(c.isWaste, false) = false))
+                      AND (:discountOnly IS NULL OR coalesce(c.discountPrice, 0) > 0)
+                      AND (:farmerName IS NULL
+                           OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
+                           OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
+                           OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :farmerName, '%')))
+                    """
+    )
+    Page<CropViewDTO> findAllFilteredCropViews(
+            @Param("currentUserId") Long currentUserId,
+            @Param("keyword") String keyword,
+            @Param("region") String region,
+            @Param("category") String category,
+            @Param("maxPrice") Double maxPrice,
+            @Param("farmerName") String farmerName,
+            @Param("urgentOnly") Boolean urgentOnly,
+            @Param("wasteOnly") Boolean wasteOnly,
+            @Param("normalOnly") Boolean normalOnly,
+            @Param("discountOnly") Boolean discountOnly,
+            Pageable pageable);
 
     @Query("""
             SELECT new com.MyWebpage.register.login.crop.CropViewDTO(
@@ -347,4 +426,7 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
               AND c.farmer.active = true
             """)
     Crop findByCropID(@Param("productId") Long productId);
+
+    @Query("SELECT c.imageData, c.imageType, c.imageKey, c.imageName FROM Crop c WHERE c.cropID = :cropId AND c.active = true AND c.deletedAt IS NULL")
+    Object[] findImageDataByCropId(@Param("cropId") Long cropId);
 }

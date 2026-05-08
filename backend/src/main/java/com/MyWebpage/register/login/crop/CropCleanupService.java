@@ -14,7 +14,7 @@ public class CropCleanupService {
 
     private final CropRepo cropRepo;
 
-    @Scheduled(cron = "${crop.cleanup-cron}")
+//    @Scheduled(cron = "${crop.cleanup-cron}")
     public void deleteSoldCrops() {
         int deleted = cropRepo.softDeleteSoldCrops(java.time.LocalDateTime.now());
         if (deleted > 0) {

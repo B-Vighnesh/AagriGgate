@@ -1,0 +1,2 @@
+ALTER TABLE crops
+ADD COLUMN image_key VARCHAR(512) NULL;

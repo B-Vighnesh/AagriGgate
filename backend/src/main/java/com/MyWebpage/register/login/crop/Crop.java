@@ -38,6 +38,32 @@ public class Crop {
     private String postDate;
     private Boolean active = true;
     private LocalDateTime deletedAt;
+    @Column(name = "image_key", length = 512)
+    private String imageKey;
+
+    public String getImageKey() {
+        return imageKey;
+    }
+
+    public void setImageKey(String imageKey) {
+        this.imageKey = imageKey;
+    }
+
+    public Boolean getWaste() {
+        return isWaste;
+    }
+
+    public void setWaste(Boolean waste) {
+        isWaste = waste;
+    }
+
+    public Boolean getUrgent() {
+        return isUrgent;
+    }
+
+    public void setUrgent(Boolean urgent) {
+        isUrgent = urgent;
+    }
 
     public String getPostDate() {
         return postDate;
