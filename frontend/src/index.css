@@ -6123,10 +6123,7 @@ a {
 }
 
 .request-lifecycle-page {
-  background:
-    radial-gradient(circle at top left, rgba(47, 154, 116, 0.12), transparent 22%),
-    radial-gradient(circle at top right, rgba(234, 143, 68, 0.12), transparent 18%),
-    linear-gradient(180deg, #eef7f1 0%, #e6f1ea 100%);
+ 
 }
 
 .request-lifecycle-card {
@@ -6682,7 +6679,6 @@ a {
   padding: 12px;
   border-radius: var(--border-radius-lg);
   border: 0.5px solid var(--color-border-tertiary);
-  background: #f7fbf5;
   box-shadow: none;
   text-align: right;
 }
@@ -6798,15 +6794,23 @@ a {
 .request-lifecycle-action-group {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .request-lifecycle-action.ui-btn {
   width: auto;
+  height: 42px;
   min-height: 42px;
   padding: 0 18px;
   border-radius: var(--border-radius-md);
   font-weight: 700;
+  align-self: center;
+  flex: 0 0 auto;
 }
 
 .request-lifecycle-action--accept.ui-btn {
