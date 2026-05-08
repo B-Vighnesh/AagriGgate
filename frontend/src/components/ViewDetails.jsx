@@ -215,7 +215,15 @@ export default function ViewDetails() {
     <section className="page view-details-page">
       <ValidateToken token={token} />
       <div className="ag-container">
-        <button className="link-back" onClick={() => navigate(-1)}>Back</button>
+        <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+          </button>
 
         {infoAlert ? <p className="view-details-alert">{infoAlert}</p> : null}
 
