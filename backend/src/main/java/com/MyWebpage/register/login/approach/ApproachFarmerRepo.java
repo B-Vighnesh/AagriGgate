@@ -381,6 +381,7 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
     FROM ApproachFarmer a
     WHERE a.userId = :userId
     AND a.cropId = :cropId
+    AND a.active = true
     ORDER BY a.approachId DESC
     LIMIT 1
 """)
