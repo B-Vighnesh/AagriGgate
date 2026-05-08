@@ -45,20 +45,19 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
       </div>
 
       <div className="view-all-card__body">
-        <h3>{crop.cropName}</h3>
-        <p className="view-all-card__meta">
-          Farmer: {crop.farmerName || 'N/A'} | Region: {crop.region || 'N/A'}
-        </p>
         <div className="crop-flag-row">
-          {crop.status ? <span className={`crop-flag crop-flag--${crop.status.toLowerCase()}`}>{crop.status}</span> : null}
+          <h3>{crop.cropName}</h3>
           {crop.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
           {crop.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
         </div>
+        <p className="view-all-card__meta">
+            Region: {crop.region || 'N/A'}
+        </p>
+        
 
         <div className="view-all-card__price-row">
           <div>
-            <p className="view-all-card__price">Rs {Number(crop.marketPrice || 0).toFixed(2)}</p>
-            <p className="view-all-card__unit">per {crop.unit || 'unit'}</p>
+            <p className="view-all-card__price">Rs {Number(crop.marketPrice || 0).toFixed(2)} per {crop.unit || 'unit'}</p>
             {crop.discountPrice ? (
               <p className="view-all-card__discount">Discount: Rs {Number(crop.discountPrice).toFixed(2)}</p>
             ) : null}
