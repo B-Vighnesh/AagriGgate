@@ -4,8 +4,9 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import { getRole } from '../lib/auth';
-import { requestJson } from '../lib/api';
+import { apiFetch, requestJson } from '../lib/api';
 import { createOrGetChatConversation, getChatConversationByApproach } from '../api/chatApi';
+import Modal from './Modal';
 
 const STATUS_CLASS = {
   pending: 'user-requests-status--pending',
@@ -48,6 +49,8 @@ export default function RequestDetails() {
   const [actionLoading, setActionLoading] = useState('');
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [conversation, setConversation] = useState(null);
+  const [withdrawLoading, setWithdrawLoading] = useState(null);
+  const [pendingWithdraw, setPendingWithdraw] = useState(null);
 
   const isFarmer = role === 'farmer';
   const conversationStatusKey = String(conversation?.status || '').toLowerCase();
@@ -141,6 +144,20 @@ export default function RequestDetails() {
       showToast(error.message || 'Unable to update request.', 'error');
     } finally {
       setActionLoading('');
+    }
+  };
+
+  const handleWithdraw = async (targetApproachId) => {
+    try {
+      setWithdrawLoading(targetApproachId);
+      const response = await apiFetch(`/buyer/approach/delete/${targetApproachId}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to withdraw request.');
+      showToast('Request withdrawn.', 'success');
+      navigate('/view-approaches-user');
+    } catch (error) {
+      showToast(error.message || 'Unable to withdraw request.', 'error');
+    } finally {
+      setWithdrawLoading(null);
     }
   };
 
@@ -292,11 +309,24 @@ export default function RequestDetails() {
                       Accept Request
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="danger"
                       loading={actionLoading === 'reject'}
                       onClick={() => handleFarmerDecision('reject')}
                     >
                       Reject Request
+                    </Button>
+                  </div>
+                )}
+
+                {!isFarmer && statusKey === 'pending' && (
+                  <div className="request-lifecycle-action-group">
+                    <Button
+                      variant="danger"
+                      loading={withdrawLoading === requestDetails.approachId}
+                      disabled={withdrawLoading !== null}
+                      onClick={() => setPendingWithdraw({ approachId: requestDetails.approachId, step: 1 })}
+                    >
+                      {withdrawLoading === requestDetails.approachId ? 'Withdrawing...' : 'Withdraw'}
                     </Button>
                   </div>
                 )}
@@ -317,6 +347,40 @@ export default function RequestDetails() {
           </div>
         </Card>
       </div>
+      <Modal
+        isOpen={pendingWithdraw?.step === 1}
+        title="Withdraw Request"
+        message="This pending request will be withdrawn from the farmer."
+        onClose={() => setPendingWithdraw(null)}
+        secondaryAction={{
+          label: 'Cancel',
+          onClick: () => setPendingWithdraw(null),
+        }}
+        primaryAction={{
+          label: 'Continue',
+          onClick: () => setPendingWithdraw((prev) => prev ? { ...prev, step: 2 } : prev),
+        }}
+      />
+      <Modal
+        isOpen={pendingWithdraw?.step === 2}
+        title="Final Confirmation"
+        message="Please confirm once more. This request will be permanently withdrawn."
+        onClose={() => setPendingWithdraw(null)}
+        secondaryAction={{
+          label: 'Back',
+          onClick: () => setPendingWithdraw((prev) => prev ? { ...prev, step: 1 } : prev),
+        }}
+        primaryAction={{
+          label: 'Withdraw Request',
+          onClick: async () => {
+            const targetApproachId = pendingWithdraw?.approachId;
+            setPendingWithdraw(null);
+            if (targetApproachId) {
+              await handleWithdraw(targetApproachId);
+            }
+          },
+        }}
+      />
       <Toast message={toast.message} type={toast.type} />
     </section>
   );
