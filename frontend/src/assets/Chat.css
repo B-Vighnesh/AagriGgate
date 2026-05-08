@@ -1568,12 +1568,14 @@
   .chat-panel__header {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
     padding: 10px 10px;
     gap: 8px;
   }
 
   .chat-header__actions {
     gap: 4px;
+    justify-content: flex-end;
   }
 
   .chat-header__info {
@@ -1581,14 +1583,14 @@
   }
 
   .chat-header__avatar {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 10px;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
   }
 
   .chat-header__details h3 {
-    font-size: 0.9rem;
+    font-size: 0.86rem;
   }
 
   .chat-header__details p {
@@ -1597,16 +1599,12 @@
 
   .chat-icon-btn,
   .chat-back-btn {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
   }
 
   .chat-header__actions .chat-icon-btn {
-    min-width: 34px;
-  }
-
-  .chat-header__actions > .chat-icon-btn:not(.chat-icon-btn--dots) {
-    display: none;
+    min-width: 32px;
   }
 
   .chat-panel-menu__dropdown {

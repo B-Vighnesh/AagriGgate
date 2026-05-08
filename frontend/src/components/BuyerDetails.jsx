@@ -85,20 +85,22 @@ export default function BuyerDetails() {
   return (
     <section className="page buyer-profile-page">
       <div className="ag-container">
-        <div className="buyer-profile-topbar">
-          <button
-            type="button"
-            className="buyer-profile-back"
-            onClick={() => navigate(-1)}
-          >
-            <span aria-hidden="true">{'<-'}</span>
-            <span>Back</span>
-          </button>
-        </div>
+          
 
         <div className="buyer-profile-layout">
+          
           <Card className="buyer-profile-hero">
+            
             <div className="buyer-profile-head">
+              <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+          </button>
               <div className="buyer-avatar">{initials}</div>
               <div className="buyer-profile-head__copy">
                 <span className="buyer-profile-kicker">Buyer Profile</span>
