@@ -57,7 +57,7 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
 
         <div className="view-all-card__price-row">
           <div>
-            <p className="view-all-card__price">Rs {Number(crop.marketPrice || 0).toFixed(2)} per {crop.unit || 'unit'}</p>
+            <p className="view-all-card__price">Rs {Number(crop.marketPrice || 0).toFixed(2)} <small>per {crop.unit || 'unit'}</small></p>
             {crop.discountPrice ? (
               <p className="view-all-card__discount">Discount: Rs {Number(crop.discountPrice).toFixed(2)}</p>
             ) : null}

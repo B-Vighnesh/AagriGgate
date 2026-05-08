@@ -322,7 +322,7 @@ export default function ViewCrop() {
                         navigate(`/update-crop/${crop.cropID}`);
                       }}
                     >
-                      Edit
+                      Update
                     </Button>
                     <Button
                       variant="outline"
