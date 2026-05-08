@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -6,9 +6,11 @@ import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import DeleteCrop from './DeleteCrop';
 import ApproachFarmer from './ApproachFarmer';
+import Modal from './Modal';
 import { apiFetch } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 import { addFavorite, addToCart, getFavoriteStatus, removeFavorite } from '../api/buyerToolsApi';
+import { createOrGetChatConversation } from '../api/chatApi';
 
 const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect width="360" height="220" fill="%23d8f3dc"/><text x="50%" y="55%" text-anchor="middle" font-size="28" fill="%231f6f54">Crop</text></svg>';
 
@@ -31,7 +33,11 @@ function getApproachStatusValue(approachStatus) {
 
 function getApproachIdValue(approachStatus) {
   if (approachStatus && typeof approachStatus === 'object') {
-    return approachStatus.approachId ?? null;
+    return approachStatus.approachId
+      ?? approachStatus.approachID
+      ?? approachStatus.approach_id
+      ?? approachStatus.id
+      ?? null;
   }
   return null;
 }
@@ -86,6 +92,9 @@ export default function ViewDetails() {
   const [requestedQuantity, setRequestedQuantity] = useState('1');
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [showApproachModal, setShowApproachModal] = useState(false);
+  const [approachPromptOpen, setApproachPromptOpen] = useState(false);
+  const [approachActionLoading, setApproachActionLoading] = useState(false);
+  const approachPromptShownRef = useRef(false);
 
   const safeFetch = (path, options = {}) => apiFetch(path, options);
 
@@ -164,6 +173,15 @@ export default function ViewDetails() {
     };
   }, [cropId]);
 
+  useEffect(() => {
+    if (loading || role !== 'buyer' || approachPromptShownRef.current) return;
+    const status = normalizeApproachStatus(approachStatus);
+    if (status === 'pending' || status === 'accepted' || status === 'active') {
+      approachPromptShownRef.current = true;
+      setApproachPromptOpen(true);
+    }
+  }, [approachStatus, loading, role]);
+
   if (loading) {
     return (
       <section className="page page--center">
@@ -237,6 +255,40 @@ export default function ViewDetails() {
     }
   };
 
+  const handleApproachButtonClick = () => {
+    if (['pending', 'accepted', 'active'].includes(normalizedApproachStatus)) {
+      setApproachPromptOpen(true);
+      return;
+    }
+    setShowApproachModal(true);
+  };
+
+  const handleTrackRequest = () => {
+    if (!approachId) {
+      showToast('Request details are not available yet. Please refresh and try again.', 'info');
+      return;
+    }
+    setApproachPromptOpen(false);
+    navigate(`/requests/${approachId}`);
+  };
+
+  const handleOpenAcceptedChat = async () => {
+    if (!approachId) {
+      showToast('Chat is not available yet. Please refresh and try again.', 'info');
+      return;
+    }
+    setApproachActionLoading(true);
+    try {
+      const conversation = await createOrGetChatConversation(approachId);
+      setApproachPromptOpen(false);
+      navigate(`/chat/${conversation.conversationId}`);
+    } catch (errorValue) {
+      showToast(errorValue.message || 'Unable to open chat right now.', 'error');
+    } finally {
+      setApproachActionLoading(false);
+    }
+  };
+
   return (
     <section className="page view-details-page">
       <ValidateToken token={token} />
@@ -303,7 +355,7 @@ export default function ViewDetails() {
                         View Request
                       </Button>
                     ) : null}
-                    <Button variant="accent" onClick={() => setShowApproachModal(true)} disabled={isSold || hasOpenApproach}>
+                    <Button variant="accent" onClick={handleApproachButtonClick} disabled={isSold || normalizedApproachStatus === 'completed'}>
                       {approachButtonLabel}
                     </Button>
                     <Button variant="ghost" onClick={() => navigate('/cart')}>Open Cart</Button>
@@ -338,6 +390,30 @@ export default function ViewDetails() {
           }}
         />
       ) : null}
+      <Modal
+        isOpen={approachPromptOpen}
+        title={normalizedApproachStatus === 'pending' ? 'Request Pending' : 'Request Accepted'}
+        message={
+          normalizedApproachStatus === 'pending'
+            ? 'Your request is pending with the farmer. Track the request to see the latest status.'
+            : 'Your request is accepted. Start the conversation with the farmer to continue the deal.'
+        }
+        onClose={() => setApproachPromptOpen(false)}
+        secondaryAction={{
+          label: normalizedApproachStatus === 'pending' ? 'Close' : 'View Request',
+          onClick: normalizedApproachStatus === 'pending'
+            ? () => setApproachPromptOpen(false)
+            : handleTrackRequest,
+        }}
+        primaryAction={{
+          label: normalizedApproachStatus === 'pending'
+            ? 'Track Request'
+            : approachActionLoading
+              ? 'Opening...'
+              : 'Open Chat',
+          onClick: normalizedApproachStatus === 'pending' ? handleTrackRequest : handleOpenAcceptedChat,
+        }}
+      />
       <Toast message={toast.message} type={toast.type} />
     </section>
   );
