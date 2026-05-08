@@ -372,4 +372,21 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
               AND (a.lastMessageAt IS NULL OR a.lastMessageAt <= a.notifiedAt)
             """)
     List<ApproachFarmer> findAcceptedRequestsNeedingExpiration(@Param("expireBefore") LocalDateTime expireBefore);
+
+    @Query("""
+    SELECT new com.MyWebpage.register.login.approach.ApproachStatusResponseDTO(
+        a.status,
+        a.approachId
+    )
+    FROM ApproachFarmer a
+    WHERE a.userId = :userId
+    AND a.cropId = :cropId
+    AND a.active = true
+    ORDER BY a.approachId DESC
+    LIMIT 1
+""")
+    ApproachStatusResponseDTO findLatestStatus(
+            @Param("userId") Long userId,
+            @Param("cropId") Long cropId
+    );
 }

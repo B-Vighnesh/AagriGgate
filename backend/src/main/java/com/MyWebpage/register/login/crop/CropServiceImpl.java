@@ -1,12 +1,13 @@
 package com.MyWebpage.register.login.crop;
 
 import com.MyWebpage.register.login.cart.CartService;
+import com.MyWebpage.register.login.crop.ImageStorage.ImageResult;
+import com.MyWebpage.register.login.crop.ImageStorage.ImageStorageService;
 import com.MyWebpage.register.login.exception.ResourceNotFoundException;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.approach.ApproachFarmerService;
 import com.MyWebpage.register.login.favorite.FavoriteService;
-import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -21,7 +22,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Set;
 
 import org.springframework.http.HttpStatus;
@@ -38,16 +38,16 @@ public class CropServiceImpl implements CropService {
             "image/png",
             "image/webp"
     );
+    private final ImageStorageService imageStorageService;
     private final CropRepo cropRepo;
     private final FarmerRepo farmerRepo;
-    private final CropMapper cropMapper;
     private final ApproachFarmerService approachFarmerService;
     private final FavoriteService favoriteService;
     private final CartService cartService;
-    public CropServiceImpl(CropRepo cropRepo, FarmerRepo farmerRepo, CropMapper cropMapper, ApproachFarmerService approachFarmerService, FavoriteService favoriteService, CartService cartService) {
+    public CropServiceImpl(ImageStorageService imageStorageService, CropRepo cropRepo, FarmerRepo farmerRepo, ApproachFarmerService approachFarmerService, FavoriteService favoriteService, CartService cartService) {
+        this.imageStorageService = imageStorageService;
         this.cropRepo = cropRepo;
         this.farmerRepo = farmerRepo;
-        this.cropMapper = cropMapper;
         this.approachFarmerService = approachFarmerService;
         this.favoriteService = favoriteService;
         this.cartService = cartService;
@@ -62,7 +62,11 @@ public class CropServiceImpl implements CropService {
         crop.setFarmer(farmer);
         crop.setPostDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
         normalizeCropFlags(crop);
-        applyImage(crop, imageFile);
+        ImageResult result = imageStorageService.store(imageFile);
+        crop.setImageName(result.getName());
+        crop.setImageType(result.getType());
+        crop.setImageData(result.getData());
+        crop.setImageKey(result.getKey());
         logger.info("[v1] Adding crop {}", crop.getCropName());
         return cropRepo.save(crop);
     }
@@ -74,11 +78,16 @@ public class CropServiceImpl implements CropService {
         crop.setFarmer(existing.getFarmer());
         crop.setPostDate(existing.getPostDate());
         if (imageFile != null && !imageFile.isEmpty()) {
-            applyImage(crop, imageFile);
+            ImageResult result = imageStorageService.store(imageFile);
+            crop.setImageName(result.getName());
+            crop.setImageType(result.getType());
+            crop.setImageData(result.getData());
+            crop.setImageKey(result.getKey());
         } else {
             crop.setImageData(existing.getImageData());
             crop.setImageName(existing.getImageName());
             crop.setImageType(existing.getImageType());
+            crop.setImageKey(existing.getImageKey());
         }
         normalizeCropFlags(crop);
         logger.info("[v1] Updating crop {}", cropId);
@@ -87,9 +96,8 @@ public class CropServiceImpl implements CropService {
 
     @Override
     public Page<CropViewDTO> getAllCropsV1(Long currentUserId, int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, Boolean discountOnly, String sortBy) {
-        return cropRepo.findFilteredCropViews(
+        return cropRepo.findAllFilteredCropViews(
                 currentUserId,
-                null,
                 normalizeFilter(keyword),
                 normalizeFilter(region),
                 normalizeFilter(category),
@@ -136,6 +144,20 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
+    public ImageResult getCropImage(Long cropId) {
+        Object[] row = cropRepo.findImageDataByCropId(cropId);
+        if (row == null || row.length == 0) {
+            return null;
+        }
+        byte[]  imageData = (byte[])  row[0];
+        String  imageType = (String)  row[1];
+        String  imageKey  = (String)  row[2];
+        String  imageName = (String)  row[3];
+
+        return imageStorageService.retrieve(imageData, imageName, imageType, imageKey);
+    }
+
+    @Override
     public void deleteCropByIdV1(Long farmerId, Long cropId) {
         requireOwnedCrop(cropId, farmerId);
         approachFarmerService.softDeleteApproachByCropId(cropId);
@@ -145,114 +167,11 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public void deleteCropByFarmerIdV1(Long farmerId) {
-        approachFarmerService.softDeleteApproach(farmerId, "ROLE_SELLER");
-        favoriteService.removeFavoritesForFarmerCrops(farmerId);
-        cartService.removeCartItemsForFarmerCrops(farmerId);
-        cropRepo.softDeleteByFarmerId(farmerId, LocalDateTime.now());
-    }
-    @Override
     public void softDeleteCropByFarmerIdV1(Long farmerId) {
         approachFarmerService.softDeleteApproach(farmerId, "ROLE_SELLER");
         favoriteService.removeFavoritesForFarmerCrops(farmerId);
         cartService.removeCartItemsForFarmerCrops(farmerId);
         cropRepo.softDeleteByFarmerId(farmerId, LocalDateTime.now());
-    }
-
-    @Override
-    public List<Crop> getCropsByNameV1(String cropName) {
-        return cropRepo.findByCropName(cropName);
-    }
-
-    @Override
-    public CropResponseDTO addCropV2(Long farmerId, CropRequestDTO dto, MultipartFile imageFile) throws IOException {
-        Farmer farmer = farmerRepo.findByFarmerId(farmerId);
-        if (farmer == null) {
-            throw new ResourceNotFoundException("Farmer not found with ID: " + farmerId);
-        }
-
-        Crop crop = cropMapper.toEntity(dto);
-        crop.setFarmer(farmer);
-        crop.setPostDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
-        normalizeCropFlags(crop);
-        applyImage(crop, imageFile);
-
-        logger.info("[v2] Adding crop {} for farmer {}", dto.getCropName(), farmerId);
-        return cropMapper.toResponse(cropRepo.save(crop));
-    }
-
-    @Override
-    public CropResponseDTO updateCropV2(Long farmerId, Long cropId, CropRequestDTO dto, MultipartFile imageFile) throws IOException {
-        Crop existing = requireOwnedCrop(cropId, farmerId);
-
-        Crop crop = cropMapper.toEntity(dto);
-        crop.setCropID(cropId);
-        crop.setFarmer(existing.getFarmer());
-        crop.setPostDate(existing.getPostDate());
-        if (imageFile != null && !imageFile.isEmpty()) {
-            applyImage(crop, imageFile);
-        } else {
-            crop.setImageData(existing.getImageData());
-            crop.setImageName(existing.getImageName());
-            crop.setImageType(existing.getImageType());
-        }
-
-        normalizeCropFlags(crop);
-        logger.info("[v2] Updating crop {}", cropId);
-        return cropMapper.toResponse(cropRepo.save(crop));
-    }
-
-    @Override
-    public Page<CropResponseDTO> getAllCropsV2(int page, int size, String keyword, String region, String category, Double maxPrice, String farmerName, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, Boolean discountOnly, String sortBy) {
-        return cropRepo.findFilteredCropResponses(
-                        null,
-                        normalizeFilter(keyword),
-                        normalizeFilter(region),
-                        normalizeFilter(category),
-                        maxPrice,
-                        normalizeFilter(farmerName),
-                        normalizeBooleanFilter(urgentOnly),
-                        normalizeBooleanFilter(wasteOnly),
-                        normalizeBooleanFilter(normalOnly),
-                        normalizeBooleanFilter(discountOnly),
-                        buildPageRequest(page, size, sortBy)
-                );
-    }
-
-    @Override
-    public Page<CropResponseDTO> getCropsByFarmerIdV2(Long farmerId, int page, int size, String keyword, String region, String category, Double maxPrice, Boolean urgentOnly, Boolean wasteOnly, Boolean normalOnly, Boolean discountOnly, String sortBy) {
-        return cropRepo.findFilteredCropResponses(
-                        farmerId,
-                        normalizeFilter(keyword),
-                        normalizeFilter(region),
-                        normalizeFilter(category),
-                        maxPrice,
-                        null,
-                        normalizeBooleanFilter(urgentOnly),
-                        normalizeBooleanFilter(wasteOnly),
-                        normalizeBooleanFilter(normalOnly),
-                        normalizeBooleanFilter(discountOnly),
-                        buildPageRequest(page, size, sortBy)
-                );
-    }
-
-    @Override
-    public CropResponseDTO getCropByCropIdV2(Long cropId) {
-        CropResponseDTO crop = cropRepo.findCropResponseById(cropId);
-        if (crop == null) {
-            throw new ResourceNotFoundException("Crop not found with ID: " + cropId);
-        }
-        return crop;
-    }
-
-    @Override
-    public void deleteCropByIdV2(Long farmerId, Long cropId) {
-        requireOwnedCrop(cropId, farmerId);
-        logger.info("[v2] Deleting crop {}", cropId);
-        approachFarmerService.softDeleteApproachByCropId(cropId);
-        favoriteService.removeFavorite(cropId);
-        cartService.removeFromCart(cropId);
-        cropRepo.softDeleteByIdAndFarmerId(cropId, farmerId, LocalDateTime.now());
     }
 
     @Override
@@ -264,38 +183,6 @@ public class CropServiceImpl implements CropService {
         cropRepo.softDeleteByFarmerId(farmerId, LocalDateTime.now());
     }
 
-    @Override
-    public Page<CropResponseDTO> searchCropsV2(String keyword, int page, int size) {
-        return cropRepo.searchCropResponses(keyword, buildPageRequest(page, size));
-    }
-
-    private void applyImage(Crop crop, MultipartFile imageFile) throws IOException {
-
-        if (imageFile == null || imageFile.isEmpty()) {
-            return;
-        }
-
-        // 1. File size validation
-        if (imageFile.getSize() > MAX_IMAGE_SIZE) {
-            throw new IllegalArgumentException("Image size exceeds 5 MB limit");
-        }
-
-        // 2. Detect actual MIME type from file bytes
-        Tika tika = new Tika();
-        String detectedType = tika.detect(imageFile.getInputStream());
-
-        // 3. Allowlist validation
-        if (!ALLOWED_IMAGE_TYPES.contains(detectedType)) {
-            throw new IllegalArgumentException(
-                    "Only JPG, PNG, and WEBP images are allowed"
-            );
-        }
-
-        // 4. Safe to save
-        crop.setImageName(imageFile.getOriginalFilename());
-        crop.setImageType(detectedType);
-        crop.setImageData(imageFile.getBytes());
-    }
 
     private Crop requireOwnedCrop(Long cropId, Long farmerId) {
         Crop existing = cropRepo.findById(cropId)
@@ -308,10 +195,6 @@ public class CropServiceImpl implements CropService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this crop");
         }
         return existing;
-    }
-
-    private PageRequest buildPageRequest(int page, int size) {
-        return buildPageRequest(page, size, "newest");
     }
 
     private PageRequest buildPageRequest(int page, int size, String sortBy) {

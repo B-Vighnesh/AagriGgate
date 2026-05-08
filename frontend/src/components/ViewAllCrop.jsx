@@ -9,15 +9,35 @@ import Card from './common/Card';
 const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect fill="%23e7f4ee" width="360" height="220"/><rect fill="%23cfe7da" x="0" y="160" width="360" height="60"/><text x="180" y="118" font-family="Arial" font-size="24" text-anchor="middle" fill="%232a6e55">Crop Image</text></svg>';
 const QUICK_FILTER_CHIPS = [
   { label: 'All', category: '', listingType: 'all' },
-  { label: 'Vegetables', category: 'Vegetables', listingType: 'all' },
-  { label: 'Fruits', category: 'Fruits', listingType: 'all' },
-  { label: 'Spices', category: 'Spices', listingType: 'all' },
+  { label: 'Vegetables', category: 'Vegetable', listingType: 'all' },
+  { label: 'Fruits', category: 'Fruit', listingType: 'all' },
+  { label: 'Spices', category: 'Spice', listingType: 'all' },
   { label: 'Urgent', category: '', listingType: 'urgent' },
 ];
 
 function CropCard({ crop, imageUrl, onViewDetails }) {
   const handleOpen = () => onViewDetails(crop.cropID);
   const cardTone = crop.isUrgent ? 'urgent' : crop.isWaste ? 'waste' : 'normal';
+  const handleShare = async (event) => {
+    event.stopPropagation();
+    const shareUrl = `${window.location.origin}/view-details/${crop.cropID}`;
+    const shareData = {
+      title: crop.cropName,
+      text: `Check out this crop listing for ${crop.cropName}.`,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+      await navigator.clipboard.writeText(shareUrl);
+    } catch {
+      // Share/copy can be cancelled by the user; keep the card interaction unchanged.
+    }
+  };
+
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -45,25 +65,47 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
       </div>
 
       <div className="view-all-card__body">
-        <h3>{crop.cropName}</h3>
-        <p className="view-all-card__meta">
-          Farmer: {crop.farmerName || 'N/A'} | Region: {crop.region || 'N/A'}
-        </p>
-        <div className="crop-flag-row">
-          {crop.status ? <span className={`crop-flag crop-flag--${crop.status.toLowerCase()}`}>{crop.status}</span> : null}
-          {crop.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
-          {crop.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
+        <div className="view-all-card__title-row">
+          <h3>{crop.cropName}</h3>
         </div>
+        {(crop.isUrgent || crop.isWaste) ? (
+          <div className="crop-flag-row">
+            {crop.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
+            {crop.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
+          </div>
+        ) : null}
+        <p className="view-all-card__meta">
+            Region: {crop.region || 'N/A'}
+        </p>
+        
 
         <div className="view-all-card__price-row">
           <div>
-            <p className="view-all-card__price">Rs {Number(crop.marketPrice || 0).toFixed(2)}</p>
-            <p className="view-all-card__unit">per {crop.unit || 'unit'}</p>
+            <p className="view-all-card__price">Rs {Number(crop.marketPrice || 0).toFixed(2)} <small>per {crop.unit || 'unit'}</small></p>
             {crop.discountPrice ? (
               <p className="view-all-card__discount">Discount: Rs {Number(crop.discountPrice).toFixed(2)}</p>
             ) : null}
           </div>
-          <p className="view-all-card__qty">Qty: {crop.quantity} {crop.unit}</p>
+         
+       
+        </div>
+          <div class="view-all-card__end">
+            <div>
+            <p className="view-all-card__qty">Qty: {crop.quantity} {crop.unit}</p>
+
+            </div>
+          <div className="view-all-card__qty-share">
+            <button
+              type="button"
+              className="view-all-card__share"
+              aria-label={`Share ${crop.cropName}`}
+              title="Share"
+              onClick={handleShare}
+              onKeyDown={(event) => event.stopPropagation()}
+            >
+              <i className="fa-solid fa-share-nodes" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </div>
     </Card>
@@ -104,6 +146,7 @@ export default function ViewAllCrop() {
   const [totalElements, setTotalElements] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const loadMoreRef = useRef(null);
   const imageUrlRegistryRef = useRef(new Set());
 
@@ -249,6 +292,7 @@ export default function ViewAllCrop() {
   const applyFilters = () => {
     setPage(0);
     setAppliedFilters(filters);
+    setMobileFiltersOpen(false);
   };
 
   const clearFilters = () => {
@@ -265,6 +309,7 @@ export default function ViewAllCrop() {
     setAppliedSearch('');
     setAppliedFilters(emptyFilters);
     setPage(0);
+    setMobileFiltersOpen(false);
   };
 
   const applyQuickChip = (chip) => {
@@ -286,6 +331,24 @@ export default function ViewAllCrop() {
     (chip.category || '') === (appliedFilters.category || '')
     && chip.listingType === appliedFilters.listingType
   );
+
+  const hasActiveFilters = Boolean(
+    appliedSearch.trim()
+    || appliedFilters.region.trim()
+    || appliedFilters.price
+    || appliedFilters.category.trim()
+    || appliedFilters.farmerName.trim()
+    || appliedFilters.listingType !== 'all'
+  );
+
+  const activeFilterCount = [
+    appliedSearch.trim(),
+    appliedFilters.region.trim(),
+    appliedFilters.price,
+    appliedFilters.category.trim(),
+    appliedFilters.farmerName.trim(),
+    appliedFilters.listingType !== 'all' ? appliedFilters.listingType : '',
+  ].filter(Boolean).length;
 
   return (
     <section className="page view-all-page">
@@ -342,7 +405,36 @@ export default function ViewAllCrop() {
           ))}
         </div>
 
-        <Card className="view-all-filter-card">
+        <div className="view-all-mobile-controls">
+          <button
+            type="button"
+            className={`view-all-mobile-filter-btn ${mobileFiltersOpen ? 'view-all-mobile-filter-btn--active' : ''}`}
+            onClick={() => setMobileFiltersOpen((open) => !open)}
+            aria-expanded={mobileFiltersOpen}
+            aria-controls="view-all-filter-panel"
+          >
+            <i className="fa-solid fa-sliders" aria-hidden="true" />
+            <span>Filters</span>
+            {activeFilterCount > 0 ? <strong>{activeFilterCount}</strong> : null}
+          </button>
+          <select
+            className="view-all-mobile-sort"
+            value={filters.sortBy}
+            onChange={(event) => setFilters((prev) => ({ ...prev, sortBy: event.target.value }))}
+            aria-label="Sort crops"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="price-low">Price low</option>
+            <option value="price-high">Price high</option>
+          </select>
+          <span className="view-all-mobile-total">{totalElements} crops</span>
+        </div>
+
+        <Card
+          id="view-all-filter-panel"
+          className={`view-all-filter-card ${mobileFiltersOpen ? 'view-all-filter-card--open' : ''}`}
+        >
           <div className="view-all-toolbar__head">
             <div>
               <h3>Filters</h3>
@@ -480,8 +572,17 @@ export default function ViewAllCrop() {
         {!loading && !error && crops.length === 0 && (
           <Card className="view-all-empty">
             <p className="view-all-empty__icon">0</p>
-            <p className="view-all-empty__title">No crops match your filters.</p>
-            <p className="view-all-empty__desc">Try different filters or clear the current selection.</p>
+            {hasActiveFilters ? (
+              <>
+                <p className="view-all-empty__title">No crops match your filters.</p>
+                <p className="view-all-empty__desc">Try different filters or clear the current selection.</p>
+              </>
+            ) : (
+              <>
+                <p className="view-all-empty__title">No available crops.</p>
+                <p className="view-all-empty__desc">Please check again later for new listings.</p>
+              </>
+            )}
           </Card>
         )}
 

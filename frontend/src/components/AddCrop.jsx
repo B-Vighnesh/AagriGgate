@@ -148,8 +148,15 @@ export default function AddCrop() {
     <section className="page add-crop-page">
       <ValidateToken token={token} />
       <div className="ag-container">
-          <button type="button" className="link-back" onClick={() => navigate('/view-crop')}>Back to My Crops</button>
-
+          <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+          </button>
         <div className="add-crop-head">
           <div>
             <h1>Add New Crop</h1>

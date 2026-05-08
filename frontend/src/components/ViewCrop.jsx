@@ -300,8 +300,7 @@ export default function ViewCrop() {
                   <div className="view-crop-card__top">
                     <h3>{crop.cropName}</h3>
                     <span>{crop.cropType}</span>
-                  </div>
-                  <div className="crop-flag-row">
+                  
                     {crop.status ? <span className={`crop-flag crop-flag--${crop.status.toLowerCase()}`}>{crop.status}</span> : null}
                     {crop.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
                     {crop.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
@@ -322,7 +321,7 @@ export default function ViewCrop() {
                         navigate(`/update-crop/${crop.cropID}`);
                       }}
                     >
-                      Edit
+                      Update
                     </Button>
                     <Button
                       variant="outline"

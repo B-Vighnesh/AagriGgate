@@ -90,9 +90,7 @@ export default function BuyerDetails() {
         <div className="buyer-profile-layout">
           
           <Card className="buyer-profile-hero">
-            
-            <div className="buyer-profile-head">
-              <button
+            <button
                     type="button"
                     className="chat-back-btn"
                     onClick={() => navigate(-1)}
@@ -101,6 +99,8 @@ export default function BuyerDetails() {
                   >
                     <i className="fa-solid fa-chevron-left" />
           </button>
+            <div className="buyer-profile-head">
+              
               <div className="buyer-avatar">{initials}</div>
               <div className="buyer-profile-head__copy">
                 <span className="buyer-profile-kicker">Buyer Profile</span>

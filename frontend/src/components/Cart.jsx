@@ -175,8 +175,15 @@ export default function Cart() {
     <section className="page buyer-tools-page">
       <ValidateToken farmerId={farmerId} token={token} role={role} />
       <div className="ag-container">
-          <button className="link-back" onClick={() => navigate(-1)}>Back</button>
-
+           <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+          </button>
         <div className="buyer-tools-head">
           <div>
             <h1>Cart</h1>
