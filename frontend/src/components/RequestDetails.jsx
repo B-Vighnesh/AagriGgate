@@ -62,7 +62,7 @@ export default function RequestDetails() {
       : requestStatusKey;
   const statusKey = conversationStatusKey || fallbackStatusKey;
   const statusLabel = statusKey === 'accepted' ? 'ACTIVE' : statusKey.toUpperCase();
-  const canOpenChat = statusKey === 'active' || ['completed', 'failed', 'expired'].includes(statusKey);
+  const canOpenChat = statusKey === 'active' || statusKey === 'accepted';
 
   useEffect(() => {
     let active = true;
@@ -212,7 +212,15 @@ export default function RequestDetails() {
       <div className="ag-container ntf-detail-wrap">
         <Card className="ntf-detail-card request-detail-card request-lifecycle-card">
           <div className="ntf-detail-head request-lifecycle-head">
-            <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
+           <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+          </button>
             <div className="request-lifecycle-head__status">
               <span className={`request-lifecycle-status ${STATUS_CLASS[statusKey] || ''}`}>
                 {statusLabel}
@@ -290,25 +298,26 @@ export default function RequestDetails() {
                     <strong>{formatDateTime(requestDetails.rejectedAt)}</strong>
                   </div>
                 )}
-                <div className="request-lifecycle-stat request-lifecycle-stat--action">
+              </div>
+            </section>
+
+            <section className="request-lifecycle-panel request-lifecycle-panel--conversation">
+              <div className="request-lifecycle-panel__head">
+                <h2>Actions</h2>
+                <p>Manage this request from here</p>
+              </div>
+              <div className="request-lifecycle-actions">
+                <div className="request-lifecycle-action-group">
                   <Button
                     size="sm"
-                    className="request-lifecycle-crop-link"
+                    className="request-lifecycle-crop-link request-lifecycle-action"
                     onClick={() => navigate(`/view-details/${requestDetails.cropId}`)}
                   >
                     <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" />
                     View Crop
                   </Button>
                 </div>
-              </div>
-            </section>
 
-            <section className="request-lifecycle-panel request-lifecycle-panel--conversation">
-              <div className="request-lifecycle-panel__head">
-                <h2>Conversation</h2>
-                <p>Lifecycle status and linked chat</p>
-              </div>
-              <div className="request-lifecycle-actions">
                 {isFarmer && statusKey === 'pending' && (
                   <div className="request-lifecycle-action-group">
                     <Button
