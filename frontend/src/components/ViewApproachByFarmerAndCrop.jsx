@@ -142,8 +142,16 @@ export default function ViewApproachByFarmerAndCrop() {
       <div className="ag-container">
         <div className="approach-crop-head">
           <div>
-            <button className="link-back" onClick={() => navigate(-1)}>Back</button>
-            <h1>Crop Requests</h1>
+             <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+          </button>
+          <h1>Crop Requests</h1>
             <p>Manage buyer requests for this crop.</p>
             {!error && approaches.length > 0 ? (
               <p className="view-all-pagination__info">
