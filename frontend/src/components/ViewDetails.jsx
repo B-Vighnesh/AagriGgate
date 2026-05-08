@@ -217,7 +217,7 @@ export default function ViewDetails() {
       ? 'Deal Completed'
       : normalizedApproachStatus === 'accepted' || normalizedApproachStatus === 'active'
         ? 'Request Accepted'
-        : 'Send Approach';
+        : 'Send Request';
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -368,7 +368,7 @@ export default function ViewDetails() {
               {isOwner ? (
                 <>
                   <Button variant="outline" onClick={() => navigate(`/update-crop/${cropId}`)}>Update Crop</Button>
-                  <Button variant="outline" onClick={() => navigate(`/view-approaches/farmer/${currentUserId}/crop/${cropId}`)}>View Approaches</Button>
+                  <Button variant="outline" onClick={() => navigate(`/view-approaches/farmer/${currentUserId}/crop/${cropId}`)}>View Requests</Button>
                   <Button variant="danger" onClick={() => setShowDeleteModal(true)}>Delete Crop</Button>
                 </>
               ) : null}
