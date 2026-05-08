@@ -9506,6 +9506,16 @@ a {
   }
 
   .view-all-filter-card {
+    display: block;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .view-all-filter-card .view-all-toolbar__head {
+    margin-bottom: 10px;
+  }
+
+  .view-all-filter-card .view-all-toolbar__head p {
     display: none;
   }
 
@@ -9525,9 +9535,35 @@ a {
     white-space: nowrap;
   }
 
+  .view-all-filter-grid {
+    gap: 8px;
+  }
+
+  .view-all-toggle-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .view-all-toggle {
+    min-height: 42px;
+    padding: 9px 10px;
+  }
+
+  .view-all-filter-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .view-all-filter-actions .ui-btn {
+    width: 100%;
+  }
+
   .view-all-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   }
 
   .view-all-card {
@@ -10544,6 +10580,10 @@ img {
 
   /* View all crops: single column */
   .view-all-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .view-all-filter-actions {
     grid-template-columns: 1fr;
   }
 
