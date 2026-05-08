@@ -18,6 +18,26 @@ const QUICK_FILTER_CHIPS = [
 function CropCard({ crop, imageUrl, onViewDetails }) {
   const handleOpen = () => onViewDetails(crop.cropID);
   const cardTone = crop.isUrgent ? 'urgent' : crop.isWaste ? 'waste' : 'normal';
+  const handleShare = async (event) => {
+    event.stopPropagation();
+    const shareUrl = `${window.location.origin}/view-details/${crop.cropID}`;
+    const shareData = {
+      title: crop.cropName,
+      text: `Check out this crop listing for ${crop.cropName}.`,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+      await navigator.clipboard.writeText(shareUrl);
+    } catch {
+      // Share/copy can be cancelled by the user; keep the card interaction unchanged.
+    }
+  };
+
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -45,11 +65,15 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
       </div>
 
       <div className="view-all-card__body">
-        <div className="crop-flag-row">
+        <div className="view-all-card__title-row">
           <h3>{crop.cropName}</h3>
-          {crop.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
-          {crop.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
         </div>
+        {(crop.isUrgent || crop.isWaste) ? (
+          <div className="crop-flag-row">
+            {crop.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
+            {crop.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
+          </div>
+        ) : null}
         <p className="view-all-card__meta">
             Region: {crop.region || 'N/A'}
         </p>
@@ -62,7 +86,26 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
               <p className="view-all-card__discount">Discount: Rs {Number(crop.discountPrice).toFixed(2)}</p>
             ) : null}
           </div>
-          <p className="view-all-card__qty">Qty: {crop.quantity} {crop.unit}</p>
+         
+       
+        </div>
+          <div class="view-all-card__end">
+            <div>
+            <p className="view-all-card__qty">Qty: {crop.quantity} {crop.unit}</p>
+
+            </div>
+          <div className="view-all-card__qty-share">
+            <button
+              type="button"
+              className="view-all-card__share"
+              aria-label={`Share ${crop.cropName}`}
+              title="Share"
+              onClick={handleShare}
+              onKeyDown={(event) => event.stopPropagation()}
+            >
+              <i className="fa-solid fa-share-nodes" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </div>
     </Card>
