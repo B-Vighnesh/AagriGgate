@@ -22,6 +22,34 @@ function DetailRow({ label, value }) {
   );
 }
 
+function normalizeApproachStatus(status) {
+  if (typeof status === 'boolean') {
+    return status ? 'accepted' : 'pending';
+  }
+  if (status == null) return '';
+  return String(status).trim().toLowerCase();
+}
+
+function getApproachInfoAlert(status) {
+  const normalized = normalizeApproachStatus(status);
+  switch (normalized) {
+    case 'accepted':
+    case 'active':
+      return 'Farmer accepted your request. Check your chats for next steps.';
+    case 'pending':
+      return 'You already requested this crop. It is pending review.';
+    case 'completed':
+      return 'Deal was completed once for this crop.';
+    case 'failed':
+    case 'rejected':
+      return 'Deal was failed once for this crop.';
+    case 'expired':
+      return 'Deal was expired once for this crop.';
+    default:
+      return '';
+  }
+}
+
 export default function ViewDetails() {
   const { cropId } = useParams();
   const navigate = useNavigate();
@@ -50,7 +78,11 @@ export default function ViewDetails() {
     if (response.status === 204) return null;
     const text = await response.text();
     if (!text) return null;
-    return JSON.parse(text);
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
   };
 
   useEffect(() => {
@@ -99,8 +131,7 @@ export default function ViewDetails() {
             const status = await parseJsonIfPresent(statusRes);
             if (!mounted) return;
             setApproachStatus(status);
-            if (status === true) setInfoAlert('Farmer accepted your request. Check your email for next steps.');
-            if (status === false) setInfoAlert('You already requested this crop. It is pending review.');
+            setInfoAlert(getApproachInfoAlert(status));
           }
         }
       } catch (err) {
@@ -233,8 +264,8 @@ export default function ViewDetails() {
                     <Button onClick={handleAddToCart} loading={cartLoading} disabled={isSold}>
                       {isSold ? 'Sold Out' : 'Add to Cart'}
                     </Button>
-                    <Button variant="accent" onClick={() => setShowApproachModal(true)} disabled={isSold || approachStatus === true}>
-                      {approachStatus === true ? 'Request Accepted' : 'Send Approach'}
+                    <Button variant="accent" onClick={() => setShowApproachModal(true)} disabled={isSold || normalizeApproachStatus(approachStatus) === 'accepted'}>
+                      {normalizeApproachStatus(approachStatus) === 'accepted' ? 'Request Accepted' : 'Send Approach'}
                     </Button>
                     <Button variant="ghost" onClick={() => navigate('/cart')}>Open Cart</Button>
                   </div>

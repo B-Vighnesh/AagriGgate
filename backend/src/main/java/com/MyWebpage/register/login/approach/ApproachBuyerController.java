@@ -80,7 +80,7 @@ public class ApproachBuyerController {
         }
     }
 
-    @GetMapping("/requests/me/{cropId}")
+    @GetMapping("/requests/me/accepted/{cropId}")
     public ResponseEntity<Boolean> isApproachAccepted(
             @PathVariable Long cropId,
             Authentication authentication
@@ -89,11 +89,24 @@ public class ApproachBuyerController {
             Long userId = Long.parseLong(authentication.getName());
             boolean isAccepted = approachFarmerService.isApproachAccepted(userId, cropId);
             if(isAccepted)
-            return ResponseEntity.ok(isAccepted);
+                return ResponseEntity.ok(isAccepted);
             else
                 return ResponseEntity.badRequest().body(false);
         } catch (Exception e) {
-           return ResponseEntity.badRequest().body(false);
+            return ResponseEntity.badRequest().body(false);
+        }
+    }
+    @GetMapping("/requests/me/{cropId}")
+    public ResponseEntity<String> getApproachStatus(
+            @PathVariable Long cropId,
+            Authentication authentication
+    ) {
+        try {
+            Long userId = Long.parseLong(authentication.getName());
+            String status = approachFarmerService.getApproachStatus(userId, cropId);
+            return ResponseEntity.ok(status);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("error");
         }
     }
     @DeleteMapping("/delete/{approachId}")
