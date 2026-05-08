@@ -384,6 +384,7 @@ export default function ViewDetails() {
           initialQuantity={Number(requestedQuantity || 1)}
           onClose={() => setShowApproachModal(false)}
           onSuccess={(quantity, latestApproach) => {
+            approachPromptShownRef.current = true;
             setApproachStatus(latestApproach || { status: 'Pending' });
             setInfoAlert('Your request is pending review from the farmer.');
             showToast('Approach request sent.', 'success');
