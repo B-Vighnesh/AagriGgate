@@ -9,12 +9,12 @@ import { createOrGetChatConversation, getChatConversationByApproach } from '../a
 import Modal from './Modal';
 
 const STATUS_CLASS = {
-  pending: 'user-requests-status--pending',
-  active: 'user-requests-status--accepted',
-  accepted: 'user-requests-status--accepted',
-  completed: 'user-requests-status--completed',
-  failed: 'user-requests-status--failed',
-  expired: 'user-requests-status--expired',
+  pending: 'request-lifecycle-status--pending',
+  active: 'request-lifecycle-status--active',
+  accepted: 'request-lifecycle-status--active',
+  completed: 'request-lifecycle-status--completed',
+  failed: 'request-lifecycle-status--failed',
+  expired: 'request-lifecycle-status--expired',
 };
 
 const STATUS_HINTS = {
@@ -61,6 +61,7 @@ export default function RequestDetails() {
       ? 'failed'
       : requestStatusKey;
   const statusKey = conversationStatusKey || fallbackStatusKey;
+  const statusLabel = statusKey === 'accepted' ? 'ACTIVE' : statusKey.toUpperCase();
   const canOpenChat = statusKey === 'active' || ['completed', 'failed', 'expired'].includes(statusKey);
 
   useEffect(() => {
@@ -213,8 +214,8 @@ export default function RequestDetails() {
           <div className="ntf-detail-head request-lifecycle-head">
             <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
             <div className="request-lifecycle-head__status">
-              <span className={`user-requests-status ${STATUS_CLASS[statusKey] || ''}`}>
-                {statusKey.toUpperCase()}
+              <span className={`request-lifecycle-status ${STATUS_CLASS[statusKey] || ''}`}>
+                {statusLabel}
               </span>
               <small>{STATUS_HINTS[statusKey] || 'Request lifecycle in progress'}</small>
             </div>
@@ -223,7 +224,7 @@ export default function RequestDetails() {
           <div className="ntf-detail-content request-detail-content request-lifecycle-content">
             <div className="request-detail-hero request-lifecycle-hero">
               <div className="request-detail-hero__copy">
-                <span className="request-detail-hero__eyebrow">Buyer–Farmer Request</span>
+                <span className="request-detail-hero__eyebrow">Buyer-Farmer Request</span>
                 <h1>{requestDetails.cropName}</h1>
                 <p>
                   View only the key request information for this request.
@@ -244,16 +245,17 @@ export default function RequestDetails() {
                   <strong>#{requestDetails.approachId}</strong>
                 </span>
                 <span className="request-detail-chip">
-                  <span>Requested Quantity</span>
+                  <span>Quantity</span>
                   <strong>{requestDetails.requestedQuantity ?? 'Not set'}</strong>
                 </span>
               </div>
             </div>
 
-            <section className="request-lifecycle-panel">
+            <div className="request-lifecycle-panels">
+            <section className="request-lifecycle-panel request-lifecycle-panel--details">
               <div className="request-lifecycle-panel__head">
                 <h2>Request Details</h2>
-                <p>Only the most important request information is shown here.</p>
+                <p>Most important fields only</p>
               </div>
               <div className="request-lifecycle-stats request-lifecycle-stats--compact">
                 <div className="request-lifecycle-stat">
@@ -265,51 +267,60 @@ export default function RequestDetails() {
                   <strong>{requestDetails.cropName}</strong>
                 </div>
                 <div className="request-lifecycle-stat">
-                  <span>Requested Quantity</span>
+                  <span>Quantity</span>
                   <strong>{requestDetails.requestedQuantity ?? 'Not set'}</strong>
                 </div>
                 <div className="request-lifecycle-stat">
                   <span>Status</span>
-                  <strong>{statusKey.toUpperCase()}</strong>
+                  <strong>{statusLabel}</strong>
                 </div>
                 <div className="request-lifecycle-stat">
-                  <span>Requested Time</span>
+                  <span>Requested</span>
                   <strong>{formatDateTime(requestDetails.requestedAt)}</strong>
                 </div>
                 {requestStatusKey === 'accepted' && (
                   <div className="request-lifecycle-stat request-lifecycle-stat--highlight">
-                    <span>Accepted Time</span>
+                    <span>Accepted</span>
                     <strong>{formatDateTime(requestDetails.acceptedAt)}</strong>
                   </div>
                 )}
                 {requestStatusKey === 'rejected' && (
-                  <div className="request-lifecycle-stat">
-                    <span>Rejected Time</span>
+                  <div className="request-lifecycle-stat request-lifecycle-stat--highlight">
+                    <span>Rejected</span>
                     <strong>{formatDateTime(requestDetails.rejectedAt)}</strong>
                   </div>
                 )}
                 <div className="request-lifecycle-stat request-lifecycle-stat--action">
-                  <span>Crop</span>
-                  <Button size="sm" onClick={() => navigate(`/view-details/${requestDetails.cropId}`)}>
+                  <Button
+                    size="sm"
+                    className="request-lifecycle-crop-link"
+                    onClick={() => navigate(`/view-details/${requestDetails.cropId}`)}
+                  >
+                    <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" />
                     View Crop
                   </Button>
                 </div>
               </div>
             </section>
 
-            <section className="request-lifecycle-panel">
+            <section className="request-lifecycle-panel request-lifecycle-panel--conversation">
               <div className="request-lifecycle-panel__head">
                 <h2>Conversation</h2>
-                <p>This page now shows the conversation lifecycle status and opens the linked chat directly.</p>
+                <p>Lifecycle status and linked chat</p>
               </div>
               <div className="request-lifecycle-actions">
                 {isFarmer && statusKey === 'pending' && (
                   <div className="request-lifecycle-action-group">
-                    <Button loading={actionLoading === 'accept'} onClick={() => handleFarmerDecision('accept')}>
+                    <Button
+                      className="request-lifecycle-action request-lifecycle-action--accept"
+                      loading={actionLoading === 'accept'}
+                      onClick={() => handleFarmerDecision('accept')}
+                    >
                       Accept Request
                     </Button>
                     <Button
                       variant="danger"
+                      className="request-lifecycle-action request-lifecycle-action--danger"
                       loading={actionLoading === 'reject'}
                       onClick={() => handleFarmerDecision('reject')}
                     >
@@ -322,6 +333,7 @@ export default function RequestDetails() {
                   <div className="request-lifecycle-action-group">
                     <Button
                       variant="danger"
+                      className="request-lifecycle-action request-lifecycle-action--danger"
                       loading={withdrawLoading === requestDetails.approachId}
                       disabled={withdrawLoading !== null}
                       onClick={() => setPendingWithdraw({ approachId: requestDetails.approachId, step: 1 })}
@@ -335,15 +347,18 @@ export default function RequestDetails() {
                   <div className="request-lifecycle-action-group">
                     <Button
                       variant="outline"
+                      className="request-lifecycle-action request-lifecycle-action--chat"
                       onClick={handleOpenChat}
                       loading={actionLoading === 'chat'}
                     >
                       Open Chat
+                      <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" />
                     </Button>
                   </div>
                 )}
               </div>
             </section>
+            </div>
           </div>
         </Card>
       </div>
