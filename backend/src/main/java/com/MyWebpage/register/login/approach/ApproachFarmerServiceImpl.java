@@ -336,8 +336,8 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     }
 
     @Override
-    public String getApproachStatus(Long userId, Long cropId) {
-        return approachFarmerRepository.findLatestStatusByUserIdAndCropId(userId, cropId);
+    public ApproachStatusResponseDTO getApproachStatus(Long userId, Long cropId) {
+        return approachFarmerRepository.findLatestStatus(userId, cropId);
     }
 
     private PageRequest buildPageRequest(int page, int size) {

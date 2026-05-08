@@ -97,16 +97,21 @@ public class ApproachBuyerController {
         }
     }
     @GetMapping("/requests/me/{cropId}")
-    public ResponseEntity<String> getApproachStatus(
+    public ResponseEntity<ApproachStatusResponseDTO> getApproachStatus(
             @PathVariable Long cropId,
             Authentication authentication
     ) {
         try {
             Long userId = Long.parseLong(authentication.getName());
-            String status = approachFarmerService.getApproachStatus(userId, cropId);
-            return ResponseEntity.ok(status);
+            ApproachStatusResponseDTO approachStatus = approachFarmerService.getApproachStatus(userId, cropId);
+            return ResponseEntity.ok(approachStatus);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("error");
+            System.out.println("[dfshuuffs]"+e);
+            System.out.println("[dfshuuffs]"+e);
+            System.out.println("[dfshuuffs]"+e);
+            System.out.println("[dfshuuffs]"+e);
+            System.out.println("[dfshuuffs]"+e);
+            return ResponseEntity.badRequest().body(new ApproachStatusResponseDTO());
         }
     }
     @DeleteMapping("/delete/{approachId}")

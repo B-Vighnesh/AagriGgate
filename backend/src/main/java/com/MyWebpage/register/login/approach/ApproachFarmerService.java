@@ -36,5 +36,5 @@ public interface ApproachFarmerService {
     void markApproachExpired(Long approachId, LocalDateTime expiredAt);
     void markApproachNotified(Long approachId, LocalDateTime notifiedAt);
 
-    String getApproachStatus(Long userId, Long cropId);
+    ApproachStatusResponseDTO getApproachStatus(Long userId, Long cropId);
 }
