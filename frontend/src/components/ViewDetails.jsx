@@ -22,7 +22,22 @@ function DetailRow({ label, value }) {
   );
 }
 
-function normalizeApproachStatus(status) {
+function getApproachStatusValue(approachStatus) {
+  if (approachStatus && typeof approachStatus === 'object') {
+    return approachStatus.status;
+  }
+  return approachStatus;
+}
+
+function getApproachIdValue(approachStatus) {
+  if (approachStatus && typeof approachStatus === 'object') {
+    return approachStatus.approachId ?? null;
+  }
+  return null;
+}
+
+function normalizeApproachStatus(approachStatus) {
+  const status = getApproachStatusValue(approachStatus);
   if (typeof status === 'boolean') {
     return status ? 'accepted' : 'pending';
   }
@@ -174,6 +189,17 @@ export default function ViewDetails() {
 
   const isOwner = role === 'farmer' && cropDetails.ownedByCurrentUser === true;
   const isSold = (cropDetails.status || '').toLowerCase() === 'sold';
+  const normalizedApproachStatus = normalizeApproachStatus(approachStatus);
+  const approachId = getApproachIdValue(approachStatus);
+  const canViewApproachDetails = Boolean(approachId);
+  const hasOpenApproach = ['pending', 'accepted', 'active', 'completed'].includes(normalizedApproachStatus);
+  const approachButtonLabel = normalizedApproachStatus === 'pending'
+    ? 'Request Pending'
+    : normalizedApproachStatus === 'completed'
+      ? 'Deal Completed'
+      : normalizedApproachStatus === 'accepted' || normalizedApproachStatus === 'active'
+        ? 'Request Accepted'
+        : 'Send Approach';
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -272,8 +298,13 @@ export default function ViewDetails() {
                     <Button onClick={handleAddToCart} loading={cartLoading} disabled={isSold}>
                       {isSold ? 'Sold Out' : 'Add to Cart'}
                     </Button>
-                    <Button variant="accent" onClick={() => setShowApproachModal(true)} disabled={isSold || normalizeApproachStatus(approachStatus) === 'accepted'}>
-                      {normalizeApproachStatus(approachStatus) === 'accepted' ? 'Request Accepted' : 'Send Approach'}
+                    {canViewApproachDetails ? (
+                      <Button variant="outline" onClick={() => navigate(`/requests/${approachId}`)}>
+                        View Request
+                      </Button>
+                    ) : null}
+                    <Button variant="accent" onClick={() => setShowApproachModal(true)} disabled={isSold || hasOpenApproach}>
+                      {approachButtonLabel}
                     </Button>
                     <Button variant="ghost" onClick={() => navigate('/cart')}>Open Cart</Button>
                   </div>
