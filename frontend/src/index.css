@@ -10701,6 +10701,18 @@ img {
     grid-column: 1 / -1;
   }
 
+  .approach-actions.approach-actions--pending .ui-btn:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .approach-actions.approach-actions--pending .ui-btn.approach-action-accept {
+    grid-column: 1;
+  }
+
+  .approach-actions.approach-actions--pending .ui-btn.approach-action-reject:last-child:nth-child(odd) {
+    grid-column: 2;
+  }
+
   .insights-hub-grid {
     grid-template-columns: 1fr;
   }

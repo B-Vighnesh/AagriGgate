@@ -196,7 +196,7 @@ export default function ViewApproach() {
                 </span>
               </div>
 
-              <div className="approach-actions">
+              <div className={`approach-actions ${normalizedStatus === 'pending' ? 'approach-actions--pending' : ''}`.trim()}>
                 <Button variant="outline" size="sm" onClick={() => navigate(`/requests/${item.approachId}`)}>
                   Request Details
                 </Button>
@@ -220,6 +220,7 @@ export default function ViewApproach() {
                   <>
                     <Button
                       size="sm"
+                      className="approach-action-accept"
                       onClick={() => setPendingDecision({ approachId: item.approachId, type: 'accept', step: 1 })}
                       loading={isAccepting}
                       disabled={rowBusy}
@@ -229,6 +230,7 @@ export default function ViewApproach() {
                     <Button
                       variant="danger"
                       size="sm"
+                      className="approach-action-reject"
                       onClick={() => setPendingDecision({ approachId: item.approachId, step: 1 })}
                       loading={isRejecting}
                       disabled={rowBusy}
