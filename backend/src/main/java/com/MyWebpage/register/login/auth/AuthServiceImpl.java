@@ -133,7 +133,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void sendDeletionOtp(Long farmerId) {
-        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
+        Farmer farmer = findFarmerById(farmerId);
         String otp = otpService.issueOtp(farmer.getFarmerId().toString(), OtpPurpose.DELETION);
         emailService.sendDeletionOtpEmail(farmer, otp);
     }
@@ -165,7 +165,7 @@ public class AuthServiceImpl implements AuthService {
             String currentPassword,
             String newPassword) {
 
-        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
+        Farmer farmer = findFarmerById(farmerId);
 
         if (!passwordEncoder.matches(currentPassword, farmer.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
@@ -270,6 +270,15 @@ public class AuthServiceImpl implements AuthService {
         Farmer farmer = principal.contains("@")
                 ? farmerRepo.findByEmailAndActiveTrue(principal).orElse(null)
                 : farmerRepo.findByUsernameAndActiveTrue(principal);
+        if (farmer == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+        ensureAccountActive(farmer);
+        return farmer;
+    }
+
+    private Farmer findFarmerById(Long farmerId) {
+        Farmer farmer = farmerRepo.findByFarmerId(farmerId);
         if (farmer == null) {
             throw new IllegalArgumentException("User not found");
         }

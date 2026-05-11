@@ -125,6 +125,7 @@ public class AuthController {
     @PostMapping("/delete-account/send-otp")
     public ResponseEntity<String> sendDeleteAccountOtp(Authentication authentication) {
         Long farmerId = Long.parseLong(authentication.getName());
+        System.out.println("[hello]"+farmerId);
         authService.sendDeletionOtp(farmerId);
         return ResponseEntity.ok("Delete account OTP sent");
     }
