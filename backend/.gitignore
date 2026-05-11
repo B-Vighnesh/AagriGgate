@@ -37,6 +37,7 @@ startup.err
 # Environment files
 .env
 .env.*
+.env.production
 !.env.example
 
 other
