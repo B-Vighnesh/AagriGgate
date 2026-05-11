@@ -7,10 +7,8 @@ import jakarta.validation.constraints.Size;
 
 public class FarmerRequestDTO {
 
-    @NotBlank(message = "Username is required")
     private String username;
 
-    @NotBlank(message = "Role is required")
     private String role;
 
     @NotBlank(message = "First name is required")
