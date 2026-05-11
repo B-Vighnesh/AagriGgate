@@ -7,7 +7,7 @@ import com.MyWebpage.register.login.auth.dto.DeleteAccountRequestDTO;
 import com.MyWebpage.register.login.auth.dto.OtpLoginRequestDTO;
 import com.MyWebpage.register.login.cart.CartItemRepo;
 import com.MyWebpage.register.login.crop.CropService;
-import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
+import com.MyWebpage.register.login.auth.dto.FarmerRequestDTO;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.favorite.FavoriteRepo;

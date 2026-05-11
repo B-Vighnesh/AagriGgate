@@ -13,6 +13,9 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -27,18 +30,26 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure(ex.getMessage(), null));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Object>> handleValidation(MethodArgumentNotValidException ex) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .findFirst()
-                .map(err -> err.getField() + " " + err.getDefaultMessage())
-                .orElse("Validation error");
-        log.warn("Validation failed: {}", message);
-        return ResponseEntity
-                .badRequest()
-                .body(ApiResponse.failure(message, null));
-    }
+//    @ExceptionHandler(MethodArgumentNotValidException.class)
+//    public ResponseEntity<ApiResponse<Object>> handleValidation(MethodArgumentNotValidException ex) {
+//        String message = ex.getBindingResult().getFieldErrors().stream()
+//                .findFirst()
+//                .map(err -> err.getField() + " " + err.getDefaultMessage())
+//                .orElse("Validation error");
+//        log.warn("Validation failed: {}", message);
+//        return ResponseEntity
+//                .badRequest()
+//                .body(ApiResponse.failure(message, null));
+//    }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        ex.getBindingResult().getFieldErrors()
+                .forEach(err -> errors.put(err.getField(), err.getDefaultMessage()));
+        return ResponseEntity.badRequest().body(errors);
+    }
+    
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiResponse<Object>> handleMissingParam(MissingServletRequestParameterException ex) {
         String message = ex.getParameterName() + " parameter is required";

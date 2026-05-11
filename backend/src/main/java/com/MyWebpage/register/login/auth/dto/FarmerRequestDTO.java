@@ -1,4 +1,4 @@
-package com.MyWebpage.register.login.farmer;
+package com.MyWebpage.register.login.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -6,44 +6,44 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class FarmerRequestDTO {
+
+    @NotBlank(message = "Username is required")
     private String username;
+
+    @NotBlank(message = "Role is required")
     private String role;
-    @NotBlank
-    @Size(min = 2, max = 50)
+
+    @NotBlank(message = "First name is required")
+    @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
     private String firstName;
+
+    @NotBlank(message = "Last name is required")
     private String lastName;
-    @Email
-    @NotBlank
+
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be valid")
     private String email;
-    @NotBlank
+
+    @NotBlank(message = "Phone number is required")
     @Pattern(regexp = "^[0-9]{10}$", message = "phoneNo must be 10 digits")
     private String phoneNo;
+
+    @NotBlank(message = "State is required")
     private String state;
-    @NotBlank
-    @Size(min = 6, max = 100)
+
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
     private String password;
 
+    @NotBlank(message = "District is required")
     private String district;
 
+    @NotBlank(message = "Date of birth is required")
     private String dob;
 
+    @NotBlank(message = "Aadhar number is required")
+    @Pattern(regexp = "^[0-9]{12}$", message = "Aadhar number must be 12 digits")
     private String aadharNo;
-
-    public String getDob() {
-        return dob;
-    }
-
-    public void setDob(String dob) {
-        this.dob = dob;
-    }
-
-    public String getDistrict() {
-        return district;
-    }
-
-    public void setDistrict(String district) {
-        this.district = district;
-    }
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
@@ -61,12 +61,10 @@ public class FarmerRequestDTO {
     public void setState(String state) { this.state = state; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
-
-    public String getAadharNo() {
-        return aadharNo;
-    }
-
-    public void setAadharNo(String aadharNo) {
-        this.aadharNo = aadharNo;
-    }
+    public String getDistrict() { return district; }
+    public void setDistrict(String district) { this.district = district; }
+    public String getDob() { return dob; }
+    public void setDob(String dob) { this.dob = dob; }
+    public String getAadharNo() { return aadharNo; }
+    public void setAadharNo(String aadharNo) { this.aadharNo = aadharNo; }
 }

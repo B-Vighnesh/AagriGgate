@@ -1,9 +1,7 @@
 package com.MyWebpage.register.login.auth;
 
 import com.MyWebpage.register.login.auth.dto.*;
-import com.MyWebpage.register.login.farmer.Farmer;
-import com.MyWebpage.register.login.farmer.FarmerRepo;
-import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
+import com.MyWebpage.register.login.auth.dto.FarmerRequestDTO;
 import com.MyWebpage.register.login.passwordreset.ResetPasswordRequest;
 import com.MyWebpage.register.login.common.EmailService;
 import com.MyWebpage.register.login.otp.OtpPurpose;
@@ -62,12 +60,12 @@ public class AuthController {
     }
 
     @PostMapping("/register/seller")
-    public ResponseEntity<Map<String, Object>> registerSeller(@RequestBody FarmerRequestDTO dto) {
+    public ResponseEntity<Map<String, Object>> registerSeller(@Valid @RequestBody FarmerRequestDTO dto) {
         return ResponseEntity.ok(toSessionResponse(authService.register(dto, "SELLER")));
     }
 
     @PostMapping("/register/buyer")
-    public ResponseEntity<Map<String, Object>> registerBuyer(@RequestBody FarmerRequestDTO dto) {
+    public ResponseEntity<Map<String, Object>> registerBuyer(@Valid @RequestBody FarmerRequestDTO dto) {
         return ResponseEntity.ok(toSessionResponse(authService.register(dto, "BUYER")));
     }
 
