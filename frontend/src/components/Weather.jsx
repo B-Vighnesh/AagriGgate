@@ -159,7 +159,7 @@ export default function Weather() {
           <p>Live-ready district weather focused on field decisions, harvest timing, and crop safety.</p>
         </header>
 
-        <div className="weather-page__actions">
+        {/* <div className="weather-page__actions">
           <Button
             type="button"
             variant="outline"
@@ -171,7 +171,7 @@ export default function Weather() {
             <i className="fa-solid fa-rotate-right weather-refresh-btn__icon" aria-hidden="true" />
             <span className="weather-refresh-btn__label">Refresh Weather</span>
           </Button>
-        </div>
+        </div> */}
 
         {alert && (
           <p className={`weather-alert weather-alert--${alert.type === 'error' ? 'error' : 'warning'}`}>
