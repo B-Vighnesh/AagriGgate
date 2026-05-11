@@ -38,7 +38,7 @@ public class AuthController {
     private final EmailService emailService;
     private final OtpService otpService;
 
-    @Value("${app.auth.cookie-secure:false}")
+    @Value("${app.auth.cookie-secure}")
     private boolean secureAuthCookie;
 
     @PostMapping("/register/send-otp")
@@ -156,7 +156,7 @@ public class AuthController {
     private void addAuthCookie(HttpServletResponse response, String token, Duration maxAge) {
         ResponseCookie cookie = ResponseCookie.from("token", token)
                 .httpOnly(true)
-                .secure(secureAuthCookie)
+                .secure(true)
                 .sameSite("None")
                 .path("/")
                 .maxAge(maxAge)
