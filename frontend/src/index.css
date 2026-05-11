@@ -5210,6 +5210,11 @@ a {
   gap: 12px;
   width: 100%;
 }
+
+.view-all-card__qty-wrap {
+  min-width: 0;
+  flex: 1 1 auto;
+}
 .view-all-card {
   padding: 0;
   overflow: hidden;
@@ -5393,6 +5398,12 @@ a {
   margin: 2px 0 0;
   color: var(--color-muted);
   font-size: 0.8rem;
+}
+
+.view-all-card__qty {
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: nowrap;
 }
 
 .view-all-card__discount {
@@ -9888,8 +9899,9 @@ a {
   }
 
   .view-all-card__qty-share {
-    width: 100%;
-    justify-content: space-between;
+    width: auto;
+    flex: 0 0 auto;
+    justify-content: flex-end;
   }
 
   .view-all-mobile-controls {
