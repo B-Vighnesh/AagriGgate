@@ -18,11 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 
@@ -31,13 +29,6 @@ import org.springframework.http.HttpStatus;
 public class CropServiceImpl implements CropService {
 
     private static final Logger logger = LoggerFactory.getLogger(CropServiceImpl.class);
-    private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
-
-    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
-            "image/jpeg",
-            "image/png",
-            "image/webp"
-    );
     private final ImageStorageService imageStorageService;
     private final CropRepo cropRepo;
     private final FarmerRepo farmerRepo;
@@ -54,7 +45,7 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public Crop addCropV1(Long farmerId, Crop crop, MultipartFile imageFile) throws IOException {
+    public Crop addCropV1(Long farmerId, Crop crop, MultipartFile imageFile) {
         Farmer farmer = farmerRepo.findByFarmerId(farmerId);
         if (farmer == null) {
             throw new ResourceNotFoundException("Farmer not found with ID: " + farmerId);
@@ -62,33 +53,18 @@ public class CropServiceImpl implements CropService {
         crop.setFarmer(farmer);
         crop.setPostDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
         normalizeCropFlags(crop);
-        ImageResult result = imageStorageService.store(imageFile);
-        crop.setImageName(result.getName());
-        crop.setImageType(result.getType());
-        crop.setImageData(result.getData());
-        crop.setImageKey(result.getKey());
+        clearImageFields(crop);
         logger.info("[v1] Adding crop {}", crop.getCropName());
         return cropRepo.save(crop);
     }
 
     @Override
-    public Crop updateCropV1(Long farmerId, Long cropId, Crop crop, MultipartFile imageFile) throws IOException {
+    public Crop updateCropV1(Long farmerId, Long cropId, Crop crop, MultipartFile imageFile) {
         Crop existing = requireOwnedCrop(cropId, farmerId);
         crop.setCropID(cropId);
         crop.setFarmer(existing.getFarmer());
         crop.setPostDate(existing.getPostDate());
-        if (imageFile != null && !imageFile.isEmpty()) {
-            ImageResult result = imageStorageService.store(imageFile);
-            crop.setImageName(result.getName());
-            crop.setImageType(result.getType());
-            crop.setImageData(result.getData());
-            crop.setImageKey(result.getKey());
-        } else {
-            crop.setImageData(existing.getImageData());
-            crop.setImageName(existing.getImageName());
-            crop.setImageType(existing.getImageType());
-            crop.setImageKey(existing.getImageKey());
-        }
+        clearImageFields(crop);
         normalizeCropFlags(crop);
         logger.info("[v1] Updating crop {}", cropId);
         return cropRepo.save(crop);
@@ -229,6 +205,13 @@ public class CropServiceImpl implements CropService {
         if (crop.getIsWaste() == null) {
             crop.setIsWaste(false);
         }
+    }
+
+    private void clearImageFields(Crop crop) {
+        crop.setImageData(null);
+        crop.setImageName(null);
+        crop.setImageType(null);
+        crop.setImageKey(null);
     }
 
     private Sort resolveSort(String sortBy) {
