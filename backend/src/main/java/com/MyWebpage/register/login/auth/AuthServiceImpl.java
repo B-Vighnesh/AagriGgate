@@ -206,7 +206,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void softDeleteAccount(Long farmerId, DeleteAccountRequestDTO request, String role) {
-        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
+        Farmer farmer = findFarmerById(farmerId);
 
         if(!otpService.verifyAndConsumeOtp(farmerId.toString(),OtpPurpose.DELETION, request.getOtp()))
         {
