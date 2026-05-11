@@ -78,6 +78,9 @@ public class AuthServiceImpl implements AuthService {
         farmer.setRole(role);
         farmer.setActive(true);
         farmer.setDeletedAt(null);
+        farmer.setDistrict(dto.getDistrict());
+        farmer.setAadharNo(dto.getAadharNo());
+        farmer.setDob(dto.getDob());
 
         Long farmerId = farmerRepo.getNextUserSequence();
         String generatedUsername = generateUsername(dto.getFirstName(), farmerId);
