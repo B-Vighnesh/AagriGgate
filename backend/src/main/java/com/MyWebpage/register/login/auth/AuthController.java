@@ -60,13 +60,25 @@ public class AuthController {
     }
 
     @PostMapping("/register/seller")
-    public ResponseEntity<Map<String, Object>> registerSeller(@Valid @RequestBody FarmerRequestDTO dto) {
-        return ResponseEntity.ok(toSessionResponse(authService.register(dto, "SELLER")));
+    public ResponseEntity<Map<String, Object>> registerSeller(
+            @Valid @RequestBody FarmerRequestDTO dto,
+            HttpServletResponse response) {
+        AuthResponseDTO authResponse = authService.register(dto, "SELLER");
+        addAuthCookie(response, authResponse.getToken(), AUTH_COOKIE_TTL);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(authResponse.getToken()))
+                .body(toSessionResponse(authResponse));
     }
 
     @PostMapping("/register/buyer")
-    public ResponseEntity<Map<String, Object>> registerBuyer(@Valid @RequestBody FarmerRequestDTO dto) {
-        return ResponseEntity.ok(toSessionResponse(authService.register(dto, "BUYER")));
+    public ResponseEntity<Map<String, Object>> registerBuyer(
+            @Valid @RequestBody FarmerRequestDTO dto,
+            HttpServletResponse response) {
+        AuthResponseDTO authResponse = authService.register(dto, "BUYER");
+        addAuthCookie(response, authResponse.getToken(), AUTH_COOKIE_TTL);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(authResponse.getToken()))
+                .body(toSessionResponse(authResponse));
     }
 
     @PostMapping("/login")
@@ -75,7 +87,9 @@ public class AuthController {
             HttpServletResponse response) {
         AuthResponseDTO authResponse = authService.login(dto);
         addAuthCookie(response, authResponse.getToken(), AUTH_COOKIE_TTL);
-        return ResponseEntity.ok(toSessionResponse(authResponse));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(authResponse.getToken()))
+                .body(toSessionResponse(authResponse));
     }
 
     @PostMapping("/login/send-otp")
@@ -90,7 +104,9 @@ public class AuthController {
             HttpServletResponse response) {
         AuthResponseDTO authResponse = authService.loginWithOtp(dto);
         addAuthCookie(response, authResponse.getToken(), AUTH_COOKIE_TTL);
-        return ResponseEntity.ok(toSessionResponse(authResponse));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(authResponse.getToken()))
+                .body(toSessionResponse(authResponse));
     }
 
     @GetMapping("/me")
@@ -156,7 +172,7 @@ public class AuthController {
     private void addAuthCookie(HttpServletResponse response, String token, Duration maxAge) {
         ResponseCookie cookie = ResponseCookie.from("token", token)
                 .httpOnly(true)
-                .secure(true)
+                .secure(secureAuthCookie)
                 .sameSite("None")
                 .path("/")
                 .maxAge(maxAge)
@@ -165,8 +181,13 @@ public class AuthController {
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
+    private String bearerToken(String token) {
+        return "Bearer " + token;
+    }
+
     private Map<String, Object> toSessionResponse(AuthResponseDTO authResponse) {
         Map<String, Object> response = new LinkedHashMap<>();
+        response.put("token", authResponse.getToken());
         response.put("role", authResponse.getRole());
         response.put("farmerId", authResponse.getFarmerId());
         response.put("firstName", authResponse.getFirstName());

@@ -5,6 +5,7 @@ import Card from './common/Card';
 import Toast from './common/Toast';
 import statesWithDistricts from './statesAndDistricts';
 import { ApiError, requestJson } from '../lib/api';
+import { setAuth } from '../lib/auth';
 
 const INITIAL_FORM = {
   email: '',
@@ -165,12 +166,13 @@ export default function Register() {
     setLoading(true);
     try {
       const endpoint = role === 'buyer' ? '/auth/register/buyer' : '/auth/register/seller';
-      await requestJson(endpoint, {
+      const data = await requestJson(endpoint, {
         method: 'POST',
         body: JSON.stringify(form),
       });
-      showToast('Registration successful. Redirecting to login.', 'success');
-      setTimeout(() => navigate('/login'), 1000);
+      setAuth({ ...data, role, farmerId: data?.farmerId ? String(data.farmerId) : '' });
+      showToast('Registration successful.', 'success');
+      setTimeout(() => navigate('/account'), 1000);
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
         showToast('User already exists with this email.', 'error');

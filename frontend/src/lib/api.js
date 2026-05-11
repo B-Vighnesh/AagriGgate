@@ -1,4 +1,4 @@
-import { clearAuth } from './auth';
+import { clearAuth, getToken } from './auth';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 const DEFAULT_TIMEOUT_MS = 15000;
@@ -14,9 +14,16 @@ export class ApiError extends Error {
 
 function buildHeaders(optionsHeaders = {}, isFormData = false) {
   const headers = { ...optionsHeaders };
+  const hasAuthorizationHeader = Object.keys(headers)
+    .some((header) => header.toLowerCase() === 'authorization');
 
   if (!isFormData && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
+  }
+
+  const token = getToken();
+  if (token && token !== 'cookie-session' && !hasAuthorizationHeader) {
+    headers.Authorization = `Bearer ${token}`;
   }
 
   return headers;
