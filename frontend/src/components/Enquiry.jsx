@@ -141,8 +141,7 @@ export default function Enquiry() {
               <div className="support-body-grid">
                 <Card className="support-types-card">
                   <div className="support-section-head">
-                    <h2>Choose Request Type</h2>
-                    <p>Pick the option that matches your message so our team can review it faster.</p>
+                    <h2>Request Types</h2>
                   </div>
                   <div className="support-topics support-topics--interactive">
                     {SUPPORT_TOPICS.map((item) => {
