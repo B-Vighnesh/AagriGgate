@@ -508,7 +508,7 @@ export default function Navbar() {
                 setOpenDropdownKey('');
               }}
             >
-              <i className="fa-regular fa-comments" aria-hidden="true" />
+              <i className="fa-regular fa-message" aria-hidden="true" />
             </Link>
           ) : null}
 
