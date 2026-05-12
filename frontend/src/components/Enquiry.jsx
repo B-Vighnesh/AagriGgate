@@ -132,11 +132,9 @@ export default function Enquiry() {
               <div className="support-intro-block">
                 <div className="support-hero__copy">
                   <span className="support-kicker">Universal Support</span>
-                  <h1>Support, feedback, and follow-up in one place</h1>
+                  <h1>Support, feedback, and complaints</h1>
                   <p>
-                    Use this page whenever you need help from the AagriGgate team. Whether it is a platform issue,
-                    product feedback, or an account-related question, this is the right place to reach us.
-                  </p>
+                   Reach the AagriGgate team for any platform issue, feedback, or account question.</p>
                 </div>
                
               </div>
@@ -144,7 +142,7 @@ export default function Enquiry() {
               <div className="support-body-grid">
                 <Card className="support-types-card">
                   <div className="support-section-head">
-                    <h2>Choose a Request Type</h2>
+                    <h2>Choose a Request Types</h2>
                     <p>Select the one that best matches your situation.</p>
                   </div>
                   <div className="support-topics support-topics--interactive">
