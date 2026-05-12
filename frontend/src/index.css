@@ -7502,17 +7502,12 @@ a {
 }
 
 .support-topic-card__toggle {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-block;
   flex-shrink: 0;
-  background: #e8f4ee;
-  color: var(--color-primary-dark);
-  font-size: 1rem;
-  font-weight: 900;
+  color: #888;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
 }
 
 .support-topic-card__details {
@@ -7543,8 +7538,7 @@ a {
 }
 
 .support-topic-card--active .support-topic-card__toggle {
-  background: var(--color-primary);
-  color: #ffffff;
+  color: #888;
 }
 
 .enquiry-form {
