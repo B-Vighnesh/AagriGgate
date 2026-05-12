@@ -12147,7 +12147,7 @@ img {
 }
 
 .settings-delete-card {
-  max-width: 540px;
+  max-width: 100%;
   min-height: 0;
   margin: 0 auto;
   padding: 32px;
@@ -12276,7 +12276,7 @@ img {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .settings-delete-list li {
@@ -12356,7 +12356,7 @@ img {
 }
 
 .settings-sticky-action .ui-btn {
-  width: 100%;
+  width: 50%;
 }
 
 .settings-sticky-action--split {

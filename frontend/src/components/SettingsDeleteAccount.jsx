@@ -127,10 +127,10 @@ export default function SettingsDeleteAccount() {
 
           {step === 1 ? (
             <div className="settings-delete-step">
-              <div className="settings-delete-hero-icon" aria-hidden="true">
+              
+              <h2><div className="settings-delete-hero-icon" aria-hidden="true">
                 <i className="fa-solid fa-triangle-exclamation" />
-              </div>
-              <h2>Before you delete</h2>
+              </div> Before you delete</h2>
               <p>
                 Deleting your account is permanent. Everything connected to your account will be removed immediately.
               </p>
