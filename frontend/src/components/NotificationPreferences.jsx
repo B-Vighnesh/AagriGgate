@@ -208,7 +208,18 @@ export default function NotificationPreferences({ onToast }) {
 
   return (
     <section id="notification-preferences" className="ntf-prefs-page-section" aria-label="Notification preferences">
-      <div className="ntf-prefs-page-section__head">
+      
+      <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+          </button>
+          <div className="ntf-prefs-page-section__head">
+         
         <div className="ntf-prefs-page-section__intro">
           <h2>Notification Settings</h2>
           <p>Manage how you get notified.</p>
