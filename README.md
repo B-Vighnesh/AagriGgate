@@ -362,17 +362,6 @@ OTP_CLEANUP_CRON=0 */5 * * * *
 
 ---
 
-## Future Improvements
-
-* Price trend analytics
-* Price prediction
-* Multi-language support
-* Transport booking
-* Payment / escrow system
-* Admin moderation system
-* AI-based crop recommendations
-
----
 
 ## Contributors
 
