@@ -72,7 +72,7 @@ a {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 12px;
 }
 
 .page {
@@ -83,7 +83,7 @@ a {
   min-height: calc(100vh - 180px);
   display: grid;
   place-items: center;
-  padding: 24px 16px;
+  padding: 24px 12px;
 }
 
 .text-center {
@@ -11348,25 +11348,25 @@ img {
 /* --- 4. Responsive container padding --- */
 @media (min-width: 768px) {
   .ag-container {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 
   .ag-container.section {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }
 
 @media (min-width: 1024px) {
   .ag-container {
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 
   .ag-container.section {
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }
 
@@ -11375,8 +11375,8 @@ img {
     max-width: 1440px;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 3rem;
-    padding-right: 3rem;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 
   .hero .ag-container {
@@ -11384,8 +11384,8 @@ img {
   }
 
   .ag-container.section {
-    padding-left: 3rem;
-    padding-right: 3rem;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }
 
