@@ -73,12 +73,25 @@ AagriGgate provides:
 
 ### Architecture Flow
 
-```text
-React Frontend → REST API → Spring Boot Backend → Database
-                      ↓
-         External APIs (Weather, Market)
-```
-
+React Frontend (Vite)
+        │
+        ├── REST API (HTTP/HTTPS)
+        │         │
+        │         ▼
+        │   Spring Boot Backend
+        │         │
+        │         ├── MySQL Database
+        │         ├── Weather API
+        │         ├── Market Price API
+        │         └── News API
+        │
+        └── WebSocket (STOMP over SockJS)
+                  │
+                  ▼
+          Spring Boot WebSocket Broker
+                  │
+                  ├── Real-time Chat (Farmer ↔ Buyer)
+                  └── Real-time Notifications
 ### Layers
 
 | Layer             | Technology              | Responsibility                   |
