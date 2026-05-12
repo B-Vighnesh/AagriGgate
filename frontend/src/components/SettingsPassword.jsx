@@ -87,15 +87,18 @@ export default function SettingsPassword() {
       <ValidateToken token={token} />
 
       <div className="ag-container settings-subpage-shell settings-subpage-shell--with-sidebar">
-        <header className="settings-topbar">
+       
+
+        <div className="settings-subpage-grid">
+          
+          <Card className="settings-card settings-form-card">
+             <div className="settings-topbar">
           <button type="button" className="settings-topbar__back" onClick={() => navigate('/settings')} aria-label="Back to settings">
             <i className="fa-solid fa-arrow-left" aria-hidden="true" />
           </button>
           <h1>Reset Password</h1>
-        </header>
-
-        <div className="settings-subpage-grid">
-          <Card className="settings-card settings-form-card">
+            <p>Reset your password using old password</p>
+        </div>
             <form className="settings-form settings-form--subpage" onSubmit={handleSubmit}>
               <label htmlFor="currentPassword">Current Password</label>
               <div className="settings-password-input">

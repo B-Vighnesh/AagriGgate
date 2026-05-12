@@ -224,7 +224,7 @@ export default function NotificationPreferences({ onToast }) {
 
       <div className="ntf-prefs-page-section__head">
         <div className="ntf-prefs-page-section__intro">
-          <h2>Notification Settings</h2>
+          <h1>Notification Settings</h1>
           <p>Manage how you get notified.</p>
         </div>
       </div>

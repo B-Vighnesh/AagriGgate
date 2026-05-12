@@ -41,10 +41,10 @@
   gap: 4px;
 }
 
-.ntf-prefs-page-section__head h2 {
+.ntf-prefs-page-section__head h1 {
   margin: 0;
   color: var(--color-primary-dark);
-  font-size: clamp(1.18rem, 2vw, 1.5rem);
+  font-size: clamp(1.6rem, 2vw, 1.5rem);
   line-height: 1.18;
 }
 
