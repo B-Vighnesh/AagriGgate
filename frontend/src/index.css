@@ -4614,14 +4614,14 @@ a {
 .contact-header h1 {
   margin: 0;
   color: var(--color-primary-dark);
-  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
   line-height: 1.06;
 }
 
 .contact-header p {
   margin: 10px 0 0;
   color: var(--color-muted);
-  font-size: 1rem;
+  font-size: 0.9rem;
   max-width: 62ch;
 }
 
@@ -4651,6 +4651,7 @@ a {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.78);
   color: var(--color-primary-dark);
+  font-size: 0.86rem;
   font-weight: 600;
   box-shadow: 0 12px 30px rgba(19, 56, 41, 0.06);
 }
@@ -4662,11 +4663,13 @@ a {
 .contact-card-head h2 {
   margin: 0;
   color: var(--color-primary-dark);
+  font-size: 1.08rem;
 }
 
 .contact-card-head p {
   margin: 8px 0 0;
   color: var(--color-muted);
+  font-size: 0.88rem;
   line-height: 1.6;
 }
 
@@ -4714,7 +4717,7 @@ a {
 .contact-info-item span {
   color: var(--color-primary-dark);
   font-weight: 700;
-  font-size: 1.02rem;
+  font-size: 0.92rem;
 }
 
 .contact-info-item__desc {
@@ -4750,7 +4753,7 @@ a {
 .contact-form label {
   font-weight: 700;
   color: var(--color-primary-dark);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   display: inline-block;
   margin-bottom: 8px;
 }
@@ -4761,7 +4764,7 @@ a {
   border: 1px solid rgba(28, 90, 67, 0.14);
   border-radius: 14px;
   padding: 12px 14px;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   resize: vertical;
   background: rgba(255, 255, 255, 0.96);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -4804,7 +4807,7 @@ a {
 .contact-form-error {
   margin: 8px 0 0;
   color: #b42318;
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
@@ -4848,12 +4851,13 @@ a {
 .contact-success h3 {
   margin: 0;
   color: var(--color-primary-dark);
-  font-size: clamp(1.45rem, 3vw, 1.9rem);
+  font-size: clamp(1.2rem, 2.4vw, 1.55rem);
 }
 
 .contact-success p {
   margin: 0;
   color: var(--color-muted);
+  font-size: 0.88rem;
   line-height: 1.7;
 }
 
@@ -4882,11 +4886,13 @@ a {
 
 .contact-success-row span {
   color: var(--color-muted);
+  font-size: 0.84rem;
   font-weight: 600;
 }
 
 .contact-success-row strong {
   color: var(--color-primary-dark);
+  font-size: 0.86rem;
   text-align: right;
   word-break: break-word;
 }
