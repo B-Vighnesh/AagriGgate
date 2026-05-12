@@ -10,10 +10,10 @@ AagriGgate is a full-stack agriculture marketplace and decision-support platform
 
 ### Production Deployments
 
-* Frontend Deployment 1 (CloudFront):
+* Deployment 1 (AWS):
   [https://d3bnt1t6yx1asq.cloudfront.net](https://d3bnt1t6yx1asq.cloudfront.net)
 
-* Frontend Deployment 2 (Vercel):
+* Deployment 2 (Vercel):
   [https://aagriggate.vercel.app](https://aagriggate.vercel.app)
 
 ---
