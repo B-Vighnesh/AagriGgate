@@ -35,6 +35,7 @@ import Enquiry from './components/Enquiry';
 import Error from './components/Error';
 import Chat from './components/Chat';
 import Notifications from './components/Notifications';
+import NotificationPreferences from './components/NotificationPreferences';
 import ValidateToken from './components/ValidateToken';
 import BuyerDetails from './components/BuyerDetails';
 import Favorites from './components/Favorites';
@@ -106,7 +107,6 @@ function AppRoutes() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/settings/password" element={<SettingsPassword />} />
             <Route path="/settings/delete-account" element={<SettingsDeleteAccount />} />
-            <Route path="/settings/notifications" element={<NotificationPreferencesPage />} />
             <Route path="/view-buyer/:buyerId" element={<BuyerDetails />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/cart" element={<Cart />} />
@@ -117,7 +117,7 @@ function AppRoutes() {
             <Route path="/requests/:approachId" element={<RequestDetails />} />
             <Route path="/market/:marketId" element={<MarketDetails />} />
             <Route path="/enquiry" element={<Enquiry />} />
-            <Route path="/settings/notifications" element={<Notifications />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/notification-preferences" element={<NotificationPreferences />} />
             <Route path="/chat/:conversationId?" element={<Chat />} />
             <Route path="/validate-token" element={<ValidateToken />} />

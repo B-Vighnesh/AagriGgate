@@ -6,7 +6,7 @@ import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 const SETTINGS_ITEMS = [
   {
-    to: '/settings/notifications',
+    to: '/notification-preferences',
     icon: 'fa-bell',
     title: 'Notification Preferences',
     description: 'Choose alerts, standard notifications, and muted categories.',
