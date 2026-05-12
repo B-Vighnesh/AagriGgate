@@ -9245,39 +9245,6 @@ a {
     padding-top: 16px;
   }
 
-  .insights-hub-head {
-    margin-bottom: 14px;
-  }
-
-  .insights-hub-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .insights-hub-card,
-  .insights-hub-card.ui-card {
-    min-height: 0;
-    padding: 16px;
-    border-radius: 16px;
-    gap: 12px;
-  }
-
-  .insights-hub-card__icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    font-size: 1.08rem;
-  }
-
-  .insights-hub-card__subtitle {
-    font-size: 0.72rem;
-    letter-spacing: 0.04em;
-  }
-
-  .insights-hub-card__copy h3 {
-    font-size: 1.05rem;
-  }
-
   .nav-toggle {
     display: block;
   }
@@ -10387,11 +10354,6 @@ a {
     font-size: 0.96rem;
   }
 
-  .insights-hub-card__actions {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
   .dashboard-home {
     gap: 14px;
   }
@@ -11373,10 +11335,6 @@ img {
 
 .account-hero__copy h1 {
   font-size: clamp(1.5rem, 4vw, 2.35rem);
-}
-
-.insights-hub-head h1 {
-  font-size: clamp(1.4rem, 4vw, 2.2rem);
 }
 
 /* --- 6. 480px "large mobile" breakpoint (new) --- */
