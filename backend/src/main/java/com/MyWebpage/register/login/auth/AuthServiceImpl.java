@@ -8,6 +8,7 @@ import com.MyWebpage.register.login.auth.dto.OtpLoginRequestDTO;
 import com.MyWebpage.register.login.cart.CartItemRepo;
 import com.MyWebpage.register.login.crop.CropService;
 import com.MyWebpage.register.login.auth.dto.FarmerRequestDTO;
+import com.MyWebpage.register.login.exception.UserAlreadyExistsException;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.favorite.FavoriteRepo;
@@ -234,7 +235,7 @@ public class AuthServiceImpl implements AuthService {
     public void findUser(String email) {
         if(farmerRepo.existsByEmailAndActiveTrue(email))
         {
-            throw new RuntimeException("User already exists");
+            throw new UserAlreadyExistsException("User already exists");
         }
     }
 
