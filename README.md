@@ -2,7 +2,8 @@
 
 # AagriGgate
 
-AagriGgate is a full-stack agriculture marketplace and decision-support platform designed to enable direct trade between farmers and buyers. The system allows farmers to list crops and buyers to browse and send purchase requests, while also providing real-time market price, weather, and agriculture insights.
+In India, farmers receive as little as 30–40% of the final price a buyer pays — the rest is absorbed by middlemen, commission agents, and logistics brokers. AagriGgate eliminates that chain entirely.
+AagriGgate is a full-stack agriculture marketplace where farmers list crops and buyers purchase directly — with real-time chat, live market prices, and weather-driven decisions built in. No agents. No markups. No information asymmetry.
 
 ---
 
@@ -93,6 +94,7 @@ React Frontend (Vite)
                   ├── Real-time Chat (Farmer ↔ Buyer)
                   └── Real-time Notifications
 ---
+
 ### Layers
 
 | Layer             | Technology              | Responsibility                   |
