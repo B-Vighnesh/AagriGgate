@@ -14,6 +14,28 @@
   gap: 6px;
 }
 
+.ntf-prefs-page-section__topbar {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.ntf-prefs-back-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(47, 154, 116, 0.2);
+  border-radius: 10px;
+  display: inline-grid;
+  place-items: center;
+  background: #ffffff;
+  color: var(--color-primary-dark);
+  cursor: pointer;
+}
+
+.ntf-prefs-back-btn:hover {
+  background: #edf7f2;
+}
+
 .ntf-prefs-page-section__intro {
   display: grid;
   gap: 4px;
