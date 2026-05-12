@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -51,6 +51,18 @@ export default function Enquiry() {
     setToast({ message: text, type });
     setTimeout(() => setToast({ message: '', type: 'info' }), 2600);
   };
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login', {
+        replace: true,
+        state: {
+          message: 'Please login to contact support.',
+          from: '/enquiry',
+        },
+      });
+    }
+  }, [navigate, token]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
