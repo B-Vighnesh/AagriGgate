@@ -96,14 +96,15 @@ export default function SettingsDeleteAccount() {
       <ValidateToken token={token} />
 
       <div className="ag-container settings-subpage-shell">
-        <header className="settings-topbar">
+
+        <Card className="settings-card settings-delete-card">
+           <div className="settings-topbar">
           <button type="button" className="settings-topbar__back" onClick={() => navigate('/settings')} aria-label="Back to settings">
             <i className="fa-solid fa-arrow-left" aria-hidden="true" />
           </button>
           <h1>Delete Account</h1>
-        </header>
-
-        <Card className="settings-card settings-delete-card">
+          <p>Permanant deletion of your account.</p>
+        </div>
           <div className="settings-stepper" aria-label={`Step ${step} of 4`}>
             {[
               { n: 1, label: 'Warning' },

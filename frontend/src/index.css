@@ -12094,6 +12094,7 @@ img {
   align-items: flex-start;
   gap: 0;
   margin-bottom: 32px;
+  margin-top: 32px;
 }
 
 .settings-stepper__step {
