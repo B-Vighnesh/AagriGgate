@@ -7483,27 +7483,54 @@ a {
 }
 
 .support-topic-card {
-  padding: 14px 15px;
+  padding: 12px 14px;
   border-radius: 16px;
   border: 1px solid #d6e6dd;
   background: rgba(255, 255, 255, 0.86);
   display: grid;
-  gap: 5px;
+  gap: 8px;
   text-align: left;
   width: 100%;
+  cursor: pointer;
+}
+
+.support-topic-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.support-topic-card__toggle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #e8f4ee;
+  color: var(--color-primary-dark);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.support-topic-card__details {
+  display: grid;
+  gap: 5px;
 }
 
 .support-topic-card strong {
   color: var(--color-primary-dark);
 }
 
-.support-topic-card span {
+.support-topic-card__details span {
   color: var(--color-muted);
   font-size: 0.88rem;
   line-height: 1.5;
 }
 
-.support-topic-card small {
+.support-topic-card__details small {
   color: var(--color-muted);
   font-size: 0.82rem;
   line-height: 1.5;
@@ -7513,6 +7540,11 @@ a {
   border-color: #b7d6c7;
   background: #edf7f2;
   box-shadow: 0 12px 26px rgba(25, 82, 60, 0.08);
+}
+
+.support-topic-card--active .support-topic-card__toggle {
+  background: var(--color-primary);
+  color: #ffffff;
 }
 
 .enquiry-form {

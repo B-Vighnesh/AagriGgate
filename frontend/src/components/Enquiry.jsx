@@ -42,6 +42,7 @@ export default function Enquiry() {
   const [submitted, setSubmitted] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [submittedSnapshot, setSubmittedSnapshot] = useState(null);
+  const [expandedTopic, setExpandedTopic] = useState('');
 
   const showToast = (text, type = 'info') => {
     setToast({ message: text, type });
@@ -144,25 +145,37 @@ export default function Enquiry() {
                     <p>Pick the option that matches your message so our team can review it faster.</p>
                   </div>
                   <div className="support-topics support-topics--interactive">
-                    {SUPPORT_TOPICS.map((item) => (
-                      <button
-                        key={item.value}
-                        type="button"
-                        className={`support-topic-card ${form.type === item.value ? 'support-topic-card--active' : ''}`}
-                        onClick={() => {
-                          setForm((prev) => ({ ...prev, type: item.value }));
-                          setErrors((prev) => {
-                            const next = { ...prev };
-                            delete next.type;
-                            return next;
-                          });
-                        }}
-                      >
-                        <strong>{item.title}</strong>
-                        <span>{item.note}</span>
-                        <small>{item.detail}</small>
-                      </button>
-                    ))}
+                    {SUPPORT_TOPICS.map((item) => {
+                      const isExpanded = expandedTopic === item.value;
+                      return (
+                        <button
+                          key={item.value}
+                          type="button"
+                          className={`support-topic-card ${form.type === item.value ? 'support-topic-card--active' : ''}`}
+                          aria-expanded={isExpanded}
+                          onClick={() => {
+                            setExpandedTopic((prev) => (prev === item.value ? '' : item.value));
+                            setForm((prev) => ({ ...prev, type: item.value }));
+                            setErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.type;
+                              return next;
+                            });
+                          }}
+                        >
+                          <span className="support-topic-card__head">
+                            <strong>{item.title}</strong>
+                            <span className="support-topic-card__toggle" aria-hidden="true">{isExpanded ? '-' : '+'}</span>
+                          </span>
+                          {isExpanded ? (
+                            <span className="support-topic-card__details">
+                              <span>{item.note}</span>
+                              <small>{item.detail}</small>
+                            </span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
                   </div>
                 </Card>
 
