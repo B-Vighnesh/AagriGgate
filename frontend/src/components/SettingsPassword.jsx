@@ -91,7 +91,7 @@ export default function SettingsPassword() {
           <button type="button" className="settings-topbar__back" onClick={() => navigate('/settings')} aria-label="Back to settings">
             <i className="fa-solid fa-arrow-left" aria-hidden="true" />
           </button>
-          <h1>Change Password</h1>
+          <h1>Reset Password</h1>
         </header>
 
         <div className="settings-subpage-grid">

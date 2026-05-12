@@ -7195,7 +7195,7 @@ a {
 
 .settings-tips-list {
   display: grid;
-  gap: 10px;
+  gap: 16px;
 }
 
 .settings-danger-actions {
@@ -11929,7 +11929,6 @@ img {
   color: var(--color-primary-dark);
   font-size: clamp(1.28rem, 2.5vw, 1.7rem);
   line-height: 1.15;
-  text-align: center;
 }
 
 .settings-topbar--hub h1 {
