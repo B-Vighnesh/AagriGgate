@@ -12258,7 +12258,7 @@ img {
   .settings-delete-card,
   .settings-notification-card {
     max-width: none;
-    min-height: calc(100vh - 150px);
+    min-height: none;
     border-radius: 0;
     border-left: 0;
     border-right: 0;
