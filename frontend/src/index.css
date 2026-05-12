@@ -12318,7 +12318,7 @@ img {
 }
 
 .settings-otp-panel {
-  display: flex;
+  display: grid;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
