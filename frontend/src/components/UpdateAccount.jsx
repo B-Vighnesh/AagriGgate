@@ -140,8 +140,15 @@ export default function UpdateAccount() {
     <section className="page update-account-page">
       <ValidateToken token={token} />
       <div className="ag-container">
-          <button type="button" className="link-back" onClick={() => navigate(-1)}>Back</button>
-
+          <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+          </button>
         <div className="update-account-head">
           <div>
             <h1>Edit Account</h1>

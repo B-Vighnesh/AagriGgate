@@ -105,22 +105,51 @@ export default function SettingsDeleteAccount() {
 
         <Card className="settings-card settings-delete-card">
           <div className="settings-stepper" aria-label={`Step ${step} of 4`}>
-            {[1, 2, 3, 4].map((item) => (
-              <span key={item} className={item <= step ? 'is-active' : ''} />
+            {[
+              { n: 1, label: 'Warning' },
+              { n: 2, label: 'Password' },
+              { n: 3, label: 'OTP' },
+              { n: 4, label: 'Confirm' },
+            ].map(({ n, label }) => (
+              <div
+                key={n}
+                className={`settings-stepper__step ${
+                  n < step ? 'is-done' : n === step ? (n === 4 ? 'is-active is-active--danger' : 'is-active') : ''
+                }`}
+              >
+                <div className="settings-stepper__dot">
+                  {n < step ? <i className="fa-solid fa-check" aria-hidden="true" /> : n}
+                </div>
+                <span className="settings-stepper__label">{label}</span>
+              </div>
             ))}
           </div>
 
           {step === 1 ? (
             <div className="settings-delete-step">
-              <h2>Before you delete</h2>
-              <p>Deleting your account permanently removes your profile, saved preferences, crop listings, requests, and access to conversations connected to this account.</p>
-              <div className="settings-warning-list">
-                <span><i className="fa-solid fa-circle-exclamation" aria-hidden="true" /> This action cannot be undone.</span>
-                <span><i className="fa-solid fa-circle-exclamation" aria-hidden="true" /> You will need a new registration to use AagriGgate again.</span>
+              <div className="settings-delete-hero-icon" aria-hidden="true">
+                <i className="fa-solid fa-triangle-exclamation" />
               </div>
+              <h2>Before you delete</h2>
+              <p>
+                Deleting your account is permanent. Everything connected to your account will be removed immediately.
+              </p>
+
+              <ul className="settings-delete-list">
+                <li><i className="fa-solid fa-circle-check" aria-hidden="true" /> Your profile and saved preferences</li>
+                <li><i className="fa-solid fa-circle-check" aria-hidden="true" /> All crop listings you created</li>
+                <li><i className="fa-solid fa-circle-check" aria-hidden="true" /> All buyer requests and responses</li>
+                <li><i className="fa-solid fa-circle-check" aria-hidden="true" /> Access to all conversations</li>
+              </ul>
+
+              <div className="settings-delete-warning">
+                <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />
+                This action cannot be undone. You will need to register again to use AagriGgate.
+              </div>
+
               <div className="settings-sticky-action settings-sticky-action--split">
                 <Button variant="outline" onClick={() => navigate('/settings')}>Cancel</Button>
-                <Button variant="danger" onClick={() => setStep(2)}>Continue</Button>
+                <Button variant="danger" onClick={() => setStep(2)}>I understand, continue</Button>
               </div>
             </div>
           ) : null}
@@ -180,6 +209,9 @@ export default function SettingsDeleteAccount() {
             <div className="settings-delete-step">
               <h2>Final Confirmation</h2>
               <p>Your account will be deleted after this confirmation. You will be signed out and redirected to registration.</p>
+              <div className="settings-final-warning">
+                <p>This is the last checkpoint. Deleting your account removes your access and account data permanently.</p>
+              </div>
               <div className="settings-sticky-action settings-sticky-action--split">
                 <Button variant="outline" onClick={() => navigate('/settings')}>Cancel</Button>
                 <Button variant="danger" loading={deleteLoading} onClick={handleDelete}>
