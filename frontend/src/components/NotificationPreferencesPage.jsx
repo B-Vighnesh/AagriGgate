@@ -34,8 +34,8 @@ export default function NotificationPreferencesPage() {
             <button
               type="button"
               className="settings-topbar__back"
-              onClick={() => navigate(-1)}
-              aria-label="Go back"
+              onClick={() => navigate('/settings')}
+              aria-label="Back to settings"
             >
               <i className="fa-solid fa-arrow-left" aria-hidden="true" />
             </button>

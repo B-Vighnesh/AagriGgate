@@ -11883,20 +11883,28 @@ img {
   background: linear-gradient(180deg, #f5faf7 0%, #edf6f1 100%);
 }
 
+.settings-page .ag-container {
+  width: 100%;
+  max-width: none;
+}
+
 .settings-shell--hub,
 .settings-subpage-shell {
-  width: min(100%, 980px);
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
   display: grid;
   gap: 16px;
 }
 
 .settings-subpage-shell {
-  width: min(100%, 560px);
+  width: 100%;
+  max-width: none;
 }
 
 .settings-subpage-shell--with-sidebar {
-  width: min(100%, 900px);
+  width: 100%;
+  max-width: none;
 }
 
 .settings-topbar {
@@ -12025,7 +12033,7 @@ img {
 
 .settings-subpage-grid {
   display: grid;
-  grid-template-columns: minmax(0, 520px) minmax(240px, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
   gap: 16px;
   align-items: start;
 }
@@ -12034,14 +12042,14 @@ img {
 .settings-delete-card,
 .settings-notification-card {
   width: 100%;
-  max-width: 520px;
+  max-width: none;
   margin: 0 auto;
   border-radius: 8px;
   background: #fff;
 }
 
 .settings-notification-card {
-  max-width: 760px;
+  max-width: none;
 }
 
 .settings-card h2 {
