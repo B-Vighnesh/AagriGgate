@@ -10,21 +10,18 @@ const SETTINGS_ITEMS = [
     icon: 'fa-bell',
     title: 'Notification Preferences',
     description: 'Choose alerts, standard notifications, and muted categories.',
-    badge: 'Preferences',
   },
   {
     to: '/settings/password',
     icon: 'fa-key',
     title: 'Change Password',
     description: 'Update your password and review strength before saving.',
-    badge: 'Security',
   },
   {
     to: '/settings/delete-account',
     icon: 'fa-triangle-exclamation',
     title: 'Delete Account',
     description: 'Permanently remove your account after password and OTP checks.',
-    badge: 'Danger',
     danger: true,
   },
 ];
@@ -47,29 +44,30 @@ export default function Settings() {
 
       <div className="ag-container settings-shell settings-shell--hub">
         <header className="settings-topbar settings-topbar--hub">
-          <h1>Settings</h1>
+          <div className="settings-title-block">
+            <h1>Settings</h1>
+            <p>Manage your password, notifications, and account.</p>
+          </div>
         </header>
 
-        <div className="settings-hub-list">
+        <Card className="settings-hub-menu">
           {SETTINGS_ITEMS.map((item) => (
-            <Card
+            <Link
               key={item.to}
-              className={`settings-hub-card ${item.danger ? 'settings-hub-card--danger' : ''}`}
+              to={item.to}
+              className={`settings-hub-row ${item.danger ? 'settings-hub-row--danger' : ''}`}
             >
-              <Link to={item.to} className="settings-hub-link">
-                <span className="settings-hub-link__icon" aria-hidden="true">
-                  <i className={`fa-solid ${item.icon}`} />
-                </span>
-                <span className="settings-hub-link__copy">
-                  <strong>{item.title}</strong>
-                  <small>{item.description}</small>
-                </span>
-                <span className="settings-hub-link__badge">{item.badge}</span>
-                <i className="fa-solid fa-chevron-right settings-hub-link__chevron" aria-hidden="true" />
-              </Link>
-            </Card>
+              <span className="settings-hub-row__icon" aria-hidden="true">
+                <i className={`fa-solid ${item.icon}`} />
+              </span>
+              <span className="settings-hub-row__copy">
+                <strong>{item.title}</strong>
+                <small>{item.description}</small>
+              </span>
+              <i className="fa-solid fa-chevron-right settings-hub-row__chevron" aria-hidden="true" />
+            </Link>
           ))}
-        </div>
+        </Card>
       </div>
     </section>
   );
