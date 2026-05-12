@@ -223,7 +223,6 @@ export default function Account() {
                   <h3>Account Details</h3>
                   <p>Your profile information that helps keep trade and communication smooth.</p>
                 </div>
-                <Link to="/update-account" className="account-section-link">Edit</Link>
               </div>
               <div className="account-info-list">
                 <InfoItem label="Username" value={userData?.username} />
@@ -281,10 +280,7 @@ export default function Account() {
               >
                 {isFarmer ? 'Add New Crop' : 'Browse Crops'}
               </Link>
-              <Button type="button" variant="secondary" className="account-mobile-logout" onClick={onLogout}>
-                <i className="fa-solid fa-right-from-bracket" aria-hidden="true" />
-                Logout
-              </Button>
+              
             </Card>
           </div>
         </div>
