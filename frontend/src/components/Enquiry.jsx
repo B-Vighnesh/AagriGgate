@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -29,7 +29,6 @@ const SUPPORT_TOPICS = [
 
 const SUPPORT_POINTS = [
   'One place for questions, feedback, and platform issues',
-  'Optional screenshot upload when visuals help explain the problem',
   'Our team reviews requests and follows up through your registered email',
 ];
 
@@ -37,7 +36,7 @@ export default function Enquiry() {
   const navigate = useNavigate();
   const token = getToken();
 
-  const [form, setForm] = useState({ type: '', message: '', image: null });
+  const [form, setForm] = useState({ type: '', message: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -50,10 +49,10 @@ export default function Enquiry() {
   };
 
   const handleChange = (event) => {
-    const { name, value, files, type } = event.target;
+    const { name, value } = event.target;
     setForm((prev) => ({
       ...prev,
-      [name]: type === 'file' ? (files?.[0] || null) : value,
+      [name]: value,
     }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -62,7 +61,6 @@ export default function Enquiry() {
     });
   };
 
-  const imageLabel = useMemo(() => form.image?.name || 'No image selected', [form.image]);
   const selectedTopic = SUPPORT_TOPICS.find((item) => item.value === form.type) || null;
 
   const validateForm = () => {
@@ -96,9 +94,6 @@ export default function Enquiry() {
     const formData = new FormData();
     formData.append('type', form.type);
     formData.append('message', form.message.trim());
-    if (form.image) {
-      formData.append('image', form.image);
-    }
 
     try {
       await requestJson('/support/request', {
@@ -107,10 +102,9 @@ export default function Enquiry() {
       });
       setSubmittedSnapshot({
         type: SUPPORT_TOPICS.find((item) => item.value === form.type)?.title || form.type,
-        hasImage: Boolean(form.image),
       });
       setSubmitted(true);
-      setForm({ type: '', message: '', image: null });
+      setForm({ type: '', message: '' });
       showToast('Support request sent successfully.', 'success');
     } catch (err) {
       const apiErrors = err?.details?.data;
@@ -176,7 +170,7 @@ export default function Enquiry() {
                   <form className="enquiry-form" onSubmit={onSubmit}>
                     <div className="support-section-head">
                       <h2>Send To Support</h2>
-                      <p>Write a clear message and include an image if it helps explain the issue.</p>
+                      <p>Write a clear message so our team can understand the issue.</p>
                     </div>
 
                     <div>
@@ -218,6 +212,7 @@ export default function Enquiry() {
                       {errors.message ? <p role="alert" className="support-form-error">{errors.message}</p> : null}
                     </div>
 
+                    {/* Image upload disabled. Backend ignores image even if older clients send it.
                     <div className="support-upload-box">
                       <div>
                         <label htmlFor="image">Image Upload (Optional)</label>
@@ -234,6 +229,7 @@ export default function Enquiry() {
                         <span className="support-upload-name">{imageLabel}</span>
                       </div>
                     </div>
+                    */}
 
                     <div className="support-form-actions">
                       <Button type="submit" loading={loading}>
@@ -254,10 +250,6 @@ export default function Enquiry() {
                   <div className="support-success-row">
                     <span>Request Type</span>
                     <strong>{submittedSnapshot.type}</strong>
-                  </div>
-                  <div className="support-success-row">
-                    <span>Attachment</span>
-                    <strong>{submittedSnapshot.hasImage ? 'Included' : 'Not included'}</strong>
                   </div>
                 </div>
               ) : null}
