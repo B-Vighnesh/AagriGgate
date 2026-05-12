@@ -6,6 +6,12 @@ import { getFarmerId, getRole, getToken } from '../lib/auth';
 
 const SETTINGS_ITEMS = [
   {
+    to: '/update-account',
+    icon: 'fa-regular fa-pen-to-square',
+    title: 'Edit Account',
+    description: 'Update your personal information.',
+  },
+  {
     to: '/notification-preferences',
     icon: 'fa-bell',
     title: 'Notification Preferences',
@@ -22,6 +28,12 @@ const SETTINGS_ITEMS = [
     icon: 'fa-triangle-exclamation',
     title: 'Delete Account',
     description: 'Permanently remove your account after password and OTP checks.',
+    danger: true,
+  },{
+    to: '/logout',
+    icon: 'fa-solid fa-right-from-bracket' ,
+    title: 'Logout',
+    description: 'Sign out of your account securely.',
     danger: true,
   },
 ];
