@@ -8672,7 +8672,7 @@ a {
 }
 
 .update-crop-card {
-  max-width: 860px;
+  max-width: 100%;
 }
 
 .update-crop-form {

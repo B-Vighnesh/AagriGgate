@@ -148,7 +148,9 @@ export default function UpdateCrop() {
       <ValidateToken farmerId={farmerId} token={token} role={role} />
 
       <div className="ag-container">
-        <button
+
+        <Card className="update-crop-card">
+          <button
                     type="button"
                     className="chat-back-btn"
                     onClick={() => navigate(-1)}
@@ -164,8 +166,6 @@ export default function UpdateCrop() {
             <p>Make changes and save your listing.</p>
           </div>
         </div>
-
-        <Card className="update-crop-card">
           <form className="update-crop-form" onSubmit={handleSubmit}>
             <div className="update-crop-grid update-crop-grid--2">
               <div className="update-crop-field">
