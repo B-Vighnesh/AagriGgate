@@ -3041,6 +3041,7 @@ a {
   background:
     radial-gradient(circle at top right, rgba(234, 143, 68, 0.14), transparent 26%),
     linear-gradient(135deg, #ffffff, #f3fbf7);
+  max-width: 100%;
 }
 
 .account-hero {
@@ -3224,6 +3225,8 @@ a {
   background:
     radial-gradient(circle at top right, rgba(234, 143, 68, 0.1), transparent 28%),
     linear-gradient(180deg, #ffffff, #f8fcfa);
+  max-width: 100%;
+  min-width: 0;
 }
 
 .account-section-head {
@@ -3254,11 +3257,13 @@ a {
 .account-content {
   display: grid;
   gap: 14px;
+  min-width: 0;
 }
 
 .account-side-stack {
   display: grid;
   gap: 14px;
+  min-width: 0;
 }
 
 .account-section-head h3,
@@ -9138,11 +9143,28 @@ a {
     overflow-x: hidden;
   }
 
+  .account-page,
+  .account-page * {
+    box-sizing: border-box;
+  }
+
   .account-shell {
     gap: 10px;
     min-width: 0;
+    width: 100%;
+    max-width: 100%;
     padding-left: 0;
     padding-right: 0;
+    overflow-x: hidden;
+  }
+
+  .account-hero-card,
+  .account-panel-card,
+  .account-spotlight-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .insights-hub-page {
@@ -9490,6 +9512,8 @@ a {
   }
 
   .account-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 10px;
     align-items: flex-start;
   }
@@ -9498,6 +9522,8 @@ a {
     align-items: flex-start;
     gap: 10px;
     min-width: 0;
+    width: 100%;
+    overflow: hidden;
   }
 
   .account-avatar-wrap {
@@ -9517,6 +9543,8 @@ a {
   .account-hero__copy h1 {
     font-size: 1rem;
     margin-top: 0;
+    max-width: 100%;
+    white-space: normal;
   }
 
   .account-hero__copy p,
@@ -9525,7 +9553,8 @@ a {
   }
 
   .account-hero__meta {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 6px;
     max-width: 100%;
     min-width: 0;
@@ -9543,6 +9572,7 @@ a {
     justify-content: flex-end;
     flex-wrap: nowrap;
     gap: 6px;
+    max-width: 74px;
   }
 
   .account-icon-action {
@@ -9576,8 +9606,10 @@ a {
   }
 
   .account-stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 8px;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .account-stat {
@@ -9593,6 +9625,8 @@ a {
   }
 
   .quick-actions-grid {
+    width: 100%;
+    min-width: 0;
     display: flex;
     overflow-x: auto;
     overflow-y: hidden;
@@ -9606,6 +9640,7 @@ a {
   .quick-action--rich {
     flex: 0 0 86px;
     min-width: 86px;
+    max-width: 86px;
     min-height: 92px;
     padding: 10px;
     scroll-snap-align: start;
