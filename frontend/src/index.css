@@ -2836,7 +2836,7 @@ a {
 }
 
 .auth-card--wide {
-  width: min(680px, 94%);
+  width: min(1200px, 95%);
 }
 
 .auth-card h1 {
