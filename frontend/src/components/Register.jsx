@@ -40,7 +40,7 @@ const ROLE_OPTIONS = [
 export default function Register() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [role, setRole] = useState('farmer');
+  const [role, setRole] = useState('');
   const [form, setForm] = useState(INITIAL_FORM);
   const [otp, setOtp] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -106,6 +106,10 @@ export default function Register() {
 
   const sendOtp = async (event) => {
     event.preventDefault();
+    if (!role) {
+      showToast('Please choose whether you are registering as a farmer or buyer.', 'error');
+      return;
+    }
     if (!form.email || !form.firstName || !form.phoneNo || !form.state || !form.district || !form.dob || !form.aadharNo) {
       showToast('Please fill all required fields before OTP.', 'error');
       return;
@@ -194,8 +198,8 @@ export default function Register() {
           <form className="form" onSubmit={sendOtp}>
             <div className="register-role-block">
               <div className="register-role-head">
-                <h2>Choose Your Role</h2>
-                <p>Select the experience that matches how you will use AagriGgate.</p>
+                <h2>First, choose your role</h2>
+                <p>Select Farmer or Buyer before entering your registration details.</p>
               </div>
 
               <div className="register-role-grid">
@@ -208,7 +212,7 @@ export default function Register() {
                     aria-pressed={role === option.value}
                   >
                     <span className="register-role-card__marker">
-                      {role === option.value ? 'Selected' : 'Choose'}
+                      {role === option.value ? 'Selected' : 'Choose role'}
                     </span>
                     <strong>{option.title}</strong>
                     <span>{option.note}</span>
