@@ -28,6 +28,11 @@ function SummaryStat({ label, value }) {
   );
 }
 
+function formatDob(value) {
+  if (!value) return '';
+  return new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 export default function Account() {
   const navigate = useNavigate();
   const farmerId = getFarmerId();
@@ -142,7 +147,16 @@ export default function Account() {
                 <i className="fa-regular fa-pen-to-square" aria-hidden="true" />
                 <span>Edit</span>
               </Link>
-              
+              <button
+                type="button"
+                className="account-icon-action account-icon-action--danger"
+                onClick={onLogout}
+                aria-label="Logout"
+                title="Logout"
+              >
+                <i className="fa-solid fa-right-from-bracket" aria-hidden="true" />
+                <span>Logout</span>
+              </button>
             </div>
           </div>
 
@@ -170,7 +184,7 @@ export default function Account() {
                 <InfoItem label="State" value={userData?.state} />
                 <InfoItem label="District" value={userData?.district} />
                 <InfoItem label="Aadhaar" value={userData?.aadharNo} />
-                <InfoItem label="Date of Birth" value={userData?.dob} />
+                <InfoItem label="Date of Birth" value={formatDob(userData?.dob)} />
               </div>
             </Card>
 
