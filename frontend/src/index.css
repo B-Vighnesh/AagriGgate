@@ -3022,11 +3022,18 @@ a {
   background:
     radial-gradient(circle at top left, rgba(47, 154, 116, 0.09), transparent 24%),
     linear-gradient(180deg, #eef7f1 0%, #e7f3ec 100%);
+  min-height: calc(100vh - 72px);
+}
+
+.account-page .ag-container {
+  max-width: none;
 }
 
 .account-shell {
   display: grid;
-  gap: 18px;
+  gap: 14px;
+  width: 100%;
+  max-width: none;
 }
 
 .account-hero-card {
@@ -3040,96 +3047,110 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 24px;
+  gap: 18px;
 }
 
 .account-hero__identity {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
   min-width: 0;
+  flex: 1;
 }
 
 .account-avatar-wrap {
-  width: 110px;
-  height: 110px;
-  border-radius: 32px;
-  padding: 8px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  padding: 0;
   background: linear-gradient(135deg, #d8f0e4, #f5fbf8);
   box-shadow: 0 16px 30px rgba(23, 78, 61, 0.1);
   flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
 }
 
 .account-hero__copy {
   min-width: 0;
+  flex: 1;
 }
 
 .account-role-badge {
   display: inline-flex;
   align-items: center;
-  padding: 7px 12px;
+  padding: 4px 8px;
   border-radius: 999px;
   background: rgba(31, 111, 84, 0.1);
   color: var(--color-primary-dark);
-  font-size: 0.76rem;
+  font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .account-hero__copy h1 {
-  margin: 12px 0 6px;
+  margin: 6px 0 2px;
   color: var(--color-primary-dark);
-  font-size: clamp(1.7rem, 4vw, 2.35rem);
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
   line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 
 .account-hero__copy p {
   margin: 0;
   color: var(--color-muted);
-  font-size: 1rem;
+  font-size: 0.86rem;
+  font-weight: 700;
 }
 
 .account-hero__meta {
-  margin-top: 12px;
+  margin-top: 8px;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .account-hero__meta span {
   display: inline-flex;
   align-items: center;
-  padding: 7px 11px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid #d7e7df;
+  gap: 5px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
   color: var(--color-primary-dark);
-  font-size: 0.84rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .account-hero__actions {
-  width: min(220px, 100%);
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .account-icon-action {
-  width: 54px;
-  min-width: 54px;
-  height: 54px;
-  border-radius: 18px;
+  min-width: 0;
+  height: 42px;
+  border-radius: 8px;
   border: 1px solid #d7e7df;
   background: rgba(255, 255, 255, 0.88);
   color: var(--color-primary-dark);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 7px;
+  padding: 0 14px;
   box-shadow: 0 10px 20px rgba(20, 74, 54, 0.06);
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  font-weight: 800;
+  font-size: 0.86rem;
 }
 
 .account-icon-action i {
@@ -3137,7 +3158,7 @@ a {
 }
 
 .account-icon-action span {
-  display: none;
+  display: inline;
 }
 
 .account-icon-action:hover {
@@ -3163,15 +3184,15 @@ a {
 }
 
 .account-stats-grid {
-  margin-top: 18px;
+  margin-top: 14px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .account-stat {
-  padding: 14px 16px;
-  border-radius: 18px;
+  padding: 12px 14px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid #d8e8e0;
   box-shadow: 0 10px 20px rgba(20, 74, 54, 0.05);
@@ -3194,8 +3215,8 @@ a {
 
 .account-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.55fr);
+  gap: 14px;
 }
 
 .account-panel-card,
@@ -3210,14 +3231,24 @@ a {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .account-avatar {
   width: 100%;
   height: 100%;
-  border-radius: 24px;
+  border-radius: 50%;
   object-fit: cover;
+}
+
+.account-avatar--image {
+  display: none;
+}
+
+.account-avatar__initials {
+  color: var(--color-primary-dark);
+  font-weight: 900;
+  font-size: 1.1rem;
 }
 
 .account-content {
@@ -3234,12 +3265,20 @@ a {
 .account-spotlight-card h3 {
   margin: 0;
   color: var(--color-primary-dark);
+  font-size: 1rem;
 }
 
 .account-section-head p,
 .account-spotlight-card p {
   margin: 6px 0 0;
   color: var(--color-muted);
+  font-size: 0.88rem;
+}
+
+.account-section-link {
+  color: var(--color-primary-dark);
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 .account-info-list {
@@ -3248,7 +3287,7 @@ a {
 
 .account-info-row {
   border-bottom: 1px solid var(--color-border);
-  padding: 12px 0;
+  padding: 9px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3257,13 +3296,15 @@ a {
 
 .account-info-row span {
   color: var(--color-muted);
-  font-size: 0.92rem;
+  font-size: 0.84rem;
+  font-weight: 700;
 }
 
 .account-info-row strong {
   color: var(--color-primary-dark);
   text-align: right;
   max-width: 58%;
+  font-size: 0.88rem;
 }
 
 .account-highlight-list {
@@ -3292,9 +3333,9 @@ a {
 }
 
 .account-settings-tile {
-  margin-top: 14px;
-  padding: 14px 16px;
-  border-radius: 18px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
   border: 1px solid #d6e6dd;
   background:
     radial-gradient(circle at top right, rgba(31, 111, 84, 0.08), transparent 26%),
@@ -3312,9 +3353,9 @@ a {
 }
 
 .account-settings-tile__icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   background: #eef7f2;
   color: var(--color-primary-dark);
   display: inline-flex;
@@ -3330,6 +3371,7 @@ a {
 .account-settings-tile__copy {
   display: grid;
   gap: 3px;
+  min-width: 0;
 }
 
 .account-settings-tile__copy strong {
@@ -3343,33 +3385,38 @@ a {
 
 .quick-actions-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .quick-action--rich {
-  min-height: 132px;
-  padding: 16px;
-  border-radius: 18px;
+  min-height: 112px;
+  padding: 14px;
+  border-radius: 8px;
   border: 1px solid #d6e6dd;
   background:
     radial-gradient(circle at top right, rgba(31, 111, 84, 0.08), transparent 26%),
     linear-gradient(180deg, #ffffff, #f7fcf9);
   display: grid;
-  align-content: space-between;
-  gap: 10px;
+  align-content: start;
+  gap: 7px;
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.quick-action--rich i {
+  color: var(--color-primary);
+  font-size: 0.96rem;
 }
 
 .quick-action--rich strong {
   color: var(--color-primary-dark);
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .quick-action--rich span {
   color: var(--color-muted);
-  font-size: 0.9rem;
-  line-height: 1.55;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .quick-action--rich:hover {
@@ -3378,21 +3425,68 @@ a {
   border-color: #bfd9cc;
 }
 
-.quick-actions-grid {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
 .quick-action {
   border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 12px 10px;
-  text-align: center;
+  text-align: left;
   font-weight: 700;
   color: var(--color-primary-dark);
   background: #f5faf7;
+}
+
+.account-completeness-card {
+  display: grid;
+  gap: 8px;
+}
+
+.account-completeness-bar {
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #dcece5;
+}
+
+.account-completeness-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+}
+
+.account-completeness-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.account-completeness-list span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.account-completeness-list .is-complete {
+  color: var(--color-primary-dark);
+}
+
+.account-completeness-list i {
+  color: #91a49b;
+  font-size: 0.76rem;
+}
+
+.account-completeness-list .is-complete i {
+  color: var(--color-primary);
+}
+
+.account-mobile-logout {
+  display: none;
+  width: 100%;
+  margin-top: 10px;
+  gap: 8px;
 }
 
 .quick-action:hover {
@@ -9040,6 +9134,17 @@ a {
     margin: 8px auto 0;
   }
 
+  .account-page {
+    overflow-x: hidden;
+  }
+
+  .account-shell {
+    gap: 10px;
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   .insights-hub-page {
     padding-top: 16px;
   }
@@ -9385,28 +9490,75 @@ a {
   }
 
   .account-hero {
-    flex-direction: column;
-  }
-
-  .account-hero__identity {
-    flex-direction: column;
+    gap: 10px;
     align-items: flex-start;
   }
 
+  .account-hero__identity {
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+  }
+
   .account-avatar-wrap {
-    width: 92px;
-    height: 92px;
-    border-radius: 26px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+  }
+
+  .account-avatar__initials {
+    font-size: 0.92rem;
+  }
+
+  .account-role-badge {
+    display: none;
+  }
+
+  .account-hero__copy h1 {
+    font-size: 1rem;
+    margin-top: 0;
+  }
+
+  .account-hero__copy p,
+  .account-hero__meta span {
+    font-size: 0.68rem;
   }
 
   .account-hero__meta {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    gap: 6px;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .account-hero__meta span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .account-hero__actions {
-    width: 100%;
-    justify-content: flex-start;
+    margin-left: auto;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  .account-icon-action {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 8px;
+  }
+
+  .account-icon-action i {
+    font-size: 0.86rem;
+  }
+
+  .account-icon-action span {
+    display: none;
   }
 
   .account-panel-card,
@@ -9415,17 +9567,56 @@ a {
   .settings-hero-card,
   .buyer-profile-hero,
   .buyer-profile-card {
-    padding: 16px;
-    border-radius: 18px;
+    padding: 14px;
+    border-radius: 8px;
   }
 
   .account-icon-action--desktop {
     display: none;
   }
 
-  .account-stats-grid,
+  .account-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .account-stat {
+    padding: 10px;
+  }
+
+  .account-stat span {
+    font-size: 0.68rem;
+  }
+
+  .account-stat strong {
+    font-size: 0.78rem;
+  }
+
   .quick-actions-grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 8px;
+    padding-bottom: 4px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  .quick-action--rich {
+    flex: 0 0 86px;
+    min-width: 86px;
+    min-height: 92px;
+    padding: 10px;
+    scroll-snap-align: start;
+  }
+
+  .quick-action--rich strong {
+    font-size: 0.75rem;
+  }
+
+  .quick-action--rich span {
+    font-size: 0.62rem;
   }
 
   .account-info-row {
@@ -9436,6 +9627,19 @@ a {
   .account-info-row strong {
     text-align: left;
     max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .account-settings-tile {
+    padding: 10px;
+  }
+
+  .account-settings-tile__copy small {
+    font-size: 0.72rem;
+  }
+
+  .account-mobile-logout {
+    display: inline-flex;
   }
 
   .account-info-list,
@@ -9448,10 +9652,6 @@ a {
   }
 
   .steps-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .quick-actions-grid {
     grid-template-columns: 1fr;
   }
 
@@ -11453,8 +11653,8 @@ img {
 
   /* Account hero: larger avatar */
   .account-avatar-wrap {
-    width: 120px;
-    height: 120px;
+    width: 72px;
+    height: 72px;
   }
 
   /* Auth card */
