@@ -11921,7 +11921,7 @@ img {
 
 .settings-shell--hub {
   max-width: 600px;
-  min-height: calc(100vh - 250px);
+  min-height: 0;
   align-content: start;
 }
 
@@ -12237,7 +12237,7 @@ img {
 
 @media (max-width: 640px) {
   .settings-page {
-    min-height: calc(100vh - 68px);
+    min-height: 0;
   }
 
   .settings-shell--hub,
