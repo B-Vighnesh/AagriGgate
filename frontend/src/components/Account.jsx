@@ -28,6 +28,21 @@ function SummaryStat({ label, value }) {
   );
 }
 
+function formatDob(value) {
+  if (!value) return '';
+  return new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function getInitials(name) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase() || 'U';
+}
+
 export default function Account() {
   const navigate = useNavigate();
   const farmerId = getFarmerId();
@@ -96,19 +111,37 @@ export default function Account() {
   const isFarmer = role === 'farmer';
   const displayName = `${userData?.firstName || ''} ${userData?.lastName || ''}`.trim() || userData?.username || 'User';
   const location = [userData?.district, userData?.state].filter(Boolean).join(', ') || 'Location not added yet';
+  const formattedDob = formatDob(userData?.dob);
+  const completedProfileFields = [
+    userData?.state,
+    userData?.district,
+    userData?.phoneNo,
+    userData?.email,
+    userData?.aadharNo,
+    formattedDob,
+  ].filter(Boolean).length;
+  const profileCompleteness = Math.round((completedProfileFields / 6) * 100);
+  const completenessItems = [
+    { label: 'State added', done: Boolean(userData?.state) },
+    { label: 'District added', done: Boolean(userData?.district) },
+    { label: 'Phone in profile', done: Boolean(userData?.phoneNo) },
+    { label: 'Email added', done: Boolean(userData?.email) },
+    { label: 'Aadhaar added', done: Boolean(userData?.aadharNo) },
+    { label: 'Date of birth added', done: Boolean(formattedDob) },
+  ];
   const quickActions = isFarmer
     ? [
-      { label: 'Add Crop', to: '/add-crop', note: 'Create a fresh listing and reach buyers faster.' },
-      { label: 'My Crops', to: '/view-crop', note: 'Track all current inventory and listing status.' },
-      { label: 'Market', to: '/market', note: 'Review mandi prices and AI-style analysis.' },
-      { label: 'Requests', to: '/view-approach', note: 'Respond to incoming buyer interest in one place.' },
-      { label: 'Weather', to: '/weather', note: 'Check local conditions before harvest or transport.' },
-      { label: 'Support', to: '/enquiry', note: 'Reach support when you need a hand.' },
+      { label: 'Add Crop', to: '/add-crop', note: 'Create a fresh listing', icon: 'fa-seedling' },
+      { label: 'My Crops', to: '/view-crop', note: 'Manage inventory', icon: 'fa-list' },
+      { label: 'Market', to: '/market', note: 'Mandi prices & insights', icon: 'fa-chart-simple' },
+      { label: 'Requests', to: '/view-approach', note: 'Incoming buyer interest', icon: 'fa-message' },
+      { label: 'Weather', to: '/weather', note: 'Local conditions', icon: 'fa-cloud-sun' },
+      { label: 'Support', to: '/enquiry', note: 'Get assistance', icon: 'fa-circle-question' },
     ]
     : [
-      { label: 'Browse Crops', to: '/view-all-crops', note: 'Explore fresh listings from nearby farmers.' },
-      { label: 'My Requests', to: '/view-approaches-user', note: 'Follow the crops you have approached so far.' },
-      { label: 'Support', to: '/enquiry', note: 'Contact support for account or platform help.' },
+      { label: 'Browse Crops', to: '/view-all-crops', note: 'Explore fresh listings', icon: 'fa-basket-shopping' },
+      { label: 'My Requests', to: '/view-approaches-user', note: 'Track active requests', icon: 'fa-message' },
+      { label: 'Support', to: '/enquiry', note: 'Get assistance', icon: 'fa-circle-question' },
     ];
 
   return (
@@ -119,15 +152,16 @@ export default function Account() {
           <div className="account-hero">
             <div className="account-hero__identity">
               <div className="account-avatar-wrap">
-                <img src={isFarmer ? farmerIcon : buyerIcon} alt="Profile" className="account-avatar" />
+                <img src={isFarmer ? farmerIcon : buyerIcon} alt="" className="account-avatar account-avatar--image" />
+                <span className="account-avatar__initials">{getInitials(displayName)}</span>
               </div>
               <div className="account-hero__copy">
                 <span className="account-role-badge">{isFarmer ? 'Farmer Dashboard' : 'Buyer Dashboard'}</span>
                 <h1>{displayName}</h1>
                 <p>@{userData?.username || 'user'}</p>
                 <div className="account-hero__meta">
-                  <span>{location}</span>
-                  <span>{userData?.email || 'Email not added yet'}</span>
+                  <span><i className="fa-solid fa-location-dot" aria-hidden="true" />{location}</span>
+                  <span><i className="fa-regular fa-envelope" aria-hidden="true" />{userData?.email || 'Email not added yet'}</span>
                 </div>
               </div>
             </div>
@@ -142,7 +176,16 @@ export default function Account() {
                 <i className="fa-regular fa-pen-to-square" aria-hidden="true" />
                 <span>Edit</span>
               </Link>
-              
+              <button
+                type="button"
+                className="account-icon-action account-icon-action--danger"
+                onClick={onLogout}
+                aria-label="Logout"
+                title="Logout"
+              >
+                <i className="fa-solid fa-right-from-bracket" aria-hidden="true" />
+                <span>Logout</span>
+              </button>
             </div>
           </div>
 
@@ -159,6 +202,24 @@ export default function Account() {
             <Card className="account-panel-card">
               <div className="account-section-head">
                 <div>
+                  <h3>Quick Actions</h3>
+                  <p>Jump into the tools you use most often.</p>
+                </div>
+              </div>
+              <div className="quick-actions-grid">
+                {quickActions.map((item) => (
+                  <Link key={item.to} to={item.to} className="quick-action quick-action--rich">
+                    <i className={`fa-solid ${item.icon}`} aria-hidden="true" />
+                    <strong>{item.label}</strong>
+                    <span>{item.note}</span>
+                  </Link>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="account-panel-card">
+              <div className="account-section-head">
+                <div>
                   <h3>Account Details</h3>
                   <p>Your profile information that helps keep trade and communication smooth.</p>
                 </div>
@@ -170,29 +231,28 @@ export default function Account() {
                 <InfoItem label="State" value={userData?.state} />
                 <InfoItem label="District" value={userData?.district} />
                 <InfoItem label="Aadhaar" value={userData?.aadharNo} />
-                <InfoItem label="Date of Birth" value={userData?.dob} />
-              </div>
-            </Card>
-
-            <Card className="account-panel-card">
-              <div className="account-section-head">
-                <div>
-                  <h3>Quick Actions</h3>
-                  <p>Jump into the tools you use most often without hunting through the menu.</p>
-                </div>
-              </div>
-              <div className="quick-actions-grid">
-                {quickActions.map((item) => (
-                  <Link key={item.to} to={item.to} className="quick-action quick-action--rich">
-                    <strong>{item.label}</strong>
-                    <span>{item.note}</span>
-                  </Link>
-                ))}
+                <InfoItem label="Date of Birth" value={formattedDob} />
               </div>
             </Card>
           </div>
 
           <div className="account-side-stack">
+            <Card className="account-spotlight-card account-completeness-card">
+              <h3>Profile Completeness</h3>
+              <p>{completedProfileFields} of 6 fields filled</p>
+              <div className="account-completeness-bar" aria-hidden="true">
+                <span style={{ width: `${profileCompleteness}%` }} />
+              </div>
+              <div className="account-completeness-list">
+                {completenessItems.map((item) => (
+                  <span key={item.label} className={item.done ? 'is-complete' : ''}>
+                    <i className={`fa-${item.done ? 'solid' : 'regular'} fa-circle-check`} aria-hidden="true" />
+                    {item.label}
+                  </span>
+                ))}
+              </div>
+            </Card>
+
             <Card className="account-spotlight-card account-spotlight-card--soft">
               <h3>Settings</h3>
               <p>Manage your password, account preferences, and security settings from one focused place.</p>
@@ -205,20 +265,6 @@ export default function Account() {
                   <small>Update your security and preferences</small>
                 </span>
               </Link>
-            </Card>
-
-            <Card className="account-spotlight-card">
-              <h3>{isFarmer ? 'Seller Focus' : 'Buyer Focus'}</h3>
-              <p>
-                {isFarmer
-                  ? 'Keep your profile updated so buyers can trust your location, listings, and contact details at a glance.'
-                  : 'A complete profile helps farmers respond faster and improves confidence when you send crop requests.'}
-              </p>
-              <div className="account-highlight-list">
-                <span>{userData?.state ? 'State added' : 'Add your state'}</span>
-                <span>{userData?.district ? 'District added' : 'Add your district'}</span>
-                <span>{userData?.phoneNo ? 'Phone verified in profile' : 'Add your phone number'}</span>
-              </div>
             </Card>
 
             <Card className="account-spotlight-card account-spotlight-card--soft">
@@ -234,6 +280,7 @@ export default function Account() {
               >
                 {isFarmer ? 'Add New Crop' : 'Browse Crops'}
               </Link>
+              
             </Card>
           </div>
         </div>

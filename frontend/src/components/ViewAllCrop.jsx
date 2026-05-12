@@ -89,8 +89,8 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
          
        
         </div>
-          <div class="view-all-card__end">
-            <div>
+          <div className="view-all-card__end">
+            <div className="view-all-card__qty-wrap">
             <p className="view-all-card__qty">Qty: {crop.quantity} {crop.unit}</p>
 
             </div>

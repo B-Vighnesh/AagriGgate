@@ -935,7 +935,7 @@ export default function Chat() {
               <h1>Messages</h1>
               <div className="chat-connection-status">
                 <span className={`status-dot ${socketReady ? 'status-dot--online' : 'status-dot--offline'}`} />
-                {socketReady ? 'Live' : 'Connecting...'}
+                {socketReady ? 'Online' : 'Connecting...'}
               </div>
             </div>
             <div className="chat-search">
@@ -1057,7 +1057,7 @@ export default function Chat() {
             <div className="chat-panel__empty">
               <div className="chat-panel__empty-content">
                 <div className="chat-illustration">
-                  <i className="fa-regular fa-comments" />
+                  <i className="fa-regular fa-message" />
                 </div>
                 <h2>Your Negotiation Space</h2>
                 <p>Select a chat from the sidebar to start negotiating deals with farmers or buyers.</p>

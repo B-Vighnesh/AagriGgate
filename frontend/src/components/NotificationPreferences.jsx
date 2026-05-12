@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import '../assets/NotificationPreferences.css';
 import {
@@ -91,6 +92,7 @@ const getMeta = (item) => {
 const getEffectiveDeliveryType = (item) => item?.effectiveDeliveryType || item?.defaultDeliveryType || 'NOTIFICATION';
 
 export default function NotificationPreferences({ onToast }) {
+  const navigate = useNavigate();
   const [preferences, setPreferences] = useState([]);
   const [loading, setLoading] = useState(false);
   const [savingCategory, setSavingCategory] = useState('');
@@ -208,9 +210,21 @@ export default function NotificationPreferences({ onToast }) {
 
   return (
     <section id="notification-preferences" className="ntf-prefs-page-section" aria-label="Notification preferences">
+      <div className="ntf-prefs-page-section__topbar">
+        <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+          </button>
+      </div>
+
       <div className="ntf-prefs-page-section__head">
         <div className="ntf-prefs-page-section__intro">
-          <h2>Notification Settings</h2>
+          <h1>Notification Settings</h1>
           <p>Manage how you get notified.</p>
         </div>
       </div>

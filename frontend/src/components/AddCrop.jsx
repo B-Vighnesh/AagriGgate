@@ -35,8 +35,6 @@ export default function AddCrop() {
     status: 'available',
   });
   const [commoditySelection, setCommoditySelection] = useState('');
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const districts = statesAndDistricts[cropData.state] || [];
@@ -56,12 +54,6 @@ export default function AddCrop() {
       return;
     }
   }, [token, farmerId, role, navigate]);
-
-  useEffect(() => {
-    return () => {
-      if (imagePreview) URL.revokeObjectURL(imagePreview);
-    };
-  }, [imagePreview]);
 
   const onFieldChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -84,14 +76,6 @@ export default function AddCrop() {
       ...prev,
       cropName: value === 'OTHER' ? '' : value,
     }));
-  };
-
-  const onImageChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
-    setImage(file);
-    setImagePreview(URL.createObjectURL(file));
   };
 
   const submit = async (event) => {
@@ -125,7 +109,6 @@ export default function AddCrop() {
     };
 
     formData.append('crop', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
-    if (image) formData.append('imageFile', image);
 
     try {
       const response = await addCrop(formData);
@@ -325,6 +308,7 @@ export default function AddCrop() {
               </label>
             </div>
 
+            {/* Crop image upload is disabled. Backend ignores imageFile even if older clients send it.
             <div className="add-crop-field">
               <label htmlFor="imageFile">Crop Photo *</label>
               <div className="add-crop-image-row">
@@ -332,6 +316,7 @@ export default function AddCrop() {
                 {imagePreview ? <img src={imagePreview} alt="Crop preview" className="add-crop-preview" /> : null}
               </div>
             </div>
+            */}
 
             <div className="add-crop-actions">
               <Button type="submit" loading={loading} className="full-width">

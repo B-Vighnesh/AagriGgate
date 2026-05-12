@@ -13,6 +13,10 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -27,16 +31,24 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure(ex.getMessage(), null));
     }
 
+//    @ExceptionHandler(MethodArgumentNotValidException.class)
+//    public ResponseEntity<ApiResponse<Object>> handleValidation(MethodArgumentNotValidException ex) {
+//        String message = ex.getBindingResult().getFieldErrors().stream()
+//                .findFirst()
+//                .map(err -> err.getField() + " " + err.getDefaultMessage())
+//                .orElse("Validation error");
+//        log.warn("Validation failed: {}", message);
+//        return ResponseEntity
+//                .badRequest()
+//                .body(ApiResponse.failure(message, null));
+//    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Object>> handleValidation(MethodArgumentNotValidException ex) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .findFirst()
-                .map(err -> err.getField() + " " + err.getDefaultMessage())
-                .orElse("Validation error");
-        log.warn("Validation failed: {}", message);
-        return ResponseEntity
-                .badRequest()
-                .body(ApiResponse.failure(message, null));
+    public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        ex.getBindingResult().getFieldErrors()
+                .forEach(err -> errors.put(err.getField(), err.getDefaultMessage()));
+        return ResponseEntity.badRequest().body(errors);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
@@ -90,13 +102,24 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Object>> handleRuntime(RuntimeException ex) {
-        // Log full stack trace server-side, return nothing useful to client
         log.error("Unhandled runtime exception", ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.failure("An unexpected error occurred", null));
     }
 
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<?> handleUserAlreadyExists(UserAlreadyExistsException ex) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("success", false);
+        response.put("message", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleException(Exception ex) {

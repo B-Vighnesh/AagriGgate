@@ -1,6 +1,12 @@
 .ntf-prefs-page-section {
+  width: calc(100% - 48px);
+  margin: 24px auto 36px;
+  padding: 22px;
   display: grid;
   gap: 14px;
+  border: 1px solid #e4ece7;
+  border-radius: 18px;
+  background: #f7fcf9;
 }
 
 .ntf-prefs-page-section__head {
@@ -8,15 +14,37 @@
   gap: 6px;
 }
 
+.ntf-prefs-page-section__topbar {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.ntf-prefs-back-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(47, 154, 116, 0.2);
+  border-radius: 10px;
+  display: inline-grid;
+  place-items: center;
+  background: #ffffff;
+  color: var(--color-primary-dark);
+  cursor: pointer;
+}
+
+.ntf-prefs-back-btn:hover {
+  background: #edf7f2;
+}
+
 .ntf-prefs-page-section__intro {
   display: grid;
   gap: 4px;
 }
 
-.ntf-prefs-page-section__head h2 {
+.ntf-prefs-page-section__head h1 {
   margin: 0;
   color: var(--color-primary-dark);
-  font-size: clamp(1.18rem, 2vw, 1.5rem);
+  font-size: clamp(1.6rem, 2vw, 1.5rem);
   line-height: 1.18;
 }
 
@@ -409,6 +437,9 @@
 
 @media (max-width: 420px) {
   .ntf-prefs-page-section {
+    width: calc(100% - 24px);
+    margin: 24px auto 24px;
+    padding: 12px;
     gap: 12px;
   }
 

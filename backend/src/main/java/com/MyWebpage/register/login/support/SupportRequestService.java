@@ -39,9 +39,7 @@ public class SupportRequestService {
         request.setType(SupportType.CONTACT);
         request.setSubject(normalizeText(requestDTO.getSubject()));
         request.setMessage(requireMessage(requestDTO.getMessage()));
-        request.setImageData(requestDTO.getImageData());
-        request.setImageName(normalizeText(requestDTO.getImageName()));
-        request.setImageType(normalizeText(requestDTO.getImageType()));
+        ignoreSupportRequestImage(request);
         request.setStatus(SupportStatus.OPEN);
         request.setIsDeleted(false);
 
@@ -66,9 +64,7 @@ public class SupportRequestService {
         request.setType(requestDTO.getType());
         request.setSubject(normalizeText(requestDTO.getSubject()));
         request.setMessage(requireMessage(requestDTO.getMessage()));
-        request.setImageData(requestDTO.getImageData());
-        request.setImageName(normalizeText(requestDTO.getImageName()));
-        request.setImageType(normalizeText(requestDTO.getImageType()));
+        ignoreSupportRequestImage(request);
         request.setStatus(SupportStatus.OPEN);
         request.setIsDeleted(false);
 
@@ -114,6 +110,12 @@ public class SupportRequestService {
                 request.getCreatedAt(),
                 request.getUpdatedAt()
         );
+    }
+
+    private void ignoreSupportRequestImage(SupportRequest request) {
+        request.setImageData(null);
+        request.setImageName(null);
+        request.setImageType(null);
     }
 
     private String normalizeEmail(String email) {

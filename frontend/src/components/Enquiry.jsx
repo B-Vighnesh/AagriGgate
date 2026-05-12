@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -12,24 +12,26 @@ const SUPPORT_TOPICS = [
     title: 'Feedback',
     note: 'Share ideas to improve the product experience.',
     detail: 'Best for feature suggestions, usability ideas, and product improvements.',
+    icon: 'fa-lightbulb',
   },
   {
     value: 'ENQUIRY',
     title: 'Support Question',
     note: 'Ask about features, account flow, or platform usage.',
     detail: 'Use this when you need guidance, clarification, or platform help from our team.',
+    icon: 'fa-circle-question',
   },
   {
     value: 'COMPLAINT',
     title: 'Complaint',
     note: 'Report an issue that needs attention or follow-up.',
     detail: 'Best for bugs, service issues, and situations where you expect a direct response.',
+    icon: 'fa-circle-exclamation',
   },
 ];
 
 const SUPPORT_POINTS = [
   'One place for questions, feedback, and platform issues',
-  'Optional screenshot upload when visuals help explain the problem',
   'Our team reviews requests and follows up through your registered email',
 ];
 
@@ -37,23 +39,36 @@ export default function Enquiry() {
   const navigate = useNavigate();
   const token = getToken();
 
-  const [form, setForm] = useState({ type: '', message: '', image: null });
+  const [form, setForm] = useState({ type: '', message: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [submittedSnapshot, setSubmittedSnapshot] = useState(null);
+  const [expandedTopic, setExpandedTopic] = useState('');
 
   const showToast = (text, type = 'info') => {
     setToast({ message: text, type });
     setTimeout(() => setToast({ message: '', type: 'info' }), 2600);
   };
 
+  useEffect(() => {
+    if (!token) {
+      navigate('/login', {
+        replace: true,
+        state: {
+          message: 'Please login to contact support.',
+          from: '/enquiry',
+        },
+      });
+    }
+  }, [navigate, token]);
+
   const handleChange = (event) => {
-    const { name, value, files, type } = event.target;
+    const { name, value } = event.target;
     setForm((prev) => ({
       ...prev,
-      [name]: type === 'file' ? (files?.[0] || null) : value,
+      [name]: value,
     }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -62,7 +77,6 @@ export default function Enquiry() {
     });
   };
 
-  const imageLabel = useMemo(() => form.image?.name || 'No image selected', [form.image]);
   const selectedTopic = SUPPORT_TOPICS.find((item) => item.value === form.type) || null;
 
   const validateForm = () => {
@@ -96,9 +110,6 @@ export default function Enquiry() {
     const formData = new FormData();
     formData.append('type', form.type);
     formData.append('message', form.message.trim());
-    if (form.image) {
-      formData.append('image', form.image);
-    }
 
     try {
       await requestJson('/support/request', {
@@ -107,10 +118,9 @@ export default function Enquiry() {
       });
       setSubmittedSnapshot({
         type: SUPPORT_TOPICS.find((item) => item.value === form.type)?.title || form.type,
-        hasImage: Boolean(form.image),
       });
       setSubmitted(true);
-      setForm({ type: '', message: '', image: null });
+      setForm({ type: '', message: '' });
       showToast('Support request sent successfully.', 'success');
     } catch (err) {
       const apiErrors = err?.details?.data;
@@ -134,11 +144,9 @@ export default function Enquiry() {
               <div className="support-intro-block">
                 <div className="support-hero__copy">
                   <span className="support-kicker">Universal Support</span>
-                  <h1>Support, feedback, and follow-up in one place</h1>
+                  <h3>Support, feedback, and complaints</h3>
                   <p>
-                    Use this page whenever you need help from the AagriGgate team. Whether it is a platform issue,
-                    product feedback, or an account-related question, this is the right place to reach us.
-                  </p>
+                   Reach the AagriGgate team for any platform issue, feedback, or account question.</p>
                 </div>
                
               </div>
@@ -146,29 +154,46 @@ export default function Enquiry() {
               <div className="support-body-grid">
                 <Card className="support-types-card">
                   <div className="support-section-head">
-                    <h2>Choose Request Type</h2>
-                    <p>Pick the option that matches your message so our team can review it faster.</p>
+                    <h2>Choose a Request Types</h2>
+                    <p>Select the one that best matches your situation.</p>
                   </div>
                   <div className="support-topics support-topics--interactive">
-                    {SUPPORT_TOPICS.map((item) => (
-                      <button
-                        key={item.value}
-                        type="button"
-                        className={`support-topic-card ${form.type === item.value ? 'support-topic-card--active' : ''}`}
-                        onClick={() => {
-                          setForm((prev) => ({ ...prev, type: item.value }));
-                          setErrors((prev) => {
-                            const next = { ...prev };
-                            delete next.type;
-                            return next;
-                          });
-                        }}
-                      >
-                        <strong>{item.title}</strong>
-                        <span>{item.note}</span>
-                        <small>{item.detail}</small>
-                      </button>
-                    ))}
+                    {SUPPORT_TOPICS.map((item) => {
+                      const isExpanded = expandedTopic === item.value;
+                      return (
+                        <button
+                          key={item.value}
+                          type="button"
+                          className={`support-topic-card ${form.type === item.value ? 'support-topic-card--active' : ''}`}
+                          aria-expanded={isExpanded}
+                          onClick={() => {
+                            setExpandedTopic((prev) => (prev === item.value ? '' : item.value));
+                            setForm((prev) => ({ ...prev, type: item.value }));
+                            setErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.type;
+                              return next;
+                            });
+                          }}
+                        >
+                          <span className="support-topic-card__icon" aria-hidden="true">
+                            <i className={`fa-solid ${item.icon}`} />
+                          </span>
+                          <span className="support-topic-card__content">
+                            <span className="support-topic-card__head">
+                              <strong>{item.title}</strong>
+                              <span className="support-topic-card__toggle" aria-hidden="true">{isExpanded ? '-' : '+'}</span>
+                            </span>
+                            <span className="support-topic-card__note">{item.note}</span>
+                            {isExpanded ? (
+                              <span className="support-topic-card__details">
+                                <small>{item.detail}</small>
+                              </span>
+                            ) : null}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </Card>
 
@@ -176,8 +201,15 @@ export default function Enquiry() {
                   <form className="enquiry-form" onSubmit={onSubmit}>
                     <div className="support-section-head">
                       <h2>Send To Support</h2>
-                      <p>Write a clear message and include an image if it helps explain the issue.</p>
+                      <p>Write a clear message so our team can understand and act on your request.</p>
                     </div>
+
+                    {selectedTopic ? (
+                      <div className="support-selected-pill">
+                        <i className="fa-solid fa-circle-check" aria-hidden="true" />
+                        {selectedTopic.title} selected
+                      </div>
+                    ) : null}
 
                     <div>
                       <label htmlFor="topic">Support Type</label>
@@ -196,14 +228,6 @@ export default function Enquiry() {
                       {errors.type ? <p role="alert" className="support-form-error">{errors.type}</p> : null}
                     </div>
 
-                    {selectedTopic ? (
-                      <div className="support-selected-topic">
-                        <span>Selected</span>
-                        <strong>{selectedTopic.title}</strong>
-                        <p>{selectedTopic.detail}</p>
-                      </div>
-                    ) : null}
-
                     <div>
                       <label htmlFor="message">Your Message</label>
                       <textarea
@@ -213,11 +237,14 @@ export default function Enquiry() {
                         onChange={handleChange}
                         placeholder="Tell us what happened, what you need help with, or what you would like us to improve..."
                         rows={7}
+                        maxLength={1000}
                         required
                       />
+                      <div className="support-message-count">{form.message.length} / 1000 characters</div>
                       {errors.message ? <p role="alert" className="support-form-error">{errors.message}</p> : null}
                     </div>
 
+                    {/* Image upload disabled. Backend ignores image even if older clients send it.
                     <div className="support-upload-box">
                       <div>
                         <label htmlFor="image">Image Upload (Optional)</label>
@@ -234,8 +261,13 @@ export default function Enquiry() {
                         <span className="support-upload-name">{imageLabel}</span>
                       </div>
                     </div>
+                    */}
 
                     <div className="support-form-actions">
+                      <span className="support-form-privacy">
+                        <i className="fa-solid fa-lock" aria-hidden="true" />
+                        Sent to support team only
+                      </span>
                       <Button type="submit" loading={loading}>
                         {loading ? 'Sending support request...' : 'Send to Support'}
                       </Button>
@@ -254,10 +286,6 @@ export default function Enquiry() {
                   <div className="support-success-row">
                     <span>Request Type</span>
                     <strong>{submittedSnapshot.type}</strong>
-                  </div>
-                  <div className="support-success-row">
-                    <span>Attachment</span>
-                    <strong>{submittedSnapshot.hasImage ? 'Included' : 'Not included'}</strong>
                   </div>
                 </div>
               ) : null}

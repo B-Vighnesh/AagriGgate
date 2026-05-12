@@ -1,6 +1,6 @@
 .news-page {
   min-height: calc(100vh - 66px);
-  padding: 20px 0 40px;
+  padding: 0 0 40px;
   background:
     radial-gradient(circle at top left, rgba(45, 122, 58, 0.08), transparent 22%),
     linear-gradient(180deg, #f7faf8 0%, #eef5f1 100%);
@@ -10,7 +10,6 @@
 .news-page .ag-container {
   display: grid;
   gap: 20px;
-  max-width: 100%;
   overflow-x: hidden;
 }
 
@@ -211,9 +210,9 @@
 }
 
 .news-content {
+  margin-top:75px;
   display: grid;
   gap: 16px;
-  margin-top:80px;
 
 }
 
@@ -573,14 +572,15 @@
 /* ── Mobile ──────────────────────────────────────────────────────── */
 
 @media (max-width: 767px) {
-  .news-page {
-    padding: 12px 0 calc(94px + env(safe-area-inset-bottom, 0px));
+  .news-content {
+    margin-top:0;
   }
 
   .news-page .ag-container {
     width: calc(100% - 16px);
     margin: 8px auto 0;
     gap: 14px;
+    padding-top:10px;
   }
 
   /* ── KEY FIX: Remove sticky on mobile so filters don't overlay content ── */
@@ -801,8 +801,12 @@
 /* ── Small mobile ────────────────────────────────────────────────── */
 
 @media (max-width: 480px) {
-  .news-page {
-    padding: 10px 0 calc(94px + env(safe-area-inset-bottom, 0px));
+  .news-content {
+    margin-top:0;
+  }
+
+  .news-page{
+    padding-top:10px;
   }
 
   .news-header {

@@ -208,7 +208,7 @@ export default function ViewApproachByFarmerAndCrop() {
                     {getRequestStatusLabel(approach.status)}
                   </span>
 
-                  <div className="approach-crop-actions">
+                  <div className={`approach-crop-actions ${isPending ? 'approach-crop-actions--pending' : ''}`.trim()}>
                     <Button variant="outline" size="sm" onClick={() => navigate(`/requests/${approach.approachId}`)}>
                       Request Details
                     </Button>
@@ -235,6 +235,7 @@ export default function ViewApproachByFarmerAndCrop() {
                       <>
                         <Button
                           size="sm"
+                          className="approach-action-accept"
                           onClick={() => setPendingDecision({ approachId: approach.approachId, type: 'accept', step: 1 })}
                           loading={isAccepting}
                           disabled={rowBusy}
@@ -244,6 +245,7 @@ export default function ViewApproachByFarmerAndCrop() {
                         <Button
                           variant="danger"
                           size="sm"
+                          className="approach-action-reject"
                           onClick={() => setPendingDecision({ approachId: approach.approachId, step: 1 })}
                           loading={isRejecting}
                           disabled={rowBusy}

@@ -29,6 +29,7 @@ export default function Login() {
   const [alreadyIn, setAlreadyIn] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const loginMessage = location.state?.message || '';
+  const redirectTo = location.state?.from || '/account';
 
   useEffect(() => {
     const validateExistingSession = async () => {
@@ -98,7 +99,7 @@ export default function Login() {
 
       setAuth({ ...data, role: normalizedRole, farmerId });
       showToast('Login successful.', 'success');
-      setTimeout(() => navigate('/account'), 700);
+      setTimeout(() => navigate(redirectTo), 700);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         showToast(loginMode === 'password' ? 'Invalid principal or password.' : 'Invalid OTP.', 'error');

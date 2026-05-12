@@ -5,6 +5,7 @@ import Card from './common/Card';
 import Toast from './common/Toast';
 import statesWithDistricts from './statesAndDistricts';
 import { ApiError, requestJson } from '../lib/api';
+import { setAuth } from '../lib/auth';
 
 const INITIAL_FORM = {
   email: '',
@@ -39,7 +40,7 @@ const ROLE_OPTIONS = [
 export default function Register() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [role, setRole] = useState('farmer');
+  const [role, setRole] = useState('');
   const [form, setForm] = useState(INITIAL_FORM);
   const [otp, setOtp] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -105,6 +106,10 @@ export default function Register() {
 
   const sendOtp = async (event) => {
     event.preventDefault();
+    if (!role) {
+      showToast('Please choose whether you are registering as a farmer or buyer.', 'error');
+      return;
+    }
     if (!form.email || !form.firstName || !form.phoneNo || !form.state || !form.district || !form.dob || !form.aadharNo) {
       showToast('Please fill all required fields before OTP.', 'error');
       return;
@@ -165,12 +170,13 @@ export default function Register() {
     setLoading(true);
     try {
       const endpoint = role === 'buyer' ? '/auth/register/buyer' : '/auth/register/seller';
-      await requestJson(endpoint, {
+      const data = await requestJson(endpoint, {
         method: 'POST',
         body: JSON.stringify(form),
       });
-      showToast('Registration successful. Redirecting to login.', 'success');
-      setTimeout(() => navigate('/login'), 1000);
+      setAuth({ ...data, role, farmerId: data?.farmerId ? String(data.farmerId) : '' });
+      showToast('Registration successful.', 'success');
+      setTimeout(() => navigate('/account'), 1000);
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
         showToast('User already exists with this email.', 'error');
@@ -192,8 +198,8 @@ export default function Register() {
           <form className="form" onSubmit={sendOtp}>
             <div className="register-role-block">
               <div className="register-role-head">
-                <h2>Choose Your Role</h2>
-                <p>Select the experience that matches how you will use AagriGgate.</p>
+                <h2>First, choose your role</h2>
+                <p>Select Farmer or Buyer before entering your registration details.</p>
               </div>
 
               <div className="register-role-grid">
@@ -206,7 +212,7 @@ export default function Register() {
                     aria-pressed={role === option.value}
                   >
                     <span className="register-role-card__marker">
-                      {role === option.value ? 'Selected' : 'Choose'}
+                      {role === option.value ? 'Selected' : 'Choose role'}
                     </span>
                     <strong>{option.title}</strong>
                     <span>{option.note}</span>

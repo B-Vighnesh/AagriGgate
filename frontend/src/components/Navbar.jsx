@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import agrigateIcon from '../images/agrigate.jpg';
+import agrigateIcon from '../images/logo3.png';
 import { getRole, isLoggedIn } from '../lib/auth';
 import {
   acknowledgeAlert,
@@ -508,7 +508,7 @@ export default function Navbar() {
                 setOpenDropdownKey('');
               }}
             >
-              <i className="fa-regular fa-comments" aria-hidden="true" />
+              <i className="fa-regular fa-message" aria-hidden="true" />
             </Link>
           ) : null}
 

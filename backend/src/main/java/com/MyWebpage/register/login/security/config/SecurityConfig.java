@@ -69,7 +69,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/news/saved", "/api/v1/news/saved/**").hasAnyRole("SELLER", "BUYER")
                         .requestMatchers("/api/v1/support/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/news/**").hasAnyRole("BUYER", "SELLER")
-                        // TODO: Report feature temporarily disabled — to be re-enabled in future release.
                         // .requestMatchers(HttpMethod.POST, "/api/v1/news/*/report").hasAnyRole("BUYER", "SELLER")
                         .requestMatchers("/api/v1/support/request").hasAnyRole("BUYER", "SELLER")
                         .requestMatchers("/api/v1/chat/**").hasAnyRole("BUYER", "SELLER")
@@ -84,7 +83,11 @@ public class SecurityConfig {
                                 "/api/v1/saved-market-data/**",
                                 "/api/v1/market/**",
                                 "/api/v1/market-price/**",
-                                "/api/v1/weather/**"
+                                "/api/v1/weather/**",
+                                "/api/v1/auth/delete-account/send-otp",
+                                "/api/v1/auth/change-password",
+                                "/api/v1/auth/delete-account"
+
                         ).hasAnyRole("SELLER", "BUYER")
                         .anyRequest().authenticated()
                 )

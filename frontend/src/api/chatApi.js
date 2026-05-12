@@ -1,4 +1,5 @@
 import { getApiBaseUrl, requestJson } from '../lib/api';
+import { getToken } from '../lib/auth';
 
 export const getChatConversations = async ({ status, archived } = {}) => {
   const params = new URLSearchParams();
@@ -76,7 +77,11 @@ export const openChatSocket = ({ onOpen, onMessage, onClose, onError } = {}) => 
   }
 
   const wsBase = baseUrl.replace(/^http/i, 'ws').replace(/\/$/, '');
-  const socket = new WebSocket(`${wsBase}/ws/chat`);
+  const token = getToken();
+  const tokenQuery = token && token !== 'cookie-session'
+    ? `?token=${encodeURIComponent(token)}`
+    : '';
+  const socket = new WebSocket(`${wsBase}/ws/chat${tokenQuery}`);
 
   socket.onopen = () => onOpen?.();
   socket.onclose = (event) => onClose?.(event);

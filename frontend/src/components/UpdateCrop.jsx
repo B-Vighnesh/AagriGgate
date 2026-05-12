@@ -31,9 +31,6 @@ export default function UpdateCrop() {
     discountPrice: '',
     status: 'available',
   });
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
-  const [existingImage, setExistingImage] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [toast, setToast] = useState({ message: '', type: 'info' });
@@ -55,15 +52,10 @@ export default function UpdateCrop() {
     }
 
     let mounted = true;
-    let existingObjectUrl = '';
-
     const loadCrop = async () => {
       setFetchLoading(true);
       try {
-        const [detailsRes, imageRes] = await Promise.all([
-          apiFetch(`/crops/legacy/${cropId}`),
-          apiFetch(`/crops/legacy/${cropId}/image`),
-        ]);
+        const detailsRes = await apiFetch(`/crops/legacy/${cropId}`);
 
         if (!detailsRes.ok) throw new Error('Could not load crop data.');
 
@@ -84,11 +76,6 @@ export default function UpdateCrop() {
           });
         }
 
-        if (imageRes.ok) {
-          const blob = await imageRes.blob();
-          existingObjectUrl = URL.createObjectURL(blob);
-          if (mounted) setExistingImage(existingObjectUrl);
-        }
       } catch (error) {
         showToast(error.message || 'Server busy. Please try again.', 'error');
         navigate(-1);
@@ -101,35 +88,12 @@ export default function UpdateCrop() {
 
     return () => {
       mounted = false;
-      if (existingObjectUrl) URL.revokeObjectURL(existingObjectUrl);
-      if (imagePreview) URL.revokeObjectURL(imagePreview);
     };
   }, [cropId]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
     setCropData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-  };
-
-  const handleImageChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (imagePreview) {
-      try { URL.revokeObjectURL(imagePreview); } catch { /* ignore */ }
-    }
-
-    const preview = URL.createObjectURL(file);
-    setImage(file);
-    setImagePreview(preview);
-  };
-
-  const clearNewImage = () => {
-    if (imagePreview) {
-      try { URL.revokeObjectURL(imagePreview); } catch { /* ignore */ }
-    }
-    setImage(null);
-    setImagePreview('');
   };
 
   const handleSubmit = async (event) => {
@@ -153,7 +117,6 @@ export default function UpdateCrop() {
 
     const formData = new FormData();
     formData.append('crop', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
-    if (image) formData.append('imageFile', image);
 
     try {
       const response = await apiFetch(`/crops/farmer/${cropId}`, {
@@ -185,7 +148,9 @@ export default function UpdateCrop() {
       <ValidateToken farmerId={farmerId} token={token} role={role} />
 
       <div className="ag-container">
-        <button
+
+        <Card className="update-crop-card">
+          <button
                     type="button"
                     className="chat-back-btn"
                     onClick={() => navigate(-1)}
@@ -201,8 +166,6 @@ export default function UpdateCrop() {
             <p>Make changes and save your listing.</p>
           </div>
         </div>
-
-        <Card className="update-crop-card">
           <form className="update-crop-form" onSubmit={handleSubmit}>
             <div className="update-crop-grid update-crop-grid--2">
               <div className="update-crop-field">
@@ -294,6 +257,7 @@ export default function UpdateCrop() {
               </label>
             </div>
 
+            {/* Crop image upload is disabled. Backend ignores imageFile even if older clients send it.
             <div className="update-crop-image-row">
               {existingImage && !imagePreview ? (
                 <div className="update-crop-preview-wrap">
@@ -314,6 +278,7 @@ export default function UpdateCrop() {
                 </div>
               ) : null}
             </div>
+            */}
 
             <Button type="submit" loading={loading} className="full-width">
               {loading ? 'Saving...' : 'Save Changes'}
