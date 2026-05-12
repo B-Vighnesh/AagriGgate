@@ -10,7 +10,6 @@
 .news-page .ag-container {
   display: grid;
   gap: 20px;
-  max-width: 100%;
   overflow-x: hidden;
 }
 

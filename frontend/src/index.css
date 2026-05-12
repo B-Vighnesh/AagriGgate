@@ -11883,14 +11883,9 @@ img {
   background: linear-gradient(180deg, #f5faf7 0%, #edf6f1 100%);
 }
 
-.settings-page .ag-container {
-  width: 100%;
-  max-width: none;
-}
-
 .settings-shell--hub,
 .settings-subpage-shell {
-  width: 100%;
+  width: 95%;
   max-width: none;
   margin: 0 auto;
   display: grid;
@@ -11919,11 +11914,11 @@ img {
   grid-template-columns: 1fr;
 }
 
-.settings-shell--hub {
+/* .settings-shell--hub {
   max-width: 600px;
   min-height: 0;
   align-content: start;
-}
+} */
 
 .settings-topbar--inside {
   margin-bottom: 14px;
