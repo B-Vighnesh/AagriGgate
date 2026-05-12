@@ -140,6 +140,8 @@ export default function UpdateAccount() {
     <section className="page update-account-page">
       <ValidateToken token={token} />
       <div className="ag-container">
+        
+        <Card className="update-account-card">
           <button
                     type="button"
                     className="chat-back-btn"
@@ -149,14 +151,12 @@ export default function UpdateAccount() {
                   >
                     <i className="fa-solid fa-chevron-left" />
           </button>
-        <div className="update-account-head">
+           <div className="update-account-head">
           <div>
             <h1>Edit Account</h1>
             <p>Update your personal details.</p>
           </div>
         </div>
-
-        <Card className="update-account-card">
           <form className="update-account-form" onSubmit={onSubmit}>
             <div className="update-account-field">
               <label htmlFor="firstName">First Name</label>
