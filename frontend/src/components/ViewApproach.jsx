@@ -134,7 +134,7 @@ export default function ViewApproach() {
       <div className="ag-container">
         <div className="view-approach-head">
           <div>
-            <h1>Buying Proposals</h1>
+            <h1>Buying Requests</h1>
             <p>Manage buyer requests for your crops.</p>
             {!error && approaches.length > 0 ? (
               <p className="view-all-pagination__info">
