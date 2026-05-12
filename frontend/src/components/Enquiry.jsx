@@ -12,18 +12,21 @@ const SUPPORT_TOPICS = [
     title: 'Feedback',
     note: 'Share ideas to improve the product experience.',
     detail: 'Best for feature suggestions, usability ideas, and product improvements.',
+    icon: 'fa-lightbulb',
   },
   {
     value: 'ENQUIRY',
     title: 'Support Question',
     note: 'Ask about features, account flow, or platform usage.',
     detail: 'Use this when you need guidance, clarification, or platform help from our team.',
+    icon: 'fa-circle-question',
   },
   {
     value: 'COMPLAINT',
     title: 'Complaint',
     note: 'Report an issue that needs attention or follow-up.',
     detail: 'Best for bugs, service issues, and situations where you expect a direct response.',
+    icon: 'fa-circle-exclamation',
   },
 ];
 
@@ -141,7 +144,8 @@ export default function Enquiry() {
               <div className="support-body-grid">
                 <Card className="support-types-card">
                   <div className="support-section-head">
-                    <h2>Request Types</h2>
+                    <h2>Choose a Request Type</h2>
+                    <p>Select the one that best matches your situation.</p>
                   </div>
                   <div className="support-topics support-topics--interactive">
                     {SUPPORT_TOPICS.map((item) => {
@@ -162,16 +166,21 @@ export default function Enquiry() {
                             });
                           }}
                         >
-                          <span className="support-topic-card__head">
-                            <strong>{item.title}</strong>
-                            <span className="support-topic-card__toggle" aria-hidden="true">{isExpanded ? '-' : '+'}</span>
+                          <span className="support-topic-card__icon" aria-hidden="true">
+                            <i className={`fa-solid ${item.icon}`} />
                           </span>
-                          {isExpanded ? (
-                            <span className="support-topic-card__details">
-                              <span>{item.note}</span>
-                              <small>{item.detail}</small>
+                          <span className="support-topic-card__content">
+                            <span className="support-topic-card__head">
+                              <strong>{item.title}</strong>
+                              <span className="support-topic-card__toggle" aria-hidden="true">{isExpanded ? '-' : '+'}</span>
                             </span>
-                          ) : null}
+                            <span className="support-topic-card__note">{item.note}</span>
+                            {isExpanded ? (
+                              <span className="support-topic-card__details">
+                                <small>{item.detail}</small>
+                              </span>
+                            ) : null}
+                          </span>
                         </button>
                       );
                     })}
@@ -182,8 +191,15 @@ export default function Enquiry() {
                   <form className="enquiry-form" onSubmit={onSubmit}>
                     <div className="support-section-head">
                       <h2>Send To Support</h2>
-                      <p>Write a clear message so our team can understand the issue.</p>
+                      <p>Write a clear message so our team can understand and act on your request.</p>
                     </div>
+
+                    {selectedTopic ? (
+                      <div className="support-selected-pill">
+                        <i className="fa-solid fa-circle-check" aria-hidden="true" />
+                        {selectedTopic.title} selected
+                      </div>
+                    ) : null}
 
                     <div>
                       <label htmlFor="topic">Support Type</label>
@@ -202,14 +218,6 @@ export default function Enquiry() {
                       {errors.type ? <p role="alert" className="support-form-error">{errors.type}</p> : null}
                     </div>
 
-                    {selectedTopic ? (
-                      <div className="support-selected-topic">
-                        <span>Selected</span>
-                        <strong>{selectedTopic.title}</strong>
-                        <p>{selectedTopic.detail}</p>
-                      </div>
-                    ) : null}
-
                     <div>
                       <label htmlFor="message">Your Message</label>
                       <textarea
@@ -219,8 +227,10 @@ export default function Enquiry() {
                         onChange={handleChange}
                         placeholder="Tell us what happened, what you need help with, or what you would like us to improve..."
                         rows={7}
+                        maxLength={1000}
                         required
                       />
+                      <div className="support-message-count">{form.message.length} / 1000 characters</div>
                       {errors.message ? <p role="alert" className="support-form-error">{errors.message}</p> : null}
                     </div>
 
@@ -244,6 +254,10 @@ export default function Enquiry() {
                     */}
 
                     <div className="support-form-actions">
+                      <span className="support-form-privacy">
+                        <i className="fa-solid fa-lock" aria-hidden="true" />
+                        Sent to support team only
+                      </span>
                       <Button type="submit" loading={loading}>
                         {loading ? 'Sending support request...' : 'Send to Support'}
                       </Button>
