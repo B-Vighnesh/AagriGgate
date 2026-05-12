@@ -92,6 +92,7 @@ React Frontend (Vite)
                   │
                   ├── Real-time Chat (Farmer ↔ Buyer)
                   └── Real-time Notifications
+---
 ### Layers
 
 | Layer             | Technology              | Responsibility                   |
