@@ -1,27 +1,29 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Button from './common/Button';
+import { Link, useNavigate } from 'react-router-dom';
 import Card from './common/Card';
 import ValidateToken from './ValidateToken';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
-function InsightPreviewCard({ icon, title, subtitle, body, primaryLabel, primaryAction, tone }) {
-  return (
-    <Card className={`insights-hub-card insights-hub-card--${tone}`}>
-      <div className="insights-hub-card__icon" aria-hidden="true">
-        <i className={icon} />
-      </div>
-      <div className="insights-hub-card__copy">
-        <p className="insights-hub-card__subtitle">{subtitle}</p>
-        <h3>{title}</h3>
-        <p>{body}</p>
-      </div>
-      <div className="insights-hub-card__actions">
-        <Button onClick={primaryAction}>{primaryLabel}</Button>
-      </div>
-    </Card>
-  );
-}
+const INSIGHT_ITEMS = [
+  {
+    to: '/market',
+    icon: 'fa-scale-balanced',
+    title: 'Mandi Prices',
+    description: 'Check crop prices by commodity, date, state, and district.',
+  },
+  {
+    to: '/weather',
+    icon: 'fa-cloud-sun-rain',
+    title: 'Weather',
+    description: 'Review district forecasts, rain risk, humidity, and wind guidance.',
+  },
+  {
+    to: '/news',
+    icon: 'fa-newspaper',
+    title: 'News',
+    description: 'Track policy updates, crop alerts, farming tips, and market signals.',
+  },
+];
 
 export default function InsightsHub() {
   const navigate = useNavigate();
@@ -35,65 +37,32 @@ export default function InsightsHub() {
     }
   }, [navigate, role]);
 
-  const insights = [
-    {
-      key: 'mandi',
-      icon: 'fa-solid fa-scale-balanced',
-      subtitle: 'Current + Past Prices',
-      title: 'Mandi Prices',
-      body: 'Check recent APMC and mandi crop prices by commodity, date, state, and district before planning a sale or purchase.',
-      primaryLabel: 'Open Mandi',
-      path: '/market',
-      tone: 'mandi',
-    },
-    {
-      key: 'weather',
-      icon: 'fa-solid fa-cloud-sun-rain',
-      subtitle: 'Forecast + Planning',
-      title: 'Weather',
-      body: 'Review district weather, harvest timing signals, rain risk, humidity, and wind guidance for field and logistics planning.',
-      primaryLabel: 'Open Weather',
-      path: '/weather',
-      tone: 'weather',
-    },
-    {
-      key: 'news',
-      icon: 'fa-regular fa-newspaper',
-      subtitle: 'Policy, Agri News, Alerts',
-      title: 'News',
-      body: 'Track policy updates, crop alerts, farming tips, market signals, and important agriculture news in one place.',
-      primaryLabel: 'Open News',
-      path: '/news',
-      tone: 'news',
-    },
-  ];
-
   return (
     <section className="page insights-hub-page">
       <ValidateToken token={token} role={role} farmerId={farmerId} />
-      <div className="ag-container">
-        <div className="insights-hub-head">
-          <div>
-            <p className="insights-hub-kicker">Insights</p>
-            <h1>Mandi, weather, and news in one place</h1>
-            <p>Use the same insight hub for crop prices, field planning, policy updates, agri news, and alerts.</p>
-          </div>
-        </div>
 
-        <div className="insights-hub-grid" aria-label="Insights sections">
-          {insights.map((item) => (
-            <InsightPreviewCard
-              key={item.key}
-              icon={item.icon}
-              subtitle={item.subtitle}
-              title={item.title}
-              body={item.body}
-              primaryLabel={item.primaryLabel}
-              primaryAction={() => navigate(item.path)}
-              tone={item.tone}
-            />
+      <div className="ag-container insights-hub-shell">
+        <header className="insights-hub-topbar">
+          <div className="insights-hub-title-block">
+            <h1>Insights</h1>
+            <p>Open mandi prices, weather, and agriculture news from one place.</p>
+          </div>
+        </header>
+
+        <Card className="insights-hub-menu">
+          {INSIGHT_ITEMS.map((item) => (
+            <Link key={item.to} to={item.to} className="insights-hub-row">
+              <span className="insights-hub-row__icon" aria-hidden="true">
+                <i className={`fa-solid ${item.icon}`} />
+              </span>
+              <span className="insights-hub-row__copy">
+                <strong>{item.title}</strong>
+                <small>{item.description}</small>
+              </span>
+              <i className="fa-solid fa-chevron-right insights-hub-row__chevron" aria-hidden="true" />
+            </Link>
           ))}
-        </div>
+        </Card>
       </div>
     </section>
   );
