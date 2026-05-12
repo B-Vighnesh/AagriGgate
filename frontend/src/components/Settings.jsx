@@ -24,6 +24,12 @@ const SETTINGS_ITEMS = [
     description: 'Update your password and review strength before saving.',
   },
   {
+    to: '/forgot-password',
+    icon: 'fas fa-unlock-alt',
+    title: 'Forgot Password',
+    description: 'Create new password using OTP.',
+  },
+  {
     to: '/settings/delete-account',
     icon: 'fa-triangle-exclamation',
     title: 'Delete Account',

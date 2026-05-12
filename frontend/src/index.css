@@ -2812,6 +2812,7 @@ a {
 .auth-card h1 {
   margin: 0 0 6px;
   color: var(--color-primary-dark);
+  font-size:1.6em;
 }
 
 .auth-card p {
