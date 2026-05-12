@@ -132,7 +132,7 @@ export default function Enquiry() {
               <div className="support-intro-block">
                 <div className="support-hero__copy">
                   <span className="support-kicker">Universal Support</span>
-                  <h1>Support, feedback, and complaints</h1>
+                  <h3>Support, feedback, and complaints</h3>
                   <p>
                    Reach the AagriGgate team for any platform issue, feedback, or account question.</p>
                 </div>

@@ -321,7 +321,7 @@ export default function Notifications() {
               <button
                 type="button"
                 className="ntf-panel__action ntf-panel__action--prefs"
-                onClick={() => navigate('/notification-preferences')}
+                onClick={() => navigate('/settings/notifications')}
                 aria-label="Open notification preferences"
               >
                 <i className="fa-solid fa-gear" aria-hidden="true" />

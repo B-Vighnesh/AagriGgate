@@ -27,19 +27,19 @@ export default function NotificationPreferencesPage() {
   }
 
   return (
-    <div className="ntf-page page">
-      <div className="ntf-layout ag-container">
-        <section className="ntf-preferences-panel">
-          <div className="ntf-panel__title-group ntf-panel__title-group--prefs">
+    <div className="ntf-page page settings-page">
+      <div className="ntf-layout ag-container settings-subpage-shell">
+        <section className="ntf-preferences-panel settings-card settings-notification-card">
+          <div className="settings-topbar settings-topbar--inside">
             <button
               type="button"
-              className="ntf-panel__back"
-              onClick={() => navigate(-1)}
-              aria-label="Go back"
+              className="settings-topbar__back"
+              onClick={() => navigate('/settings')}
+              aria-label="Back to settings"
             >
-              <i className="fa-solid fa-chevron-left" aria-hidden="true" />
+              <i className="fa-solid fa-arrow-left" aria-hidden="true" />
             </button>
-            <h1 className="ntf-panel__title">Notification Preferences</h1>
+            <h1>Notification Preferences</h1>
           </div>
           <NotificationPreferences onToast={showToast} />
         </section>

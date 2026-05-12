@@ -29,6 +29,8 @@ import DeleteApproach from './components/DeleteApproach';
 import ViewApproachForUser from './components/ViewApproachForUser';
 import RequestDetails from './components/RequestDetails';
 import Settings from './components/Settings';
+import SettingsPassword from './components/SettingsPassword';
+import SettingsDeleteAccount from './components/SettingsDeleteAccount';
 import Enquiry from './components/Enquiry';
 import Error from './components/Error';
 import Chat from './components/Chat';
@@ -103,6 +105,9 @@ function AppRoutes() {
             <Route path="/view-approach" element={<ViewApproach />} />
             <Route path="/view-approaches-user" element={<ViewApproachForUser />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/password" element={<SettingsPassword />} />
+            <Route path="/settings/delete-account" element={<SettingsDeleteAccount />} />
+            <Route path="/settings/notifications" element={<NotificationPreferencesPage />} />
             <Route path="/view-buyer/:buyerId" element={<BuyerDetails />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/cart" element={<Cart />} />
