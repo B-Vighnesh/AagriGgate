@@ -935,7 +935,7 @@ export default function Chat() {
               <h1>Messages</h1>
               <div className="chat-connection-status">
                 <span className={`status-dot ${socketReady ? 'status-dot--online' : 'status-dot--offline'}`} />
-                {socketReady ? 'Live' : 'Connecting...'}
+                {socketReady ? 'Online' : 'Connecting...'}
               </div>
             </div>
             <div className="chat-search">
