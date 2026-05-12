@@ -6982,12 +6982,13 @@ a {
 }
 
 .update-account-card {
-  max-width: 860px;
+  max-width: 95%;
+  margin: 0 auto;
 }
 
 .update-account-form {
   display: grid;
-  gap: 12px;
+  gap: 20px;
 }
 
 .update-account-grid {
@@ -6996,7 +6997,7 @@ a {
 }
 
 .update-account-grid--2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .update-account-field {

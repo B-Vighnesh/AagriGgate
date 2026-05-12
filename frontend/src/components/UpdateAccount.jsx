@@ -158,56 +158,53 @@ export default function UpdateAccount() {
 
         <Card className="update-account-card">
           <form className="update-account-form" onSubmit={onSubmit}>
-            <div className="update-account-grid update-account-grid--2">
-              <div className="update-account-field">
-                <label htmlFor="firstName">First Name</label>
-                <input id="firstName" name="firstName" value={form.firstName} onChange={onChange} />
-                {errors.firstName ? <small>{errors.firstName}</small> : null}
-              </div>
-              <div className="update-account-field">
-                <label htmlFor="lastName">Last Name</label>
-                <input id="lastName" name="lastName" value={form.lastName} onChange={onChange} />
-              </div>
+            <div className="update-account-field">
+              <label htmlFor="firstName">First Name</label>
+              <input id="firstName" name="firstName" value={form.firstName} onChange={onChange} />
+              {errors.firstName ? <small>{errors.firstName}</small> : null}
             </div>
 
-            <div className="update-account-grid update-account-grid--2">
-              <div className="update-account-field">
-                <label htmlFor="phoneNo">Phone Number</label>
-                <input id="phoneNo" name="phoneNo" value={form.phoneNo} onChange={onChange} />
-                {errors.phoneNo ? <small>{errors.phoneNo}</small> : null}
-              </div>
-              <div className="update-account-field">
-                <label htmlFor="dob">Date of Birth</label>
-                <input id="dob" type="date" name="dob" value={form.dob} onChange={onChange} />
-                {errors.dob ? <small>{errors.dob}</small> : null}
-              </div>
+            <div className="update-account-field">
+              <label htmlFor="lastName">Last Name</label>
+              <input id="lastName" name="lastName" value={form.lastName} onChange={onChange} />
             </div>
 
-            <div className="update-account-grid update-account-grid--2">
-              <div className="update-account-field">
-                <label htmlFor="state">State</label>
-                <select id="state" name="state" value={form.state} onChange={onStateChange}>
-                  <option value="">Select State</option>
-                  {Object.keys(statesWithDistricts).map((item) => (
-                    <option key={item} value={item}>{item}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="update-account-field">
-                <label htmlFor="district">District</label>
-                <select
-                  id="district"
-                  name="district"
-                  value={form.district}
-                  onChange={onChange}
-                  disabled={!form.state}
-                >
-                  <option value="">Select District</option>
-                  {(statesWithDistricts[form.state] || []).map((item) => (
-                    <option key={item} value={item}>{item}</option>
-                  ))}
-                </select>
-              </div>
+            <div className="update-account-field">
+              <label htmlFor="phoneNo">Phone Number</label>
+              <input id="phoneNo" name="phoneNo" value={form.phoneNo} onChange={onChange} />
+              {errors.phoneNo ? <small>{errors.phoneNo}</small> : null}
+            </div>
+
+            <div className="update-account-field">
+              <label htmlFor="dob">Date of Birth</label>
+              <input id="dob" type="date" name="dob" value={form.dob} onChange={onChange} />
+              {errors.dob ? <small>{errors.dob}</small> : null}
+            </div>
+
+            <div className="update-account-field">
+              <label htmlFor="state">State</label>
+              <select id="state" name="state" value={form.state} onChange={onStateChange}>
+                <option value="">Select State</option>
+                {Object.keys(statesWithDistricts).map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="update-account-field">
+              <label htmlFor="district">District</label>
+              <select
+                id="district"
+                name="district"
+                value={form.district}
+                onChange={onChange}
+                disabled={!form.state}
+              >
+                <option value="">Select District</option>
+                {(statesWithDistricts[form.state] || []).map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
             </div>
 
             <div className="update-account-field">
