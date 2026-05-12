@@ -1,6 +1,12 @@
 .ntf-prefs-page-section {
+  width: calc(100% - 48px);
+  margin: 24px auto 36px;
+  padding: 22px;
   display: grid;
   gap: 14px;
+  border: 1px solid #e4ece7;
+  border-radius: 18px;
+  background: #f7fcf9;
 }
 
 .ntf-prefs-page-section__head {
@@ -409,6 +415,9 @@
 
 @media (max-width: 420px) {
   .ntf-prefs-page-section {
+    width: calc(100% - 24px);
+    margin: 24px auto 24px;
+    padding: 12px;
     gap: 12px;
   }
 
