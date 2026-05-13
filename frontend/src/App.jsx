@@ -44,6 +44,7 @@ import News from './pages/News';
 import NewsDetails from './components/NewsDetails';
 import MarketDetails from './components/MarketDetails';
 import { bootstrapSession } from './lib/auth';
+import { NavbarCountProvider } from './context/NavbarCountContext';
 import './index.css';
 
 function ScrollManager() {
@@ -153,7 +154,9 @@ function App() {
 
   return (
     <Router>
-      <AppRoutes />
+      <NavbarCountProvider>
+        <AppRoutes />
+      </NavbarCountProvider>
     </Router>
   );
 }

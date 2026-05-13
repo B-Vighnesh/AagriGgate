@@ -57,6 +57,7 @@ export default function ApproachFarmer({ cropId, onClose, initialQuantity = 1, o
       }
 
       setSuccess(true);
+      window.dispatchEvent(new CustomEvent('requests:count-updated'));
       if (onSuccess) {
         onSuccess(Number(quantity || 1), latestApproach);
       }

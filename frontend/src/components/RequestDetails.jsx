@@ -140,6 +140,7 @@ export default function RequestDetails() {
     try {
       await requestJson(`/seller/approach/${decision}/${approachId}`, { method: 'POST' });
       await refreshRequest();
+      window.dispatchEvent(new CustomEvent('requests:count-updated'));
       showToast(`Request ${decision === 'accept' ? 'accepted' : 'rejected'} successfully.`, 'success');
     } catch (error) {
       showToast(error.message || 'Unable to update request.', 'error');
@@ -153,6 +154,7 @@ export default function RequestDetails() {
       setWithdrawLoading(targetApproachId);
       const response = await apiFetch(`/buyer/approach/delete/${targetApproachId}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to withdraw request.');
+      window.dispatchEvent(new CustomEvent('requests:count-updated'));
       showToast('Request withdrawn.', 'success');
       navigate('/view-approaches-user');
     } catch (error) {

@@ -5,15 +5,13 @@ import agrigateIcon from '../images/logo3.png';
 import { getRole, isLoggedIn } from '../lib/auth';
 import {
   acknowledgeAlert,
-  countUnread,
   getActiveAlerts,
   getNotifications,
   markAllAsRead,
   markAsRead,
 } from '../lib/notificationApi';
 import { resolveNotificationRoute, sortNotificationsByDate } from '../lib/notificationRouting';
-import { countRoleBasedRequests } from '../lib/requestApi';
-import { countChatUnread } from '../api/chatApi';
+import { useNavbarCounts } from '../context/NavbarCountContext';
 
 function navByRole(role) {
   if (!role) {
@@ -147,6 +145,12 @@ function bottomNavItemsByRole(role) {
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const {
+    unreadMessages,
+    unreadRequests,
+    unreadNotifications,
+    setUnreadNotifications,
+  } = useNavbarCounts();
   const [role, setRole] = useState(getRole());
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [isMobileViewport, setIsMobileViewport] = useState(
@@ -156,9 +160,6 @@ export default function Navbar() {
   const [openDropdownKey, setOpenDropdownKey] = useState('');
   const [hoverLockedDropdownKey, setHoverLockedDropdownKey] = useState('');
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [requestCount, setRequestCount] = useState(0);
-  const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const [notificationOverlayOpen, setNotificationOverlayOpen] = useState(false);
   const [notificationPreviewLoading, setNotificationPreviewLoading] = useState(false);
   const [notificationPreview, setNotificationPreview] = useState([]);
@@ -209,102 +210,6 @@ export default function Navbar() {
       window.clearTimeout(dropdownCloseTimeoutRef.current);
     }
   }, []);
-
-  /* poll unread count for badge */
-  useEffect(() => {
-    if (!loggedIn) {
-      setUnreadCount(0);
-      return undefined;
-    }
-
-    let active = true;
-
-    const loadUnreadCount = async () => {
-      try {
-        const payload = await countUnread();
-        if (active) setUnreadCount(Number(payload?.count ?? 0));
-      } catch {
-        if (active) setUnreadCount(0);
-      }
-    };
-
-    loadUnreadCount();
-    const interval = window.setInterval(loadUnreadCount, 30000);
-    const handleCountUpdate = (event) => {
-      setUnreadCount(Number(event?.detail?.count ?? 0));
-    };
-    window.addEventListener('notifications:count-updated', handleCountUpdate);
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-      window.removeEventListener('notifications:count-updated', handleCountUpdate);
-    };
-  }, [loggedIn]);
-
-  useEffect(() => {
-    if (!loggedIn || !role) {
-      setRequestCount(0);
-      return undefined;
-    }
-
-    let active = true;
-
-    const loadRequestCount = async () => {
-      try {
-        const payload = await countRoleBasedRequests(role);
-        if (active) {
-          setRequestCount(Number(payload ?? 0));
-        }
-      } catch {
-        if (active) {
-          setRequestCount(0);
-        }
-      }
-    };
-
-    loadRequestCount();
-    const interval = window.setInterval(loadRequestCount, 30000);
-
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-    };
-  }, [loggedIn, role]);
-
-  useEffect(() => {
-    if (!loggedIn) {
-      setChatUnreadCount(0);
-      return undefined;
-    }
-
-    let active = true;
-
-    const loadChatUnreadCount = async () => {
-      try {
-        const payload = await countChatUnread();
-        if (active) {
-          setChatUnreadCount(Number(payload?.count ?? payload ?? 0));
-        }
-      } catch {
-        if (active) {
-          setChatUnreadCount(0);
-        }
-      }
-    };
-
-    loadChatUnreadCount();
-    const interval = window.setInterval(loadChatUnreadCount, 30000);
-    const handleChatCountUpdate = (event) => {
-      setChatUnreadCount(Number(event?.detail?.count ?? 0));
-    };
-
-    window.addEventListener('chat:count-updated', handleChatCountUpdate);
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-      window.removeEventListener('chat:count-updated', handleChatCountUpdate);
-    };
-  }, [loggedIn]);
 
   useEffect(() => {
     if (!profileMenuOpen) return undefined;
@@ -456,9 +361,10 @@ export default function Navbar() {
         await acknowledgeAlert(item.id);
       } else if (item.isRead !== true) {
         await markAsRead(item.id);
-        setUnreadCount((prev) => Math.max(prev - 1, 0));
+        const nextCount = Math.max(unreadNotifications - 1, 0);
+        setUnreadNotifications(nextCount);
         window.dispatchEvent(new CustomEvent('notifications:count-updated', {
-          detail: { count: Math.max(unreadCount - 1, 0) },
+          detail: { count: nextCount },
         }));
       }
     } catch {
@@ -477,7 +383,7 @@ export default function Navbar() {
   const handleMarkAllRead = async () => {
     try {
       await markAllAsRead();
-      setUnreadCount(0);
+      setUnreadNotifications(0);
       setNotificationPreview([]);
       window.dispatchEvent(new CustomEvent('notifications:count-updated', {
         detail: { count: 0 },
@@ -559,8 +465,8 @@ export default function Navbar() {
                   className={`site-nav__link ${isActive(item.to) ? 'site-nav__link--active' : ''}`}
                 >
                   <span>{item.label}</span>
-                  {isRequestLink(item.to) && requestCount > 0 ? (
-                    <span className="site-nav__badge">{requestCount}</span>
+                  {isRequestLink(item.to) && unreadRequests > 0 ? (
+                    <span className="site-nav__badge">{unreadRequests}</span>
                   ) : null}
                 </Link>
               );
@@ -582,7 +488,7 @@ export default function Navbar() {
               }}
             >
               <i className="fa-regular fa-message" aria-hidden="true" />
-              {chatUnreadCount > 0 ? <span className="notification-bell__badge">{chatUnreadCount}</span> : null}
+              {unreadMessages > 0 ? <span className="notification-bell__badge">{unreadMessages}</span> : null}
             </Link>
           ) : null}
 
@@ -597,7 +503,7 @@ export default function Navbar() {
                 onClick={handleNotificationBellClick}
               >
                 <i className="fa-regular fa-bell" aria-hidden="true" />
-                {unreadCount > 0 ? <span className="notification-bell__badge">{unreadCount}</span> : null}
+                {unreadNotifications > 0 ? <span className="notification-bell__badge">{unreadNotifications}</span> : null}
               </button>
 
               {notificationOverlayOpen ? (
@@ -752,8 +658,8 @@ export default function Navbar() {
           >
             <span className="mobile-bottom-nav__icon-wrap">
               <i className={item.icon} aria-hidden="true" />
-              {isRequestLink(item.to) && requestCount > 0 ? (
-                <span className="mobile-bottom-nav__badge">{requestCount}</span>
+              {isRequestLink(item.to) && unreadRequests > 0 ? (
+                <span className="mobile-bottom-nav__badge">{unreadRequests}</span>
               ) : null}
             </span>
             <span>{item.label}</span>

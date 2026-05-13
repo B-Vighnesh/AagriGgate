@@ -97,6 +97,7 @@ export default function ViewApproach() {
       if (!response.ok) throw new Error('Action failed.');
       showToast(accept ? 'Request accepted.' : 'Request rejected.', accept ? 'success' : 'info');
       await loadApproaches();
+      window.dispatchEvent(new CustomEvent('requests:count-updated'));
     } catch (err) {
       showToast(err.message || 'Unable to process request.', 'error');
     } finally {
