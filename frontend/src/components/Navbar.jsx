@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import agrigateIcon from '../images/logo3.png';
 import { getRole, isLoggedIn } from '../lib/auth';
-import { requestJson } from '../lib/api';
 import {
   acknowledgeAlert,
   countUnread,
@@ -13,6 +12,7 @@ import {
   markAsRead,
 } from '../lib/notificationApi';
 import { resolveNotificationRoute, sortNotificationsByDate } from '../lib/notificationRouting';
+import { countRoleBasedRequests } from '../lib/requestApi';
 
 function navByRole(role) {
   if (!role) {
@@ -41,7 +41,7 @@ function navByRole(role) {
           { label: 'My Crops', to: '/view-crop' },
         ],
       },
-      { type: 'link', label: 'Requests', to: '/view-approach', badge: 'requests' },
+      { type: 'link', label: 'Requests', to: '/view-approach' },
       { type: 'link', label: 'Weather', to: '/weather' },
       { type: 'link', label: 'News', to: '/news' },
       { type: 'link', label: 'About Us', to: '/about-us' },
@@ -52,7 +52,7 @@ function navByRole(role) {
     { type: 'link', label: 'Home', to: '/' },
     { type: 'link', label: 'Marketplace', to: '/view-all-crops' },
     { type: 'link', label: 'Mandi Prices', to: '/market' },
-    { type: 'link', label: 'My Requests', to: '/view-approaches-user', badge: 'requests' },
+    { type: 'link', label: 'My Requests', to: '/view-approaches-user' },
     { type: 'link', label: 'News', to: '/news' },
     { type: 'link', label: 'About Us', to: '/about-us' },
   ];
@@ -97,7 +97,6 @@ function bottomNavItemsByRole(role) {
         label: 'Requests',
         to: '/view-approaches-user',
         icon: 'fa-regular fa-clock',
-        badge: 'requests',
         matchPrefixes: ['/view-approaches-user', '/requests'],
       },
       {
@@ -133,7 +132,6 @@ function bottomNavItemsByRole(role) {
       label: 'Requests',
       to: role === 'farmer' ? '/view-approach' : '/view-approaches-user',
       icon: 'fa-regular fa-clock',
-      badge: 'requests',
       matchPrefixes: ['/view-approach', '/view-approaches-user', '/view-approaches/farmer', '/requests'],
     },
     {
@@ -143,18 +141,6 @@ function bottomNavItemsByRole(role) {
       matchPrefixes: ['/insights', '/market', '/weather', '/news'],
     },
   ];
-}
-
-function getRequestCountEndpoint(role) {
-  if (role === 'buyer') return '/buyer/approach/requests/accepted';
-  if (role === 'farmer') return '/seller/approach/requests/pending';
-  return '';
-}
-
-function getLongResponseValue(payload) {
-  const value = payload?.data ?? payload?.count ?? payload;
-  const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? numericValue : 0;
 }
 
 export default function Navbar() {
@@ -254,8 +240,7 @@ export default function Navbar() {
   }, [loggedIn]);
 
   useEffect(() => {
-    const endpoint = loggedIn ? getRequestCountEndpoint(role) : '';
-    if (!endpoint) {
+    if (!loggedIn || !role) {
       setRequestCount(0);
       return undefined;
     }
@@ -264,24 +249,23 @@ export default function Navbar() {
 
     const loadRequestCount = async () => {
       try {
-        const payload = await requestJson(endpoint, { method: 'GET' });
-        if (active) setRequestCount(getLongResponseValue(payload));
+        const payload = await countRoleBasedRequests(role);
+        if (active) {
+          setRequestCount(Number(payload ?? 0));
+        }
       } catch {
-        if (active) setRequestCount(0);
+        if (active) {
+          setRequestCount(0);
+        }
       }
     };
 
     loadRequestCount();
     const interval = window.setInterval(loadRequestCount, 30000);
-    const handleRequestCountUpdate = (event) => {
-      setRequestCount(Number(event?.detail?.count ?? 0));
-    };
 
-    window.addEventListener('requests:count-updated', handleRequestCountUpdate);
     return () => {
       active = false;
       window.clearInterval(interval);
-      window.removeEventListener('requests:count-updated', handleRequestCountUpdate);
     };
   }, [loggedIn, role]);
 
@@ -359,9 +343,7 @@ export default function Navbar() {
     && !['/login', '/register', '/logout', '/forgot-password', '/404'].includes(location.pathname);
   const showMobileDrawer = isMobileViewport && !showMobileBottomNav;
   const navItemsToRender = showMobileDrawer ? mobileDrawerItemsByRole(role, loggedIn) : items;
-  const renderRequestBadge = () => (
-    requestCount > -1 ? <span className="site-nav__badge">{requestCount}</span> : null
-  );
+  const isRequestLink = (to) => to === '/view-approach' || to === '/view-approaches-user';
 
   const toggleDropdown = (key) => {
     setOpenDropdownKey((current) => {
@@ -540,7 +522,9 @@ export default function Navbar() {
                   className={`site-nav__link ${isActive(item.to) ? 'site-nav__link--active' : ''}`}
                 >
                   <span>{item.label}</span>
-                  {item.badge === 'requests' ? renderRequestBadge() : null}
+                  {isRequestLink(item.to) && requestCount > 0 ? (
+                    <span className="site-nav__badge">{requestCount}</span>
+                  ) : null}
                 </Link>
               );
               })}
@@ -575,7 +559,7 @@ export default function Navbar() {
                 onClick={handleNotificationBellClick}
               >
                 <i className="fa-regular fa-bell" aria-hidden="true" />
-                {unreadCount > -1 ? <span className="notification-bell__badge">{unreadCount}</span> : null}
+                {unreadCount > 0 ? <span className="notification-bell__badge">{unreadCount}</span> : null}
               </button>
 
               {notificationOverlayOpen ? (
@@ -730,7 +714,7 @@ export default function Navbar() {
           >
             <span className="mobile-bottom-nav__icon-wrap">
               <i className={item.icon} aria-hidden="true" />
-              {item.badge === 'requests' && requestCount > -1 ? (
+              {isRequestLink(item.to) && requestCount > 0 ? (
                 <span className="mobile-bottom-nav__badge">{requestCount}</span>
               ) : null}
             </span>
