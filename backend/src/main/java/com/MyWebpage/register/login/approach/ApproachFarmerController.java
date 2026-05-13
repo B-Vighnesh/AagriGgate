@@ -75,9 +75,16 @@ public class ApproachFarmerController {
     public ResponseEntity<ApiResponse<Long>> getPendingCount(Authentication authentication)
     {
         Long farmerId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(ApiResponse.success("Unread count fetched", approachFarmerService.getPendingCount(farmerId)));
+        return ResponseEntity.ok(ApiResponse.success("Pending count fetched", approachFarmerService.getPendingCount(farmerId)));
 
     }
+
+//    @GetMapping("/requests/accepted")
+//    public ResponseEntity<ApiResponse<Long>> getAcceptedCount(Authentication authentication)
+//    {
+//        Long farmerId = Long.parseLong(authentication.getName());
+//        return ResponseEntity.ok(ApiResponse.success("Unread count fetched", approachFarmerService.getAcceptedCount(farmerId)));
+//    }
 
     @GetMapping("/requests/{approachId}")
     public ResponseEntity<ApproachRequestDTO> getRequestByFarmerId(

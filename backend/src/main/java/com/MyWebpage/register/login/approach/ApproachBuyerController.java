@@ -1,5 +1,6 @@
 package com.MyWebpage.register.login.approach;
 
+import com.MyWebpage.register.login.common.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -114,6 +115,14 @@ public class ApproachBuyerController {
             return ResponseEntity.badRequest().body(new ApproachStatusResponseDTO());
         }
     }
+
+    @GetMapping("/requests/accepted")
+    public ResponseEntity<ApiResponse<Long>> getAcceptedCount(Authentication authentication)
+    {
+        Long farmerId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success("Accepted count fetched", approachFarmerService.getAcceptedCount(farmerId)));
+    }
+
     @DeleteMapping("/delete/{approachId}")
     public ResponseEntity<String> deleteApproach(
             @PathVariable Long approachId,
