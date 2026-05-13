@@ -80,7 +80,7 @@ a {
 }
 
 .page--center {
-  min-height: calc(100vh - 180px);
+  min-height: 560px;
   display: grid;
   place-items: center;
   padding: 24px 12px;

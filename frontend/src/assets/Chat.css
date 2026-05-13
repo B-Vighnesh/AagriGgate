@@ -1300,7 +1300,7 @@
 
 @media (max-width: 768px) {
   .premium-chat {
-    min-height: calc(100dvh - 136px - env(safe-area-inset-bottom, 0px));
+    min-height: calc(100dvh - 90px - env(safe-area-inset-bottom, 0px));
     align-items: stretch;
     justify-content: stretch;
     margin: 0;
