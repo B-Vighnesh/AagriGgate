@@ -598,7 +598,7 @@ export default function Market() {
               </div>
             )}
 
-            {!loading && activeQuery && (
+            {/* {!loading && activeQuery && (
               <Card className="market-analysis-prompt">
                 <div>
                   <h3>Ready for deeper insights?</h3>
@@ -608,7 +608,7 @@ export default function Market() {
                   Do Analysis
                 </Button>
               </Card>
-            )}
+            )} */}
 
             {loading && (
               <div className="market-loading">
