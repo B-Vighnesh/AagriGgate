@@ -13,6 +13,7 @@ import {
 } from '../lib/notificationApi';
 import { resolveNotificationRoute, sortNotificationsByDate } from '../lib/notificationRouting';
 import { countRoleBasedRequests } from '../lib/requestApi';
+import { countChatUnread } from '../api/chatApi';
 
 function navByRole(role) {
   if (!role) {
@@ -157,6 +158,7 @@ export default function Navbar() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [requestCount, setRequestCount] = useState(0);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const [notificationOverlayOpen, setNotificationOverlayOpen] = useState(false);
   const [notificationPreviewLoading, setNotificationPreviewLoading] = useState(false);
   const [notificationPreview, setNotificationPreview] = useState([]);
@@ -268,6 +270,41 @@ export default function Navbar() {
       window.clearInterval(interval);
     };
   }, [loggedIn, role]);
+
+  useEffect(() => {
+    if (!loggedIn) {
+      setChatUnreadCount(0);
+      return undefined;
+    }
+
+    let active = true;
+
+    const loadChatUnreadCount = async () => {
+      try {
+        const payload = await countChatUnread();
+        if (active) {
+          setChatUnreadCount(Number(payload?.count ?? payload ?? 0));
+        }
+      } catch {
+        if (active) {
+          setChatUnreadCount(0);
+        }
+      }
+    };
+
+    loadChatUnreadCount();
+    const interval = window.setInterval(loadChatUnreadCount, 30000);
+    const handleChatCountUpdate = (event) => {
+      setChatUnreadCount(Number(event?.detail?.count ?? 0));
+    };
+
+    window.addEventListener('chat:count-updated', handleChatCountUpdate);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      window.removeEventListener('chat:count-updated', handleChatCountUpdate);
+    };
+  }, [loggedIn]);
 
   useEffect(() => {
     if (!profileMenuOpen) return undefined;
@@ -545,6 +582,7 @@ export default function Navbar() {
               }}
             >
               <i className="fa-regular fa-message" aria-hidden="true" />
+              {chatUnreadCount > 0 ? <span className="notification-bell__badge">{chatUnreadCount}</span> : null}
             </Link>
           ) : null}
 

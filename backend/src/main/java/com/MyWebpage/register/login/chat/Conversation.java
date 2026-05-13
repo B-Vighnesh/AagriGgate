@@ -132,6 +132,12 @@ public class Conversation {
         if (farmerDealConfirmed == null) {
             farmerDealConfirmed = false;
         }
+        if (buyerUnreadCount == null) {
+            buyerUnreadCount = 0;
+        }
+        if (farmerUnreadCount == null) {
+            farmerUnreadCount = 0;
+        }
     }
 
     @PreUpdate

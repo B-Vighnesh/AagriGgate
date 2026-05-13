@@ -44,12 +44,12 @@ public class ChatMessage {
     @Column(nullable = false)
     private MessageStatus deliveryStatus = MessageStatus.SENT; // SENT, DELIVERED, READ
 
-    public Boolean getRead() {
+    public Boolean getIsRead() {
         return isRead;
     }
 
-    public void setRead(Boolean read) {
-        isRead = read;
+    public void setIsRead(Boolean isRead) {
+        this.isRead = isRead;
     }
 
     public LocalDateTime getReadAt() {

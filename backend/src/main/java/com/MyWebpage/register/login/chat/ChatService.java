@@ -13,6 +13,7 @@ public interface ChatService {
     ConversationSummaryDTO getConversationByApproach(Long approachId, Long actorId);
     List<ConversationSummaryDTO> getConversationsForUser(Long actorId);
     List<ConversationSummaryDTO> getConversationsForUser(Long actorId, String status, Boolean archived);
+    long countUnreadMessages(Long actorId);
     List<ChatMessageDTO> getMessages(Long conversationId, Long actorId);
     ChatMessageDTO postMessage(Long conversationId, Long senderId, String messageText);
     DealConfirmationResultDTO confirmDeal(Long conversationId, Long actorId, DealConfirmationRequestDTO request);
