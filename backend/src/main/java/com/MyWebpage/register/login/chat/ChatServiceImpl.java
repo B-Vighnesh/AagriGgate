@@ -111,7 +111,15 @@ public class ChatServiceImpl implements ChatService {
         if (conversation.getStatus() != ConversationStatus.ACTIVE || !Boolean.TRUE.equals(conversation.getActive())) {
             throw new IllegalArgumentException("This conversation is closed");
         }
-
+        if(Objects.equals(conversation.getFarmerId(), senderId))
+        {
+            conversation.setBuyerUnreadCount(conversation.getBuyerUnreadCount()+1);
+        }
+        else{
+            conversation.setFarmerUnreadCount(conversation.getFarmerUnreadCount()+1);
+        }
+        conversation.setLastMessageSenderId(senderId);
+        conversation.setLastMessagePreview(messageText);
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setConversationId(conversation.getConversationId());
         chatMessage.setSenderId(senderId);
