@@ -523,7 +523,7 @@ export default function Navbar() {
                 onClick={handleNotificationBellClick}
               >
                 <i className="fa-regular fa-bell" aria-hidden="true" />
-                {unreadCount > 0 ? <span className="notification-bell__badge">{unreadCount}</span> : null}
+                {unreadCount > -1 ? <span className="notification-bell__badge">{unreadCount}</span> : null}
               </button>
 
               {notificationOverlayOpen ? (

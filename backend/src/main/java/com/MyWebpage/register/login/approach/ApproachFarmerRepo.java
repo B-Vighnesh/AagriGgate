@@ -389,4 +389,13 @@ public interface ApproachFarmerRepo extends JpaRepository<ApproachFarmer, Long> 
             @Param("userId") Long userId,
             @Param("cropId") Long cropId
     );
+
+    @Query("""
+    SELECT count(*)
+    FROM ApproachFarmer a
+    WHERE a.farmerId = :farmerId
+    AND a.status = "pending"
+    AND a.active = true
+    """)
+    Long findByPendingCount(Long farmerId);
 }

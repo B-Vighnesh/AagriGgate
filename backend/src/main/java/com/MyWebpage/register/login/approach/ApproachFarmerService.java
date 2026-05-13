@@ -37,4 +37,6 @@ public interface ApproachFarmerService {
     void markApproachNotified(Long approachId, LocalDateTime notifiedAt);
 
     ApproachStatusResponseDTO getApproachStatus(Long userId, Long cropId);
+
+    Long getPendingCount(Long farmerId);
 }
