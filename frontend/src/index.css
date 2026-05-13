@@ -12028,7 +12028,7 @@ img {
   width: 100%;
   max-width: none;
   margin: 0 auto;
-  border-radius: 8px;
+  border-radius: 18px;
   background: #fff;
 }
 
@@ -12385,7 +12385,6 @@ img {
     z-index: 20;
     margin: -8px -4px 0;
     padding: 8px 4px;
-    background: rgba(245, 250, 247, 0.96);
     backdrop-filter: blur(10px);
   }
 
@@ -12398,7 +12397,6 @@ img {
   .settings-notification-card {
     max-width: none;
     min-height: none;
-    border-radius: 0;
     border-left: 0;
     border-right: 0;
   }
