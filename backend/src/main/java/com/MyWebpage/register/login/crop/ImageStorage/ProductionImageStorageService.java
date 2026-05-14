@@ -7,17 +7,17 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.UUID;
 
+
+//@Profile("prod")
 @Service
-@Profile("prod")
 public class ProductionImageStorageService implements ImageStorageService {
 
     private static final Logger logger = LoggerFactory.getLogger(ProductionImageStorageService.class);
@@ -32,7 +32,7 @@ public class ProductionImageStorageService implements ImageStorageService {
 
     private final S3Client s3Client;
 
-    @Value("${aws.s3.bucket:#{null}}")
+    @Value("${aws.s3.bucket}")
     private String bucketName;
 
     public ProductionImageStorageService(S3Client s3Client) {
@@ -41,58 +41,73 @@ public class ProductionImageStorageService implements ImageStorageService {
 
     @Override
     public ImageResult store(MultipartFile file) {
-        try{
-            if (file != null && !file.isEmpty()) {
-                logger.info("[prod] Image upload received but image storage is disabled in Phase 1. " +
-                        "File '{}' ({} bytes) was not stored.", file.getOriginalFilename(), file.getSize());
+        try {
+            if (file == null || file.isEmpty()) {
+                return ImageResult.empty();
             }
-            return ImageResult.empty();
 
-        /*
-        if (file == null || file.isEmpty()) {
-            return ImageResult.empty();
-        }
+            if (file.getSize() > MAX_IMAGE_SIZE) {
+                throw new IllegalArgumentException("Image size exceeds 5 MB limit");
+            }
 
-        if (file.getSize() > MAX_IMAGE_SIZE) {
-            throw new IllegalArgumentException("Image size exceeds 5 MB limit");
-        }
+            String contentType = file.getContentType();
+            if (!ALLOWED_IMAGE_TYPES.contains(contentType)) {
+                throw new IllegalArgumentException("Only JPG, PNG, and WEBP images are allowed");
+            }
 
-        Tika tika = new Tika();
-        String detectedType = tika.detect(file.getInputStream());
+            String extension = contentType.split("/")[1];
+            String key = "crops/" + UUID.randomUUID() + "." + extension;
 
-        if (!ALLOWED_IMAGE_TYPES.contains(detectedType)) {
-            throw new IllegalArgumentException("Only JPG, PNG, and WEBP images are allowed");
-        }
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .contentType(contentType)
+                    .build();
 
-        String extension = detectedType.split("/")[1];
-        String key = "crops/" + UUID.randomUUID() + "." + extension;
+            s3Client.putObject(putRequest,
+                    RequestBody.fromBytes(file.getBytes()));
 
-        PutObjectRequest putRequest = PutObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .contentType(detectedType)
-                .build();
+            logger.info("[prod] Uploaded image to S3: bucket={} key={}", bucketName, key);
 
-        s3Client.putObject(putRequest, RequestBody.fromBytes(file.getBytes()));
+            return ImageResult.ofKey(
+                    file.getOriginalFilename(),
+                    contentType,
+                    key
+            );
 
-        logger.info("[prod] Uploaded image to private S3: bucket={} key={}", bucketName, key);
-
-        return ImageResult.ofKey(file.getOriginalFilename(), detectedType, key);
-        */
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
     }
 
     @Override
     public ImageResult storeThumbnail(MultipartFile file) {
         try {
-            if (file != null && !file.isEmpty()) {
-                logger.info("[prod] Thumbnail upload received but disabled in Phase 1. File '{}' ignored.",
-                        file.getOriginalFilename());
+            if (file == null || file.isEmpty()) {
+                return ImageResult.empty();
             }
-            return ImageResult.empty();
+
+            String contentType = file.getContentType();
+            String extension = contentType.split("/")[1];
+            String key = "thumbnails/" + UUID.randomUUID() + "." + extension;
+
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .contentType(contentType)
+                    .build();
+
+            s3Client.putObject(putRequest,
+                    RequestBody.fromBytes(file.getBytes()));
+
+            logger.info("[prod] Uploaded thumbnail to S3: bucket={} key={}", bucketName, key);
+
+            return ImageResult.ofKey(
+                    file.getOriginalFilename(),
+                    contentType,
+                    key
+            );
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -127,23 +142,9 @@ public class ProductionImageStorageService implements ImageStorageService {
     }
 
     @Override
-    public ImageResult retrieve(byte[] imageData, String imageName, String imageType, String imageKey) {
-        if (1 == 1) {
-            byte[] defaultImage = "No Image".getBytes();
-
-            return ImageResult.ofBlob(
-                    "default.png",
-                    "image/png",
-                    defaultImage
-            );
-        }
+    public ImageResult retrieve(byte[] imageData, String imageName,
+                                String imageType, String imageKey) {
         if (imageKey == null || imageKey.isBlank()) {
-            logger.debug("[prod] retrieve() called but imageKey is blank — returning null (404)");
-            return null;
-        }
-
-        if (s3Client == null || bucketName == null) {
-            logger.warn("[prod] retrieve() called but S3Client or bucket is not configured — returning null (404)");
             return null;
         }
 
@@ -153,21 +154,21 @@ public class ProductionImageStorageService implements ImageStorageService {
                     .key(imageKey)
                     .build();
 
-            ResponseBytes<GetObjectResponse> response = s3Client.getObjectAsBytes(getRequest);
+            ResponseBytes<GetObjectResponse> response =
+                    s3Client.getObjectAsBytes(getRequest);
             byte[] bytes = response.asByteArray();
 
             String contentType = response.response().contentType();
-            String resolvedType = (contentType != null && !contentType.isBlank()) ? contentType : imageType;
-
-            logger.debug("[prod] retrieve() fetched {} bytes from S3 key={}", bytes.length, imageKey);
+            String resolvedType = (contentType != null &&
+                    !contentType.isBlank()) ? contentType : imageType;
 
             return ImageResult.ofBlob(imageName, resolvedType, bytes);
 
         } catch (NoSuchKeyException e) {
-            logger.warn("[prod] retrieve() S3 key not found: bucket={} key={}", bucketName, imageKey);
+            logger.warn("[prod] retrieve() key not found: key={}", imageKey);
             return null;
         } catch (Exception e) {
-            logger.error("[prod] retrieve() failed to fetch from S3: key={} error={}", imageKey, e.getMessage());
+            logger.error("[prod] retrieve() failed: key={} error={}", imageKey, e.getMessage());
             return null;
         }
     }

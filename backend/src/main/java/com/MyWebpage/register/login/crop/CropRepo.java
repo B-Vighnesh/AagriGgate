@@ -471,7 +471,7 @@ public interface CropRepo extends JpaRepository<Crop, Long> {
             """)
     Crop findByCropID(@Param("productId") Long productId);
 
-    
+
     @Query("""
             SELECT c.imageKey, c.thumbnailKey
             FROM Crop c

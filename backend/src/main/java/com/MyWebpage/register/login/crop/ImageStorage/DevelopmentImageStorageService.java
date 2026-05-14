@@ -10,9 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Set;
 
-
+//@Profile("dev")
 @Service
-@Profile("dev")
 public class DevelopmentImageStorageService{
 
     private static final Logger logger = LoggerFactory.getLogger(DevelopmentImageStorageService.class);
