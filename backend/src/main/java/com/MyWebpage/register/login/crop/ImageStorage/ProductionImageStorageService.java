@@ -1,5 +1,6 @@
 package com.MyWebpage.register.login.crop.ImageStorage;
 
+import net.coobird.thumbnailator.Thumbnails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +12,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Set;
 import java.util.UUID;
@@ -42,7 +44,6 @@ public class ProductionImageStorageService implements ImageStorageService {
     @Override
     public ImageResult store(MultipartFile file) {
         try {
-
             if (file == null || file.isEmpty()) {
                 return ImageResult.empty();
             }
@@ -56,23 +57,32 @@ public class ProductionImageStorageService implements ImageStorageService {
                 throw new IllegalArgumentException("Only JPG, PNG, and WEBP images are allowed");
             }
 
-            String extension = contentType.split("/")[1];
-            String key = "crops/" + UUID.randomUUID() + "." + extension;
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            Thumbnails.of(file.getInputStream())
+                    .size(1200, 1200)
+                    .keepAspectRatio(true)
+                    .outputQuality(0.8)
+                    .outputFormat("jpg")
+                    .toOutputStream(outputStream);
+
+            byte[] compressedBytes = outputStream.toByteArray();
+            String key = "crops/" + UUID.randomUUID() + ".jpg";
 
             PutObjectRequest putRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)
-                    .contentType(contentType)
+                    .contentType("image/jpeg")
                     .build();
 
             s3Client.putObject(putRequest,
-                    RequestBody.fromBytes(file.getBytes()));
+                    RequestBody.fromBytes(compressedBytes));
 
-            logger.info("[prod] Uploaded image to S3: bucket={} key={}", bucketName, key);
+            logger.info("[prod] Uploaded compressed image: bucket={} key={} size={}KB",
+                    bucketName, key, compressedBytes.length / 1024);
 
             return ImageResult.ofKey(
                     file.getOriginalFilename(),
-                    contentType,
+                    "image/jpeg",
                     key
             );
 
@@ -88,24 +98,32 @@ public class ProductionImageStorageService implements ImageStorageService {
                 return ImageResult.empty();
             }
 
-            String contentType = file.getContentType();
-            String extension = contentType.split("/")[1];
-            String key = "thumbnails/" + UUID.randomUUID() + "." + extension;
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            Thumbnails.of(file.getInputStream())
+                    .size(300, 300)
+                    .keepAspectRatio(true)
+                    .outputQuality(0.7)
+                    .outputFormat("jpg")
+                    .toOutputStream(outputStream);
+
+            byte[] compressedBytes = outputStream.toByteArray();
+            String key = "thumbnails/" + UUID.randomUUID() + ".jpg";
 
             PutObjectRequest putRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)
-                    .contentType(contentType)
+                    .contentType("image/jpeg")
                     .build();
 
             s3Client.putObject(putRequest,
-                    RequestBody.fromBytes(file.getBytes()));
+                    RequestBody.fromBytes(compressedBytes));
 
-            logger.info("[prod] Uploaded thumbnail to S3: bucket={} key={}", bucketName, key);
+            logger.info("[prod] Uploaded compressed thumbnail: bucket={} key={} size={}KB",
+                    bucketName, key, compressedBytes.length / 1024);
 
             return ImageResult.ofKey(
                     file.getOriginalFilename(),
-                    contentType,
+                    "image/jpeg",
                     key
             );
 
@@ -113,7 +131,6 @@ public class ProductionImageStorageService implements ImageStorageService {
             throw new RuntimeException(e);
         }
     }
-
     @Override
     public void delete(String imageKey) {
         if (imageKey == null || imageKey.isBlank()) {
