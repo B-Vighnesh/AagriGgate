@@ -79,7 +79,7 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
           </div>
         ) : null}
         <p className="view-all-card__meta">
-            Region: {[crop.region, crop.district, crop.state].filter(Boolean).join(' | ') || 'N/A'}
+            Area: {[crop.region, crop.district, crop.state].filter(Boolean).join(' | ') || 'N/A'}
         </p>
         
 

@@ -318,7 +318,7 @@ export default function ViewDetails() {
             </div>
 
             <DetailRow label="Farmer" value={cropDetails.farmerName} />
-            <DetailRow label="Region" value={cropDetails.region} />
+            <DetailRow label="Area" value={cropDetails.region} />
             <DetailRow label="State" value={cropDetails.state} />
             <DetailRow label="District" value={cropDetails.district} />
             <DetailRow label="Status" value={cropDetails.status} />

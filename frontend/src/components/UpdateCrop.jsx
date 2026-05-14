@@ -243,7 +243,7 @@ export default function UpdateCrop() {
             </div>
 
             <div className="update-crop-field">
-              <label htmlFor="region">Region</label>
+              <label htmlFor="region">Area</label>
               <input id="region" name="region" value={cropData.region} onChange={handleChange} />
             </div>
 

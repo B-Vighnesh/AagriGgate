@@ -226,7 +226,7 @@ export default function AddCrop() {
 
             <div className="add-crop-grid add-crop-grid--3">
               <div className="add-crop-field">
-                <label htmlFor="city">City *</label>
+                <label htmlFor="city">Area *</label>
                 <input
                   id="city"
                   name="city"
