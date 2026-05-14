@@ -352,9 +352,10 @@ export default function UpdateCrop() {
                 </div>
               ) : null}
 
-              <label className="update-crop-upload" htmlFor="cropImage">
-                <input id="cropImage" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={handleImageChange} />
-                <span>Choose new photo</span>
+              <label className="update-crop-upload crop-image-picker" htmlFor="cropImage">
+                <input className="crop-image-input" id="cropImage" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={handleImageChange} />
+                <span>Choose Image</span>
+                <small>{image?.name || 'No image chosen'}</small>
               </label>
 
               {imagePreview ? (

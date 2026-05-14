@@ -349,7 +349,11 @@ export default function AddCrop() {
             <div className="add-crop-field">
               <label htmlFor="imageFile">Crop Photo *</label>
               <div className="add-crop-image-row">
-                <input id="imageFile" type="file" accept={ALLOWED_IMAGE_ACCEPT} capture="environment" onChange={onImageChange} required={!image} />
+                <label className="crop-image-picker" htmlFor="imageFile">
+                  <span>Choose Image</span>
+                  <small>{image?.name || 'No image chosen'}</small>
+                </label>
+                <input className="crop-image-input" id="imageFile" type="file" accept={ALLOWED_IMAGE_ACCEPT} capture="environment" onChange={onImageChange} required={!image} />
                 {imagePreview ? (
                   <div className="update-crop-preview-wrap">
                     <img src={imagePreview} alt="Crop preview" className="add-crop-preview" />
