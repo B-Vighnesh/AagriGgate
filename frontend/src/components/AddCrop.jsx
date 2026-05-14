@@ -343,11 +343,13 @@ export default function AddCrop() {
               <label htmlFor="imageFile">Crop Photo *</label>
               <div className="add-crop-image-row">
                 <input id="imageFile" type="file" accept="image/*" capture="environment" onChange={onImageChange} required={!image} />
-                {imagePreview ? <img src={imagePreview} alt="Crop preview" className="add-crop-preview" /> : null}
                 {imagePreview ? (
-                  <button type="button" className="update-crop-remove" onClick={clearImage}>
-                    Remove
-                  </button>
+                  <div className="update-crop-preview-wrap">
+                    <img src={imagePreview} alt="Crop preview" className="add-crop-preview" />
+                    <button type="button" className="update-crop-remove" onClick={clearImage} aria-label="Remove selected image">
+                      <i className="fa-solid fa-xmark" aria-hidden="true" />
+                    </button>
+                  </div>
                 ) : null}
               </div>
             </div>

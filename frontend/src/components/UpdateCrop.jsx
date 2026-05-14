@@ -353,7 +353,9 @@ export default function UpdateCrop() {
               {imagePreview ? (
                 <div className="update-crop-preview-wrap">
                   <img src={imagePreview} alt="New crop" className="update-crop-preview" />
-                  <button type="button" className="update-crop-remove" onClick={clearNewImage}>Remove</button>
+                  <button type="button" className="update-crop-remove" onClick={clearNewImage} aria-label="Remove selected image">
+                    <i className="fa-solid fa-xmark" aria-hidden="true" />
+                  </button>
                 </div>
               ) : null}
             </div>
