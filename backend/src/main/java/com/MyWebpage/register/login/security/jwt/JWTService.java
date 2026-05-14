@@ -21,7 +21,7 @@ import java.util.function.Function;
 @Service
 public class JWTService {
 
-    private static final Duration FARMER_TOKEN_TTL = Duration.ofHours(2);
+    private static final Duration FARMER_TOKEN_TTL = Duration.ofHours(300);
 
     private final JwtProperties jwtProperties;
 
