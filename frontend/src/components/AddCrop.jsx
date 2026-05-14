@@ -148,13 +148,7 @@ export default function AddCrop() {
     formData.append('imageFile', image);
 
     try {
-      const response = await addCrop(formData);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.message || errorData?.data?.message || 'Failed to add crop.');
-      }
-
+      await addCrop(formData);
       showToast('Crop added successfully.', 'success');
       setTimeout(() => navigate('/view-crop'), 800);
     } catch (err) {
@@ -353,7 +347,7 @@ export default function AddCrop() {
                   <span>Choose Image</span>
                   <small>{image?.name || 'No image chosen'}</small>
                 </label>
-                <input className="crop-image-input" id="imageFile" type="file" accept={ALLOWED_IMAGE_ACCEPT} capture="environment" onChange={onImageChange} required={!image} />
+                <input className="crop-image-input" id="imageFile" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={onImageChange} required={!image} />
                 {imagePreview ? (
                   <div className="update-crop-preview-wrap">
                     <img src={imagePreview} alt="Crop preview" className="add-crop-preview" />

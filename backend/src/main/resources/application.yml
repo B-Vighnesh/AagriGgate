@@ -3,6 +3,10 @@ spring:
       import: optional:file:backend/.env[.properties],optional:file:.env[.properties]
   application:
     name: aagrigate
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   profiles:
     active: ${SPRING_PROFILES_ACTIVE}
   jpa:

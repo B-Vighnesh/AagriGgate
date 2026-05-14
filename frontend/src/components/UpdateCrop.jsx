@@ -178,13 +178,7 @@ export default function UpdateCrop() {
     }
 
     try {
-      const response = await updateCrop(cropId, formData);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.message || 'Failed to update crop.');
-      }
-
+      await updateCrop(cropId, formData);
       showToast('Crop updated successfully.', 'success');
       setTimeout(() => navigate(`/view-details/${cropId}`), 700);
     } catch (error) {

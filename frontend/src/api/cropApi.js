@@ -36,17 +36,19 @@ export const normalizeCropPage = (payload) => {
 export const normalizeCropResponse = (payload) => normalizeCrop(unwrapApiResponse(payload));
 
 export const addCrop = async (formData) => {
-  return apiFetch('/crops/farmer/add', {
+  const payload = await requestJson('/crops/farmer/add', {
     method: 'POST',
     body: formData,
   });
+  return normalizeCropResponse(payload);
 };
 
 export const updateCrop = async (cropId, formData) => {
-  return apiFetch(`/crops/farmer/${cropId}`, {
+  const payload = await requestJson(`/crops/farmer/${cropId}`, {
     method: 'PUT',
     body: formData,
   });
+  return normalizeCropResponse(payload);
 };
 
 export const getCropImageBlob = async (cropId, variant = 'image') => {
