@@ -8,6 +8,7 @@ import { apiFetch } from '../lib/api';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
 import { getCropImageBlob, normalizeCropResponse, updateCrop } from '../api/cropApi';
 import statesAndDistricts from './statesAndDistricts';
+import commodities from './commodities';
 
 const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
 const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
@@ -43,6 +44,7 @@ export default function UpdateCrop() {
   const [existingImage, setExistingImage] = useState('');
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [commoditySelection, setCommoditySelection] = useState('');
   const districts = statesAndDistricts[cropData.state] || [];
 
   const showToast = (message, type = 'info') => {
@@ -71,8 +73,12 @@ export default function UpdateCrop() {
 
         const details = normalizeCropResponse(await detailsRes.json());
         if (mounted) {
+          const cropName = details.cropName || '';
+          const matchingCommodity = commodities.find(
+            (item) => item.toLowerCase() === cropName.trim().toLowerCase()
+          );
           setCropData({
-            cropName: details.cropName || '',
+            cropName,
             cropType: details.cropType || '',
             region: details.region || '',
             state: details.state || '',
@@ -86,6 +92,7 @@ export default function UpdateCrop() {
             discountPrice: details.discountPrice ?? '',
             status: details.status || 'available',
           });
+          setCommoditySelection(cropName ? (matchingCommodity || 'OTHER') : '');
         }
 
         const imageBlob = await getCropImageBlob(cropId, 'image');
@@ -130,6 +137,15 @@ export default function UpdateCrop() {
     }));
   };
 
+  const handleCommodityChange = (event) => {
+    const value = event.target.value;
+    setCommoditySelection(value);
+    setCropData((prev) => ({
+      ...prev,
+      cropName: value === 'OTHER' ? '' : value,
+    }));
+  };
+
   const handleImageChange = (event) => {
     const file = event.target.files?.[0] || null;
     if (file && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
@@ -154,7 +170,7 @@ export default function UpdateCrop() {
 
     const payload = {
       cropID: Number(cropId),
-      cropName: cropData.cropName,
+      cropName: cropData.cropName.trim(),
       cropType: cropData.cropType,
       region: cropData.region,
       state: cropData.state,
@@ -223,7 +239,28 @@ export default function UpdateCrop() {
             <div className="update-crop-grid update-crop-grid--2">
               <div className="update-crop-field">
                 <label htmlFor="cropName">Crop Name *</label>
-                <input id="cropName" name="cropName" required value={cropData.cropName} onChange={handleChange} />
+                <select
+                  id="cropName"
+                  name="cropName"
+                  required
+                  value={commoditySelection}
+                  onChange={handleCommodityChange}
+                >
+                  <option value="">Select Commodity</option>
+                  {commodities.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                  <option value="OTHER">Other</option>
+                </select>
+                {commoditySelection === 'OTHER' ? (
+                  <input
+                    name="cropName"
+                    value={cropData.cropName}
+                    onChange={handleChange}
+                    placeholder="Enter crop name"
+                    required
+                  />
+                ) : null}
               </div>
               <div className="update-crop-field">
                 <label htmlFor="cropType">Category *</label>
