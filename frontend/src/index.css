@@ -5356,12 +5356,12 @@ a {
 .view-all-card {
   padding: 0;
   overflow: hidden;
-  display: grid;
   grid-template-rows: 180px minmax(0, 1fr);
   align-content: start;
   border-width: 2px;
   min-height: 300px;
   width: 100%;
+  
 }
 @media (min-width: 1440px) {
     .view-all-card {
@@ -5399,9 +5399,10 @@ a {
 .view-all-card__image-wrap {
   position: relative;
   background: #f1f7f4;
-  height: 180px;
+  height: 250px;
   overflow: hidden;
   line-height: 0;
+  
 }
 
 .view-all-card__image {
@@ -10461,7 +10462,7 @@ a {
   }
 
   .view-all-card__image-wrap {
-    height: 120px;
+    height: 220px;
   }
 
   .view-all-card__body {
@@ -11570,7 +11571,7 @@ img {
   }
 
   .view-all-card__image-wrap {
-    height: 140px;
+    height: 220px;
   }
 
   /* Auth card: slightly wider on very small screens */
