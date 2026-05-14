@@ -7,6 +7,7 @@ import { requestJson } from '../lib/api';
 import { getFarmerId, getToken, getRole } from '../lib/auth';
 import { getNews } from '../lib/newsApi';
 import { getRequestStatusLabel, normalizeRequestStatus } from '../lib/requestStatus';
+import { normalizeCropPage } from '../api/cropApi';
 
 // ─── Static Data ──────────────────────────────────────────────────────────────
 
@@ -413,9 +414,10 @@ function LoggedInDashboard({ role, token, farmerId, navigate }) {
           requestsData.status === 'fulfilled' && Array.isArray(requestsData.value?.content)
             ? requestsData.value.content.slice(0, 3) : [],
         );
+        const cropsPage = cropsData.status === 'fulfilled' ? normalizeCropPage(cropsData.value) : null;
         setLatestCrops(
-          cropsData.status === 'fulfilled' && Array.isArray(cropsData.value?.content)
-            ? cropsData.value.content.slice(0, role === 'buyer' ? 4 : 2) : [],
+          Array.isArray(cropsPage?.content)
+            ? cropsPage.content.slice(0, role === 'buyer' ? 4 : 2) : [],
         );
         setLatestNews(
           newsData.status === 'fulfilled' && Array.isArray(newsData.value?.content)

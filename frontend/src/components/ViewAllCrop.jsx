@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { apiGet, apiFetch } from '../lib/api';
+import { apiGet } from '../lib/api';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
 import ValidateToken from './ValidateToken';
 import Button from './common/Button';
 import Card from './common/Card';
+import { getCropImageBlob, normalizeCropPage } from '../api/cropApi';
+import statesAndDistricts from './statesAndDistricts';
 
 const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect fill="%23e7f4ee" width="360" height="220"/><text x="180" y="118" font-family="Arial" font-size="24" text-anchor="middle" fill="%232a6e55">Crop Image</text></svg>';
 const QUICK_FILTER_CHIPS = [
@@ -13,6 +15,8 @@ const QUICK_FILTER_CHIPS = [
   { label: 'Fruits', category: 'Fruit', listingType: 'all' },
   { label: 'Spices', category: 'Spice', listingType: 'all' },
   { label: 'Urgent', category: '', listingType: 'urgent' },
+  { label: 'Waste', category: '', listingType: 'waste' },
+  { label: 'Discount', category: '', listingType: 'discount' },
 ];
 
 function CropCard({ crop, imageUrl, onViewDetails }) {
@@ -75,7 +79,7 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
           </div>
         ) : null}
         <p className="view-all-card__meta">
-            Region: {crop.region || 'N/A'}
+            Region: {[crop.region, crop.district, crop.state].filter(Boolean).join(' | ') || 'N/A'}
         </p>
         
 
@@ -126,6 +130,8 @@ export default function ViewAllCrop() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     region: '',
+    state: '',
+    district: '',
     price: '',
     category: '',
     farmerName: '',
@@ -135,6 +141,8 @@ export default function ViewAllCrop() {
   const [appliedSearch, setAppliedSearch] = useState('');
   const [appliedFilters, setAppliedFilters] = useState({
     region: '',
+    state: '',
+    district: '',
     price: '',
     category: '',
     farmerName: '',
@@ -149,6 +157,7 @@ export default function ViewAllCrop() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const loadMoreRef = useRef(null);
   const imageUrlRegistryRef = useRef(new Set());
+  const districts = statesAndDistricts[filters.state] || [];
 
   const revokeAllImageUrls = useCallback(() => {
     imageUrlRegistryRef.current.forEach((url) => {
@@ -205,6 +214,8 @@ export default function ViewAllCrop() {
 
         if (appliedSearch.trim()) params.set('keyword', appliedSearch.trim());
         if (appliedFilters.region.trim()) params.set('region', appliedFilters.region.trim());
+        if (appliedFilters.state.trim()) params.set('state', appliedFilters.state.trim());
+        if (appliedFilters.district.trim()) params.set('district', appliedFilters.district.trim());
         if (appliedFilters.category.trim()) params.set('category', appliedFilters.category.trim());
         if (appliedFilters.farmerName.trim()) params.set('farmerName', appliedFilters.farmerName.trim());
         if (appliedFilters.price) params.set('maxPrice', appliedFilters.price);
@@ -217,7 +228,7 @@ export default function ViewAllCrop() {
         const response = await apiGet(`/crops/legacy?${params.toString()}`);
         if (!response.ok) throw new Error('Failed to load crops. Please try again.');
 
-        const data = await response.json();
+        const data = normalizeCropPage(await response.json());
         const cropList = Array.isArray(data?.content) ? data.content : [];
         if (!mounted) return;
         const nextPage = Number(data?.number ?? page);
@@ -229,9 +240,8 @@ export default function ViewAllCrop() {
 
         cropList.forEach(async (crop) => {
           try {
-            const imageResponse = await apiFetch(`/crops/legacy/${crop.cropID}/image`);
-            if (!imageResponse.ok) return;
-            const blob = await imageResponse.blob();
+            const blob = await getCropImageBlob(crop.cropID, 'thumbnail');
+            if (!blob) return;
             if (!mounted) return;
             const objectUrl = URL.createObjectURL(blob);
             imageUrlRegistryRef.current.add(objectUrl);
@@ -298,6 +308,8 @@ export default function ViewAllCrop() {
   const clearFilters = () => {
     const emptyFilters = {
       region: '',
+      state: '',
+      district: '',
       price: '',
       category: '',
       farmerName: '',
@@ -335,6 +347,8 @@ export default function ViewAllCrop() {
   const hasActiveFilters = Boolean(
     appliedSearch.trim()
     || appliedFilters.region.trim()
+    || appliedFilters.state.trim()
+    || appliedFilters.district.trim()
     || appliedFilters.price
     || appliedFilters.category.trim()
     || appliedFilters.farmerName.trim()
@@ -344,6 +358,8 @@ export default function ViewAllCrop() {
   const activeFilterCount = [
     appliedSearch.trim(),
     appliedFilters.region.trim(),
+    appliedFilters.state.trim(),
+    appliedFilters.district.trim(),
     appliedFilters.price,
     appliedFilters.category.trim(),
     appliedFilters.farmerName.trim(),
@@ -448,6 +464,27 @@ export default function ViewAllCrop() {
               value={filters.region}
               onChange={(event) => setFilters((prev) => ({ ...prev, region: event.target.value }))}
             />
+            <select
+              className="view-all-input"
+              value={filters.state}
+              onChange={(event) => setFilters((prev) => ({ ...prev, state: event.target.value, district: '' }))}
+            >
+              <option value="">All states</option>
+              {Object.keys(statesAndDistricts).map((state) => (
+                <option key={state} value={state}>{state}</option>
+              ))}
+            </select>
+            <select
+              className="view-all-input"
+              value={filters.district}
+              onChange={(event) => setFilters((prev) => ({ ...prev, district: event.target.value }))}
+              disabled={!filters.state}
+            >
+              <option value="">{filters.state ? 'All districts' : 'Select state first'}</option>
+              {districts.map((district) => (
+                <option key={district} value={district}>{district}</option>
+              ))}
+            </select>
             <select
               className="view-all-input"
               value={filters.sortBy}

@@ -4,8 +4,9 @@ import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
-import { apiGet, apiFetch } from '../lib/api';
+import { apiGet } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
+import { getCropImageBlob, normalizeCropPage } from '../api/cropApi';
 
 const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180"><rect width="320" height="180" fill="%23d8f3dc"/><text x="50%" y="54%" text-anchor="middle" font-size="26" fill="%231f6f54">No Image</text></svg>';
 
@@ -115,7 +116,7 @@ export default function ViewCrop() {
 
         const response = await apiGet(`/crops/farmer/me/legacy?${params.toString()}`);
         if (!response.ok) throw new Error('Unable to load crops.');
-        const data = await response.json();
+        const data = normalizeCropPage(await response.json());
         if (!mounted) return;
         const cropList = Array.isArray(data?.content) ? data.content : [];
         const nextPage = Number(data?.number ?? page);
@@ -127,9 +128,8 @@ export default function ViewCrop() {
 
         cropList.forEach(async (crop) => {
           try {
-            const imgRes = await apiFetch(`/crops/legacy/${crop.cropID}/image`, { method: 'GET' });
-            if (!imgRes.ok) return;
-            const blob = await imgRes.blob();
+            const blob = await getCropImageBlob(crop.cropID, 'thumbnail');
+            if (!blob) return;
             if (!mounted) return;
             const objectUrl = URL.createObjectURL(blob);
             imageUrlRegistryRef.current.add(objectUrl);
@@ -305,7 +305,9 @@ export default function ViewCrop() {
                     {crop.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
                     {crop.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
                   </div>
-                  <p className="region">{crop.region}</p>
+                  <p className="region">
+                    {[crop.region, crop.district, crop.state].filter(Boolean).join(' | ')}
+                  </p>
                   <div className="view-crop-card__price">
                     <strong>Rs {Number(crop.marketPrice || 0).toFixed(2)}</strong>
                     <small>per {crop.unit}</small>

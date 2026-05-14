@@ -35,6 +35,8 @@ export default function AddCrop() {
     status: 'available',
   });
   const [commoditySelection, setCommoditySelection] = useState('');
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const districts = statesAndDistricts[cropData.state] || [];
@@ -54,6 +56,10 @@ export default function AddCrop() {
       return;
     }
   }, [token, farmerId, role, navigate]);
+
+  useEffect(() => () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+  }, [imagePreview]);
 
   const onFieldChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -78,6 +84,19 @@ export default function AddCrop() {
     }));
   };
 
+  const onImageChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImage(file);
+    setImagePreview(file ? URL.createObjectURL(file) : '');
+  };
+
+  const clearImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImage(null);
+    setImagePreview('');
+  };
+
   const submit = async (event) => {
     event.preventDefault();
     setLoading(true);
@@ -87,8 +106,14 @@ export default function AddCrop() {
       .filter(Boolean)
       .join(', ');
 
-    if (!region) {
+    if (!cropData.city.trim() || !cropData.state || !cropData.district) {
       showToast('Please enter city, district, and state.', 'error');
+      setLoading(false);
+      return;
+    }
+
+    if (!image) {
+      showToast('Please select a crop photo.', 'error');
       setLoading(false);
       return;
     }
@@ -98,24 +123,29 @@ export default function AddCrop() {
       cropName: cropData.cropName.trim(),
       cropType: cropData.cropType,
       region,
+      state: cropData.state,
+      district: cropData.district,
       marketPrice: Number(cropData.marketPrice),
       quantity: Number(cropData.quantity),
       unit: cropData.unit,
       description: cropData.description.trim(),
+      urgent: cropData.isUrgent,
       isUrgent: cropData.isUrgent,
+      waste: cropData.isWaste,
       isWaste: cropData.isWaste,
       discountPrice: cropData.discountPrice === '' ? null : Number(cropData.discountPrice),
       status: cropData.status,
     };
 
     formData.append('crop', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+    formData.append('imageFile', image);
 
     try {
       const response = await addCrop(formData);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.message || 'Failed to add crop.');
+        throw new Error(errorData?.message || errorData?.data?.message || 'Failed to add crop.');
       }
 
       showToast('Crop added successfully.', 'success');
@@ -131,6 +161,9 @@ export default function AddCrop() {
     <section className="page add-crop-page">
       <ValidateToken token={token} />
       <div className="ag-container">
+          
+
+        <Card className="add-crop-card">
           <button
                     type="button"
                     className="chat-back-btn"
@@ -146,8 +179,6 @@ export default function AddCrop() {
             <p>List your produce for buyers to discover.</p>
           </div>
         </div>
-
-        <Card className="add-crop-card">
           <form className="add-crop-form" onSubmit={submit}>
             <div className="add-crop-grid add-crop-grid--2">
               <div className="add-crop-field">
@@ -308,15 +339,18 @@ export default function AddCrop() {
               </label>
             </div>
 
-            {/* Crop image upload is disabled. Backend ignores imageFile even if older clients send it.
             <div className="add-crop-field">
               <label htmlFor="imageFile">Crop Photo *</label>
               <div className="add-crop-image-row">
                 <input id="imageFile" type="file" accept="image/*" capture="environment" onChange={onImageChange} required={!image} />
                 {imagePreview ? <img src={imagePreview} alt="Crop preview" className="add-crop-preview" /> : null}
+                {imagePreview ? (
+                  <button type="button" className="update-crop-remove" onClick={clearImage}>
+                    Remove
+                  </button>
+                ) : null}
               </div>
             </div>
-            */}
 
             <div className="add-crop-actions">
               <Button type="submit" loading={loading} className="full-width">

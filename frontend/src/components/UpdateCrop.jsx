@@ -6,6 +6,8 @@ import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import { apiFetch } from '../lib/api';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
+import { getCropImageBlob, normalizeCropResponse, updateCrop } from '../api/cropApi';
+import statesAndDistricts from './statesAndDistricts';
 
 const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
 const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
@@ -22,6 +24,8 @@ export default function UpdateCrop() {
     cropName: '',
     cropType: '',
     region: '',
+    state: '',
+    district: '',
     marketPrice: '',
     quantity: '',
     unit: 'kg',
@@ -34,6 +38,10 @@ export default function UpdateCrop() {
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [existingImage, setExistingImage] = useState('');
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const districts = statesAndDistricts[cropData.state] || [];
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -59,12 +67,14 @@ export default function UpdateCrop() {
 
         if (!detailsRes.ok) throw new Error('Could not load crop data.');
 
-        const details = await detailsRes.json();
+        const details = normalizeCropResponse(await detailsRes.json());
         if (mounted) {
           setCropData({
             cropName: details.cropName || '',
             cropType: details.cropType || '',
             region: details.region || '',
+            state: details.state || '',
+            district: details.district || '',
             marketPrice: details.marketPrice ?? '',
             quantity: details.quantity ?? '',
             unit: details.unit || 'kg',
@@ -74,6 +84,11 @@ export default function UpdateCrop() {
             discountPrice: details.discountPrice ?? '',
             status: details.status || 'available',
           });
+        }
+
+        const imageBlob = await getCropImageBlob(cropId, 'image');
+        if (imageBlob && mounted) {
+          setExistingImage(URL.createObjectURL(imageBlob));
         }
 
       } catch (error) {
@@ -91,9 +106,39 @@ export default function UpdateCrop() {
     };
   }, [cropId]);
 
+  useEffect(() => () => {
+    if (existingImage) URL.revokeObjectURL(existingImage);
+  }, [existingImage]);
+
+  useEffect(() => () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+  }, [imagePreview]);
+
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
     setCropData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleStateChange = (event) => {
+    const value = event.target.value;
+    setCropData((prev) => ({
+      ...prev,
+      state: value,
+      district: '',
+    }));
+  };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImage(file);
+    setImagePreview(file ? URL.createObjectURL(file) : '');
+  };
+
+  const clearNewImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImage(null);
+    setImagePreview('');
   };
 
   const handleSubmit = async (event) => {
@@ -105,11 +150,15 @@ export default function UpdateCrop() {
       cropName: cropData.cropName,
       cropType: cropData.cropType,
       region: cropData.region,
+      state: cropData.state,
+      district: cropData.district,
       marketPrice: Number(cropData.marketPrice),
       quantity: Number(cropData.quantity),
       unit: cropData.unit,
       description: cropData.description,
+      urgent: cropData.isUrgent,
       isUrgent: cropData.isUrgent,
+      waste: cropData.isWaste,
       isWaste: cropData.isWaste,
       discountPrice: cropData.discountPrice === '' ? null : Number(cropData.discountPrice),
       status: cropData.status,
@@ -117,14 +166,17 @@ export default function UpdateCrop() {
 
     const formData = new FormData();
     formData.append('crop', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+    if (image) {
+      formData.append('imageFile', image);
+    }
 
     try {
-      const response = await apiFetch(`/crops/farmer/${cropId}`, {
-        method: 'PUT',
-        body: formData,
-      });
+      const response = await updateCrop(cropId, formData);
 
-      if (!response.ok) throw new Error('Failed to update crop.');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.message || 'Failed to update crop.');
+      }
 
       showToast('Crop updated successfully.', 'success');
       setTimeout(() => navigate(`/view-details/${cropId}`), 700);
@@ -186,6 +238,34 @@ export default function UpdateCrop() {
             <div className="update-crop-field">
               <label htmlFor="region">Region</label>
               <input id="region" name="region" value={cropData.region} onChange={handleChange} />
+            </div>
+
+            <div className="update-crop-grid update-crop-grid--2">
+              <div className="update-crop-field">
+                <label htmlFor="state">State *</label>
+                <select id="state" name="state" required value={cropData.state} onChange={handleStateChange}>
+                  <option value="">Select State</option>
+                  {Object.keys(statesAndDistricts).map((state) => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="update-crop-field">
+                <label htmlFor="district">District *</label>
+                <select
+                  id="district"
+                  name="district"
+                  required
+                  value={cropData.district}
+                  onChange={handleChange}
+                  disabled={!cropData.state}
+                >
+                  <option value="">{cropData.state ? 'Select District' : 'Select State First'}</option>
+                  {districts.map((district) => (
+                    <option key={district} value={district}>{district}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="update-crop-grid update-crop-grid--3">
@@ -257,7 +337,6 @@ export default function UpdateCrop() {
               </label>
             </div>
 
-            {/* Crop image upload is disabled. Backend ignores imageFile even if older clients send it.
             <div className="update-crop-image-row">
               {existingImage && !imagePreview ? (
                 <div className="update-crop-preview-wrap">
@@ -278,7 +357,6 @@ export default function UpdateCrop() {
                 </div>
               ) : null}
             </div>
-            */}
 
             <Button type="submit" loading={loading} className="full-width">
               {loading ? 'Saving...' : 'Save Changes'}

@@ -61,7 +61,7 @@ public class ProductionImageStorageService implements ImageStorageService {
             Thumbnails.of(file.getInputStream())
                     .size(1200, 1200)
                     .keepAspectRatio(true)
-                    .outputQuality(0.8)
+                    .outputQuality(0.9)
                     .outputFormat("jpg")
                     .toOutputStream(outputStream);
 
@@ -102,7 +102,7 @@ public class ProductionImageStorageService implements ImageStorageService {
             Thumbnails.of(file.getInputStream())
                     .size(300, 300)
                     .keepAspectRatio(true)
-                    .outputQuality(0.7)
+                    .outputQuality(0.8)
                     .outputFormat("jpg")
                     .toOutputStream(outputStream);
 

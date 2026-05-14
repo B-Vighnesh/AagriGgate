@@ -4925,7 +4925,7 @@ a {
 }
 
 .add-crop-card {
-  max-width: 860px;
+  max-width: 100%;
 }
 
 .add-crop-form {
