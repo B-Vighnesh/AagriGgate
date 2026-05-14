@@ -92,6 +92,7 @@ export default function ViewApproachForUser() {
       const response = await apiFetch(`/buyer/approach/delete/${approachId}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to withdraw request.');
       setApproaches((prev) => prev.filter((item) => item.approachId !== approachId));
+      window.dispatchEvent(new CustomEvent('requests:count-updated'));
       showToast('Request withdrawn.', 'success');
     } catch (requestError) {
       showToast(requestError.message || 'Server busy. Please try again.', 'error');

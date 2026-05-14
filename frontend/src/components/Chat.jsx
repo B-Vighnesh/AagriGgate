@@ -51,11 +51,39 @@ function formatQuantity(value) {
 }
 
 function buildConversationPreview(item) {
+  if (item?.lastMessagePreview) return item.lastMessagePreview;
   if (item.status === 'COMPLETED') return `Deal closed for ${formatQuantity(item.pendingDealQuantity ?? item.requestedQuantity)} quantity.`;
   if (item.status === 'EXPIRED')   return 'Conversation expired.';
   if (item.status === 'FAILED')    return 'Deal was not completed.';
   if (item.pendingDealQuantity)    return `Offer: ${formatQuantity(item.pendingDealQuantity)} quantity.`;
   return 'Continue negotiation...';
+}
+
+function getConversationUnreadCount(item, currentUserId) {
+  if (typeof item?.unreadCount === 'number') return item.unreadCount;
+  if (!item || !currentUserId) return 0;
+  if (item.buyerId === currentUserId) return Number(item.buyerUnreadCount ?? 0);
+  if (item.farmerId === currentUserId) return Number(item.farmerUnreadCount ?? 0);
+  return 0;
+}
+
+function emitChatCountUpdate(items, currentUserId) {
+  const count = (Array.isArray(items) ? items : []).reduce(
+    (total, item) => total + getConversationUnreadCount(item, currentUserId),
+    0,
+  );
+  window.dispatchEvent(new CustomEvent('chat:count-updated', { detail: { count } }));
+}
+
+function getDeliveryIcon(status) {
+  const deliveryStatus = String(status || 'SENT').toUpperCase();
+  if (deliveryStatus === 'READ') {
+    return { icon: 'fa-solid fa-check-double', className: 'chat-message-status chat-message-status--read' };
+  }
+  if (deliveryStatus === 'DELIVERED') {
+    return { icon: 'fa-solid fa-check-double', className: 'chat-message-status chat-message-status--delivered' };
+  }
+  return { icon: 'fa-solid fa-check', className: 'chat-message-status chat-message-status--sent' };
 }
 
 const initialsFor = (name) => {
@@ -410,6 +438,7 @@ export default function Chat() {
       const list   = Array.isArray(data) ? data : [];
       const sorted = sortConversations(list);
       setConversations(sorted);
+      emitChatCountUpdate(sorted, currentUserId);
 
       const targetId = conversationId ? Number(conversationId) : null;
       if (targetId && !filterNavRef.current && !suppressConversation && !filterOverrideRef.current) {
@@ -439,6 +468,7 @@ export default function Chat() {
     } catch (error) {
       showToast(error.message || 'Unable to load conversations.', 'error');
       setConversations([]);
+      emitChatCountUpdate([], currentUserId);
       setActiveConversation(null);
     } finally {
       setLoadingList(false);
@@ -531,6 +561,14 @@ export default function Chat() {
             if (payload.message) showToast(payload.message, updated.status === 'COMPLETED' ? 'success' : 'info');
           }
 
+          if (payload?.type === 'MESSAGE_STATUS_UPDATE' && Array.isArray(payload.data)) {
+            const updates = payload.data;
+            setMessages((prev) => prev.map((item) => {
+              const next = updates.find((candidate) => candidate.messageId === item.messageId);
+              return next ? { ...item, ...next } : item;
+            }));
+          }
+
           if (payload?.type === 'CONVERSATION_REMOVED' && payload.data?.conversationId) {
             removeConversationLocally(payload.data.conversationId);
             if (payload.message) showToast(payload.message, 'info');
@@ -559,7 +597,9 @@ export default function Chat() {
   const mergeConversationUpdate = (updatedConversation) => {
     setConversations((prev) => {
       const rest = prev.filter((item) => item.conversationId !== updatedConversation.conversationId);
-      return sortConversations([updatedConversation, ...rest]);
+      const next = sortConversations([updatedConversation, ...rest]);
+      emitChatCountUpdate(next, currentUserId);
+      return next;
     });
     if (updatedConversation.conversationId === resolvedConversationId) {
       setActiveConversation(updatedConversation);
@@ -567,7 +607,11 @@ export default function Chat() {
   };
 
   const removeConversationLocally = (conversationIdToRemove) => {
-    setConversations((prev) => prev.filter((item) => item.conversationId !== conversationIdToRemove));
+    setConversations((prev) => {
+      const next = prev.filter((item) => item.conversationId !== conversationIdToRemove);
+      emitChatCountUpdate(next, currentUserId);
+      return next;
+    });
     if (resolvedConversationId === conversationIdToRemove) {
       setActiveConversation(null);
       setMessages([]);
@@ -741,11 +785,12 @@ export default function Chat() {
             const counterpart  = currentUserId === item.buyerId ? item.farmerName : item.buyerName;
             const statusTone   = String(item.status || 'ACTIVE').toLowerCase();
             const lastTime     = item.lastMessageAt || item.updatedAt || item.createdAt;
+            const unreadCount  = getConversationUnreadCount(item, currentUserId);
             return (
               <button
                 key={item.conversationId}
                 type="button"
-                className={`chat-conversation-card chat-conversation-card--${statusTone}${active ? ' chat-conversation-card--active' : ''}`}
+                className={`chat-conversation-card chat-conversation-card--${statusTone}${active ? ' chat-conversation-card--active' : ''}${unreadCount > 0 ? ' chat-conversation-card--unread' : ''}`}
                 onClick={() => openConversation(item)}
               >
                 <div className="chat-conversation-card__avatar" aria-hidden="true" style={colorFor(counterpart)}>
@@ -758,10 +803,15 @@ export default function Chat() {
                       <span className="chat-conversation-card__listing">{item.listingName}</span>
                     </div>
                     <div className="chat-conversation-card__meta">
-                      <time>{lastTime ? getRelativeDate(lastTime) : ''}</time>
+                      <time className={unreadCount > 0 ? 'chat-conversation-card__time chat-conversation-card__time--unread' : 'chat-conversation-card__time'}>
+                        {lastTime ? getRelativeDate(lastTime) : ''}
+                      </time>
+                      {unreadCount > 0 ? <span className="chat-conversation-card__unread">{unreadCount}</span> : null}
                     </div>
                   </div>
-                  <small>{buildConversationPreview(item)}</small>
+                  <small className={unreadCount > 0 ? 'chat-conversation-card__preview chat-conversation-card__preview--unread' : 'chat-conversation-card__preview'}>
+                    {buildConversationPreview(item)}
+                  </small>
                 </div>
                 <div className="chat-conversation-card__quick-actions">
                   {canArchiveConversation(item) && (
@@ -881,6 +931,7 @@ export default function Chat() {
 
       const isSystem = item.messageType === 'SYSTEM';
       const mine     = item.senderId === currentUserId;
+      const deliveryIcon = getDeliveryIcon(item.deliveryStatus);
 
       if (isSystem) {
         return (
@@ -902,7 +953,7 @@ export default function Chat() {
             <p>{item.messageText}</p>
             <div className="chat-message-footer">
               <time>{formatTime(item.createdAt)}</time>
-              {mine && <i className="fa-solid fa-check-double chat-message-status" />}
+              {mine ? <i className={`${deliveryIcon.icon} ${deliveryIcon.className}`} aria-hidden="true" /> : null}
             </div>
           </div>
         </div>

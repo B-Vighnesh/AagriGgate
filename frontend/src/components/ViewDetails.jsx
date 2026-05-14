@@ -11,6 +11,7 @@ import { apiFetch } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 import { addFavorite, addToCart, getFavoriteStatus, removeFavorite } from '../api/buyerToolsApi';
 import { createOrGetChatConversation } from '../api/chatApi';
+import { normalizeCropResponse } from '../api/cropApi';
 
 const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect width="360" height="220" fill="%23d8f3dc"/><text x="50%" y="55%" text-anchor="middle" font-size="28" fill="%231f6f54">Crop</text></svg>';
 
@@ -121,7 +122,7 @@ export default function ViewDetails() {
         const detailRes = await safeFetch(`/crops/legacy/${cropId}`, { method: 'GET' });
         const imgRes = await safeFetch(`/crops/legacy/${cropId}/image`, { method: 'GET' });
         if (!detailRes.ok) throw new Error('This crop is not available.');
-        const detailData = await parseJsonIfPresent(detailRes);
+        const detailData = normalizeCropResponse(await parseJsonIfPresent(detailRes));
         if (!detailData.cropID) throw new Error('This crop is not available.');
 
         if (!mounted) return;
@@ -293,7 +294,14 @@ export default function ViewDetails() {
     <section className="page view-details-page">
       <ValidateToken token={token} />
       <div className="ag-container">
-        <button
+        
+
+        {infoAlert ? <p className="view-details-alert">{infoAlert}</p> : null}
+
+        <div className="view-details-grid">
+          
+          <Card className="view-details-image-card">
+            <button
                     type="button"
                     className="chat-back-btn"
                     onClick={() => navigate(-1)}
@@ -302,12 +310,7 @@ export default function ViewDetails() {
                   >
                     <i className="fa-solid fa-chevron-left" />
           </button>
-
-        {infoAlert ? <p className="view-details-alert">{infoAlert}</p> : null}
-
-        <div className="view-details-grid">
-          <Card className="view-details-image-card">
-            <img src={imageUrl || PLACEHOLDER} alt={cropDetails.cropName} onError={(event) => { event.currentTarget.src = PLACEHOLDER; }} />
+          <img src={imageUrl || PLACEHOLDER} alt={cropDetails.cropName} onError={(event) => { event.currentTarget.src = PLACEHOLDER; }} />
           </Card>
 
           <Card className="view-details-info-card">
@@ -317,7 +320,9 @@ export default function ViewDetails() {
             </div>
 
             <DetailRow label="Farmer" value={cropDetails.farmerName} />
-            <DetailRow label="Region" value={cropDetails.region} />
+            <DetailRow label="Area" value={cropDetails.region} />
+            <DetailRow label="State" value={cropDetails.state} />
+            <DetailRow label="District" value={cropDetails.district} />
             <DetailRow label="Status" value={cropDetails.status} />
             <DetailRow label="Urgent Sale" value={cropDetails.isUrgent ? 'Yes' : 'No'} />
             <DetailRow label="Waste Sale" value={cropDetails.isWaste ? 'Yes' : 'No'} />

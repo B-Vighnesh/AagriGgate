@@ -92,6 +92,15 @@ export default function ForgotPassword() {
   return (
     <section className="page page--center auth-page forgot-page">
       <Card className="auth-card forgot-card">
+         <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+          </button>
         <h1>Reset Your Password</h1>
         <p>Step {step} of 3 - {STEPS[step - 1]}</p>
 

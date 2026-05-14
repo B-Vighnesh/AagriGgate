@@ -5,6 +5,8 @@ public class CropResponseDTO {
     private String cropName;
     private String cropType;
     private String region;
+    private String state;
+    private String district;
     private Double marketPrice;
     private Double quantity;
     private String unit;
@@ -16,67 +18,149 @@ public class CropResponseDTO {
     private Double discountPrice;
     private String status;
 
-    public CropResponseDTO() {
-    }
+    public CropResponseDTO() {}
 
     public CropResponseDTO(
-            Long cropId,
-            String cropName,
-            String cropType,
-            String region,
-            Double marketPrice,
-            Double quantity,
-            String unit,
-            String description,
-            String postDate,
-            String farmerName,
-            Boolean isUrgent,
-            Boolean isWaste,
-            Double discountPrice,
-            String status
+            Long cropId, String cropName, String cropType, String region,
+            String state, String district,
+            Double marketPrice, Double quantity, String unit, String description,
+            String postDate, String farmerName,
+            Boolean isUrgent, Boolean isWaste, Double discountPrice, String status
     ) {
-        this.cropId = cropId;
-        this.cropName = cropName;
-        this.cropType = cropType;
-        this.region = region;
-        this.marketPrice = marketPrice;
-        this.quantity = quantity;
-        this.unit = unit;
-        this.description = description;
-        this.postDate = postDate;
+        this.cropId = cropId; this.cropName = cropName; this.cropType = cropType;
+        this.region = region; this.state = state; this.district = district;
+        this.marketPrice = marketPrice; this.quantity = quantity; this.unit = unit;
+        this.description = description; this.postDate = postDate;
         this.farmerName = farmerName;
-        this.isUrgent = isUrgent;
-        this.isWaste = isWaste;
-        this.discountPrice = discountPrice;
-        this.status = status;
+        this.isUrgent = isUrgent; this.isWaste = isWaste;
+        this.discountPrice = discountPrice; this.status = status;
     }
 
-    public Long getCropId() { return cropId; }
-    public void setCropId(Long cropId) { this.cropId = cropId; }
-    public String getCropName() { return cropName; }
-    public void setCropName(String cropName) { this.cropName = cropName; }
-    public String getCropType() { return cropType; }
-    public void setCropType(String cropType) { this.cropType = cropType; }
-    public String getRegion() { return region; }
-    public void setRegion(String region) { this.region = region; }
-    public Double getMarketPrice() { return marketPrice; }
-    public void setMarketPrice(Double marketPrice) { this.marketPrice = marketPrice; }
-    public Double getQuantity() { return quantity; }
-    public void setQuantity(Double quantity) { this.quantity = quantity; }
-    public String getUnit() { return unit; }
-    public void setUnit(String unit) { this.unit = unit; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public String getPostDate() { return postDate; }
-    public void setPostDate(String postDate) { this.postDate = postDate; }
-    public String getFarmerName() { return farmerName; }
-    public void setFarmerName(String farmerName) { this.farmerName = farmerName; }
-    public Boolean getIsUrgent() { return isUrgent; }
-    public void setIsUrgent(Boolean urgent) { isUrgent = urgent; }
-    public Boolean getIsWaste() { return isWaste; }
-    public void setIsWaste(Boolean waste) { isWaste = waste; }
-    public Double getDiscountPrice() { return discountPrice; }
-    public void setDiscountPrice(Double discountPrice) { this.discountPrice = discountPrice; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public Long getCropId() {
+        return cropId;
+    }
+
+    public void setCropId(Long cropId) {
+        this.cropId = cropId;
+    }
+
+    public String getCropType() {
+        return cropType;
+    }
+
+    public void setCropType(String cropType) {
+        this.cropType = cropType;
+    }
+
+    public String getCropName() {
+        return cropName;
+    }
+
+    public void setCropName(String cropName) {
+        this.cropName = cropName;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String district) {
+        this.district = district;
+    }
+
+    public Double getMarketPrice() {
+        return marketPrice;
+    }
+
+    public void setMarketPrice(Double marketPrice) {
+        this.marketPrice = marketPrice;
+    }
+
+    public Double getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Double quantity) {
+        this.quantity = quantity;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getPostDate() {
+        return postDate;
+    }
+
+    public void setPostDate(String postDate) {
+        this.postDate = postDate;
+    }
+
+    public String getFarmerName() {
+        return farmerName;
+    }
+
+    public void setFarmerName(String farmerName) {
+        this.farmerName = farmerName;
+    }
+
+    public Boolean getUrgent() {
+        return isUrgent;
+    }
+
+    public void setUrgent(Boolean urgent) {
+        isUrgent = urgent;
+    }
+
+    public Boolean getWaste() {
+        return isWaste;
+    }
+
+    public void setWaste(Boolean waste) {
+        isWaste = waste;
+    }
+
+    public Double getDiscountPrice() {
+        return discountPrice;
+    }
+
+    public void setDiscountPrice(Double discountPrice) {
+        this.discountPrice = discountPrice;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }

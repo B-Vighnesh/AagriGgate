@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -73,28 +74,55 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ConversationSummaryDTO> getConversationsForUser(Long actorId) {
         return getConversationsForUser(actorId, null, null);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ConversationSummaryDTO> getConversationsForUser(Long actorId, String status, Boolean archived) {
         ConversationStatus targetStatus = resolveStatus(status);
-        return conversationRepository.findByBuyerIdOrFarmerIdOrderByLastMessageAtDescUpdatedAtDesc(actorId, actorId)
+        List<Conversation> conversations = conversationRepository.findByBuyerIdOrFarmerIdOrderByLastMessageAtDescUpdatedAtDesc(actorId, actorId)
                 .stream()
                 .filter(conversation -> !isDeletedForActor(conversation, actorId))
                 .filter(conversation -> targetStatus == null || conversation.getStatus() == targetStatus)
                 .filter(conversation -> archived == null || Objects.equals(getArchivedAt(conversation, actorId) != null, archived))
+                .toList();
+        markDeliveredForVisibleConversations(conversations, actorId);
+        return conversations.stream()
                 .map(conversation -> toSummary(conversation, actorId))
                 .toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
+    public long countUnreadMessages(Long actorId) {
+        return conversationRepository.countUnreadConversations(actorId);
+    }
+
+    @Override
     public List<ChatMessageDTO> getMessages(Long conversationId, Long actorId) {
         Conversation conversation = requireParticipantConversation(conversationId, actorId);
+        Long counterpartyId = getCounterpartyId(conversation, actorId);
+        LocalDateTime now = LocalDateTime.now();
+
+        List<ChatMessage> unreadIncomingMessages = counterpartyId == null
+                ? List.of()
+                : chatMessageRepository.findUnreadIncomingMessages(conversation.getConversationId(), counterpartyId);
+
+        if (!unreadIncomingMessages.isEmpty()) {
+            unreadIncomingMessages.forEach(message -> {
+                message.setIsRead(true);
+                message.setReadAt(now);
+                message.setDeliveryStatus(MessageStatus.READ);
+            });
+            chatMessageRepository.saveAll(unreadIncomingMessages);
+
+            resetUnreadCountForActor(conversation, actorId);
+            conversationRepository.save(conversation);
+
+            sendMessageStatusUpdate(conversation, unreadIncomingMessages);
+            broadcastConversationUpdate(conversation, null);
+        }
+
         return chatMessageRepository.findByConversationIdOrderByCreatedAtAsc(conversation.getConversationId())
                 .stream()
                 .map(this::toMessageDto)
@@ -112,11 +140,21 @@ public class ChatServiceImpl implements ChatService {
             throw new IllegalArgumentException("This conversation is closed");
         }
 
+        String normalizedMessage = messageText.trim();
+        Long receiverId = getCounterpartyId(conversation, senderId);
+        incrementUnreadCountForReceiver(conversation, senderId);
+        conversation.setLastMessageSenderId(senderId);
+        conversation.setLastMessagePreview(buildMessagePreview(normalizedMessage));
+
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setConversationId(conversation.getConversationId());
         chatMessage.setSenderId(senderId);
-        chatMessage.setMessageText(messageText.trim());
+        chatMessage.setMessageText(normalizedMessage);
         chatMessage.setMessageType(MessageType.USER);
+        chatMessage.setIsRead(false);
+        chatMessage.setDeliveryStatus(receiverId != null && chatRealtimeService.isUserOnline(receiverId)
+                ? MessageStatus.DELIVERED
+                : MessageStatus.SENT);
         chatMessage = chatMessageRepository.save(chatMessage);
 
         touchConversation(conversation, chatMessage.getCreatedAt());
@@ -124,10 +162,7 @@ public class ChatServiceImpl implements ChatService {
         approachFarmerService.recordChatActivity(savedConversation.getApproachId(), senderId, chatMessage.getCreatedAt());
         ChatMessageDTO dto = toMessageDto(chatMessage);
         chatRealtimeService.sendToConversation(savedConversation, "CHAT_MESSAGE", dto, null);
-        chatRealtimeService.sendToUser(savedConversation.getBuyerId(), "CONVERSATION_UPDATE", toSummary(savedConversation, savedConversation.getBuyerId()), null);
-        if (!savedConversation.getBuyerId().equals(savedConversation.getFarmerId())) {
-            chatRealtimeService.sendToUser(savedConversation.getFarmerId(), "CONVERSATION_UPDATE", toSummary(savedConversation, savedConversation.getFarmerId()), null);
-        }
+        broadcastConversationUpdate(savedConversation, null);
         return dto;
     }
 
@@ -167,7 +202,8 @@ public class ChatServiceImpl implements ChatService {
             touchConversation(conversation, LocalDateTime.now());
             approachFarmerService.markApproachCompleted(conversation.getApproachId(), conversation.getCompletedAt());
 
-            systemMessage = createSystemMessage(conversation.getConversationId(),
+            systemMessage = createSystemMessage(
+                    conversation,
                     "Deal confirmed for " + agreedQuantity + " units. Listing updated successfully.");
 
             result.setCompleted(true);
@@ -177,7 +213,8 @@ public class ChatServiceImpl implements ChatService {
         } else {
             touchConversation(conversation, LocalDateTime.now());
             String proposer = actorId.equals(conversation.getBuyerId()) ? conversation.getBuyerName() : conversation.getFarmerName();
-            systemMessage = createSystemMessage(conversation.getConversationId(),
+            systemMessage = createSystemMessage(
+                    conversation,
                     proposer + " confirmed deal quantity " + agreedQuantity + ". Waiting for the other side.");
             result.setCompleted(false);
             result.setRemainingQuantity(null);
@@ -191,10 +228,7 @@ public class ChatServiceImpl implements ChatService {
         ConversationSummaryDTO summaryDTO = toSummary(savedConversation, actorId);
 
         chatRealtimeService.sendToConversation(savedConversation, "CHAT_MESSAGE", messageDto, null);
-        chatRealtimeService.sendToUser(savedConversation.getBuyerId(), "CONVERSATION_UPDATE", toSummary(savedConversation, savedConversation.getBuyerId()), result.getMessage());
-        if (!savedConversation.getBuyerId().equals(savedConversation.getFarmerId())) {
-            chatRealtimeService.sendToUser(savedConversation.getFarmerId(), "CONVERSATION_UPDATE", toSummary(savedConversation, savedConversation.getFarmerId()), result.getMessage());
-        }
+        broadcastConversationUpdate(savedConversation, result.getMessage());
 
         result.setConversation(summaryDTO);
         return result;
@@ -248,7 +282,7 @@ public class ChatServiceImpl implements ChatService {
         touchConversation(conversation, now);
         approachFarmerService.markApproachFailed(conversation.getApproachId(), now);
 
-        ChatMessage systemMessage = createSystemMessage(conversation.getConversationId(),
+        ChatMessage systemMessage = createSystemMessage(conversation,
                 actorName + " cancelled the deal. Conversation moved to failed.");
 
         Conversation savedConversation = conversationRepository.save(conversation);
@@ -257,12 +291,7 @@ public class ChatServiceImpl implements ChatService {
         ConversationSummaryDTO summary = toSummary(savedConversation, actorId);
 
         chatRealtimeService.sendToConversation(savedConversation, "CHAT_MESSAGE", messageDto, null);
-        chatRealtimeService.sendToUser(savedConversation.getBuyerId(), "CONVERSATION_UPDATE",
-                toSummary(savedConversation, savedConversation.getBuyerId()), "Deal cancelled.");
-        if (!savedConversation.getBuyerId().equals(savedConversation.getFarmerId())) {
-            chatRealtimeService.sendToUser(savedConversation.getFarmerId(), "CONVERSATION_UPDATE",
-                    toSummary(savedConversation, savedConversation.getFarmerId()), "Deal cancelled.");
-        }
+        broadcastConversationUpdate(savedConversation, "Deal cancelled.");
         return summary;
     }
 
@@ -296,18 +325,14 @@ public class ChatServiceImpl implements ChatService {
                 item.setFailedAt(now);
                 touchConversation(item, now);
                 approachFarmerService.markApproachFailed(item.getApproachId(), now);
-                Conversation savedConversation = conversationRepository.save(item);
-                ChatMessage savedSystemMessage = chatMessageRepository.save(
-                        createSystemMessage(item.getConversationId(),
-                                actorName + " blocked the other user. Conversation moved to failed.")
+                ChatMessage systemMessage = createSystemMessage(
+                        item,
+                        actorName + " blocked the other user. Conversation moved to failed."
                 );
+                Conversation savedConversation = conversationRepository.save(item);
+                ChatMessage savedSystemMessage = chatMessageRepository.save(systemMessage);
                 chatRealtimeService.sendToConversation(savedConversation, "CHAT_MESSAGE", toMessageDto(savedSystemMessage), null);
-                chatRealtimeService.sendToUser(savedConversation.getBuyerId(), "CONVERSATION_UPDATE",
-                        toSummary(savedConversation, savedConversation.getBuyerId()), "User blocked. Conversation moved to failed.");
-                if (!savedConversation.getBuyerId().equals(savedConversation.getFarmerId())) {
-                    chatRealtimeService.sendToUser(savedConversation.getFarmerId(), "CONVERSATION_UPDATE",
-                            toSummary(savedConversation, savedConversation.getFarmerId()), "User blocked. Conversation moved to failed.");
-                }
+                broadcastConversationUpdate(savedConversation, "User blocked. Conversation moved to failed.");
             }
         }
         if (conversation == null) {
@@ -409,9 +434,10 @@ public class ChatServiceImpl implements ChatService {
         conversation = conversationRepository.save(conversation);
 
         ChatMessage welcomeMessage = createSystemMessage(
-                conversation.getConversationId(),
+                conversation,
                 "Conversation started. You can now negotiate and confirm the final deal here."
         );
+        conversation = conversationRepository.save(conversation);
         chatMessageRepository.save(welcomeMessage);
         return conversation;
     }
@@ -456,18 +482,135 @@ public class ChatServiceImpl implements ChatService {
         return quantity;
     }
 
+    private void markDeliveredForVisibleConversations(List<Conversation> conversations, Long actorId) {
+        List<ChatMessage> deliveredMessages = new ArrayList<>();
+        for (Conversation conversation : conversations) {
+            Long counterpartyId = getCounterpartyId(conversation, actorId);
+            if (counterpartyId == null) {
+                continue;
+            }
+            List<ChatMessage> newlyDelivered = chatMessageRepository
+                    .findByConversationIdAndSenderIdAndIsReadFalseAndDeliveryStatusOrderByCreatedAtAsc(
+                            conversation.getConversationId(),
+                            counterpartyId,
+                            MessageStatus.SENT
+                    );
+            for (ChatMessage message : newlyDelivered) {
+                message.setDeliveryStatus(MessageStatus.DELIVERED);
+            }
+            deliveredMessages.addAll(newlyDelivered);
+        }
+
+        if (deliveredMessages.isEmpty()) {
+            return;
+        }
+
+        chatMessageRepository.saveAll(deliveredMessages);
+        conversations.stream()
+                .filter(conversation -> deliveredMessages.stream()
+                        .anyMatch(message -> Objects.equals(message.getConversationId(), conversation.getConversationId())))
+                .forEach(conversation -> sendMessageStatusUpdate(
+                        conversation,
+                        deliveredMessages.stream()
+                                .filter(message -> Objects.equals(message.getConversationId(), conversation.getConversationId()))
+                                .toList()
+                ));
+    }
+
     private void touchConversation(Conversation conversation, LocalDateTime timestamp) {
         conversation.setLastMessageAt(timestamp);
         conversation.setUpdatedAt(timestamp);
     }
 
-    private ChatMessage createSystemMessage(Long conversationId, String message) {
+    private void incrementUnreadCountForReceiver(Conversation conversation, Long senderId) {
+        if (Objects.equals(conversation.getBuyerId(), senderId)) {
+            conversation.setFarmerUnreadCount((conversation.getFarmerUnreadCount() == null ? 0 : conversation.getFarmerUnreadCount()) + 1);
+            return;
+        }
+        conversation.setBuyerUnreadCount((conversation.getBuyerUnreadCount() == null ? 0 : conversation.getBuyerUnreadCount()) + 1);
+    }
+
+    private void resetUnreadCountForActor(Conversation conversation, Long actorId) {
+        if (Objects.equals(conversation.getBuyerId(), actorId)) {
+            conversation.setBuyerUnreadCount(0);
+            return;
+        }
+        if (Objects.equals(conversation.getFarmerId(), actorId)) {
+            conversation.setFarmerUnreadCount(0);
+        }
+    }
+
+    private int getUnreadCountForActor(Conversation conversation, Long actorId) {
+        if (Objects.equals(conversation.getBuyerId(), actorId)) {
+            return conversation.getBuyerUnreadCount() == null ? 0 : conversation.getBuyerUnreadCount();
+        }
+        if (Objects.equals(conversation.getFarmerId(), actorId)) {
+            return conversation.getFarmerUnreadCount() == null ? 0 : conversation.getFarmerUnreadCount();
+        }
+        return 0;
+    }
+
+    private Long getCounterpartyId(Conversation conversation, Long actorId) {
+        if (Objects.equals(conversation.getBuyerId(), actorId)) {
+            return conversation.getFarmerId();
+        }
+        if (Objects.equals(conversation.getFarmerId(), actorId)) {
+            return conversation.getBuyerId();
+        }
+        return null;
+    }
+
+    private String buildMessagePreview(String messageText) {
+        if (messageText == null) {
+            return null;
+        }
+        String trimmed = messageText.trim().replaceAll("\\s+", " ");
+        if (trimmed.length() <= 255) {
+            return trimmed;
+        }
+        return trimmed.substring(0, 252) + "...";
+    }
+
+    private void broadcastConversationUpdate(Conversation conversation, String message) {
+        chatRealtimeService.sendToUser(
+                conversation.getBuyerId(),
+                "CONVERSATION_UPDATE",
+                toSummary(conversation, conversation.getBuyerId()),
+                message
+        );
+        if (!conversation.getBuyerId().equals(conversation.getFarmerId())) {
+            chatRealtimeService.sendToUser(
+                    conversation.getFarmerId(),
+                    "CONVERSATION_UPDATE",
+                    toSummary(conversation, conversation.getFarmerId()),
+                    message
+            );
+        }
+    }
+
+    private void sendMessageStatusUpdate(Conversation conversation, List<ChatMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+        List<ChatMessageDTO> payload = messages.stream()
+                .map(this::toMessageDto)
+                .toList();
+        chatRealtimeService.sendToConversation(conversation, "MESSAGE_STATUS_UPDATE", payload, null);
+    }
+
+    private ChatMessage createSystemMessage(Conversation conversation, String message) {
+        LocalDateTime now = LocalDateTime.now();
+        touchConversation(conversation, now);
+        conversation.setLastMessageSenderId(null);
+        conversation.setLastMessagePreview(buildMessagePreview(message));
         ChatMessage chatMessage = new ChatMessage();
-        chatMessage.setConversationId(conversationId);
+        chatMessage.setConversationId(conversation.getConversationId());
         chatMessage.setSenderId(null);
         chatMessage.setMessageType(MessageType.SYSTEM);
         chatMessage.setMessageText(message);
-        chatMessage.setCreatedAt(LocalDateTime.now());
+        chatMessage.setCreatedAt(now);
+        chatMessage.setIsRead(false);
+        chatMessage.setDeliveryStatus(MessageStatus.DELIVERED);
         return chatMessage;
     }
 
@@ -553,6 +696,11 @@ public class ChatServiceImpl implements ChatService {
         dto.setUpdatedAt(conversation.getUpdatedAt());
         dto.setCompletedAt(conversation.getCompletedAt());
         dto.setArchived(getArchivedAt(conversation, actorId) != null);
+        dto.setBuyerUnreadCount(conversation.getBuyerUnreadCount());
+        dto.setFarmerUnreadCount(conversation.getFarmerUnreadCount());
+        dto.setUnreadCount(getUnreadCountForActor(conversation, actorId));
+        dto.setLastMessageSenderId(conversation.getLastMessageSenderId());
+        dto.setLastMessagePreview(conversation.getLastMessagePreview());
         dto.setBlockedByMe(userBlockRepository.existsByBlockerIdAndBlockedId(actorId,
                 Objects.equals(actorId, conversation.getBuyerId()) ? conversation.getFarmerId() : conversation.getBuyerId()));
         dto.setBlockedMe(userBlockRepository.existsByBlockerIdAndBlockedId(
@@ -569,6 +717,9 @@ public class ChatServiceImpl implements ChatService {
         dto.setMessageText(chatMessage.getMessageText());
         dto.setMessageType(chatMessage.getMessageType().name());
         dto.setCreatedAt(chatMessage.getCreatedAt());
+        dto.setIsRead(chatMessage.getIsRead());
+        dto.setReadAt(chatMessage.getReadAt());
+        dto.setDeliveryStatus(chatMessage.getDeliveryStatus() == null ? null : chatMessage.getDeliveryStatus().name());
         return dto;
     }
 

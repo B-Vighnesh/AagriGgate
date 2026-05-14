@@ -108,6 +108,7 @@ export default function ViewApproachByFarmerAndCrop() {
       if (!response.ok) throw new Error('Action failed. Try again.');
       showToast(accept ? 'Request accepted.' : 'Request rejected.', accept ? 'success' : 'info');
       await loadApproaches();
+      window.dispatchEvent(new CustomEvent('requests:count-updated'));
     } catch (requestError) {
       showToast(requestError.message || 'Unable to process request.', 'error');
     } finally {

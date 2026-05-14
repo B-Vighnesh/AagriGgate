@@ -340,6 +340,16 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
         return approachFarmerRepository.findLatestStatus(userId, cropId);
     }
 
+    @Override
+    public Long getPendingCount(Long farmerId) {
+        return approachFarmerRepository.findByPendingCount(farmerId);
+    }
+
+    @Override
+    public Long getAcceptedCount(Long userId) {
+        return approachFarmerRepository.findByAcceptedCount(userId);
+    }
+
     private PageRequest buildPageRequest(int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = size <= 0 ? 10 : Math.min(size, 50);

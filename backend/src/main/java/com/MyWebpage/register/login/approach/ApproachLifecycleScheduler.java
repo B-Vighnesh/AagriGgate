@@ -7,6 +7,7 @@ import com.MyWebpage.register.login.chat.Conversation;
 import com.MyWebpage.register.login.chat.ConversationRepository;
 import com.MyWebpage.register.login.chat.ConversationStatus;
 import com.MyWebpage.register.login.chat.MessageType;
+import com.MyWebpage.register.login.chat.MessageStatus;
 import com.MyWebpage.register.login.chat.dto.ChatMessageDTO;
 import com.MyWebpage.register.login.chat.dto.ConversationSummaryDTO;
 import com.MyWebpage.register.login.notification.enums.MessageSeverity;
@@ -102,6 +103,8 @@ public class ApproachLifecycleScheduler {
                     systemMessage.setMessageType(MessageType.SYSTEM);
                     systemMessage.setMessageText("Request expired after inactivity. The chat is now closed.");
                     systemMessage.setCreatedAt(now);
+                    systemMessage.setIsRead(false);
+                    systemMessage.setDeliveryStatus(MessageStatus.DELIVERED);
                     ChatMessage savedMessage = chatMessageRepository.save(systemMessage);
 
                     chatRealtimeService.sendToConversation(savedConversation, "CHAT_MESSAGE", toRealtimeMessage(savedMessage), null);
@@ -155,6 +158,9 @@ public class ApproachLifecycleScheduler {
         dto.setMessageText(message.getMessageText());
         dto.setMessageType(message.getMessageType().name());
         dto.setCreatedAt(message.getCreatedAt());
+        dto.setIsRead(message.getIsRead());
+        dto.setReadAt(message.getReadAt());
+        dto.setDeliveryStatus(message.getDeliveryStatus() == null ? null : message.getDeliveryStatus().name());
         return dto;
     }
 
@@ -179,6 +185,13 @@ public class ApproachLifecycleScheduler {
         dto.setUpdatedAt(conversation.getUpdatedAt());
         dto.setCompletedAt(conversation.getCompletedAt());
         dto.setArchived(Boolean.FALSE);
+        dto.setBuyerUnreadCount(conversation.getBuyerUnreadCount());
+        dto.setFarmerUnreadCount(conversation.getFarmerUnreadCount());
+        dto.setUnreadCount(actorId != null && actorId.equals(conversation.getBuyerId())
+                ? conversation.getBuyerUnreadCount()
+                : conversation.getFarmerUnreadCount());
+        dto.setLastMessageSenderId(conversation.getLastMessageSenderId());
+        dto.setLastMessagePreview(conversation.getLastMessagePreview());
         dto.setBlockedByMe(Boolean.FALSE);
         dto.setBlockedMe(Boolean.FALSE);
         return dto;

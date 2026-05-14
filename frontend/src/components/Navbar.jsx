@@ -5,13 +5,13 @@ import agrigateIcon from '../images/logo3.png';
 import { getRole, isLoggedIn } from '../lib/auth';
 import {
   acknowledgeAlert,
-  countUnread,
   getActiveAlerts,
   getNotifications,
   markAllAsRead,
   markAsRead,
 } from '../lib/notificationApi';
 import { resolveNotificationRoute, sortNotificationsByDate } from '../lib/notificationRouting';
+import { useNavbarCounts } from '../context/NavbarCountContext';
 
 function navByRole(role) {
   if (!role) {
@@ -145,6 +145,12 @@ function bottomNavItemsByRole(role) {
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const {
+    unreadMessages,
+    unreadRequests,
+    unreadNotifications,
+    setUnreadNotifications,
+  } = useNavbarCounts();
   const [role, setRole] = useState(getRole());
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [isMobileViewport, setIsMobileViewport] = useState(
@@ -154,7 +160,6 @@ export default function Navbar() {
   const [openDropdownKey, setOpenDropdownKey] = useState('');
   const [hoverLockedDropdownKey, setHoverLockedDropdownKey] = useState('');
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [notificationOverlayOpen, setNotificationOverlayOpen] = useState(false);
   const [notificationPreviewLoading, setNotificationPreviewLoading] = useState(false);
   const [notificationPreview, setNotificationPreview] = useState([]);
@@ -205,37 +210,6 @@ export default function Navbar() {
       window.clearTimeout(dropdownCloseTimeoutRef.current);
     }
   }, []);
-
-  /* poll unread count for badge */
-  useEffect(() => {
-    if (!loggedIn) {
-      setUnreadCount(0);
-      return undefined;
-    }
-
-    let active = true;
-
-    const loadUnreadCount = async () => {
-      try {
-        const payload = await countUnread();
-        if (active) setUnreadCount(Number(payload?.count ?? 0));
-      } catch {
-        if (active) setUnreadCount(0);
-      }
-    };
-
-    loadUnreadCount();
-    const interval = window.setInterval(loadUnreadCount, 30000);
-    const handleCountUpdate = (event) => {
-      setUnreadCount(Number(event?.detail?.count ?? 0));
-    };
-    window.addEventListener('notifications:count-updated', handleCountUpdate);
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-      window.removeEventListener('notifications:count-updated', handleCountUpdate);
-    };
-  }, [loggedIn]);
 
   useEffect(() => {
     if (!profileMenuOpen) return undefined;
@@ -311,6 +285,7 @@ export default function Navbar() {
     && !['/login', '/register', '/logout', '/forgot-password', '/404'].includes(location.pathname);
   const showMobileDrawer = isMobileViewport && !showMobileBottomNav;
   const navItemsToRender = showMobileDrawer ? mobileDrawerItemsByRole(role, loggedIn) : items;
+  const isRequestLink = (to) => to === '/view-approach' || to === '/view-approaches-user';
 
   const toggleDropdown = (key) => {
     setOpenDropdownKey((current) => {
@@ -386,9 +361,10 @@ export default function Navbar() {
         await acknowledgeAlert(item.id);
       } else if (item.isRead !== true) {
         await markAsRead(item.id);
-        setUnreadCount((prev) => Math.max(prev - 1, 0));
+        const nextCount = Math.max(unreadNotifications - 1, 0);
+        setUnreadNotifications(nextCount);
         window.dispatchEvent(new CustomEvent('notifications:count-updated', {
-          detail: { count: Math.max(unreadCount - 1, 0) },
+          detail: { count: nextCount },
         }));
       }
     } catch {
@@ -407,7 +383,7 @@ export default function Navbar() {
   const handleMarkAllRead = async () => {
     try {
       await markAllAsRead();
-      setUnreadCount(0);
+      setUnreadNotifications(0);
       setNotificationPreview([]);
       window.dispatchEvent(new CustomEvent('notifications:count-updated', {
         detail: { count: 0 },
@@ -488,7 +464,10 @@ export default function Navbar() {
                   }}
                   className={`site-nav__link ${isActive(item.to) ? 'site-nav__link--active' : ''}`}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {isRequestLink(item.to) && unreadRequests > 0 ? (
+                    <span className="site-nav__badge">{unreadRequests}</span>
+                  ) : null}
                 </Link>
               );
               })}
@@ -509,6 +488,7 @@ export default function Navbar() {
               }}
             >
               <i className="fa-regular fa-message" aria-hidden="true" />
+              {unreadMessages > 0 ? <span className="notification-bell__badge">{unreadMessages}</span> : null}
             </Link>
           ) : null}
 
@@ -523,7 +503,7 @@ export default function Navbar() {
                 onClick={handleNotificationBellClick}
               >
                 <i className="fa-regular fa-bell" aria-hidden="true" />
-                {unreadCount > 0 ? <span className="notification-bell__badge">{unreadCount}</span> : null}
+                {unreadNotifications > 0 ? <span className="notification-bell__badge">{unreadNotifications}</span> : null}
               </button>
 
               {notificationOverlayOpen ? (
@@ -676,7 +656,12 @@ export default function Navbar() {
               setNotificationOverlayOpen(false);
             }}
           >
-            <i className={item.icon} aria-hidden="true" />
+            <span className="mobile-bottom-nav__icon-wrap">
+              <i className={item.icon} aria-hidden="true" />
+              {isRequestLink(item.to) && unreadRequests > 0 ? (
+                <span className="mobile-bottom-nav__badge">{unreadRequests}</span>
+              ) : null}
+            </span>
             <span>{item.label}</span>
           </Link>
         ))}

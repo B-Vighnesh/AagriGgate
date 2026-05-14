@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -12,12 +12,15 @@ import commodities from './commodities';
 const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
 const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
 const CROP_STATUS = ['available', 'sold'];
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_IMAGE_ACCEPT = ALLOWED_IMAGE_TYPES.join(',');
 
 export default function AddCrop() {
   const navigate = useNavigate();
   const farmerId = getFarmerId();
   const token = getToken();
   const role = getRole();
+  const imageFieldRef = useRef(null);
 
   const [cropData, setCropData] = useState({
     cropName: '',
@@ -35,6 +38,8 @@ export default function AddCrop() {
     status: 'available',
   });
   const [commoditySelection, setCommoditySelection] = useState('');
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const districts = statesAndDistricts[cropData.state] || [];
@@ -42,6 +47,30 @@ export default function AddCrop() {
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
     setTimeout(() => setToast({ message: '', type: 'info' }), 2800);
+  };
+
+  const scrollToField = (field) => {
+    if (!field) return;
+    const target = field.closest?.('.add-crop-field') || field;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+      try {
+        field.focus({ preventScroll: true });
+      } catch {
+        field.focus?.();
+      }
+    }, 250);
+  };
+
+  const handleFormInvalid = (event) => {
+    event.preventDefault();
+    const firstInvalid = event.currentTarget.querySelector(':invalid');
+    if (event.target !== firstInvalid) return;
+    setTimeout(() => scrollToField(firstInvalid), 0);
+  };
+
+  const scrollToImageField = () => {
+    imageFieldRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   useEffect(() => {
@@ -54,6 +83,10 @@ export default function AddCrop() {
       return;
     }
   }, [token, farmerId, role, navigate]);
+
+  useEffect(() => () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+  }, [imagePreview]);
 
   const onFieldChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -78,46 +111,75 @@ export default function AddCrop() {
     }));
   };
 
+  const onImageChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    if (file && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      event.target.value = '';
+      showToast('Please select a JPEG, PNG, or WebP image.', 'error');
+      return;
+    }
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImage(file);
+    setImagePreview(file ? URL.createObjectURL(file) : '');
+  };
+
+  const clearImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImage(null);
+    setImagePreview('');
+  };
+
   const submit = async (event) => {
     event.preventDefault();
-    setLoading(true);
+
+    if (!event.currentTarget.checkValidity()) {
+      const firstInvalid = event.currentTarget.querySelector(':invalid');
+      scrollToField(firstInvalid);
+      return;
+    }
 
     const region = [cropData.city, cropData.district, cropData.state]
       .map((value) => value.trim())
       .filter(Boolean)
       .join(', ');
 
-    if (!region) {
+    if (!cropData.city.trim() || !cropData.state || !cropData.district) {
       showToast('Please enter city, district, and state.', 'error');
-      setLoading(false);
       return;
     }
+
+    if (!image) {
+      showToast('Please select a crop photo.', 'error');
+      scrollToImageField();
+      return;
+    }
+
+    setLoading(true);
 
     const formData = new FormData();
     const payload = {
       cropName: cropData.cropName.trim(),
       cropType: cropData.cropType,
       region,
+      state: cropData.state,
+      district: cropData.district,
       marketPrice: Number(cropData.marketPrice),
       quantity: Number(cropData.quantity),
       unit: cropData.unit,
       description: cropData.description.trim(),
+      urgent: cropData.isUrgent,
       isUrgent: cropData.isUrgent,
+      waste: cropData.isWaste,
       isWaste: cropData.isWaste,
       discountPrice: cropData.discountPrice === '' ? null : Number(cropData.discountPrice),
       status: cropData.status,
     };
 
     formData.append('crop', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+    formData.append('imageFile', image);
 
     try {
-      const response = await addCrop(formData);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.message || 'Failed to add crop.');
-      }
-
+      await addCrop(formData);
       showToast('Crop added successfully.', 'success');
       setTimeout(() => navigate('/view-crop'), 800);
     } catch (err) {
@@ -131,6 +193,9 @@ export default function AddCrop() {
     <section className="page add-crop-page">
       <ValidateToken token={token} />
       <div className="ag-container">
+          
+
+        <Card className="add-crop-card">
           <button
                     type="button"
                     className="chat-back-btn"
@@ -146,9 +211,7 @@ export default function AddCrop() {
             <p>List your produce for buyers to discover.</p>
           </div>
         </div>
-
-        <Card className="add-crop-card">
-          <form className="add-crop-form" onSubmit={submit}>
+          <form className="add-crop-form" onSubmit={submit} onInvalid={handleFormInvalid}>
             <div className="add-crop-grid add-crop-grid--2">
               <div className="add-crop-field">
                 <label htmlFor="cropName">Crop Name *</label>
@@ -188,7 +251,7 @@ export default function AddCrop() {
 
             <div className="add-crop-grid add-crop-grid--3">
               <div className="add-crop-field">
-                <label htmlFor="city">City *</label>
+                <label htmlFor="city">Area *</label>
                 <input
                   id="city"
                   name="city"
@@ -308,15 +371,24 @@ export default function AddCrop() {
               </label>
             </div>
 
-            {/* Crop image upload is disabled. Backend ignores imageFile even if older clients send it.
-            <div className="add-crop-field">
+            <div className="add-crop-field" ref={imageFieldRef}>
               <label htmlFor="imageFile">Crop Photo *</label>
               <div className="add-crop-image-row">
-                <input id="imageFile" type="file" accept="image/*" capture="environment" onChange={onImageChange} required={!image} />
-                {imagePreview ? <img src={imagePreview} alt="Crop preview" className="add-crop-preview" /> : null}
+                <label className="crop-image-picker" htmlFor="imageFile">
+                  <span>Choose Image</span>
+                  <small>{image?.name || 'No image chosen'}</small>
+                </label>
+                <input className="crop-image-input" id="imageFile" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={onImageChange} />
+                {imagePreview ? (
+                  <div className="update-crop-preview-wrap">
+                    <img src={imagePreview} alt="Crop preview" className="add-crop-preview" />
+                    <button type="button" className="update-crop-remove" onClick={clearImage} aria-label="Remove selected image">
+                      <i className="fa-solid fa-xmark" aria-hidden="true" />
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
-            */}
 
             <div className="add-crop-actions">
               <Button type="submit" loading={loading} className="full-width">

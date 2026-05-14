@@ -30,12 +30,42 @@ public class ChatMessage {
 
     @PrePersist
     public void prePersist() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        if (messageType == null) {
-            messageType = MessageType.USER;
-        }
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (messageType == null) messageType = MessageType.USER;
+        if (isRead == null) isRead = false;
+        if (deliveryStatus == null) deliveryStatus = MessageStatus.SENT;
+    }
+    @Column(nullable = false)
+    private Boolean isRead = false;
+
+    private LocalDateTime readAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MessageStatus deliveryStatus = MessageStatus.SENT; // SENT, DELIVERED, READ
+
+    public Boolean getIsRead() {
+        return isRead;
+    }
+
+    public void setIsRead(Boolean isRead) {
+        this.isRead = isRead;
+    }
+
+    public LocalDateTime getReadAt() {
+        return readAt;
+    }
+
+    public void setReadAt(LocalDateTime readAt) {
+        this.readAt = readAt;
+    }
+
+    public MessageStatus getDeliveryStatus() {
+        return deliveryStatus;
+    }
+
+    public void setDeliveryStatus(MessageStatus deliveryStatus) {
+        this.deliveryStatus = deliveryStatus;
     }
 
     public Long getMessageId() {

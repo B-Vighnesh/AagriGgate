@@ -5,6 +5,8 @@ public class CropViewDTO {
     private String cropName;
     private String cropType;
     private String region;
+    private String state;
+    private String district;
     private Double marketPrice;
     private Double quantity;
     private String unit;
@@ -17,49 +19,41 @@ public class CropViewDTO {
     private Double discountPrice;
     private String status;
 
-    public CropViewDTO() {
-    }
-
     public CropViewDTO(
-            Long cropID,
-            String cropName,
-            String cropType,
-            String region,
-            Double marketPrice,
-            Double quantity,
-            String unit,
-            String description,
-            String postDate,
-            String farmerName,
-            boolean ownedByCurrentUser,
-            Boolean isUrgent,
-            Boolean isWaste,
-            Double discountPrice,
-            String status
+            Long cropID, String cropName, String cropType, String region,
+            String state, String district,
+            Double marketPrice, Double quantity, String unit, String description,
+            String postDate, String farmerName, boolean ownedByCurrentUser,
+            Boolean isUrgent, Boolean isWaste, Double discountPrice, String status
     ) {
-        this.cropID = cropID;
-        this.cropName = cropName;
-        this.cropType = cropType;
-        this.region = region;
-        this.marketPrice = marketPrice;
-        this.quantity = quantity;
-        this.unit = unit;
-        this.description = description;
-        this.postDate = postDate;
-        this.farmerName = farmerName;
-        this.ownedByCurrentUser = ownedByCurrentUser;
-        this.isUrgent = isUrgent;
-        this.isWaste = isWaste;
-        this.discountPrice = discountPrice;
-        this.status = status;
+        this.cropID = cropID; this.cropName = cropName; this.cropType = cropType;
+        this.region = region; this.state = state; this.district = district;
+        this.marketPrice = marketPrice; this.quantity = quantity; this.unit = unit;
+        this.description = description; this.postDate = postDate;
+        this.farmerName = farmerName; this.ownedByCurrentUser = ownedByCurrentUser;
+        this.isUrgent = isUrgent; this.isWaste = isWaste;
+        this.discountPrice = discountPrice; this.status = status;
     }
 
-    public Long getCropID() {
-        return cropID;
+    public CropViewDTO() {}
+
+
+    public Long getCropID() { return cropID; }
+
+    public Boolean getUrgent() {
+        return isUrgent;
     }
 
-    public void setCropID(Long cropID) {
-        this.cropID = cropID;
+    public void setUrgent(Boolean urgent) {
+        isUrgent = urgent;
+    }
+
+    public Boolean getWaste() {
+        return isWaste;
+    }
+
+    public void setWaste(Boolean waste) {
+        isWaste = waste;
     }
 
     public String getCropName() {
@@ -68,6 +62,10 @@ public class CropViewDTO {
 
     public void setCropName(String cropName) {
         this.cropName = cropName;
+    }
+
+    public void setCropID(Long cropID) {
+        this.cropID = cropID;
     }
 
     public String getCropType() {
@@ -84,6 +82,22 @@ public class CropViewDTO {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String district) {
+        this.district = district;
     }
 
     public Double getMarketPrice() {
@@ -110,20 +124,20 @@ public class CropViewDTO {
         this.unit = unit;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public String getPostDate() {
         return postDate;
     }
 
     public void setPostDate(String postDate) {
         this.postDate = postDate;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getFarmerName() {
@@ -140,22 +154,6 @@ public class CropViewDTO {
 
     public void setOwnedByCurrentUser(boolean ownedByCurrentUser) {
         this.ownedByCurrentUser = ownedByCurrentUser;
-    }
-
-    public Boolean getIsUrgent() {
-        return isUrgent;
-    }
-
-    public void setIsUrgent(Boolean urgent) {
-        isUrgent = urgent;
-    }
-
-    public Boolean getIsWaste() {
-        return isWaste;
-    }
-
-    public void setIsWaste(Boolean waste) {
-        isWaste = waste;
     }
 
     public Double getDiscountPrice() {
