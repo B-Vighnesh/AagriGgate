@@ -5398,8 +5398,9 @@ a {
 
 .view-all-card__image-wrap {
   position: relative;
+   height: auto;          /* ← remove fixed height */
   background: #f1f7f4;
-  height: 250px;
+  width: 100%;
   overflow: hidden;
   line-height: 0;
   
@@ -5407,8 +5408,8 @@ a {
 
 .view-all-card__image {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: 400px;          /* ← let image decide its own height */
+  object-fit: contain;   /* ← shows full image, no crop */
   display: block;
 }
 
@@ -8162,7 +8163,6 @@ a {
 }
 
 .view-details-grid {
-  display: grid;
   grid-template-columns: 1fr 1.1fr;
   gap: 12px;
 }
