@@ -12,6 +12,8 @@ import statesAndDistricts from './statesAndDistricts';
 const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
 const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
 const CROP_STATUS = ['available', 'sold'];
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_IMAGE_ACCEPT = ALLOWED_IMAGE_TYPES.join(',');
 
 export default function UpdateCrop() {
   const navigate = useNavigate();
@@ -130,6 +132,11 @@ export default function UpdateCrop() {
 
   const handleImageChange = (event) => {
     const file = event.target.files?.[0] || null;
+    if (file && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      event.target.value = '';
+      showToast('Please select a JPEG, PNG, or WebP image.', 'error');
+      return;
+    }
     if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImage(file);
     setImagePreview(file ? URL.createObjectURL(file) : '');
@@ -346,7 +353,7 @@ export default function UpdateCrop() {
               ) : null}
 
               <label className="update-crop-upload" htmlFor="cropImage">
-                <input id="cropImage" type="file" accept="image/*" onChange={handleImageChange} />
+                <input id="cropImage" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={handleImageChange} />
                 <span>Choose new photo</span>
               </label>
 

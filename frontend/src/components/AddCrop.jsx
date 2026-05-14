@@ -12,6 +12,8 @@ import commodities from './commodities';
 const CROP_TYPES = ['Vegetable', 'Fruit', 'Grain', 'Pulse', 'Spice', 'Oil Seed', 'Flower', 'Other'];
 const UNITS = ['kg', 'ltr', 'g', 'piece', 'quintal', 'ton'];
 const CROP_STATUS = ['available', 'sold'];
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_IMAGE_ACCEPT = ALLOWED_IMAGE_TYPES.join(',');
 
 export default function AddCrop() {
   const navigate = useNavigate();
@@ -86,6 +88,11 @@ export default function AddCrop() {
 
   const onImageChange = (event) => {
     const file = event.target.files?.[0] || null;
+    if (file && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      event.target.value = '';
+      showToast('Please select a JPEG, PNG, or WebP image.', 'error');
+      return;
+    }
     if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImage(file);
     setImagePreview(file ? URL.createObjectURL(file) : '');
@@ -342,7 +349,7 @@ export default function AddCrop() {
             <div className="add-crop-field">
               <label htmlFor="imageFile">Crop Photo *</label>
               <div className="add-crop-image-row">
-                <input id="imageFile" type="file" accept="image/*" capture="environment" onChange={onImageChange} required={!image} />
+                <input id="imageFile" type="file" accept={ALLOWED_IMAGE_ACCEPT} capture="environment" onChange={onImageChange} required={!image} />
                 {imagePreview ? (
                   <div className="update-crop-preview-wrap">
                     <img src={imagePreview} alt="Crop preview" className="add-crop-preview" />
