@@ -5314,6 +5314,7 @@ a {
   padding: 0;
   overflow: hidden;
   display: grid;
+  grid-template-rows: 180px minmax(0, 1fr);
   align-content: start;
   border-width: 2px;
   min-height: 300px;
@@ -5357,6 +5358,7 @@ a {
   background: #f1f7f4;
   height: 180px;
   overflow: hidden;
+  line-height: 0;
 }
 
 .view-all-card__image {
