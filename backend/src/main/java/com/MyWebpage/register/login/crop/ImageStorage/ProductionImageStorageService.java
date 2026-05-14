@@ -100,7 +100,7 @@ public class ProductionImageStorageService implements ImageStorageService {
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             Thumbnails.of(file.getInputStream())
-                    .size(300, 300)
+                    .size(900, 900)
                     .keepAspectRatio(true)
                     .outputQuality(0.8)
                     .outputFormat("jpg")
