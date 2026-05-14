@@ -345,19 +345,19 @@ export default function UpdateCrop() {
             </div>
 
             <div className="update-crop-image-row">
-              {existingImage && !imagePreview ? (
+              
+
+              <label className="update-crop-upload crop-image-picker" htmlFor="cropImage">
+                <input className="crop-image-input" id="cropImage" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={handleImageChange} />
+                <span>Update Image</span>
+                <small>{image?.name || 'No image chosen'}</small>
+              </label>
+                {existingImage && !imagePreview ? (
                 <div className="update-crop-preview-wrap">
                   <img src={existingImage} alt="Current crop" className="update-crop-preview" />
                   <small>Current image</small>
                 </div>
               ) : null}
-
-              <label className="update-crop-upload crop-image-picker" htmlFor="cropImage">
-                <input className="crop-image-input" id="cropImage" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={handleImageChange} />
-                <span>Choose Image</span>
-                <small>{image?.name || 'No image chosen'}</small>
-              </label>
-
               {imagePreview ? (
                 <div className="update-crop-preview-wrap">
                   <img src={imagePreview} alt="New crop" className="update-crop-preview" />
