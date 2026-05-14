@@ -8171,6 +8171,7 @@ a {
   min-height: 300px;
   object-fit: cover;
   border-radius: 10px;
+  padding-top:10px;
 }
 
 .view-details-title-row {

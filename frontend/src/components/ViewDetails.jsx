@@ -294,7 +294,14 @@ export default function ViewDetails() {
     <section className="page view-details-page">
       <ValidateToken token={token} />
       <div className="ag-container">
-        <button
+        
+
+        {infoAlert ? <p className="view-details-alert">{infoAlert}</p> : null}
+
+        <div className="view-details-grid">
+          
+          <Card className="view-details-image-card">
+            <button
                     type="button"
                     className="chat-back-btn"
                     onClick={() => navigate(-1)}
@@ -303,12 +310,7 @@ export default function ViewDetails() {
                   >
                     <i className="fa-solid fa-chevron-left" />
           </button>
-
-        {infoAlert ? <p className="view-details-alert">{infoAlert}</p> : null}
-
-        <div className="view-details-grid">
-          <Card className="view-details-image-card">
-            <img src={imageUrl || PLACEHOLDER} alt={cropDetails.cropName} onError={(event) => { event.currentTarget.src = PLACEHOLDER; }} />
+          <img src={imageUrl || PLACEHOLDER} alt={cropDetails.cropName} onError={(event) => { event.currentTarget.src = PLACEHOLDER; }} />
           </Card>
 
           <Card className="view-details-info-card">
