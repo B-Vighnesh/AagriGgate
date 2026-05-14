@@ -35,7 +35,14 @@ public class CropController {
     public ResponseEntity<ApiResponse<CropResponseDTO>> addCropV1(
             Authentication authentication,
             @RequestPart("crop") @Valid CropRequestDTO dto,
-            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
+            @RequestPart(value = "imageFile") MultipartFile imageFile) throws IOException {
+        if (imageFile == null || imageFile.isEmpty()) {
+            System.out.println("NULL or EMPTY");
+            System.out.println("imageFile == null: " + (imageFile == null));
+            System.out.println("imageFile.isEmpty(): " + imageFile.isEmpty());
+            System.out.println("Size: " + imageFile.getSize());
+            System.out.println("Original filename: " + imageFile.getOriginalFilename());
+        }
         Long farmerId = Long.parseLong(authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(cropService.addCropV1(farmerId, dto, imageFile));
     }

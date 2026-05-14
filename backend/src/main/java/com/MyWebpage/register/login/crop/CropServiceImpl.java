@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 
@@ -61,7 +62,7 @@ public class CropServiceImpl implements CropService {
         clearImageFields(crop);
         ImageResult imageResult = productionImageStorageService.store(imageFile);
         crop.setImageKey(imageResult.getKey());
-
+        System.out.println(imageResult);
         ImageResult thumbResult = productionImageStorageService.storeThumbnail(imageFile);
         crop.setThumbnailKey(thumbResult.getKey());
         crop.setImageName(imageResult.getName());
@@ -180,7 +181,9 @@ public class CropServiceImpl implements CropService {
 
     @Override
     public ImageResult getCropThumbnail(Long cropId) {
-        Object[] row = cropRepo.findImageKeysByCropId(cropId);
+        List<Object[]> rows = cropRepo.findImageKeysByCropId(cropId);
+        if (rows == null || rows.isEmpty()) return null;
+        Object[] row = rows.get(0);
         if (row == null || row.length == 0) return null;
         String thumbnailKey = (String) row[1];
         if (thumbnailKey == null || thumbnailKey.isBlank()) {
@@ -193,10 +196,15 @@ public class CropServiceImpl implements CropService {
 
     @Override
     public ImageResult getCropImage(Long cropId) {
-        Object[] row = cropRepo.findImageKeysByCropId(cropId);
+        List<Object[]> rows = cropRepo.findImageKeysByCropId(cropId);
+        if (rows == null || rows.isEmpty()) return null;
+
+        Object[] row = rows.get(0);
         if (row == null || row.length == 0) return null;
+
         String imageKey = (String) row[0];
         if (imageKey == null || imageKey.isBlank()) return null;
+
         return productionImageStorageService.retrieve(null, null, null, imageKey);
     }
 

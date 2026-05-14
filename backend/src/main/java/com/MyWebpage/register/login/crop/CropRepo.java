@@ -479,5 +479,5 @@ public interface CropRepo extends JpaRepository<Crop, Long> {
               AND c.active = true
               AND c.deletedAt IS NULL
             """)
-    Object[] findImageKeysByCropId(@Param("cropId") Long cropId);
+    List<Object[]> findImageKeysByCropId(@Param("cropId") Long cropId);
 }

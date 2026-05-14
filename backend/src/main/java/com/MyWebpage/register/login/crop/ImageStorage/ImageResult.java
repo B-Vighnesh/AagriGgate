@@ -1,6 +1,8 @@
 package com.MyWebpage.register.login.crop.ImageStorage;
 
 
+import java.util.Arrays;
+
 public class ImageResult {
 
     private final String name;
@@ -43,5 +45,15 @@ public class ImageResult {
 
     public boolean hasKey() {
         return key != null && !key.isBlank();
+    }
+
+    @Override
+    public String toString() {
+        return "ImageResult{" +
+                "name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", data=" + Arrays.toString(data) +
+                ", key='" + key + '\'' +
+                '}';
     }
 }

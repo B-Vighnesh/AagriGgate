@@ -42,6 +42,7 @@ public class ProductionImageStorageService implements ImageStorageService {
     @Override
     public ImageResult store(MultipartFile file) {
         try {
+
             if (file == null || file.isEmpty()) {
                 return ImageResult.empty();
             }
