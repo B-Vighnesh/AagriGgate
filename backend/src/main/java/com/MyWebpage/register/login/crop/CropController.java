@@ -1,5 +1,8 @@
 package com.MyWebpage.register.login.crop;
 
+import com.MyWebpage.register.login.common.ApiResponse;
+import com.MyWebpage.register.login.crop.ImageStorage.ImageResult;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,32 +32,33 @@ public class CropController {
     }
 
     @PostMapping(value = "/farmer/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Crop> addCropV1(
+    public ResponseEntity<ApiResponse<CropResponseDTO>> addCropV1(
             Authentication authentication,
-            @RequestPart("crop") Crop crop,
+            @RequestPart("crop") @Valid CropRequestDTO dto,
             @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
         Long farmerId = Long.parseLong(authentication.getName());
-        return ResponseEntity.status(HttpStatus.CREATED).body(cropService.addCropV1(farmerId, crop, imageFile));
+        return ResponseEntity.status(HttpStatus.CREATED).body(cropService.addCropV1(farmerId, dto, imageFile));
     }
 
     @PutMapping(value = "/farmer/{cropId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Crop> updateCropV1(
+    public ResponseEntity<ApiResponse<CropResponseDTO>> updateCropV1(
             Authentication authentication,
             @PathVariable Long cropId,
-            @RequestPart("crop") Crop crop,
+            @RequestPart("crop") @Valid UpdateCropRequest dto,
             @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
         Long farmerId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(cropService.updateCropV1(farmerId, cropId, crop, imageFile));
+        return ResponseEntity.ok(cropService.updateCropV1(farmerId, cropId, dto, imageFile));
     }
 
-    // Legacy V1 endpoints kept for backward compatibility with older clients.
     @GetMapping("/legacy")
-    public ResponseEntity<Page<CropViewDTO>> getAllCropsV1(
+    public ResponseEntity<ApiResponse<Page<CropViewDTO>>> getAllCropsV1(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String region,
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String district,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) String farmerName,
@@ -64,16 +68,21 @@ public class CropController {
             @RequestParam(required = false) Boolean discountOnly,
             @RequestParam(defaultValue = "newest") String sortBy) {
         Long currentUserId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(cropService.getAllCropsV1(currentUserId, page, size, keyword, region, category, maxPrice, farmerName, urgentOnly, wasteOnly, normalOnly, discountOnly, sortBy));
+        return ResponseEntity.ok(cropService.getAllCropsV1(
+                currentUserId, page, size, keyword, region, state, district,
+                category, maxPrice, farmerName, urgentOnly, wasteOnly,
+                normalOnly, discountOnly, sortBy));
     }
 
     @GetMapping("/farmer/me/legacy")
-    public ResponseEntity<Page<CropViewDTO>> getMyCropsV1(
+    public ResponseEntity<ApiResponse<Page<CropViewDTO>>> getMyCropsV1(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String region,
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String district,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) Boolean urgentOnly,
@@ -82,40 +91,48 @@ public class CropController {
             @RequestParam(required = false) Boolean discountOnly,
             @RequestParam(defaultValue = "newest") String sortBy) {
         Long farmerId = Long.parseLong(authentication.getName());
-        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(farmerId, farmerId, page, size, keyword, region, category, maxPrice, urgentOnly, wasteOnly, normalOnly, discountOnly, sortBy));
+        return ResponseEntity.ok(cropService.getCropsByFarmerIdV1(
+                farmerId, farmerId, page, size, keyword, region, state, district,
+                category, maxPrice, urgentOnly, wasteOnly, normalOnly, discountOnly, sortBy));
     }
 
     @GetMapping("/legacy/{cropId}")
-    public ResponseEntity<CropViewDTO> getCropByCropIdV1(
+    public ResponseEntity<ApiResponse<CropViewDTO>> getCropByCropIdV1(
             Authentication authentication,
             @PathVariable Long cropId) {
         Long currentUserId = Long.parseLong(authentication.getName());
         return ResponseEntity.ok(cropService.getCropByCropIdV1(currentUserId, cropId));
     }
 
-    @GetMapping("/legacy/{cropId}/image")
-    public ResponseEntity<byte[]> getCropImageByCropIdV1(@PathVariable Long cropId) {
-        Crop crop = cropService.getCropEntityById(cropId);
-        if (crop == null || crop.getImageData() == null || crop.getImageData().length == 0) {
+
+    @GetMapping("/legacy/{cropId}/thumbnail")
+    public ResponseEntity<byte[]> getCropThumbnail(@PathVariable Long cropId) {
+        ImageResult result = cropService.getCropThumbnail(cropId);
+        if (result == null || result.getData() == null || result.getData().length == 0) {
             return ResponseEntity.notFound().build();
         }
-
-        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
-        if (crop.getImageType() != null && !crop.getImageType().isBlank()) {
-            mediaType = MediaType.parseMediaType(crop.getImageType());
-        }
-
+        String contentType = result.getType() != null ? result.getType() : "image/jpeg";
         return ResponseEntity.ok()
-                .contentType(mediaType)
-                .body(crop.getImageData());
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(result.getData());
+    }
+
+    @GetMapping("/legacy/{cropId}/image")
+    public ResponseEntity<byte[]> getCropImage(@PathVariable Long cropId) {
+        ImageResult result = cropService.getCropImage(cropId);
+        if (result == null || result.getData() == null || result.getData().length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+        String contentType = result.getType() != null ? result.getType() : "image/jpeg";
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(result.getData());
     }
 
     @DeleteMapping("/legacy/{cropId}")
-    public ResponseEntity<String> deleteCropByIdV1(
-            @PathVariable Long cropId,
-            Authentication authentication) {
+    public ResponseEntity<ApiResponse<Void>> deleteCropByIdV1(
+            @PathVariable Long cropId, Authentication authentication) {
         Long farmerId = Long.parseLong(authentication.getName());
-        cropService.deleteCropByIdV1(farmerId, cropId);
-        return ResponseEntity.ok("Crop deleted successfully");
+        return ResponseEntity.ok(cropService.deleteCropByIdV1(farmerId, cropId));
     }
 }

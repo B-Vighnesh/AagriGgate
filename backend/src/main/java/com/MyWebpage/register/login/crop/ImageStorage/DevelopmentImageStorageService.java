@@ -13,7 +13,7 @@ import java.util.Set;
 
 @Service
 @Profile("dev")
-public class DevelopmentImageStorageService implements ImageStorageService {
+public class DevelopmentImageStorageService{
 
     private static final Logger logger = LoggerFactory.getLogger(DevelopmentImageStorageService.class);
 
@@ -25,8 +25,8 @@ public class DevelopmentImageStorageService implements ImageStorageService {
             "image/webp"
     );
 
-    @Override
-    public ImageResult store(MultipartFile file) throws IOException {
+
+    public ImageResult store(MultipartFile file)  {
         if (file == null || file.isEmpty()) {
             return ImageResult.empty();
         }
@@ -36,7 +36,12 @@ public class DevelopmentImageStorageService implements ImageStorageService {
         }
 
         Tika tika = new Tika();
-        String detectedType = tika.detect(file.getInputStream());
+        String detectedType = null;
+        try {
+            detectedType = tika.detect(file.getInputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         if (!ALLOWED_IMAGE_TYPES.contains(detectedType)) {
             throw new IllegalArgumentException("Only JPG, PNG, and WEBP images are allowed");
@@ -45,14 +50,25 @@ public class DevelopmentImageStorageService implements ImageStorageService {
         logger.debug("[dev] Storing image '{}' ({}, {} bytes) as DB BLOB",
                 file.getOriginalFilename(), detectedType, file.getSize());
 
-        return ImageResult.ofBlob(
-                file.getOriginalFilename(),
-                detectedType,
-                file.getBytes()
-        );
+        try {
+            return ImageResult.ofBlob(
+                    file.getOriginalFilename(),
+                    detectedType,
+                    file.getBytes()
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @Override
+    public ImageResult storeThumbnail(MultipartFile file) {
+        return null;
+    }
+
+    public void delete(String imageKey) {
+        logger.info("[dev] delete() called for key={} — no-op in dev profile", imageKey);
+    }
+
     public ImageResult retrieve(byte[] imageData, String imageName, String imageType, String imageKey) {
         if (imageData == null || imageData.length == 0) {
             logger.debug("[dev] retrieve() called but imageData is empty — returning null (404)");

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
@@ -39,13 +40,13 @@ public class ProductionImageStorageService implements ImageStorageService {
     }
 
     @Override
-    public ImageResult store(MultipartFile file) throws IOException {
-
-        if (file != null && !file.isEmpty()) {
-            logger.info("[prod] Image upload received but image storage is disabled in Phase 1. " +
-                    "File '{}' ({} bytes) was not stored.", file.getOriginalFilename(), file.getSize());
-        }
-        return ImageResult.empty();
+    public ImageResult store(MultipartFile file) {
+        try{
+            if (file != null && !file.isEmpty()) {
+                logger.info("[prod] Image upload received but image storage is disabled in Phase 1. " +
+                        "File '{}' ({} bytes) was not stored.", file.getOriginalFilename(), file.getSize());
+            }
+            return ImageResult.empty();
 
         /*
         if (file == null || file.isEmpty()) {
@@ -78,6 +79,51 @@ public class ProductionImageStorageService implements ImageStorageService {
 
         return ImageResult.ofKey(file.getOriginalFilename(), detectedType, key);
         */
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @Override
+    public ImageResult storeThumbnail(MultipartFile file) {
+        try {
+            if (file != null && !file.isEmpty()) {
+                logger.info("[prod] Thumbnail upload received but disabled in Phase 1. File '{}' ignored.",
+                        file.getOriginalFilename());
+            }
+            return ImageResult.empty();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void delete(String imageKey) {
+        if (imageKey == null || imageKey.isBlank()) {
+            logger.warn("[prod] delete() called with blank key — skipping");
+            return;
+        }
+
+        if (s3Client == null || bucketName == null) {
+            logger.warn("[prod] delete() S3Client or bucket not configured — skipping");
+            return;
+        }
+
+        try {
+            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(imageKey)
+                    .build();
+
+            s3Client.deleteObject(deleteRequest);
+            logger.info("[prod] Deleted S3 object: bucket={} key={}", bucketName, imageKey);
+
+        } catch (NoSuchKeyException e) {
+            logger.warn("[prod] delete() key not found (already deleted?): key={}", imageKey);
+        } catch (Exception e) {
+            logger.error("[prod] delete() failed: key={} error={}", imageKey, e.getMessage());
+        }
     }
 
     @Override
@@ -123,6 +169,55 @@ public class ProductionImageStorageService implements ImageStorageService {
         } catch (Exception e) {
             logger.error("[prod] retrieve() failed to fetch from S3: key={} error={}", imageKey, e.getMessage());
             return null;
+        }
+    }
+
+    @Override
+    public ImageResult retrieveThumbnail(byte[] imageData, String imageName, String imageType, String thumbnailKey) {
+        if (thumbnailKey == null || thumbnailKey.isBlank()) {
+            logger.debug("[prod] retrieveThumbnail() thumbnailKey is blank — returning null");
+            return null;
+        }
+        if (s3Client == null || bucketName == null) {
+            logger.warn("[prod] retrieveThumbnail() S3Client or bucket not configured — returning null");
+            return null;
+        }
+        try {
+            GetObjectRequest getRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(thumbnailKey)
+                    .build();
+            ResponseBytes<GetObjectResponse> response = s3Client.getObjectAsBytes(getRequest);
+            byte[] bytes = response.asByteArray();
+            String contentType = response.response().contentType();
+            String resolvedType = (contentType != null && !contentType.isBlank()) ? contentType : imageType;
+            logger.debug("[prod] retrieveThumbnail() fetched {} bytes for key={}", bytes.length, thumbnailKey);
+            return ImageResult.ofBlob(imageName, resolvedType, bytes);
+        } catch (NoSuchKeyException e) {
+            logger.warn("[prod] retrieveThumbnail() key not found: key={}", thumbnailKey);
+            return null;
+        } catch (Exception e) {
+            logger.error("[prod] retrieveThumbnail() failed: key={} error={}", thumbnailKey, e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    public void deleteThumbnail(String thumbnailKey) {
+        if (thumbnailKey == null || thumbnailKey.isBlank()) {
+            logger.warn("[prod] deleteThumbnail() called with blank key — skipping");
+            return;
+        }
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(thumbnailKey)
+                    .build());
+            logger.info("[prod] Deleted S3 thumbnail: key={}", thumbnailKey);
+        } catch (NoSuchKeyException e) {
+            logger.warn("[prod] deleteThumbnail() key not found (already deleted?): key={}", thumbnailKey);
+        } catch (Exception e) {
+            logger.error("[prod] deleteThumbnail() failed: key={} error={}", thumbnailKey, e.getMessage());
         }
     }
 }

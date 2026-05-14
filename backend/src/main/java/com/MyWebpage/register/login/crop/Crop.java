@@ -2,6 +2,8 @@ package com.MyWebpage.register.login.crop;
 
 import com.MyWebpage.register.login.farmer.Farmer;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -16,30 +18,105 @@ public class Crop {
     @SequenceGenerator(name = "crop_seq", sequenceName = "crop_sequence", initialValue = 10011, allocationSize = 1)
     private Long cropID;
 
-
+    @NotBlank
+    @Column(nullable = false)
     private String cropName;
+
+    @NotBlank
+    @Column(nullable = false)
     private String cropType;
+
+    @NotBlank
+    @Column(nullable = false)
     private String region;
+
+    @NotNull
+    @Column(nullable = false)
     private Double marketPrice;
+
+    @NotNull
+    @Column(nullable = false)
     private Double quantity;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String unit;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String description;
+
+    @NotNull
+    @Column(nullable = false)
+    private Boolean isUrgent;
+
+    @NotNull
+    @Column(nullable = false)
+    private Boolean isWaste;
+
+    @Column(nullable = true)
+    private Double discountPrice;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String status;
+
+    @NotBlank
+    @Column(nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'Unknown'")
+    private String state;
+
+    @NotBlank
+    @Column(nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'Unknown'")
+    private String district;
+
+    // S3 only — blob fields are dead, kept to avoid dropping columns
     private String imageName;
     private String imageType;
-    private String unit;
-    private String description;
-    private Boolean isUrgent;
-    private Boolean isWaste;
-    private Double discountPrice;
-    private String status;
     @Lob
     private byte[] imageData;
+
+    @Column(name = "image_key", length = 512)
+    private String imageKey;
+
     @ManyToOne
     @JoinColumn(name = "farmer_id", nullable = false)
     private Farmer farmer;
+
+    @NotBlank
+    @Column(nullable = false)
     private String postDate;
+
+    @Column(nullable = false)
     private Boolean active = true;
+
     private LocalDateTime deletedAt;
-    @Column(name = "image_key", length = 512)
-    private String imageKey;
+
+    @Column(name = "thumbnail_key", length = 512)
+    private String thumbnailKey;
+
+    public String getThumbnailKey() {
+        return thumbnailKey;
+    }
+
+    public void setThumbnailKey(String thumbnailKey) {
+        this.thumbnailKey = thumbnailKey;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String district) {
+        this.district = district;
+    }
 
     public String getImageKey() {
         return imageKey;
