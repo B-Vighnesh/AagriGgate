@@ -52,6 +52,26 @@ export default function UpdateCrop() {
     setTimeout(() => setToast({ message: '', type: 'info' }), 3000);
   };
 
+  const scrollToField = (field) => {
+    if (!field) return;
+    const target = field.closest?.('.update-crop-field') || field;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+      try {
+        field.focus({ preventScroll: true });
+      } catch {
+        field.focus?.();
+      }
+      field.reportValidity?.();
+    }, 250);
+  };
+
+  const handleFormInvalid = (event) => {
+    const firstInvalid = event.currentTarget.querySelector(':invalid');
+    if (event.target !== firstInvalid) return;
+    setTimeout(() => scrollToField(firstInvalid), 0);
+  };
+
   useEffect(() => {
     if (!role) {
       navigate('/login');
@@ -166,6 +186,14 @@ export default function UpdateCrop() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (!event.currentTarget.checkValidity()) {
+      const firstInvalid = event.currentTarget.querySelector(':invalid');
+      scrollToField(firstInvalid);
+      event.currentTarget.reportValidity();
+      return;
+    }
+
     setLoading(true);
 
     const payload = {
@@ -235,7 +263,7 @@ export default function UpdateCrop() {
             <p>Make changes and save your listing.</p>
           </div>
         </div>
-          <form className="update-crop-form" onSubmit={handleSubmit}>
+          <form className="update-crop-form" onSubmit={handleSubmit} onInvalid={handleFormInvalid}>
             <div className="update-crop-grid update-crop-grid--2">
               <div className="update-crop-field">
                 <label htmlFor="cropName">Crop Name *</label>

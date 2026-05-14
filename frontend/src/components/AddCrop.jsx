@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -20,6 +20,7 @@ export default function AddCrop() {
   const farmerId = getFarmerId();
   const token = getToken();
   const role = getRole();
+  const imageFieldRef = useRef(null);
 
   const [cropData, setCropData] = useState({
     cropName: '',
@@ -46,6 +47,30 @@ export default function AddCrop() {
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
     setTimeout(() => setToast({ message: '', type: 'info' }), 2800);
+  };
+
+  const scrollToField = (field) => {
+    if (!field) return;
+    const target = field.closest?.('.add-crop-field') || field;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+      try {
+        field.focus({ preventScroll: true });
+      } catch {
+        field.focus?.();
+      }
+      field.reportValidity?.();
+    }, 250);
+  };
+
+  const handleFormInvalid = (event) => {
+    const firstInvalid = event.currentTarget.querySelector(':invalid');
+    if (event.target !== firstInvalid) return;
+    setTimeout(() => scrollToField(firstInvalid), 0);
+  };
+
+  const scrollToImageField = () => {
+    imageFieldRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   useEffect(() => {
@@ -106,7 +131,13 @@ export default function AddCrop() {
 
   const submit = async (event) => {
     event.preventDefault();
-    setLoading(true);
+
+    if (!event.currentTarget.checkValidity()) {
+      const firstInvalid = event.currentTarget.querySelector(':invalid');
+      scrollToField(firstInvalid);
+      event.currentTarget.reportValidity();
+      return;
+    }
 
     const region = [cropData.city, cropData.district, cropData.state]
       .map((value) => value.trim())
@@ -115,15 +146,16 @@ export default function AddCrop() {
 
     if (!cropData.city.trim() || !cropData.state || !cropData.district) {
       showToast('Please enter city, district, and state.', 'error');
-      setLoading(false);
       return;
     }
 
     if (!image) {
       showToast('Please select a crop photo.', 'error');
-      setLoading(false);
+      scrollToImageField();
       return;
     }
+
+    setLoading(true);
 
     const formData = new FormData();
     const payload = {
@@ -180,7 +212,7 @@ export default function AddCrop() {
             <p>List your produce for buyers to discover.</p>
           </div>
         </div>
-          <form className="add-crop-form" onSubmit={submit}>
+          <form className="add-crop-form" onSubmit={submit} onInvalid={handleFormInvalid}>
             <div className="add-crop-grid add-crop-grid--2">
               <div className="add-crop-field">
                 <label htmlFor="cropName">Crop Name *</label>
@@ -340,14 +372,14 @@ export default function AddCrop() {
               </label>
             </div>
 
-            <div className="add-crop-field">
+            <div className="add-crop-field" ref={imageFieldRef}>
               <label htmlFor="imageFile">Crop Photo *</label>
               <div className="add-crop-image-row">
                 <label className="crop-image-picker" htmlFor="imageFile">
                   <span>Choose Image</span>
                   <small>{image?.name || 'No image chosen'}</small>
                 </label>
-                <input className="crop-image-input" id="imageFile" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={onImageChange} required={!image} />
+                <input className="crop-image-input" id="imageFile" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={onImageChange} />
                 {imagePreview ? (
                   <div className="update-crop-preview-wrap">
                     <img src={imagePreview} alt="Crop preview" className="add-crop-preview" />

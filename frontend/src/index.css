@@ -4949,6 +4949,7 @@ a {
 .add-crop-field {
   display: grid;
   gap: 6px;
+  scroll-margin-top: 96px;
 }
 
 .add-crop-field label {
@@ -8731,6 +8732,7 @@ a {
 .update-crop-field {
   display: grid;
   gap: 6px;
+  scroll-margin-top: 96px;
 }
 
 .update-crop-field label {
