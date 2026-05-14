@@ -59,11 +59,11 @@ export default function AddCrop() {
       } catch {
         field.focus?.();
       }
-      field.reportValidity?.();
     }, 250);
   };
 
   const handleFormInvalid = (event) => {
+    event.preventDefault();
     const firstInvalid = event.currentTarget.querySelector(':invalid');
     if (event.target !== firstInvalid) return;
     setTimeout(() => scrollToField(firstInvalid), 0);
@@ -135,7 +135,6 @@ export default function AddCrop() {
     if (!event.currentTarget.checkValidity()) {
       const firstInvalid = event.currentTarget.querySelector(':invalid');
       scrollToField(firstInvalid);
-      event.currentTarget.reportValidity();
       return;
     }
 
