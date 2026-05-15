@@ -192,9 +192,12 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                 ? "The farmer"
                 : approach.getFarmerName();
         if (accept) {
-            return farmerName + " accepted your request for " + cropName + ".";
+            return "Your request for " + cropName + " has been accepted by "
+                    + farmerName + ". You can now open the chat and negotiate pricing, quantity, and delivery details.";
         }
-        return farmerName + " rejected your request for " + cropName + ".";
+
+        return "Your request for " + cropName + " has been declined by "
+                + farmerName + ". You may explore other available farmers or crops.";
     }
 
     @Override
