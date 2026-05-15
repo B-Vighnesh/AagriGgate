@@ -8,8 +8,6 @@ import { apiGet } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 import { getCropImageBlob, normalizeCropPage } from '../api/cropApi';
 
-const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180"><rect width="320" height="180" fill="%23d8f3dc"/><text x="50%" y="54%" text-anchor="middle" font-size="26" fill="%231f6f54">No Image</text></svg>';
-
 export default function ViewCrop() {
   const navigate = useNavigate();
   const farmerId = getFarmerId();
@@ -50,6 +48,15 @@ export default function ViewCrop() {
     if (crop.isUrgent) return 'urgent';
     if (crop.isWaste) return 'waste';
     return 'normal';
+  };
+  const handleCropImageLoad = (event) => {
+    const img = event.currentTarget;
+    img.closest('.view-crop-card__image-wrap')?.classList.toggle('landscape', img.naturalWidth > img.naturalHeight);
+  };
+  const handleCropImageError = (event) => {
+    const img = event.currentTarget;
+    img.closest('.view-crop-card__image-wrap')?.classList.add('image-wrap--empty');
+    img.remove();
   };
 
   useEffect(() => {
@@ -290,11 +297,15 @@ export default function ViewCrop() {
             {crops.map((crop) => (
               <Card key={crop.cropID} className={`view-crop-card view-crop-card--${getCardTone(crop)}`} onClick={() => navigate(`/view-details/${crop.cropID}`)}>
                 <div className="view-crop-card__image-wrap">
-                  <img
-                    src={images[crop.cropID] || PLACEHOLDER}
-                    alt={crop.cropName}
-                    onError={(event) => { event.currentTarget.src = PLACEHOLDER; }}
-                  />
+                  {images[crop.cropID] ? (
+                    <img
+                      src={images[crop.cropID]}
+                      alt={crop.cropName}
+                      onLoad={handleCropImageLoad}
+                      onError={handleCropImageError}
+                    />
+                  ) : <span className="crop-image-empty">No image</span>}
+                  <span className="view-all-card__badge">{crop.cropType}</span>
                 </div>
                 <div className="view-crop-card__body">
                   <div className="view-crop-card__top">

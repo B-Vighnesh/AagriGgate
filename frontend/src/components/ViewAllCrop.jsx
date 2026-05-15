@@ -8,7 +8,6 @@ import Card from './common/Card';
 import { getCropImageBlob, normalizeCropPage } from '../api/cropApi';
 import statesAndDistricts from './statesAndDistricts';
 
-const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect fill="%23e7f4ee" width="360" height="220"/><text x="180" y="118" font-family="Arial" font-size="24" text-anchor="middle" fill="%232a6e55">Crop Image</text></svg>';
 const QUICK_FILTER_CHIPS = [
   { label: 'All', category: '', listingType: 'all' },
   { label: 'Vegetables', category: 'Vegetable', listingType: 'all' },
@@ -48,6 +47,15 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
       handleOpen();
     }
   };
+  const handleImageLoad = (event) => {
+    const img = event.currentTarget;
+    img.closest('.view-all-card__image-wrap')?.classList.toggle('landscape', img.naturalWidth > img.naturalHeight);
+  };
+  const handleImageError = (event) => {
+    const img = event.currentTarget;
+    img.closest('.view-all-card__image-wrap')?.classList.add('image-wrap--empty');
+    img.remove();
+  };
 
   return (
     <Card
@@ -59,12 +67,15 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
       aria-label={`View details for ${crop.cropName}`}
     >
       <div className="view-all-card__image-wrap">
-        <img
-          src={imageUrl || IMAGE_PLACEHOLDER}
-          alt={crop.cropName}
-          className="view-all-card__image"
-          onError={(event) => { event.currentTarget.src = IMAGE_PLACEHOLDER; }}
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={crop.cropName}
+            className="view-all-card__image"
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
+        ) : <span className="crop-image-empty">No image</span>}
         <span className="view-all-card__badge">{crop.cropType}</span>
       </div>
 
