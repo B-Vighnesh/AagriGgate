@@ -5115,7 +5115,7 @@ a {
 }
 
 .view-crop-card__image-wrap {
-  height: 200px;
+  height: 300px;
 }
 
 .view-crop-card__image-wrap img {
@@ -5438,7 +5438,7 @@ a {
 }
 
 .view-all-card__image-wrap {
-  height: 200px;
+  height: 300px;
   background: #eaf3e6;
   display: flex;
   align-items: center;
@@ -11529,6 +11529,9 @@ img {
 
 /* --- 6. 480px "large mobile" breakpoint (new) --- */
 @media (max-width: 480px) {
+  .view-crop-card__image-wrap{
+    height:180px;
+  }
   .hero {
     padding: 48px 0 40px;
   }
@@ -11632,7 +11635,7 @@ img {
   }
 
   .view-all-card__image-wrap {
-    height: 200px;
+    height: 180px;
   }
 
   /* Auth card: slightly wider on very small screens */
