@@ -114,6 +114,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             approachFarmer.setExpiredAt(null);
 
             approachFarmerRepository.save(approachFarmer);
+            publishNewApproachNotification(approachFarmer, LocalDateTime.now());
             logger.info("Approach created: {}", approachFarmer.getApproachId());
             return new ResponseEntity<>("Success", HttpStatus.OK);
         } catch (ResponseStatusException exception) {
@@ -182,6 +183,29 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
         event.setReference(new NotificationEventReference(NotificationReferenceType.REQUEST, approach.getApproachId()));
         event.setCreatedAt(createdAt);
         notificationService.publishEvent(event);
+    }
+
+    private void publishNewApproachNotification(ApproachFarmer approach, LocalDateTime createdAt) {
+        NotificationEvent event = new NotificationEvent();
+        event.setEventType("REQUEST_CREATED");
+        event.setCategoryName("REQUEST");
+        event.setSeverity(MessageSeverity.MEDIUM);
+        event.setTitle("New crop request");
+        event.setMessage(buildNewApproachNotificationMessage(approach));
+        event.setTarget(new NotificationEventTarget(NotificationTargetType.USER, String.valueOf(approach.getFarmerId())));
+        event.setReference(new NotificationEventReference(NotificationReferenceType.REQUEST, approach.getApproachId()));
+        event.setCreatedAt(createdAt);
+        notificationService.publishEvent(event);
+    }
+
+    private String buildNewApproachNotificationMessage(ApproachFarmer approach) {
+        String userName = approach.getUserName() == null || approach.getUserName().isBlank()
+                ? "A buyer"
+                : approach.getUserName();
+        String cropName = approach.getCropName() == null || approach.getCropName().isBlank()
+                ? "your crop"
+                : approach.getCropName();
+        return userName + " sent a request for " + cropName + ".";
     }
 
     private String buildApproachStatusNotificationMessage(ApproachFarmer approach, boolean accept) {
