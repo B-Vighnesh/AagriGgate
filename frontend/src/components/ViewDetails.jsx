@@ -13,8 +13,6 @@ import { addFavorite, addToCart, getFavoriteStatus, removeFavorite } from '../ap
 import { createOrGetChatConversation } from '../api/chatApi';
 import { normalizeCropResponse } from '../api/cropApi';
 
-const PLACEHOLDER = '/assets/default-crop.png';
-
 function DetailRow({ label, value }) {
   if (!value && value !== 0) return null;
   return (
@@ -261,9 +259,8 @@ export default function ViewDetails() {
   };
   const handleDetailImageError = (event) => {
     const img = event.currentTarget;
-    if (img.getAttribute('src') !== PLACEHOLDER) {
-      img.src = PLACEHOLDER;
-    }
+    img.closest('.view-crop__image-wrap')?.classList.add('image-wrap--empty');
+    img.remove();
   };
 
   const handleApproachButtonClick = () => {
@@ -321,12 +318,14 @@ export default function ViewDetails() {
                     <i className="fa-solid fa-chevron-left" />
           </button>
           <div className="view-crop__image-wrap">
-            <img
-              src={imageUrl || PLACEHOLDER}
-              alt={cropDetails.cropName}
-              onLoad={handleDetailImageLoad}
-              onError={handleDetailImageError}
-            />
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={cropDetails.cropName}
+                onLoad={handleDetailImageLoad}
+                onError={handleDetailImageError}
+              />
+            ) : <span className="crop-image-empty">No image</span>}
             <span className="view-all-card__badge">{cropDetails.cropType}</span>
           </div>
           </Card>

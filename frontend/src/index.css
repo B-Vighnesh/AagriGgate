@@ -5133,6 +5133,25 @@ a {
   object-fit: cover;
 }
 
+.crop-image-empty {
+  color: #2a6e55;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.image-wrap--empty {
+  background: #eaf3e6;
+}
+
+.image-wrap--empty::before {
+  content: "No image";
+  color: #2a6e55;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 .view-crop-card__body {
   padding: 12px;
 }

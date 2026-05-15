@@ -8,8 +8,6 @@ import { apiGet } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 import { getCropImageBlob, normalizeCropPage } from '../api/cropApi';
 
-const PLACEHOLDER = '/assets/default-crop.png';
-
 export default function ViewCrop() {
   const navigate = useNavigate();
   const farmerId = getFarmerId();
@@ -57,9 +55,8 @@ export default function ViewCrop() {
   };
   const handleCropImageError = (event) => {
     const img = event.currentTarget;
-    if (img.getAttribute('src') !== PLACEHOLDER) {
-      img.src = PLACEHOLDER;
-    }
+    img.closest('.view-crop-card__image-wrap')?.classList.add('image-wrap--empty');
+    img.remove();
   };
 
   useEffect(() => {
@@ -300,12 +297,14 @@ export default function ViewCrop() {
             {crops.map((crop) => (
               <Card key={crop.cropID} className={`view-crop-card view-crop-card--${getCardTone(crop)}`} onClick={() => navigate(`/view-details/${crop.cropID}`)}>
                 <div className="view-crop-card__image-wrap">
-                  <img
-                    src={images[crop.cropID] || PLACEHOLDER}
-                    alt={crop.cropName}
-                    onLoad={handleCropImageLoad}
-                    onError={handleCropImageError}
-                  />
+                  {images[crop.cropID] ? (
+                    <img
+                      src={images[crop.cropID]}
+                      alt={crop.cropName}
+                      onLoad={handleCropImageLoad}
+                      onError={handleCropImageError}
+                    />
+                  ) : <span className="crop-image-empty">No image</span>}
                   <span className="view-all-card__badge">{crop.cropType}</span>
                 </div>
                 <div className="view-crop-card__body">
