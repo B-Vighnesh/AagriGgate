@@ -13,7 +13,7 @@ import { addFavorite, addToCart, getFavoriteStatus, removeFavorite } from '../ap
 import { createOrGetChatConversation } from '../api/chatApi';
 import { normalizeCropResponse } from '../api/cropApi';
 
-const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect width="360" height="220" fill="%23d8f3dc"/><text x="50%" y="55%" text-anchor="middle" font-size="28" fill="%231f6f54">Crop</text></svg>';
+const PLACEHOLDER = '/assets/default-crop.png';
 
 function DetailRow({ label, value }) {
   if (!value && value !== 0) return null;
@@ -255,6 +255,16 @@ export default function ViewDetails() {
       setCartLoading(false);
     }
   };
+  const handleDetailImageLoad = (event) => {
+    const img = event.currentTarget;
+    img.closest('.view-crop__image-wrap')?.classList.toggle('landscape', img.naturalWidth > img.naturalHeight);
+  };
+  const handleDetailImageError = (event) => {
+    const img = event.currentTarget;
+    if (img.getAttribute('src') !== PLACEHOLDER) {
+      img.src = PLACEHOLDER;
+    }
+  };
 
   const handleApproachButtonClick = () => {
     if (['pending', 'accepted', 'active'].includes(normalizedApproachStatus)) {
@@ -310,7 +320,15 @@ export default function ViewDetails() {
                   >
                     <i className="fa-solid fa-chevron-left" />
           </button>
-          <img src={imageUrl || PLACEHOLDER} alt={cropDetails.cropName} onError={(event) => { event.currentTarget.src = PLACEHOLDER; }} />
+          <div className="view-crop__image-wrap">
+            <img
+              src={imageUrl || PLACEHOLDER}
+              alt={cropDetails.cropName}
+              onLoad={handleDetailImageLoad}
+              onError={handleDetailImageError}
+            />
+            <span className="view-all-card__badge">{cropDetails.cropType}</span>
+          </div>
           </Card>
 
           <Card className="view-details-info-card">

@@ -5100,15 +5100,37 @@ a {
   border-color: #dc6a6a;
 }
 
+.image-wrap,
+.view-all-card__image-wrap,
+.view-crop-card__image-wrap,
+.view-crop__image-wrap {
+  width: 100%;
+  background: #eaf3e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  line-height: 0;
+}
+
 .view-crop-card__image-wrap {
-  background: #f1f7f4;
+  height: 200px;
 }
 
 .view-crop-card__image-wrap img {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
   display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.view-crop-card__image-wrap.landscape img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .view-crop-card__body {
@@ -5397,19 +5419,29 @@ a {
 }
 
 .view-all-card__image-wrap {
-  position: relative;
-   height: auto;          /* ← remove fixed height */
-  background: #f1f7f4;
-  width: 100%;
+  height: 200px;
+  background: #eaf3e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  
+  position: relative;
+  line-height: 0;
 }
 
 .view-all-card__image {
-  width: 100%;
-  height: 400px;          /* ← let image decide its own height */
-  object-fit: contain;   /* ← shows full image, no crop */
   display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.view-all-card__image-wrap.landscape img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .view-all-card__badge {
@@ -8166,12 +8198,24 @@ a {
   gap: 12px;
 }
 
-.view-details-image-card img {
+.view-crop__image-wrap {
+  height: 340px;
+  border-radius: 12px;
+}
+
+.view-crop__image-wrap img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.view-crop__image-wrap.landscape img {
   width: 100%;
-  height: 95%;
-  min-height: 300px;
-  border-radius: 10px;
-  padding-top:10px;
+  height: 100%;
+  object-fit: cover;
 }
 
 .view-details-title-row {
@@ -10460,7 +10504,7 @@ a {
   }
 
   .view-all-card__image-wrap {
-    height: 220px;
+    height: 200px;
   }
 
   .view-all-card__body {
@@ -11569,7 +11613,7 @@ img {
   }
 
   .view-all-card__image-wrap {
-    height: 220px;
+    height: 200px;
   }
 
   /* Auth card: slightly wider on very small screens */

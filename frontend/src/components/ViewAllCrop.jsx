@@ -8,7 +8,7 @@ import Card from './common/Card';
 import { getCropImageBlob, normalizeCropPage } from '../api/cropApi';
 import statesAndDistricts from './statesAndDistricts';
 
-const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect fill="%23e7f4ee" width="360" height="220"/><text x="180" y="118" font-family="Arial" font-size="24" text-anchor="middle" fill="%232a6e55">Crop Image</text></svg>';
+const IMAGE_PLACEHOLDER = '/assets/default-crop.png';
 const QUICK_FILTER_CHIPS = [
   { label: 'All', category: '', listingType: 'all' },
   { label: 'Vegetables', category: 'Vegetable', listingType: 'all' },
@@ -48,6 +48,16 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
       handleOpen();
     }
   };
+  const handleImageLoad = (event) => {
+    const img = event.currentTarget;
+    img.closest('.view-all-card__image-wrap')?.classList.toggle('landscape', img.naturalWidth > img.naturalHeight);
+  };
+  const handleImageError = (event) => {
+    const img = event.currentTarget;
+    if (img.getAttribute('src') !== IMAGE_PLACEHOLDER) {
+      img.src = IMAGE_PLACEHOLDER;
+    }
+  };
 
   return (
     <Card
@@ -63,7 +73,8 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
           src={imageUrl || IMAGE_PLACEHOLDER}
           alt={crop.cropName}
           className="view-all-card__image"
-          onError={(event) => { event.currentTarget.src = IMAGE_PLACEHOLDER; }}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
         />
         <span className="view-all-card__badge">{crop.cropType}</span>
       </div>
