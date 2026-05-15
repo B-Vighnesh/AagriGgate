@@ -352,11 +352,11 @@ function getNewsDateLabel(item) {
 
 function FarmerQuickActions({ navigate }) {
   const actions = [
-    { label: 'Add crop', icon: 'fa-solid fa-plus',       path: '/add-crop' },
-    { label: 'My crops', icon: 'fa-solid fa-seedling',   path: '/view-crop' },
-    { label: 'Requests', icon: 'fa-regular fa-clock',    path: '/view-approach' },
-    { label: 'Mandi',    icon: 'fa-solid fa-chart-line', path: '/market' },
-  ];
+  { label: 'Add crop',     icon: 'fa-solid fa-plus',          path: '/add-crop' },
+  { label: 'Mandi Prices', icon: 'fa-solid fa-scale-balanced', path: '/market' },
+  { label: 'Weather',      icon: 'fa-solid fa-cloud-sun-rain', path: '/weather' },
+  { label: 'News',         icon: 'fa-solid fa-newspaper',      path: '/news' },
+];
   return (
     <section className="dashboard-section">
       <div className="dashboard-section__header">
