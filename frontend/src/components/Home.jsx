@@ -489,7 +489,7 @@ function LoggedInDashboard({ role, token, farmerId, navigate }) {
                   <p className="dashboard-crop-card__meta">
                     {crop.region || crop.cropType || 'Crop listing'}
                   </p>
-                  <p className="dashboard-crop-card__price">{formatPrice(crop.marketPrice)}</p>
+                  <p className="dashboard-crop-card__price">{formatPrice(crop.marketPrice)} <small>per {crop.unit || 'unit'}</small></p>
                   <p className="dashboard-crop-card__sub">Qty: {crop.quantity} {crop.unit}</p>
                 </button>
               )) : (
