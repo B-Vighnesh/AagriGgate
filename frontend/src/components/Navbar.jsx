@@ -107,7 +107,7 @@ function bottomNavItemsByRole(role) {
       {
         label: 'Mandi Prices',
         to: '/market',
-        icon: 'fa-solid fa-chart-line',
+        icon: 'fa-solid fa-scale-balanced',
         matchPrefixes: ['/market'],
       },
     ];
