@@ -8334,7 +8334,7 @@ a {
 }
 
 .view-details-grid {
-  display: grid;
+  display: flex;
   align-items: stretch;
   gap: 32px;
 }
@@ -9344,6 +9344,7 @@ a {
 
   .view-details-grid {
     grid-template-columns: 1fr;
+    display: grid;
   }
 
   .view-details-image-card .view-crop__image-wrap {
