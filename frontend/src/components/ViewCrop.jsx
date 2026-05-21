@@ -333,7 +333,8 @@ export default function ViewCrop() {
                         navigate(`/update-crop/${crop.cropID}`);
                       }}
                     >
-                      Update
+                      <i className="fa-solid fa-pen-to-square view-crop-card__action-icon" aria-hidden="true" />
+                      <span className="view-crop-card__action-text">Update</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -343,7 +344,8 @@ export default function ViewCrop() {
                         navigate(`/view-approaches/farmer/${farmerId}/crop/${crop.cropID}`);
                       }}
                     >
-                      Requests
+                      <i className="fa-solid fa-inbox view-crop-card__action-icon" aria-hidden="true" />
+                      <span className="view-crop-card__action-text">Requests</span>
                     </Button>
                     <Button
                       variant="ghost"
@@ -353,7 +355,8 @@ export default function ViewCrop() {
                         handleShare(crop);
                       }}
                     >
-                      Share
+                      <i className="fa-solid fa-share-nodes view-crop-card__action-icon" aria-hidden="true" />
+                      <span className="view-crop-card__action-text">Share</span>
                     </Button>
                   </div>
                 </div>

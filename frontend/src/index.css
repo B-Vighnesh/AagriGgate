@@ -5220,6 +5220,10 @@ a {
   margin-top: 4px;
 }
 
+.view-crop-card__action-icon {
+  display: none;
+}
+
 .view-crop-empty {
   text-align: center;
   color: var(--color-muted);
@@ -10305,6 +10309,10 @@ a {
     width: 100%;
   }
 
+  .view-crop-card__action-icon {
+    display: none;
+  }
+
   .view-crop-fab {
     position: fixed;
     right: 16px;
@@ -11814,6 +11822,32 @@ img {
   /* Profile menu: slightly wider */
   .profile-menu__panel {
     width: 200px;
+  }
+}
+
+@media (max-width: 500px) {
+  .view-crop-card__actions .ui-btn {
+    min-width: 42px;
+    min-height: 38px;
+    padding: 8px;
+  }
+
+  .view-crop-card__action-icon {
+    display: inline-block;
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  .view-crop-card__action-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 }
 
