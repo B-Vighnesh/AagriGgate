@@ -650,6 +650,15 @@ a {
   line-height: 1.4;
 }
 
+.dashboard-greeting--clickable {
+  cursor: pointer;
+}
+
+.dashboard-greeting--clickable:focus-visible {
+  outline: 3px solid rgba(159, 207, 175, 0.85);
+  outline-offset: 3px;
+}
+
 .dashboard-section {
   display: grid;
   gap: 10px;

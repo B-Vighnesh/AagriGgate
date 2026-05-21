@@ -449,7 +449,18 @@ function LoggedInDashboard({ role, token, farmerId, navigate }) {
       <div className="ag-container dashboard-home">
 
         {/* Greeting card */}
-        <Card className="dashboard-greeting">
+        <Card
+          className="dashboard-greeting dashboard-greeting--clickable"
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate('/account')}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              navigate('/account');
+            }
+          }}
+        >
           <p className="dashboard-greeting__sub">{getDayGreeting()}</p>
           <h1 className="dashboard-greeting__name">{displayName}</h1>
           <p className="dashboard-greeting__role">
