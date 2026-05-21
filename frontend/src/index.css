@@ -9388,7 +9388,7 @@ a {
   .user-requests-page,
   .ntf-detail-page,
   .ntf-page {
-    padding-bottom: calc(94px + env(safe-area-inset-bottom, 0px));
+    /* padding-bottom: calc(94px + env(safe-area-inset-bottom, 0px)); */
   }
 
   .account-page .ag-container,
@@ -11825,7 +11825,7 @@ img {
   }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 700px) {
   .view-crop-card__actions .ui-btn {
     min-width: 42px;
     min-height: 38px;
