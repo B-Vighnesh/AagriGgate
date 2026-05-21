@@ -5158,6 +5158,7 @@ a {
   padding: 14px 16px;
   display: grid;
   min-width: 0;
+  height:100%;
 }
 
 .view-crop-card__top {
