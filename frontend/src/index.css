@@ -5505,7 +5505,7 @@ a {
   }
 
   .view-all-card__image-wrap.landscape img {
-    object-fit: cover;
+    /* object-fit: cover; */
   }
 
   .view-all-card__body {
