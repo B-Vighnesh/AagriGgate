@@ -11571,7 +11571,10 @@ img {
     width: 140px;
     height: 186.6px; /* maintains 230.8 / 307.74 ratio */
   }
-
+.view-crop-card__image-wrap {
+    width: 140px;
+    height: 100%; /* maintains 230.8 / 307.74 ratio */
+  }
   .buyer-tools-card {
     grid-template-columns: 140px minmax(0, 1fr);
   }
