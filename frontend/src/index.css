@@ -8337,7 +8337,7 @@ a {
   display: grid;
   grid-template-columns: 1fr;
   align-items: start;
-  gap: 18px;
+  gap: 12px;
 }
 
 /* In the detail page, the image wrap should fill the card width (not the 230.8px card-list constraint) */
@@ -8353,11 +8353,11 @@ a {
   width: 100%;
 }
 
-@media (min-width: 581px) {
+@media (min-width: 501px) {
   .view-details-grid {
     display: flex;
     align-items: flex-start;
-    gap: 32px;
+    gap: 10px;
   }
 
   .view-details-image-card {
@@ -8365,7 +8365,6 @@ a {
     flex: 0 0 45%;
     position: sticky;
     top: 88px;
-    height: calc(100vh - 112px);
   }
 
   .view-details-info-card {
@@ -8375,12 +8374,12 @@ a {
   }
 
   .view-details-image-card .view-crop__image-wrap {
-    height: 100%;
-    min-height: 0;
+    height: min(68vh, 620px);
+    min-height: 460px;
   }
 }
 
-@media (max-width: 580px) {
+@media (max-width: 900px) {
   .view-details-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -8393,7 +8392,7 @@ a {
   }
 }
 
-@media (max-width: 580px) {
+@media (max-width: 500px) {
   .view-details-image-card .view-crop__image-wrap {
     height: 320px;
   }
@@ -9392,6 +9391,21 @@ a {
 
   .settings-grid {
     grid-template-columns: 1fr;
+  }
+
+  .view-details-grid {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .view-details-image-card,
+  .view-details-info-card {
+    width: 100%;
+    position: static;
+  }
+
+  .view-details-image-card .view-crop__image-wrap {
+    height: clamp(320px, 52vw, 400px);
   }
 
   .approach-crop-card {
