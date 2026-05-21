@@ -8365,6 +8365,7 @@ a {
     flex: 0 0 45%;
     position: sticky;
     top: 88px;
+    height: calc(100vh - 112px);
   }
 
   .view-details-info-card {
@@ -8374,8 +8375,8 @@ a {
   }
 
   .view-details-image-card .view-crop__image-wrap {
-    height: min(68vh, 620px);
-    min-height: 460px;
+    height: 100%;
+    min-height: 0;
   }
 }
 
