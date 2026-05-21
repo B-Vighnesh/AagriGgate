@@ -133,13 +133,14 @@ export default function Account() {
     ? [
       { label: 'Add Crop', to: '/add-crop', note: 'Create a fresh listing', icon: 'fa-seedling' },
       { label: 'My Crops', to: '/view-crop', note: 'Manage inventory', icon: 'fa-list' },
-      { label: 'Market', to: '/market', note: 'Mandi prices & insights', icon: 'fa-chart-simple' },
+      { label: 'Mandi Prices', to: '/market', note: 'Mandi prices & insights', icon: 'fa-chart-simple' },
       { label: 'Requests', to: '/view-approach', note: 'Incoming buyer interest', icon: 'fa-message' },
       { label: 'Weather', to: '/weather', note: 'Local conditions', icon: 'fa-cloud-sun' },
       { label: 'Support', to: '/enquiry', note: 'Get assistance', icon: 'fa-circle-question' },
     ]
     : [
       { label: 'Browse Crops', to: '/view-all-crops', note: 'Explore fresh listings', icon: 'fa-basket-shopping' },
+      { label: 'Mandi Prices', to: '/market', note: 'Mandi prices & insights', icon: 'fa-chart-simple' },
       { label: 'My Requests', to: '/view-approaches-user', note: 'Track active requests', icon: 'fa-message' },
       { label: 'Support', to: '/enquiry', note: 'Get assistance', icon: 'fa-circle-question' },
     ];
