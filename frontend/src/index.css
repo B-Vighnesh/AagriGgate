@@ -5493,9 +5493,42 @@ a {
 }
 
 @media (min-width: 481px) {
+  .view-all-card {
+    height: 230px;
+    grid-template-columns: 230px minmax(0, 1fr);
+  }
+
+  .view-all-card__image-wrap {
+    width: 230px;
+    height: 100%;
+    align-self: stretch;
+  }
+
+  .view-all-card__image-wrap.landscape img {
+    object-fit: cover;
+  }
+
   .view-all-card__body {
-    align-content: start;
-    grid-auto-rows: max-content;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 14px 16px;
+  }
+
+  .view-all-card__meta {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .view-all-card__price-row {
+    margin-top: 2px;
+  }
+
+  .view-all-card__end {
+    margin-top: auto;
   }
 }
 
