@@ -105,7 +105,7 @@ function bottomNavItemsByRole(role) {
         matchPrefixes: ['/news'],
       },
       {
-        label: 'Mandi',
+        label: 'Mandi Prices',
         to: '/market',
         icon: 'fa-solid fa-chart-line',
         matchPrefixes: ['/market'],
