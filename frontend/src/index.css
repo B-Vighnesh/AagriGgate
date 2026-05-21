@@ -8220,13 +8220,35 @@ a {
 }
 
 .view-details-grid {
-  grid-template-columns: 1fr 1.1fr;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  align-items: stretch;
+  gap: 32px;
+}
+
+/* In the detail page, the image wrap should fill the card width (not the 230.8px card-list constraint) */
+.view-details-image-card {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Back button sits in a small padded row above the image */
+.view-details-image-card .chat-back-btn {
+  margin: 12px 12px 8px;
+  flex-shrink: 0;
+}
+
+.view-details-image-card .view-crop__image-wrap {
+  width: 100%;
+  flex: 1;
+  height: 520px;
+  border-radius: 0;
 }
 
 .view-crop__image-wrap {
-  height: 307.74px;
-  border-radius: 12px;
+  border-radius: 0 0 12px 12px;
 }
 
 .view-crop__image-wrap img {
@@ -9209,6 +9231,10 @@ a {
 
   .view-details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .view-details-image-card .view-crop__image-wrap {
+    height: 400px;
   }
 
   .approach-crop-card {
