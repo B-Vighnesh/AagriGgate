@@ -306,9 +306,7 @@ export default function ViewDetails() {
         {infoAlert ? <p className="view-details-alert">{infoAlert}</p> : null}
 
         <div className="view-details-grid">
-          
-          <Card className="view-details-image-card">
-            <button
+          <button
                     type="button"
                     className="chat-back-btn"
                     onClick={() => navigate(-1)}
@@ -317,6 +315,8 @@ export default function ViewDetails() {
                   >
                     <i className="fa-solid fa-chevron-left" />
           </button>
+          <Card className="view-details-image-card">
+            
           <div className="view-crop__image-wrap">
             {imageUrl ? (
               <img

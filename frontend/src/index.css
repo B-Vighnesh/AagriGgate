@@ -5492,6 +5492,13 @@ a {
   min-width: 0;
 }
 
+@media (min-width: 481px) {
+  .view-all-card__body {
+    align-content: start;
+    grid-auto-rows: max-content;
+  }
+}
+
 .view-all-card__body h3 {
   margin: 0;
   color: var(--color-primary-dark);
