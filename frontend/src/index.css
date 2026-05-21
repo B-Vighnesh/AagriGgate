@@ -8353,7 +8353,7 @@ a {
   width: 100%;
 }
 
-@media (min-width: 701px) {
+@media (min-width: 581px) {
   .view-details-grid {
     display: flex;
     align-items: flex-start;
@@ -8380,7 +8380,7 @@ a {
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 580px) {
   .view-details-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -8393,7 +8393,7 @@ a {
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 580px) {
   .view-details-image-card .view-crop__image-wrap {
     height: 320px;
   }
