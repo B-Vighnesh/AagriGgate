@@ -5581,7 +5581,6 @@ a {
 
   .view-all-card__body {
     height: 100%;
-    display: flex;
     flex-direction: column;
     gap: 7px;
     padding: 14px 16px;
