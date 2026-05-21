@@ -5158,7 +5158,41 @@ a {
   padding: 14px 16px;
   display: grid;
   min-width: 0;
-  height:100%;
+}
+
+@media (min-width: 481px) {
+  .view-crop-card {
+    height: 270px;
+    grid-template-columns: 230px minmax(0, 1fr);
+  }
+
+  .view-crop-card__image-wrap {
+    width: 230px;
+    height: 100%;
+    align-self: stretch;
+  }
+
+  .view-crop-card__body {
+    height: 100%;
+    flex-direction: column;
+    gap: 7px;
+    padding: 14px 16px;
+  }
+
+  .view-crop-card .region {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .view-crop-card .qty {
+    margin-top: auto;
+  }
+
+  .view-crop-card__actions {
+    margin-top: 0;
+  }
 }
 
 .view-crop-card__top {
