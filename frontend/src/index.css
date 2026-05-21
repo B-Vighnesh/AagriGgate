@@ -5224,6 +5224,43 @@ a {
   display: none;
 }
 
+.view-crop-card__actions .ui-btn,
+.view-crop-fab {
+  position: relative;
+}
+
+.view-crop-card__actions .ui-btn[data-tooltip]::after,
+.view-crop-fab[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(4px);
+  width: max-content;
+  max-width: 220px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: rgba(18, 62, 49, 0.96);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 80;
+}
+
+.view-crop-card__actions .ui-btn[data-tooltip]:hover::after,
+.view-crop-card__actions .ui-btn[data-tooltip]:focus-visible::after,
+.view-crop-fab[data-tooltip]:hover::after,
+.view-crop-fab[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .view-crop-empty {
   text-align: center;
   color: var(--color-muted);

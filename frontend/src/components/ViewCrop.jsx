@@ -328,6 +328,9 @@ export default function ViewCrop() {
                     <Button
                       variant="outline"
                       size="sm"
+                      aria-label="Edit crop"
+                      data-tooltip="Edit crop"
+                      title="Edit crop"
                       onClick={(event) => {
                         event.stopPropagation();
                         navigate(`/update-crop/${crop.cropID}`);
@@ -339,6 +342,9 @@ export default function ViewCrop() {
                     <Button
                       variant="outline"
                       size="sm"
+                      aria-label="View requests for this crop"
+                      data-tooltip="View requests for this crop"
+                      title="View requests for this crop"
                       onClick={(event) => {
                         event.stopPropagation();
                         navigate(`/view-approaches/farmer/${farmerId}/crop/${crop.cropID}`);
@@ -350,6 +356,9 @@ export default function ViewCrop() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      aria-label="Share crop"
+                      data-tooltip="Share crop"
+                      title="Share crop"
                       onClick={(event) => {
                         event.stopPropagation();
                         handleShare(crop);
@@ -380,7 +389,7 @@ export default function ViewCrop() {
           </>
         )}
       </div>
-      <Link to="/add-crop" className="view-crop-fab" aria-label="Add crop">
+      <Link to="/add-crop" className="view-crop-fab" aria-label="Add crop" data-tooltip="Add crop" title="Add crop">
         <i className="fa-solid fa-plus" aria-hidden="true" />
       </Link>
       {toast.message ? <Toast message={toast.message} type={toast.type} /> : null}
