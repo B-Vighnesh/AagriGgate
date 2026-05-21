@@ -333,7 +333,6 @@ export default function ViewDetails() {
           <Card className="view-details-info-card">
             <div className="view-details-title-row">
               <h1>{cropDetails.cropName}</h1>
-              <span>{cropDetails.cropType}</span>
             </div>
 
             <DetailRow label="Farmer" value={cropDetails.farmerName} />

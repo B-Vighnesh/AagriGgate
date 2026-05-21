@@ -310,7 +310,6 @@ export default function ViewCrop() {
                 <div className="view-crop-card__body">
                   <div className="view-crop-card__top">
                     <h3>{crop.cropName}</h3>
-                    <span>{crop.cropType}</span>
                   
                     {crop.status ? <span className={`crop-flag crop-flag--${crop.status.toLowerCase()}`}>{crop.status}</span> : null}
                     {crop.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}

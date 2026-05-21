@@ -5087,8 +5087,7 @@ a {
   border-width: 1px;
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(92px, 17%) minmax(0, 1fr);
-  min-height: 118px;
+  grid-template-columns: 230.8px minmax(0, 1fr);
 }
 
 .view-crop-card--normal {
@@ -5107,7 +5106,9 @@ a {
 .view-all-card__image-wrap,
 .view-crop-card__image-wrap,
 .view-crop__image-wrap {
-  width: 100%;
+  width: 230.8px;
+  height: 307.74px;
+  flex-shrink: 0;
   background: #eaf3e6;
   display: flex;
   align-items: center;
@@ -5117,25 +5118,21 @@ a {
   line-height: 0;
 }
 
-.view-crop-card__image-wrap {
-  height: 100%;
-  min-height: 118px;
-  align-self: stretch;
-}
+/* .view-crop-card__image-wrap — dimensions set by shared rule above */
 
 .view-crop-card__image-wrap img {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
 }
 
 .view-crop-card__image-wrap.landscape img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center center;
 }
 
 .crop-image-empty {
@@ -5411,11 +5408,9 @@ a {
   padding: 0;
   overflow: hidden;
   border-width: 1px;
-  min-height: 118px;
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(92px, 17%) minmax(0, 1fr);
-  
+  grid-template-columns: 230.8px minmax(0, 1fr);
 }
 @media (min-width: 1440px) {
     .view-all-card {
@@ -5450,32 +5445,21 @@ a {
   outline-offset: 3px;
 }
 
-.view-all-card__image-wrap {
-  height: 100%;
-  min-height: 118px;
-  align-self: stretch;
-  background: #eaf3e6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  position: relative;
-  line-height: 0;
-}
+/* .view-all-card__image-wrap — dimensions set by shared rule above */
 
 .view-all-card__image {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
 }
 
 .view-all-card__image-wrap.landscape img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center center;
 }
 
 .view-all-card__badge {
@@ -5483,12 +5467,18 @@ a {
   top: 10px;
   left: 10px;
   right: auto;
-  border-radius: 999px;
-  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border-radius: 8px;
+  border: 1px solid #b5e3cc;
+  padding: 3px 8px;
   background: #daf2e8;
   color: #247757;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 700;
+  line-height: 1;
+  text-transform: capitalize;
 }
 
 .view-all-card__body {
@@ -8230,28 +8220,50 @@ a {
 }
 
 .view-details-grid {
-  grid-template-columns: 1fr 1.1fr;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  align-items: stretch;
+  gap: 32px;
+}
+
+/* In the detail page, the image wrap should fill the card width (not the 230.8px card-list constraint) */
+.view-details-image-card {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Back button sits in a small padded row above the image */
+.view-details-image-card .chat-back-btn {
+  margin: 12px 12px 8px;
+  flex-shrink: 0;
+}
+
+.view-details-image-card .view-crop__image-wrap {
+  width: 100%;
+  flex: 1;
+  height: 520px;
+  border-radius: 0;
 }
 
 .view-crop__image-wrap {
-  height: 340px;
-  border-radius: 12px;
+  border-radius: 0 0 12px 12px;
 }
 
 .view-crop__image-wrap img {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
 }
 
 .view-crop__image-wrap.landscape img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center center;
 }
 
 .view-details-title-row {
@@ -8419,7 +8431,7 @@ a {
 .buyer-tools-card {
   border-width: 2px;
   display: grid;
-  grid-template-columns: 190px 1fr;
+  grid-template-columns: 230.8px minmax(0, 1fr);
   gap: 0;
   overflow: hidden;
 }
@@ -8452,15 +8464,19 @@ a {
 }
 
 .buyer-tools-card__image-wrap {
+  width: 230.8px;
+  height: 307.74px;
+  flex-shrink: 0;
   background: #f1f7f4;
-  min-height: 100%;
+  overflow: hidden;
+  position: relative;
 }
 
 .buyer-tools-card__image {
   width: 100%;
   height: 100%;
-  min-height: 220px;
   object-fit: cover;
+  object-position: center center;
   display: block;
 }
 
@@ -9215,6 +9231,10 @@ a {
 
   .view-details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .view-details-image-card .view-crop__image-wrap {
+    height: 400px;
   }
 
   .approach-crop-card {
@@ -10535,14 +10555,7 @@ a {
     padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   }
 
-  .view-all-card {
-    min-height: 118px;
-  }
-
-  .view-all-card__image-wrap {
-    height: 100%;
-    min-height: 118px;
-  }
+  /* .view-all-card and .view-all-card__image-wrap — portrait height governed by shared rule */
 
   .view-all-card__body {
   }
@@ -11547,9 +11560,25 @@ img {
 
 /* --- 6. 480px "large mobile" breakpoint (new) --- */
 @media (max-width: 480px) {
-  .view-crop-card__image-wrap{
-    height: 100%;
-    min-height: 118px;
+  /* Portrait image dimensions for crop cards — scale down on very small screens */
+  .view-all-card,
+  .view-crop-card {
+    grid-template-columns: 140px minmax(0, 1fr);
+  }
+
+  .view-all-card__image-wrap,
+  .view-crop-card__image-wrap {
+    width: 140px;
+    height: 186.6px; /* maintains 230.8 / 307.74 ratio */
+  }
+
+  .buyer-tools-card {
+    grid-template-columns: 140px minmax(0, 1fr);
+  }
+
+  .buyer-tools-card__image-wrap {
+    width: 140px;
+    height: 186.6px;
   }
   .hero {
     padding: 48px 0 40px;
@@ -11653,10 +11682,7 @@ img {
     grid-template-columns: 1fr;
   }
 
-  .view-all-card__image-wrap {
-    height: 100%;
-    min-height: 118px;
-  }
+  /* .view-all-card__image-wrap — portrait size already set in 480px block above */
 
   /* Auth card: slightly wider on very small screens */
   .auth-card,
