@@ -62,7 +62,7 @@ function PriceCard({ item, isSaved, deleteId, onSave, onDelete, canSave = true }
     <Card className="market-price-card">
       <div className="market-price-card__head">
         <h3>{item.Commodity || 'Commodity'}</h3>
-        {item.Grade ? <span className="market-chip">{item.Grade}</span> : null}
+        {/* {item.Grade ? <span className="market-chip">{item.Grade}</span> : null} */}
       </div>
 
       <div className="market-price-card__meta">
