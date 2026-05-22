@@ -89,6 +89,95 @@ function PriceCard({ item, isSaved, deleteId, onSave, onDelete, canSave = true }
   );
 }
 
+function MarketViewToggle({ value, onChange, label, count }) {
+  return (
+    <div className="market-view-bar">
+      <div>
+        <p>{label}</p>
+        <span>{count} {count === 1 ? 'record' : 'records'}</span>
+      </div>
+      <div className="market-view-toggle" aria-label="Market result view">
+        <button
+          type="button"
+          className={value === 'table' ? 'is-active' : ''}
+          onClick={() => onChange('table')}
+          aria-pressed={value === 'table'}
+        >
+          Table view
+        </button>
+        <button
+          type="button"
+          className={value === 'card' ? 'is-active' : ''}
+          onClick={() => onChange('card')}
+          aria-pressed={value === 'card'}
+        >
+          Card view
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MarketPriceTable({ items, savedMarketIds, savedMarketLookup, onSave, onDelete, canSave = true, savedMode = false }) {
+  return (
+    <div className="market-table-wrap">
+      <table className="market-table">
+        <thead>
+          <tr>
+            <th>Market</th>
+            <th>Variety</th>
+            <th>Grade</th>
+            <th>Min Price</th>
+            <th>Modal Price</th>
+            <th>Max Price</th>
+            <th>Date</th>
+            {canSave ? <th aria-label="Actions" /> : null}
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item, index) => {
+            const marketId = String(item.id);
+            const isSaved = savedMode || savedMarketIds?.has(marketId);
+            const deleteId = savedMode ? item.id : savedMarketLookup?.[marketId];
+
+            return (
+              <tr key={`${item.id || marketRecordKey(item)}-${index}`}>
+                <td data-label="Market">
+                  <strong>{item.Market || 'N/A'}</strong>
+                  <span>{item.District || 'N/A'}, {item.State || 'N/A'}</span>
+                </td>
+                <td data-label="Variety">{item.Variety || item.Commodity || 'N/A'}</td>
+                <td data-label="Grade">
+                  <span className="market-grade-pill">{item.Grade || 'N/A'}</span>
+                </td>
+                <td data-label="Min Price" className="market-table__price market-table__price--low">
+                  {fmtPrice(item.Min_Price)}
+                </td>
+                <td data-label="Modal Price" className="market-table__price market-table__price--mid">
+                  {fmtPrice(item.Modal_Price)}
+                </td>
+                <td data-label="Max Price" className="market-table__price market-table__price--high">
+                  {fmtPrice(item.Max_Price)}
+                </td>
+                <td data-label="Date">{item.Arrival_Date || 'N/A'}</td>
+                {canSave ? (
+                  <td className="market-table__action">
+                    {!isSaved ? (
+                      <Button variant="outline" size="sm" onClick={() => onSave(item)}>Save</Button>
+                    ) : (
+                      <Button variant="danger" size="sm" onClick={() => onDelete(deleteId, 1)}>Remove</Button>
+                    )}
+                  </td>
+                ) : null}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function Market() {
   const navigate = useNavigate();
   const token = getToken();
@@ -122,6 +211,8 @@ export default function Market() {
   const [savedPage, setSavedPage] = useState(0);
   const [hasMoreSavedData, setHasMoreSavedData] = useState(false);
   const [savedMarketLookup, setSavedMarketLookup] = useState({});
+  const [marketView, setMarketView] = useState('card');
+  const [savedView, setSavedView] = useState('card');
 
   const [filterCommodity, setFilterCommodity] = useState('');
   const [filterState, setFilterState] = useState('');
@@ -619,19 +710,36 @@ export default function Market() {
 
             {!loading && marketData.length > 0 && (
               <>
-                <div className="market-grid">
-                  {marketData.map((item, index) => (
-                    <PriceCard
-                      key={`${marketRecordKey(item)}-${index}`}
-                      item={item}
-                      isSaved={savedMarketIds.has(String(item.id))}
-                      deleteId={savedMarketLookup[String(item.id)]}
-                      onSave={handleSave}
-                      onDelete={handleDelete}
-                      canSave={canUseSavedMarket}
-                    />
-                  ))}
-                </div>
+                <MarketViewToggle
+                  value={marketView}
+                  onChange={setMarketView}
+                  label="All Markets"
+                  count={marketData.length}
+                />
+                {marketView === 'table' ? (
+                  <MarketPriceTable
+                    items={marketData}
+                    savedMarketIds={savedMarketIds}
+                    savedMarketLookup={savedMarketLookup}
+                    onSave={handleSave}
+                    onDelete={handleDelete}
+                    canSave={canUseSavedMarket}
+                  />
+                ) : (
+                  <div className="market-grid">
+                    {marketData.map((item, index) => (
+                      <PriceCard
+                        key={`${marketRecordKey(item)}-${index}`}
+                        item={item}
+                        isSaved={savedMarketIds.has(String(item.id))}
+                        deleteId={savedMarketLookup[String(item.id)]}
+                        onSave={handleSave}
+                        onDelete={handleDelete}
+                        canSave={canUseSavedMarket}
+                      />
+                    ))}
+                  </div>
+                )}
                 {hasMoreMarketData && <div ref={loadMoreRef} style={{ height: '1px' }} />}
                 {loadingMore && (
                   <div className="market-loading">
@@ -723,11 +831,27 @@ export default function Market() {
 
             {!loadingSaved && filteredSavedData.length > 0 ? (
               <>
-                <div className="market-grid">
-                  {filteredSavedData.map((item, index) => (
-                    <PriceCard key={`${item.id || marketRecordKey(item)}-${index}`} item={item} isSaved deleteId={item.id} onDelete={handleDelete} />
-                  ))}
-                </div>
+                <MarketViewToggle
+                  value={savedView}
+                  onChange={setSavedView}
+                  label="Saved Markets"
+                  count={filteredSavedData.length}
+                />
+                {savedView === 'table' ? (
+                  <MarketPriceTable
+                    items={filteredSavedData}
+                    savedMarketIds={savedMarketIds}
+                    savedMarketLookup={savedMarketLookup}
+                    onDelete={handleDelete}
+                    savedMode
+                  />
+                ) : (
+                  <div className="market-grid">
+                    {filteredSavedData.map((item, index) => (
+                      <PriceCard key={`${item.id || marketRecordKey(item)}-${index}`} item={item} isSaved deleteId={item.id} onDelete={handleDelete} />
+                    ))}
+                  </div>
+                )}
                 {hasMoreSavedData && <div ref={loadMoreSavedRef} style={{ height: '1px' }} />}
                 {loadingMoreSaved && (
                   <div className="market-loading">
