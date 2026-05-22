@@ -18,6 +18,12 @@ import statesAndDistricts from './statesAndDistricts';
 
 const MAX_RANGE_DAYS = 7;
 const PAGE_SIZE = 20;
+const MOBILE_VIEW_QUERY = '(max-width: 700px)';
+
+function getDefaultMarketView() {
+  if (typeof window === 'undefined') return 'table';
+  return window.matchMedia(MOBILE_VIEW_QUERY).matches ? 'card' : 'table';
+}
 
 function fmtPrice(value) {
   if (value === null || value === undefined || value === '') return '-';
@@ -211,8 +217,8 @@ export default function Market() {
   const [savedPage, setSavedPage] = useState(0);
   const [hasMoreSavedData, setHasMoreSavedData] = useState(false);
   const [savedMarketLookup, setSavedMarketLookup] = useState({});
-  const [marketView, setMarketView] = useState('card');
-  const [savedView, setSavedView] = useState('card');
+  const [marketView, setMarketView] = useState(getDefaultMarketView);
+  const [savedView, setSavedView] = useState(getDefaultMarketView);
 
   const [filterCommodity, setFilterCommodity] = useState('');
   const [filterState, setFilterState] = useState('');
@@ -421,6 +427,19 @@ export default function Market() {
       clearTimeout(autoFetchTimerRef.current);
       clearTimeout(toastTimerRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(MOBILE_VIEW_QUERY);
+    const handleViewChange = (event) => {
+      const nextView = event.matches ? 'card' : 'table';
+      setMarketView(nextView);
+      setSavedView(nextView);
+    };
+
+    handleViewChange(mediaQuery);
+    mediaQuery.addEventListener('change', handleViewChange);
+    return () => mediaQuery.removeEventListener('change', handleViewChange);
   }, []);
 
   useEffect(() => {
