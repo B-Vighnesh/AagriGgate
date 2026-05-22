@@ -324,6 +324,7 @@ export default function Market() {
     const rangeDays = diffInDays(fromDate, toDate);
     if (rangeDays > MAX_RANGE_DAYS - 1) {
       queryToDate = addDays(queryFromDate, MAX_RANGE_DAYS - 1);
+      setToDate(queryToDate);
       const message = 'Date range is limited to 7 days from the start date. Showing the first allowed 7-day window.';
       setError(message);
       showToast(message, 'info', 10000);
