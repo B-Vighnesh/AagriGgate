@@ -204,7 +204,7 @@ export default function Weather() {
                   </div>
                   <div className="weather-hero__copy">
                     <span className="weather-kicker">Farmer District Forecast</span>
-                    <h2>{location?.name || '-'}, {location?.region || '-'}</h2>
+                    <h2>{location?.region || '-'}</h2>
                     <p>{current?.condition?.text || '-'} with {formatValue(current?.cloud, '%')} cloud cover</p>
                   </div>
                 </div>
