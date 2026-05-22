@@ -4085,7 +4085,7 @@ a {
 
 .market-price-card {
   display: grid;
-  gap: 10px;
+  gap: 15px;
 }
 
 .market-price-card__head {
@@ -4112,7 +4112,7 @@ a {
 
 .market-price-card__meta {
   display: grid;
-  gap: 4px;
+  gap: 12px;
 }
 
 .market-price-card__meta p {
