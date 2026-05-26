@@ -232,7 +232,6 @@ function UserGuide({ isOpen, onClose }) {
   }, [query]);
 
   const visibleCardCount = visibleSections.reduce((total, section) => total + section.cards.length, 0);
-
   const handleFeedback = () => {};
 
   if (!isOpen) return null;
@@ -248,7 +247,11 @@ function UserGuide({ isOpen, onClose }) {
 
       <aside className="user-guide__drawer" role="dialog" aria-modal="true" aria-labelledby="user-guide-title">
         <header className="user-guide__header">
-          
+          <div>
+            <p className="user-guide__kicker">Validated app guide</p>
+            <h2 id="user-guide-title">User Guide</h2>
+            <p className="user-guide__subtitle">Step-by-step help for farmers, buyers, privacy, market tools, and support.</p>
+          </div>
           <button type="button" className="user-guide__close" aria-label="Close user guide" onClick={onClose}>
             <X size={22} aria-hidden="true" />
           </button>
@@ -282,6 +285,19 @@ function UserGuide({ isOpen, onClose }) {
             }}
             placeholder="Search guide..."
           />
+          {query ? (
+            <button
+              type="button"
+              className="user-guide__search-clear"
+              aria-label="Clear guide search"
+              onClick={() => {
+                setQuery('');
+                setOpenCardId(null);
+              }}
+            >
+              <X size={15} aria-hidden="true" />
+            </button>
+          ) : null}
         </label>
 
         <div className="user-guide__content">
