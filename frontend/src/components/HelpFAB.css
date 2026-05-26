@@ -16,75 +16,63 @@
   cursor: pointer;
 }
 
-.help-fab__tooltip {
-  position: absolute;
-  right: 0;
-  bottom: 106px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  color: #0f172a;
-  background: #fff;
-  font-size: 0.88rem;
-  font-weight: 800;
-  line-height: 1;
-  white-space: nowrap;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(8px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.help-fab:hover:not(.help-fab--open) .help-fab__tooltip,
-.help-fab:focus-within:not(.help-fab--open) .help-fab__tooltip {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 .help-fab__button {
   position: relative;
-  width: 132px;
-  height: 96px;
-  color: #050505;
-  background: transparent;
-  filter: drop-shadow(0 12px 22px rgba(15, 23, 42, 0.16));
+  width: 54px;
+  height: 54px;
+  border: 1px solid rgba(18, 62, 49, 0.2);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #123e31;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
   transition:
-    filter 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
     transform 0.2s ease;
 }
 
 .help-fab__button:hover {
-  filter: drop-shadow(0 16px 28px rgba(15, 23, 42, 0.22));
+  color: #0f8b5f;
+  background: #e7f5ee;
+  border-color: #b5d7c7;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22);
   transform: translateY(-1px);
 }
 
-.help-fab__label {
-  position: absolute;
-  top: 0;
-  right: 0;
-  min-width: 120px;
-  height: 58px;
-  border: 6px solid currentColor;
-  border-radius: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #050505;
-  background: #fff;
-  font-size: 32px;
-  font-weight: 950;
+.help-fab__button i {
+  font-size: 1.45rem;
   line-height: 1;
-  letter-spacing: 0;
 }
 
-.help-fab__hand {
+.help-fab__button::after {
+  content: attr(data-tooltip);
   position: absolute;
-  right: 36px;
-  bottom: 0;
-  color: #050505;
-  fill: #fff;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(4px);
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(18, 62, 49, 0.95);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 1;
+}
+
+.help-fab__button:hover::after,
+.help-fab__button:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .help-fab__button:focus-visible,
@@ -96,7 +84,7 @@
 .help-fab__menu {
   position: absolute;
   right: 0;
-  bottom: 106px;
+  bottom: 66px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -156,29 +144,11 @@
   }
 
   .help-fab__button {
-    width: 108px;
-    height: 80px;
-  }
-
-  .help-fab__label {
-    min-width: 96px;
-    height: 48px;
-    border-width: 5px;
-    border-radius: 20px;
-    font-size: 25px;
-  }
-
-  .help-fab__hand {
-    right: 28px;
-    width: 46px;
-    height: 46px;
+    width: 52px;
+    height: 52px;
   }
 
   .help-fab__menu {
-    bottom: 88px;
-  }
-
-  .help-fab__tooltip {
-    bottom: 88px;
+    bottom: 64px;
   }
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BookOpen, MessageCircle, Pointer } from 'lucide-react';
+import { BookOpen, MessageCircle } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import './HelpFAB.css';
 
@@ -45,8 +45,6 @@ function HelpFAB({ onChatClick, onGuideClick }) {
       ref={fabRef}
       className={`help-fab ${isOpen ? 'help-fab--open' : ''}`}
     >
-      <span className="help-fab__tooltip" role="status">Assistance</span>
-
       <div className="help-fab__menu" aria-hidden={!isOpen}>
         <button
           type="button"
@@ -72,10 +70,10 @@ function HelpFAB({ onChatClick, onGuideClick }) {
         className="help-fab__button"
         aria-label="Open help menu"
         aria-expanded={isOpen}
+        data-tooltip="Assistance"
         onClick={() => setIsOpen((open) => !open)}
       >
-        <span className="help-fab__label">HELP</span>
-        <Pointer className="help-fab__hand" size={54} strokeWidth={2.7} aria-hidden="true" />
+        <i className="fa-solid fa-headset" aria-hidden="true" />
       </button>
     </div>
   );
