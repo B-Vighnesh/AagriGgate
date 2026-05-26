@@ -1,9 +1,37 @@
-import React, { useState } from 'react';
-import { BookOpen, HelpCircle, MessageCircle, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { BookOpen, MessageCircle, Pointer } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import './HelpFAB.css';
 
 function HelpFAB({ onChatClick, onGuideClick }) {
   const [isOpen, setIsOpen] = useState(false);
+  const fabRef = useRef(null);
+  const location = useLocation();
+  const chatTitle = onChatClick
+    ? 'Chat support is currently disabled'
+    : 'Chat support is currently unavailable';
+
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (fabRef.current && !fabRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleResize = () => setIsOpen(false);
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname, location.search, location.hash]);
 
   const handleAction = (callback) => {
     setIsOpen(false);
@@ -13,12 +41,18 @@ function HelpFAB({ onChatClick, onGuideClick }) {
   };
 
   return (
-    <div className={`help-fab ${isOpen ? 'help-fab--open' : ''}`}>
+    <div
+      ref={fabRef}
+      className={`help-fab ${isOpen ? 'help-fab--open' : ''}`}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
       <div className="help-fab__menu" aria-hidden={!isOpen}>
         <button
           type="button"
-          className="help-fab__option"
-          onClick={() => handleAction(onChatClick)}
+          className="help-fab__option help-fab__option--disabled"
+          disabled
+          title={chatTitle}
         >
           <MessageCircle size={18} aria-hidden="true" />
           <span>Chat with us</span>
@@ -36,11 +70,12 @@ function HelpFAB({ onChatClick, onGuideClick }) {
       <button
         type="button"
         className="help-fab__button"
-        aria-label={isOpen ? 'Close help menu' : 'Open help menu'}
+        aria-label="Open help menu"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
       >
-        {isOpen ? <X size={24} aria-hidden="true" /> : <HelpCircle size={26} aria-hidden="true" />}
+        <span className="help-fab__label">HELP</span>
+        <Pointer className="help-fab__hand" size={54} strokeWidth={2.7} aria-hidden="true" />
       </button>
     </div>
   );

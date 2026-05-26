@@ -157,12 +157,12 @@ const guideSections = [
       {
         id: 'otp-not-arriving',
         title: 'OTP not arriving',
-        description: 'Wait 60 seconds → tap Resend OTP → check you entered the correct number. Still not working? Email support@aagrigate.com.',
+        description: 'Wait 60 seconds → tap Resend OTP → check you entered the correct number. Still not working? Email webappfarmer@gmail.com.',
       },
       {
         id: 'report-listing',
         title: 'Report a listing',
-        description: 'On any listing, tap ⋮ in the top corner → Report. Or email support@aagrigate.com with the listing ID.',
+        description: 'On any listing, tap ⋮ in the top corner → Report. Or email webappfarmer@gmail.com with the listing ID.',
       },
       {
         id: 'is-it-free',
@@ -171,8 +171,8 @@ const guideSections = [
       },
       {
         id: 'contact-support',
-        title: 'Contact support → support@aagrigate.com',
-        description: 'Email: support@aagrigate.com | Response within 24 hours on working days.',
+        title: 'Contact support → webappfarmer@gmail.com',
+        description: 'Email: webappfarmer@gmail.com | Response within 24 hours on working days.',
       },
       {
         id: 'glossary',
