@@ -10676,7 +10676,7 @@ a {
   .view-crop-fab {
     position: fixed;
     right: 16px;
-    bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(144px + env(safe-area-inset-bottom, 0px));
     width: 54px;
     height: 54px;
     border-radius: 50%;
@@ -10686,7 +10686,7 @@ a {
     background: var(--color-primary);
     color: #ffffff;
     box-shadow: 0 16px 24px rgba(25, 86, 61, 0.24);
-    z-index: 55;
+    z-index: 1001;
   }
 
   .update-crop-head {
