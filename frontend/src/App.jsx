@@ -44,6 +44,7 @@ import News from './pages/News';
 import NewsDetails from './components/NewsDetails';
 import MarketDetails from './components/MarketDetails';
 import HelpFAB from './components/HelpFAB';
+import UserGuide from './components/UserGuide/UserGuide';
 import { bootstrapSession } from './lib/auth';
 import { NavbarCountProvider } from './context/NavbarCountContext';
 import './index.css';
@@ -73,6 +74,7 @@ function ScrollManager() {
 function AppRoutes() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [guideOpen, setGuideOpen] = React.useState(false);
   const isChatRoute = location.pathname.startsWith('/chat');
 
   return (
@@ -131,8 +133,9 @@ function AppRoutes() {
       <Footer />
       <HelpFAB
         onChatClick={() => navigate('/chat')}
-        onGuideClick={() => navigate('/#how-it-works')}
+        onGuideClick={() => setGuideOpen(true)}
       />
+      <UserGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     </div>
   );
 }
