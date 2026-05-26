@@ -44,9 +44,9 @@ function HelpFAB({ onChatClick, onGuideClick }) {
     <div
       ref={fabRef}
       className={`help-fab ${isOpen ? 'help-fab--open' : ''}`}
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
     >
+      <span className="help-fab__tooltip" role="status">Assistance</span>
+
       <div className="help-fab__menu" aria-hidden={!isOpen}>
         <button
           type="button"

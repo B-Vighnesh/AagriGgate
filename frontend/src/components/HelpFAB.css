@@ -16,6 +16,31 @@
   cursor: pointer;
 }
 
+.help-fab__tooltip {
+  position: absolute;
+  right: 0;
+  bottom: 106px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: #0f172a;
+  background: #fff;
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.help-fab:hover:not(.help-fab--open) .help-fab__tooltip,
+.help-fab:focus-within:not(.help-fab--open) .help-fab__tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .help-fab__button {
   position: relative;
   width: 132px;
@@ -150,6 +175,10 @@
   }
 
   .help-fab__menu {
+    bottom: 88px;
+  }
+
+  .help-fab__tooltip {
     bottom: 88px;
   }
 }
