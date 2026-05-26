@@ -93,6 +93,6 @@
 @media (max-width: 640px) {
   .help-fab {
     right: 18px;
-    bottom: 18px;
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
   }
 }
