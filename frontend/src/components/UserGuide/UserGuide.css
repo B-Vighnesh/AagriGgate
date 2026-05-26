@@ -24,7 +24,7 @@
   display: flex;
   flex-direction: column;
   background:
-    linear-gradient(180deg, rgba(231, 245, 238, 0.75) 0%, rgba(248, 250, 252, 0) 240px),
+    linear-gradient(180deg, rgba(237, 252, 244, 0.9) 0%, rgba(248, 250, 252, 0) 260px),
     #f8fafc;
   border-left: 1px solid rgba(15, 23, 42, 0.1);
   box-shadow: -24px 0 60px rgba(15, 23, 42, 0.22);
@@ -33,13 +33,27 @@
 
 .user-guide__header {
   flex: 0 0 auto;
+  position: relative;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 22px 28px 16px;
-  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
-  border-bottom: 1px solid rgba(18, 62, 49, 0.1);
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  padding: 30px 72px 28px 28px;
+  background:
+    radial-gradient(circle at 22% 18%, rgba(187, 247, 208, 0.55), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #effaf2 100%);
+  border-bottom: 1px solid rgba(18, 62, 49, 0.08);
+  overflow: hidden;
+}
+
+.user-guide__header::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(26, 122, 63, 0.22), transparent);
 }
 
 .user-guide__kicker {
@@ -67,8 +81,11 @@
 }
 
 .user-guide__close {
-  width: 38px;
-  height: 38px;
+  position: absolute;
+  top: 22px;
+  right: 28px;
+  width: 40px;
+  height: 40px;
   border: 1px solid rgba(15, 23, 42, 0.1);
   border-radius: 50%;
   display: inline-flex;
@@ -76,6 +93,7 @@
   justify-content: center;
   color: #0f172a;
   background: #fff;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
@@ -83,30 +101,35 @@
 .user-guide__close:hover {
   color: #0f8b5f;
   background: #e7f5ee;
+  border-color: rgba(15, 139, 95, 0.22);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
   transform: translateY(-1px);
 }
 
 .user-guide__hero {
-  margin: 16px 28px 10px;
-  padding: 14px;
-  border: 1px solid rgba(18, 62, 49, 0.12);
+  width: min(250px, 100%);
+  margin: 0;
+  padding: 15px 16px;
+  border: 1px solid rgba(18, 62, 49, 0.13);
   border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 12px;
   background: #ffffff;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.1);
+  transform: translateX(12px);
 }
 
 .user-guide__hero-icon {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #0f8b5f;
-  background: #dcfce7;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  box-shadow: inset 0 0 0 1px rgba(15, 139, 95, 0.08);
 }
 
 .user-guide__hero strong,
@@ -116,20 +139,22 @@
 
 .user-guide__hero strong {
   color: #123e31;
-  font-size: 0.98rem;
+  font-size: 1rem;
+  line-height: 1.2;
 }
 
 .user-guide__hero span {
-  margin-top: 3px;
+  margin-top: 6px;
   color: #64748b;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
+  font-weight: 650;
 }
 
 .user-guide__chips {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 0 28px 2px;
+  padding: 14px 28px 2px;
 }
 
 .user-guide__chips span {
@@ -144,17 +169,17 @@
 
 .user-guide__search {
   flex: 0 0 auto;
-  margin: 12px 28px 10px;
-  min-height: 44px;
+  margin: 12px 28px 14px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 0 14px;
   color: #64748b;
   background: #f5f5f5;
-  border: 1px solid rgba(18, 62, 49, 0.12);
+  border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 999px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .user-guide__search input {
@@ -400,19 +425,26 @@
   }
 
   .user-guide__header {
-    padding: 18px 16px 12px;
+    min-height: 140px;
+    padding: 26px 64px 24px 16px;
   }
 
   .user-guide__search {
     margin: 12px 16px 8px;
   }
 
+  .user-guide__close {
+    top: 18px;
+    right: 16px;
+  }
+
   .user-guide__hero {
-    margin: 14px 16px 10px;
+    width: min(250px, 100%);
+    transform: none;
   }
 
   .user-guide__chips {
-    padding: 0 16px 2px;
+    padding: 12px 16px 2px;
   }
 
   .user-guide__content {
