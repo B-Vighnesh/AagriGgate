@@ -53,8 +53,8 @@
   content: attr(data-tooltip);
   position: absolute;
   left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%) translateY(4px);
+  top: calc(100% + 8px);
+  transform: translateX(-50%) translateY(-4px);
   padding: 6px 8px;
   border-radius: 8px;
   background: rgba(18, 62, 49, 0.95);
