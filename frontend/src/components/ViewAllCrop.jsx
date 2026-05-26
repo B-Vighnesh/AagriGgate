@@ -1,28 +1,62 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { apiGet, apiFetch } from '../lib/api';
+import { apiGet } from '../lib/api';
 import { getToken, getFarmerId, getRole } from '../lib/auth';
 import ValidateToken from './ValidateToken';
 import Button from './common/Button';
 import Card from './common/Card';
+import { getCropImageBlob, normalizeCropPage } from '../api/cropApi';
+import statesAndDistricts from './statesAndDistricts';
 
 const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect fill="%23e7f4ee" width="360" height="220"/><rect fill="%23cfe7da" x="0" y="160" width="360" height="60"/><text x="180" y="118" font-family="Arial" font-size="24" text-anchor="middle" fill="%232a6e55">Crop Image</text></svg>';
+
 const QUICK_FILTER_CHIPS = [
   { label: 'All', category: '', listingType: 'all' },
-  { label: 'Vegetables', category: 'Vegetables', listingType: 'all' },
-  { label: 'Fruits', category: 'Fruits', listingType: 'all' },
-  { label: 'Spices', category: 'Spices', listingType: 'all' },
+  { label: 'Vegetables', category: 'Vegetable', listingType: 'all' },
+  { label: 'Fruits', category: 'Fruit', listingType: 'all' },
+  { label: 'Spices', category: 'Spice', listingType: 'all' },
   { label: 'Urgent', category: '', listingType: 'urgent' },
+  { label: 'Waste', category: '', listingType: 'waste' },
+  { label: 'Discount', category: '', listingType: 'discount' },
 ];
 
 function CropCard({ crop, imageUrl, onViewDetails }) {
   const handleOpen = () => onViewDetails(crop.cropID);
   const cardTone = crop.isUrgent ? 'urgent' : crop.isWaste ? 'waste' : 'normal';
+  const handleShare = async (event) => {
+    event.stopPropagation();
+    const shareUrl = `${window.location.origin}/view-details/${crop.cropID}`;
+    const shareData = {
+      title: crop.cropName,
+      text: `Check out this crop listing for ${crop.cropName}.`,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+      await navigator.clipboard.writeText(shareUrl);
+    } catch {
+      // Share/copy can be cancelled by the user; keep the card interaction unchanged.
+    }
+  };
+
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       handleOpen();
     }
+  };
+  const handleImageLoad = (event) => {
+    const img = event.currentTarget;
+    img.closest('.view-all-card__image-wrap')?.classList.toggle('landscape', img.naturalWidth > img.naturalHeight);
+  };
+  const handleImageError = (event) => {
+    const img = event.currentTarget;
+    img.closest('.view-all-card__image-wrap')?.classList.add('image-wrap--empty');
+    img.remove();
   };
 
   return (
@@ -35,35 +69,60 @@ function CropCard({ crop, imageUrl, onViewDetails }) {
       aria-label={`View details for ${crop.cropName}`}
     >
       <div className="view-all-card__image-wrap">
-        <img
-          src={imageUrl || IMAGE_PLACEHOLDER}
-          alt={crop.cropName}
-          className="view-all-card__image"
-          onError={(event) => { event.currentTarget.src = IMAGE_PLACEHOLDER; }}
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={crop.cropName}
+            className="view-all-card__image"
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
+        ) : <span className="crop-image-empty">No image</span>}
         <span className="view-all-card__badge">{crop.cropType}</span>
       </div>
 
       <div className="view-all-card__body">
-        <h3>{crop.cropName}</h3>
-        <p className="view-all-card__meta">
-          Farmer: {crop.farmerName || 'N/A'} | Region: {crop.region || 'N/A'}
-        </p>
-        <div className="crop-flag-row">
-          {crop.status ? <span className={`crop-flag crop-flag--${crop.status.toLowerCase()}`}>{crop.status}</span> : null}
-          {crop.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
-          {crop.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
+        <div className="view-all-card__title-row">
+          <h3>{crop.cropName}</h3>
         </div>
+        {(crop.isUrgent || crop.isWaste) ? (
+          <div className="crop-flag-row">
+            {crop.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
+            {crop.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
+          </div>
+        ) : null}
+        <p className="view-all-card__meta">
+          Area: {[crop.region, crop.district, crop.state].filter(Boolean).join(' | ') || 'N/A'}
+        </p>
+
 
         <div className="view-all-card__price-row">
           <div>
-            <p className="view-all-card__price">Rs {Number(crop.marketPrice || 0).toFixed(2)}</p>
-            <p className="view-all-card__unit">per {crop.unit || 'unit'}</p>
+            <p className="view-all-card__price">Rs {Number(crop.marketPrice || 0).toFixed(2)} <small>per {crop.unit || 'unit'}</small></p>
             {crop.discountPrice ? (
               <p className="view-all-card__discount">Discount: Rs {Number(crop.discountPrice).toFixed(2)}</p>
             ) : null}
           </div>
-          <p className="view-all-card__qty">Qty: {crop.quantity} {crop.unit}</p>
+
+
+        </div>
+        <div className="view-all-card__end">
+          <div className="view-all-card__qty-wrap">
+            <p className="view-all-card__qty">Qty: {crop.quantity} {crop.unit}</p>
+
+          </div>
+          <div className="view-all-card__qty-share">
+            <button
+              type="button"
+              className="view-all-card__share"
+              aria-label={`Share ${crop.cropName}`}
+              title="Share"
+              onClick={handleShare}
+              onKeyDown={(event) => event.stopPropagation()}
+            >
+              <i className="fa-solid fa-share-nodes" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </div>
     </Card>
@@ -84,6 +143,8 @@ export default function ViewAllCrop() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     region: '',
+    state: '',
+    district: '',
     price: '',
     category: '',
     farmerName: '',
@@ -93,6 +154,8 @@ export default function ViewAllCrop() {
   const [appliedSearch, setAppliedSearch] = useState('');
   const [appliedFilters, setAppliedFilters] = useState({
     region: '',
+    state: '',
+    district: '',
     price: '',
     category: '',
     farmerName: '',
@@ -104,7 +167,17 @@ export default function ViewAllCrop() {
   const [totalElements, setTotalElements] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const loadMoreRef = useRef(null);
+  const imageUrlRegistryRef = useRef(new Set());
+  const districts = statesAndDistricts[filters.state] || [];
+
+  const revokeAllImageUrls = useCallback(() => {
+    imageUrlRegistryRef.current.forEach((url) => {
+      try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+    });
+    imageUrlRegistryRef.current.clear();
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -140,6 +213,8 @@ export default function ViewAllCrop() {
         setLoading(true);
         setError('');
         setCrops([]);
+        setImageUrls({});
+        revokeAllImageUrls();
         setTotalPages(0);
         setTotalElements(0);
         setHasMore(false);
@@ -152,6 +227,8 @@ export default function ViewAllCrop() {
 
         if (appliedSearch.trim()) params.set('keyword', appliedSearch.trim());
         if (appliedFilters.region.trim()) params.set('region', appliedFilters.region.trim());
+        if (appliedFilters.state.trim()) params.set('state', appliedFilters.state.trim());
+        if (appliedFilters.district.trim()) params.set('district', appliedFilters.district.trim());
         if (appliedFilters.category.trim()) params.set('category', appliedFilters.category.trim());
         if (appliedFilters.farmerName.trim()) params.set('farmerName', appliedFilters.farmerName.trim());
         if (appliedFilters.price) params.set('maxPrice', appliedFilters.price);
@@ -164,7 +241,7 @@ export default function ViewAllCrop() {
         const response = await apiGet(`/crops/legacy?${params.toString()}`);
         if (!response.ok) throw new Error('Failed to load crops. Please try again.');
 
-        const data = await response.json();
+        const data = normalizeCropPage(await response.json());
         const cropList = Array.isArray(data?.content) ? data.content : [];
         if (!mounted) return;
         const nextPage = Number(data?.number ?? page);
@@ -176,11 +253,18 @@ export default function ViewAllCrop() {
 
         cropList.forEach(async (crop) => {
           try {
-            const imageResponse = await apiFetch(`/crops/legacy/${crop.cropID}/image`);
-            if (!imageResponse.ok) return;
-            const blob = await imageResponse.blob();
+            const blob = await getCropImageBlob(crop.cropID, 'thumbnail');
+            if (!blob) return;
             if (!mounted) return;
-            setImageUrls((prev) => ({ ...prev, [crop.cropID]: URL.createObjectURL(blob) }));
+            const objectUrl = URL.createObjectURL(blob);
+            imageUrlRegistryRef.current.add(objectUrl);
+            setImageUrls((prev) => {
+              if (prev[crop.cropID]) {
+                try { URL.revokeObjectURL(prev[crop.cropID]); } catch { /* ignore */ }
+                imageUrlRegistryRef.current.delete(prev[crop.cropID]);
+              }
+              return { ...prev, [crop.cropID]: objectUrl };
+            });
           } catch {
             // keep placeholder image on failures
           }
@@ -202,11 +286,12 @@ export default function ViewAllCrop() {
 
     return () => {
       mounted = false;
-      Object.values(imageUrls).forEach((url) => {
-        try { URL.revokeObjectURL(url); } catch { /* ignore */ }
-      });
     };
-  }, [page, token, navigate, appliedSearch, appliedFilters]);
+  }, [page, token, navigate, appliedSearch, appliedFilters, revokeAllImageUrls]);
+
+  useEffect(() => () => {
+    revokeAllImageUrls();
+  }, [revokeAllImageUrls]);
 
   useEffect(() => {
     if (!loadMoreRef.current || !hasMore || loading || loadingMore) {
@@ -230,11 +315,14 @@ export default function ViewAllCrop() {
   const applyFilters = () => {
     setPage(0);
     setAppliedFilters(filters);
+    setMobileFiltersOpen(false);
   };
 
   const clearFilters = () => {
     const emptyFilters = {
       region: '',
+      state: '',
+      district: '',
       price: '',
       category: '',
       farmerName: '',
@@ -246,6 +334,7 @@ export default function ViewAllCrop() {
     setAppliedSearch('');
     setAppliedFilters(emptyFilters);
     setPage(0);
+    setMobileFiltersOpen(false);
   };
 
   const applyQuickChip = (chip) => {
@@ -268,6 +357,28 @@ export default function ViewAllCrop() {
     && chip.listingType === appliedFilters.listingType
   );
 
+  const hasActiveFilters = Boolean(
+    appliedSearch.trim()
+    || appliedFilters.region.trim()
+    || appliedFilters.state.trim()
+    || appliedFilters.district.trim()
+    || appliedFilters.price
+    || appliedFilters.category.trim()
+    || appliedFilters.farmerName.trim()
+    || appliedFilters.listingType !== 'all'
+  );
+
+  const activeFilterCount = [
+    appliedSearch.trim(),
+    appliedFilters.region.trim(),
+    appliedFilters.state.trim(),
+    appliedFilters.district.trim(),
+    appliedFilters.price,
+    appliedFilters.category.trim(),
+    appliedFilters.farmerName.trim(),
+    appliedFilters.listingType !== 'all' ? appliedFilters.listingType : '',
+  ].filter(Boolean).length;
+
   return (
     <section className="page view-all-page">
       <ValidateToken farmerId={farmerId} token={token} role={role} />
@@ -287,7 +398,7 @@ export default function ViewAllCrop() {
               <Link to="/cart">
                 <Button variant="outline" className="view-all-requests-btn">Cart</Button>
               </Link>
-              
+
             </div>
           )}
         </div>
@@ -323,7 +434,36 @@ export default function ViewAllCrop() {
           ))}
         </div>
 
-        <Card className="view-all-filter-card">
+        <div className="view-all-mobile-controls">
+          <button
+            type="button"
+            className={`view-all-mobile-filter-btn ${mobileFiltersOpen ? 'view-all-mobile-filter-btn--active' : ''}`}
+            onClick={() => setMobileFiltersOpen((open) => !open)}
+            aria-expanded={mobileFiltersOpen}
+            aria-controls="view-all-filter-panel"
+          >
+            <i className="fa-solid fa-sliders" aria-hidden="true" />
+            <span>Filters</span>
+            {activeFilterCount > 0 ? <strong>{activeFilterCount}</strong> : null}
+          </button>
+          <select
+            className="view-all-mobile-sort"
+            value={filters.sortBy}
+            onChange={(event) => setFilters((prev) => ({ ...prev, sortBy: event.target.value }))}
+            aria-label="Sort crops"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="price-low">Price low</option>
+            <option value="price-high">Price high</option>
+          </select>
+          <span className="view-all-mobile-total">{totalElements} crops</span>
+        </div>
+
+        <Card
+          id="view-all-filter-panel"
+          className={`view-all-filter-card ${mobileFiltersOpen ? 'view-all-filter-card--open' : ''}`}
+        >
           <div className="view-all-toolbar__head">
             <div>
               <h3>Filters</h3>
@@ -337,6 +477,27 @@ export default function ViewAllCrop() {
               value={filters.region}
               onChange={(event) => setFilters((prev) => ({ ...prev, region: event.target.value }))}
             />
+            <select
+              className="view-all-input"
+              value={filters.state}
+              onChange={(event) => setFilters((prev) => ({ ...prev, state: event.target.value, district: '' }))}
+            >
+              <option value="">All states</option>
+              {Object.keys(statesAndDistricts).map((state) => (
+                <option key={state} value={state}>{state}</option>
+              ))}
+            </select>
+            <select
+              className="view-all-input"
+              value={filters.district}
+              onChange={(event) => setFilters((prev) => ({ ...prev, district: event.target.value }))}
+              disabled={!filters.state}
+            >
+              <option value="">{filters.state ? 'All districts' : 'Select state first'}</option>
+              {districts.map((district) => (
+                <option key={district} value={district}>{district}</option>
+              ))}
+            </select>
             <select
               className="view-all-input"
               value={filters.sortBy}
@@ -461,8 +622,17 @@ export default function ViewAllCrop() {
         {!loading && !error && crops.length === 0 && (
           <Card className="view-all-empty">
             <p className="view-all-empty__icon">0</p>
-            <p className="view-all-empty__title">No crops match your filters.</p>
-            <p className="view-all-empty__desc">Try different filters or clear the current selection.</p>
+            {hasActiveFilters ? (
+              <>
+                <p className="view-all-empty__title">No crops match your filters.</p>
+                <p className="view-all-empty__desc">Try different filters or clear the current selection.</p>
+              </>
+            ) : (
+              <>
+                <p className="view-all-empty__title">No available crops.</p>
+                <p className="view-all-empty__desc">Please check again later for new listings.</p>
+              </>
+            )}
           </Card>
         )}
 
@@ -484,5 +654,3 @@ export default function ViewAllCrop() {
     </section>
   );
 }
-
-

@@ -4,7 +4,9 @@ import com.MyWebpage.register.login.auth.dto.AuthRequestDTO;
 import com.MyWebpage.register.login.auth.dto.AuthResponseDTO;
 import com.MyWebpage.register.login.auth.dto.DeleteAccountRequestDTO;
 import com.MyWebpage.register.login.auth.dto.OtpLoginRequestDTO;
-import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
+import com.MyWebpage.register.login.auth.dto.FarmerRequestDTO;
+
+import java.util.Map;
 
 public interface AuthService {
 
@@ -44,4 +46,6 @@ public interface AuthService {
     void softDeleteAccount(Long farmerId, DeleteAccountRequestDTO requestDTO, String role);
 
     void findUser(String email);
+
+    Map<String, Object> getUserDetails(Long farmerId);
 }

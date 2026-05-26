@@ -4,6 +4,7 @@ public class AuthResponseDTO {
     private String token;
     private String role;
     private Long farmerId;
+    private String firstName;
 
     public AuthResponseDTO() {
     }
@@ -25,4 +26,6 @@ public class AuthResponseDTO {
     public void setRole(String role) { this.role = role; }
     public Long getFarmerId() { return farmerId; }
     public void setFarmerId(Long farmerId) { this.farmerId = farmerId; }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
 }

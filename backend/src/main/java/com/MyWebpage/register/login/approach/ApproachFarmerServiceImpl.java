@@ -6,6 +6,13 @@ import com.MyWebpage.register.login.crop.CropQueryService;
 import com.MyWebpage.register.login.farmer.FarmerQueryService;
 import com.MyWebpage.register.login.chat.UserBlockRepository;
 import com.MyWebpage.register.login.common.EmailService;
+import com.MyWebpage.register.login.notification.enums.MessageSeverity;
+import com.MyWebpage.register.login.notification.enums.NotificationReferenceType;
+import com.MyWebpage.register.login.notification.enums.NotificationTargetType;
+import com.MyWebpage.register.login.notification.event.NotificationEvent;
+import com.MyWebpage.register.login.notification.event.NotificationEventReference;
+import com.MyWebpage.register.login.notification.event.NotificationEventTarget;
+import com.MyWebpage.register.login.notification.service.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -35,18 +42,21 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     private final FarmerQueryService farmerQueryService;
     private final EmailService emailService;
     private final UserBlockRepository userBlockRepository;
+    private final NotificationService notificationService;
 
     public ApproachFarmerServiceImpl(
             ApproachFarmerRepo approachFarmerRepository,
             CropQueryService cropQueryService,
             FarmerQueryService farmerQueryService,
             EmailService emailService,
-            UserBlockRepository userBlockRepository) {
+            UserBlockRepository userBlockRepository,
+            NotificationService notificationService) {
         this.approachFarmerRepository = approachFarmerRepository;
         this.cropQueryService = cropQueryService;
         this.farmerQueryService = farmerQueryService;
         this.emailService = emailService;
         this.userBlockRepository = userBlockRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -55,7 +65,8 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             Crop crop = cropQueryService.requireAvailableCropForBuyer(cropId, userId);
             Long farmerId = crop.getFarmer().getFarmerId();
             if (userBlockRepository.existsBetween(userId, farmerId)) {
-                return new ResponseEntity<>("Cannot create a new approach. You are blocked by this user.", HttpStatus.FORBIDDEN);
+                return new ResponseEntity<>("Cannot create a new approach. You are blocked by this user.",
+                        HttpStatus.FORBIDDEN);
             }
 
             boolean isPending = approachFarmerRepository.existsByFarmerIdAndCropIdAndUserIdAndStatusAndActiveTrue(
@@ -104,6 +115,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             approachFarmer.setExpiredAt(null);
 
             approachFarmerRepository.save(approachFarmer);
+            publishNewApproachNotification(approachFarmer, LocalDateTime.now());
             logger.info("Approach created: {}", approachFarmer.getApproachId());
             return new ResponseEntity<>("Success", HttpStatus.OK);
         } catch (ResponseStatusException exception) {
@@ -154,10 +166,64 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                 approach.setExpiredAt(null);
             }
             approachFarmerRepository.save(approach);
+            publishApproachStatusNotification(approach, accept, now);
             logger.info("Approach status updated: {} -> {}", approachId, approach.getStatus());
             return true;
         }
         return false;
+    }
+
+    private void publishApproachStatusNotification(ApproachFarmer approach, boolean accept, LocalDateTime createdAt) {
+        NotificationEvent event = new NotificationEvent();
+        event.setEventType(accept ? "REQUEST_ACCEPTED" : "REQUEST_REJECTED");
+        event.setCategoryName("REQUEST");
+        event.setSeverity(MessageSeverity.MEDIUM);
+        event.setTitle(accept ? "Request accepted" : "Request rejected");
+        event.setMessage(buildApproachStatusNotificationMessage(approach, accept));
+        event.setTarget(new NotificationEventTarget(NotificationTargetType.USER, String.valueOf(approach.getUserId())));
+        event.setReference(new NotificationEventReference(NotificationReferenceType.REQUEST, approach.getApproachId()));
+        event.setCreatedAt(createdAt);
+        notificationService.publishEvent(event);
+    }
+
+    private void publishNewApproachNotification(ApproachFarmer approach, LocalDateTime createdAt) {
+        NotificationEvent event = new NotificationEvent();
+        event.setEventType("REQUEST_CREATED");
+        event.setCategoryName("REQUEST");
+        event.setSeverity(MessageSeverity.MEDIUM);
+        event.setTitle("New crop request");
+        event.setMessage(buildNewApproachNotificationMessage(approach));
+        event.setTarget(
+                new NotificationEventTarget(NotificationTargetType.USER, String.valueOf(approach.getFarmerId())));
+        event.setReference(new NotificationEventReference(NotificationReferenceType.REQUEST, approach.getApproachId()));
+        event.setCreatedAt(createdAt);
+        notificationService.publishEvent(event);
+    }
+
+    private String buildNewApproachNotificationMessage(ApproachFarmer approach) {
+        String userName = approach.getUserName() == null || approach.getUserName().isBlank()
+                ? "A buyer"
+                : approach.getUserName();
+        String cropName = approach.getCropName() == null || approach.getCropName().isBlank()
+                ? "your crop"
+                : approach.getCropName();
+        return userName + " sent a request for " + cropName + ".";
+    }
+
+    private String buildApproachStatusNotificationMessage(ApproachFarmer approach, boolean accept) {
+        String cropName = approach.getCropName() == null || approach.getCropName().isBlank()
+                ? "your crop request"
+                : approach.getCropName();
+        String farmerName = approach.getFarmerName() == null || approach.getFarmerName().isBlank()
+                ? "The farmer"
+                : approach.getFarmerName();
+        if (accept) {
+            return "Your request for " + cropName + " has been accepted by "
+                    + farmerName + ". You can now open the chat and negotiate pricing, quantity, and delivery details.";
+        }
+
+        return "Your request for " + cropName + " has been declined by "
+                + farmerName + ". You may explore other available farmers or crops.";
     }
 
     @Override
@@ -166,8 +232,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
                 .stream()
                 .sorted((a, b) -> Long.compare(
                         b.getApproachId() == null ? 0L : b.getApproachId(),
-                        a.getApproachId() == null ? 0L : a.getApproachId()
-                ))
+                        a.getApproachId() == null ? 0L : a.getApproachId()))
                 .toList();
     }
 
@@ -176,18 +241,17 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
         return approachFarmerRepository.findRequestViewsByFarmerId(
                 farmerId,
                 normalizeStatus(status),
-                buildPageRequest(page, size)
-        );
+                buildPageRequest(page, size));
     }
 
     @Override
-    public Page<ApproachRequestDTO> getRequestsByFarmerIdAndCropId(Long farmerId, Long cropId, String status, int page, int size) {
+    public Page<ApproachRequestDTO> getRequestsByFarmerIdAndCropId(Long farmerId, Long cropId, String status, int page,
+            int size) {
         return approachFarmerRepository.findRequestViewsByFarmerIdAndCropId(
                 farmerId,
                 cropId,
                 normalizeStatus(status),
-                buildPageRequest(page, size)
-        );
+                buildPageRequest(page, size));
     }
 
     @Override
@@ -195,8 +259,7 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
         return approachFarmerRepository.findRequestViewsByUserId(
                 userId,
                 normalizeStatus(status),
-                buildPageRequest(page, size)
-        ).map(this::sanitizeBuyerRequestView);
+                buildPageRequest(page, size)).map(this::sanitizeBuyerRequestView);
     }
 
     @Override
@@ -222,18 +285,20 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
         }
         return false;
     }
+
     @Override
     public boolean deleteApproach(Long farmerId, String role) {
-        if ("ROLE_BUYER".equals(role)){
+        if ("ROLE_BUYER".equals(role)) {
             approachFarmerRepository.softDeleteByUserId(farmerId, LocalDateTime.now());
         } else if ("ROLE_SELLER".equals(role)) {
             approachFarmerRepository.softDeleteByFarmerId(farmerId, LocalDateTime.now());
         }
         return false;
     }
+
     @Override
     public boolean softDeleteApproach(Long farmerId, String role) {
-        if ("ROLE_BUYER".equals(role)){
+        if ("ROLE_BUYER".equals(role)) {
             approachFarmerRepository.softDeleteByUserId(farmerId, LocalDateTime.now());
         } else if ("ROLE_SELLER".equals(role)) {
             approachFarmerRepository.softDeleteByFarmerId(farmerId, LocalDateTime.now());
@@ -249,14 +314,15 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
 
     @Override
     public boolean hasRejectedApproach(Long userId, Long cropId) {
-        return approachFarmerRepository.existsByCropIdAndUserIdAndStatusIgnoreCaseAndActiveTrue(cropId, userId, STATUS_FAILED);
+        return approachFarmerRepository.existsByCropIdAndUserIdAndStatusIgnoreCaseAndActiveTrue(cropId, userId,
+                STATUS_FAILED);
     }
 
     @Override
     public void softDeleteExistingApproach(Long userId, Long cropId) {
         approachFarmerRepository.findByUserIdAndCropIdAndActiveTrue(userId, cropId)
-                .ifPresent(existing ->
-                        approachFarmerRepository.softDeleteByApproachIdAndUserId(existing.getApproachId(), userId, LocalDateTime.now()));
+                .ifPresent(existing -> approachFarmerRepository
+                        .softDeleteByApproachIdAndUserId(existing.getApproachId(), userId, LocalDateTime.now()));
     }
 
     @Override
@@ -278,7 +344,8 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
     @Override
     public boolean isApproachAccepted(Long userId, Long cropId) {
         try {
-            return approachFarmerRepository.existsByCropIdAndUserIdAndStatusAndActiveTrue(cropId, userId, STATUS_ACCEPTED);
+            return approachFarmerRepository.existsByCropIdAndUserIdAndStatusAndActiveTrue(cropId, userId,
+                    STATUS_ACCEPTED);
         } catch (Exception e) {
             throw new RuntimeException("Error occurred while checking the approach status: " + e.getMessage(), e);
         }
@@ -333,6 +400,21 @@ public class ApproachFarmerServiceImpl implements ApproachFarmerService {
             approach.setNotifiedAt(notifiedAt);
             approachFarmerRepository.save(approach);
         });
+    }
+
+    @Override
+    public ApproachStatusResponseDTO getApproachStatus(Long userId, Long cropId) {
+        return approachFarmerRepository.findLatestStatus(userId, cropId);
+    }
+
+    @Override
+    public Long getPendingCount(Long farmerId) {
+        return approachFarmerRepository.findByPendingCount(farmerId);
+    }
+
+    @Override
+    public Long getAcceptedCount(Long userId) {
+        return approachFarmerRepository.findByAcceptedCount(userId);
     }
 
     private PageRequest buildPageRequest(int page, int size) {

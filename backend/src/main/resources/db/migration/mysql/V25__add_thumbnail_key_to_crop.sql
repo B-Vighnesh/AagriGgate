@@ -1,0 +1,2 @@
+ALTER TABLE crop
+    ADD COLUMN IF NOT EXISTS thumbnail_key VARCHAR(512) NULL;

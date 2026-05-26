@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -118,13 +118,13 @@ export default function Weather() {
   const [error, setError] = useState('');
 
   const alert = useMemo(() => getAlert(weather), [weather]);
-  const current = weather?.current || {};
-  const location = weather?.location || {};
+  const current = useMemo(() => weather?.current || {}, [weather]);
+  const location = useMemo(() => weather?.location || {}, [weather]);
   const rainGuidance = useMemo(() => getRainGuidance(current), [current]);
   const humidityGuidance = useMemo(() => getHumidityGuidance(current), [current]);
   const windGuidance = useMemo(() => getWindGuidance(current), [current]);
 
-  const fetchMyLocationWeather = async () => {
+  const fetchMyLocationWeather = useCallback(async () => {
     if (!token) {
       navigate('/login');
       return;
@@ -140,19 +140,15 @@ export default function Weather() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, navigate]);
 
   useEffect(() => {
     if (!role) {
       navigate('/login');
       return;
     }
-    if (role === 'buyer') {
-      navigate('/404');
-      return;
-    }
     fetchMyLocationWeather();
-  }, []);
+  }, [role, navigate, fetchMyLocationWeather]);
 
   return (
     <section className="page weather-page">
@@ -163,7 +159,7 @@ export default function Weather() {
           <p>Live-ready district weather focused on field decisions, harvest timing, and crop safety.</p>
         </header>
 
-        <div className="weather-page__actions">
+        {/* <div className="weather-page__actions">
           <Button
             type="button"
             variant="outline"
@@ -175,7 +171,7 @@ export default function Weather() {
             <i className="fa-solid fa-rotate-right weather-refresh-btn__icon" aria-hidden="true" />
             <span className="weather-refresh-btn__label">Refresh Weather</span>
           </Button>
-        </div>
+        </div> */}
 
         {alert && (
           <p className={`weather-alert weather-alert--${alert.type === 'error' ? 'error' : 'warning'}`}>
@@ -208,7 +204,7 @@ export default function Weather() {
                   </div>
                   <div className="weather-hero__copy">
                     <span className="weather-kicker">Farmer District Forecast</span>
-                    <h2>{location?.name || '-'}, {location?.region || '-'}</h2>
+                    <h2>{location?.region || '-'}</h2>
                     <p>{current?.condition?.text || '-'} with {formatValue(current?.cloud, '%')} cloud cover</p>
                   </div>
                 </div>

@@ -35,4 +35,10 @@ public interface ApproachFarmerService {
     void markApproachFailed(Long approachId, LocalDateTime failedAt);
     void markApproachExpired(Long approachId, LocalDateTime expiredAt);
     void markApproachNotified(Long approachId, LocalDateTime notifiedAt);
+
+    ApproachStatusResponseDTO getApproachStatus(Long userId, Long cropId);
+
+    Long getPendingCount(Long farmerId);
+
+    Long getAcceptedCount(Long farmerId);
 }

@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import { apiFetch } from '../lib/api';
 import { getToken } from '../lib/auth';
 
 export default function ApproachFarmer({ cropId, onClose, initialQuantity = 1, onSuccess }) {
+  const navigate = useNavigate();
   const token = getToken();
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [quantity, setQuantity] = useState(String(initialQuantity || 1));
+  const [createdApproach, setCreatedApproach] = useState(null);
+
+  const parseResponseBody = async (response) => {
+    const text = await response.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  };
 
   const handleApproach = async () => {
     if (!token) {
@@ -32,15 +45,42 @@ export default function ApproachFarmer({ cropId, onClose, initialQuantity = 1, o
         throw new Error(message || 'Failed to send request. You may have already requested this crop.');
       }
 
+      let latestApproach = null;
+      try {
+        const statusResponse = await apiFetch(`/buyer/approach/requests/me/${cropId}`, { method: 'GET' });
+        if (statusResponse.ok) {
+          latestApproach = await parseResponseBody(statusResponse);
+          setCreatedApproach(latestApproach);
+        }
+      } catch {
+        // Keep success state even if the tracking lookup is delayed.
+      }
+
       setSuccess(true);
+      window.dispatchEvent(new CustomEvent('requests:count-updated'));
       if (onSuccess) {
-        onSuccess(Number(quantity || 1));
+        onSuccess(Number(quantity || 1), latestApproach);
       }
     } catch (requestError) {
       setError(requestError.message || 'Server busy. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTrackRequest = () => {
+    const approachId = createdApproach?.approachId
+      ?? createdApproach?.approachID
+      ?? createdApproach?.approach_id
+      ?? createdApproach?.id
+      ?? null;
+    if (!approachId) {
+      onClose?.();
+      navigate('/view-approaches-user');
+      return;
+    }
+    onClose?.();
+    navigate(`/requests/${approachId}`);
   };
 
   return (
@@ -74,7 +114,10 @@ export default function ApproachFarmer({ cropId, onClose, initialQuantity = 1, o
           <>
             <h2>Request Sent</h2>
             <p>Your approach request was sent successfully.</p>
-            <Button onClick={onClose}>Done</Button>
+            <div className="approach-modal__actions">
+              <Button onClick={handleTrackRequest}>Track Request</Button>
+              <Button variant="outline" onClick={onClose}>Close</Button>
+            </div>
           </>
         )}
 

@@ -13,9 +13,7 @@ export default function ValidateToken({ token }) {
     let alive = true;
     const checkTokenValidity = async () => {
       try {
-        const role = localStorage.getItem('role');
-        const endpoint = role === 'buyer' ? '/buyers/me' : '/farmers/me';
-        const response = await apiGet(endpoint);
+        const response = await apiGet('/auth/me');
         if (!response.ok && alive) {
           clearAuth();
           setMessage('Session expired. Please login again.');

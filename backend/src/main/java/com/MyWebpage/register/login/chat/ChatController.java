@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/chat")
@@ -29,6 +30,15 @@ public class ChatController {
             Authentication authentication) {
         Long userId = Long.parseLong(authentication.getName());
         return ResponseEntity.ok(chatService.getConversationsForUser(userId, status, archived));
+    }
+
+    @GetMapping("/conversations/unread-count")
+    public ResponseEntity<ApiResponse<Map<String, Long>>> countUnreadMessages(Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success(
+                "Unread chat count fetched",
+                Map.of("count", chatService.countUnreadMessages(userId))
+        ));
     }
 
     @PostMapping("/conversations/from-approach/{approachId}")

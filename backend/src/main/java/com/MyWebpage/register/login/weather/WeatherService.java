@@ -161,7 +161,7 @@ public class WeatherService {
     private Map<String, Object> toWeatherResponse(WeatherSnapshot snapshot) {
         Map<String, Object> location = new LinkedHashMap<>();
         location.put("name", snapshot.getLocationName() == null ? snapshot.getDistrictName() : snapshot.getLocationName());
-        location.put("region", snapshot.getRegionName() == null ? snapshot.getStateName() : snapshot.getRegionName());
+        location.put("region", snapshot.getDistrictName());
         location.put("country", snapshot.getCountryName() == null ? "India" : snapshot.getCountryName());
         location.put("lat", snapshot.getLatitude());
         location.put("lon", snapshot.getLongitude());

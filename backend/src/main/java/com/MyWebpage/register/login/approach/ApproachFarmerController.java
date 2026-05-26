@@ -1,6 +1,7 @@
 package com.MyWebpage.register.login.approach;
 
 import com.MyWebpage.register.login.chat.ChatService;
+import com.MyWebpage.register.login.common.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/seller/approach")
@@ -67,6 +70,21 @@ public class ApproachFarmerController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @GetMapping("/requests/pending")
+    public ResponseEntity<ApiResponse<Long>> getPendingCount(Authentication authentication)
+    {
+        Long farmerId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success("Pending count fetched", approachFarmerService.getPendingCount(farmerId)));
+
+    }
+
+//    @GetMapping("/requests/accepted")
+//    public ResponseEntity<ApiResponse<Long>> getAcceptedCount(Authentication authentication)
+//    {
+//        Long farmerId = Long.parseLong(authentication.getName());
+//        return ResponseEntity.ok(ApiResponse.success("Unread count fetched", approachFarmerService.getAcceptedCount(farmerId)));
+//    }
 
     @GetMapping("/requests/{approachId}")
     public ResponseEntity<ApproachRequestDTO> getRequestByFarmerId(

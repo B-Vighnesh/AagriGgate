@@ -7,6 +7,7 @@ import com.MyWebpage.register.login.chat.Conversation;
 import com.MyWebpage.register.login.chat.ConversationRepository;
 import com.MyWebpage.register.login.chat.ConversationStatus;
 import com.MyWebpage.register.login.chat.MessageType;
+import com.MyWebpage.register.login.chat.MessageStatus;
 import com.MyWebpage.register.login.chat.dto.ChatMessageDTO;
 import com.MyWebpage.register.login.chat.dto.ConversationSummaryDTO;
 import com.MyWebpage.register.login.notification.enums.MessageSeverity;
@@ -63,7 +64,8 @@ public class ApproachLifecycleScheduler {
     }
 
     private void sendInactivityNotifications(LocalDateTime notifyBefore, LocalDateTime now) {
-        List<ApproachFarmer> approaches = approachFarmerRepo.findAcceptedRequestsNeedingInactivityNotification(notifyBefore);
+        List<ApproachFarmer> approaches = approachFarmerRepo
+                .findAcceptedRequestsNeedingInactivityNotification(notifyBefore);
         for (ApproachFarmer approach : approaches) {
             Set<Long> targetUsers = resolveInactiveUsers(approach);
             for (Long targetUserId : targetUsers) {
@@ -74,7 +76,8 @@ public class ApproachLifecycleScheduler {
                 event.setTitle("Request inactive for 48 hours");
                 event.setMessage(buildInactivityMessage(approach, targetUserId));
                 event.setTarget(new NotificationEventTarget(NotificationTargetType.USER, String.valueOf(targetUserId)));
-                event.setReference(new NotificationEventReference(NotificationReferenceType.REQUEST, approach.getApproachId()));
+                event.setReference(
+                        new NotificationEventReference(NotificationReferenceType.REQUEST, approach.getApproachId()));
                 event.setCreatedAt(now);
                 notificationService.publishEvent(event);
             }
@@ -89,7 +92,8 @@ public class ApproachLifecycleScheduler {
             approachFarmerService.markApproachExpired(approach.getApproachId(), now);
 
             conversationRepository.findByApproachId(approach.getApproachId()).ifPresent(conversation -> {
-                if (conversation.getStatus() == ConversationStatus.ACTIVE && Boolean.TRUE.equals(conversation.getActive())) {
+                if (conversation.getStatus() == ConversationStatus.ACTIVE
+                        && Boolean.TRUE.equals(conversation.getActive())) {
                     conversation.setStatus(ConversationStatus.EXPIRED);
                     conversation.setActive(false);
                     conversation.setExpiredAt(now);
@@ -102,9 +106,12 @@ public class ApproachLifecycleScheduler {
                     systemMessage.setMessageType(MessageType.SYSTEM);
                     systemMessage.setMessageText("Request expired after inactivity. The chat is now closed.");
                     systemMessage.setCreatedAt(now);
+                    systemMessage.setIsRead(false);
+                    systemMessage.setDeliveryStatus(MessageStatus.DELIVERED);
                     ChatMessage savedMessage = chatMessageRepository.save(systemMessage);
 
-                    chatRealtimeService.sendToConversation(savedConversation, "CHAT_MESSAGE", toRealtimeMessage(savedMessage), null);
+                    chatRealtimeService.sendToConversation(savedConversation, "CHAT_MESSAGE",
+                            toRealtimeMessage(savedMessage), null);
                     chatRealtimeService.sendToUser(savedConversation.getBuyerId(), "CONVERSATION_UPDATE",
                             toConversationSummary(savedConversation, savedConversation.getBuyerId()),
                             "Request expired after inactivity.");
@@ -155,6 +162,9 @@ public class ApproachLifecycleScheduler {
         dto.setMessageText(message.getMessageText());
         dto.setMessageType(message.getMessageType().name());
         dto.setCreatedAt(message.getCreatedAt());
+        dto.setIsRead(message.getIsRead());
+        dto.setReadAt(message.getReadAt());
+        dto.setDeliveryStatus(message.getDeliveryStatus() == null ? null : message.getDeliveryStatus().name());
         return dto;
     }
 
@@ -179,6 +189,13 @@ public class ApproachLifecycleScheduler {
         dto.setUpdatedAt(conversation.getUpdatedAt());
         dto.setCompletedAt(conversation.getCompletedAt());
         dto.setArchived(Boolean.FALSE);
+        dto.setBuyerUnreadCount(conversation.getBuyerUnreadCount());
+        dto.setFarmerUnreadCount(conversation.getFarmerUnreadCount());
+        dto.setUnreadCount(actorId != null && actorId.equals(conversation.getBuyerId())
+                ? conversation.getBuyerUnreadCount()
+                : conversation.getFarmerUnreadCount());
+        dto.setLastMessageSenderId(conversation.getLastMessageSenderId());
+        dto.setLastMessagePreview(conversation.getLastMessagePreview());
         dto.setBlockedByMe(Boolean.FALSE);
         dto.setBlockedMe(Boolean.FALSE);
         return dto;

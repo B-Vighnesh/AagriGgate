@@ -54,6 +54,19 @@ public class ChatRealtimeService {
         send(session, new ChatSocketEventDTO("ERROR", null, message));
     }
 
+    public boolean isUserOnline(Long userId) {
+        Set<WebSocketSession> sessions = sessionsByUser.get(userId);
+        if (sessions == null || sessions.isEmpty()) {
+            return false;
+        }
+        for (WebSocketSession session : sessions) {
+            if (session != null && session.isOpen()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void sendToUser(Long userId, ChatSocketEventDTO payload) {
         Set<WebSocketSession> sessions = sessionsByUser.get(userId);
         if (sessions == null || sessions.isEmpty()) {

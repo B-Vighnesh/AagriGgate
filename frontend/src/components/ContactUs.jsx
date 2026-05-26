@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -12,12 +12,7 @@ const CONTACT_ITEMS = [
     href: 'mailto:webappfarmer@gmail.com',
     description: 'Best for account issues, platform help, and detailed follow-ups.',
   },
-  {
-    title: 'Call Us',
-    value: '+91 8618402581',
-    href: 'tel:+918618402581',
-    description: 'Useful when you need quick help during working hours.',
-  },
+  
   {
     title: 'Office',
     value: 'Mangalore, Karnataka',
@@ -29,13 +24,12 @@ const CONTACT_ITEMS = [
 const SUPPORT_PROMISES = [
   'Clear help for platform, access, and account questions',
   'A space to share issues, suggestions, and product feedback',
-  'Optional image upload when a screenshot helps explain the problem',
 ];
 
 export default function ContactUs() {
   const navigate = useNavigate();
   const token = getToken();
-  const [form, setForm] = useState({ name: '', email: '', message: '', image: null });
+  const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -49,10 +43,10 @@ export default function ContactUs() {
   }, [navigate, token]);
 
   const handleChange = (event) => {
-    const { name, value, files, type } = event.target;
+    const { name, value } = event.target;
     setForm((prev) => ({
       ...prev,
-      [name]: type === 'file' ? (files?.[0] || null) : value,
+      [name]: value,
     }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -61,8 +55,6 @@ export default function ContactUs() {
     });
     setSubmitError('');
   };
-
-  const imageLabel = useMemo(() => form.image?.name || 'No image selected', [form.image]);
 
   const validateForm = () => {
     const nextErrors = {};
@@ -99,9 +91,6 @@ export default function ContactUs() {
     formData.append('name', form.name.trim());
     formData.append('email', form.email.trim());
     formData.append('message', form.message.trim());
-    if (form.image) {
-      formData.append('image', form.image);
-    }
 
     try {
       await requestJson('/support/contact', {
@@ -111,10 +100,9 @@ export default function ContactUs() {
       setSubmittedSnapshot({
         name: form.name.trim(),
         email: form.email.trim(),
-        hasImage: Boolean(form.image),
       });
       setSubmitted(true);
-      setForm({ name: '', email: '', message: '', image: null });
+      setForm({ name: '', email: '', message: '' });
     } catch (error) {
       const apiErrors = error?.details?.data;
       if (apiErrors && typeof apiErrors === 'object') {
@@ -203,6 +191,7 @@ export default function ContactUs() {
                   {errors.message ? <p role="alert" className="contact-form-error">{errors.message}</p> : null}
                 </div>
 
+                {/* Image upload disabled. Backend ignores image even if older clients send it.
                 <div className="contact-upload-box">
                   <div>
                     <label htmlFor="image">Image Upload (Optional)</label>
@@ -219,6 +208,7 @@ export default function ContactUs() {
                     <span className="contact-upload-name">{imageLabel}</span>
                   </div>
                 </div>
+                */}
 
                 {submitError ? <p role="alert" className="contact-form-error contact-form-error--banner">{submitError}</p> : null}
 
@@ -242,10 +232,6 @@ export default function ContactUs() {
                     <div className="contact-success-row">
                       <span>Email</span>
                       <strong>{submittedSnapshot.email}</strong>
-                    </div>
-                    <div className="contact-success-row">
-                      <span>Attachment</span>
-                      <strong>{submittedSnapshot.hasImage ? 'Included' : 'Not included'}</strong>
                     </div>
                   </div>
                 ) : null}
@@ -278,9 +264,7 @@ export default function ContactUs() {
                 </div>
               ))}
             </div>
-            <p className="contact-note">
-              If you are logged in, you can also use the <Link to="/enquiry">Support page</Link>.
-            </p>
+           
           </Card>
         </div>
       </div>

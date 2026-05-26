@@ -57,6 +57,48 @@ public class Conversation {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
+    private Integer buyerUnreadCount = 0;
+
+    @Column(nullable = false)
+    private Integer farmerUnreadCount = 0;
+
+    private Long lastMessageSenderId;
+
+    private String lastMessagePreview;
+
+    public Integer getFarmerUnreadCount() {
+        return farmerUnreadCount;
+    }
+
+    public void setFarmerUnreadCount(Integer farmerUnreadCount) {
+        this.farmerUnreadCount = farmerUnreadCount;
+    }
+
+    public Long getLastMessageSenderId() {
+        return lastMessageSenderId;
+    }
+
+    public void setLastMessageSenderId(Long lastMessageSenderId) {
+        this.lastMessageSenderId = lastMessageSenderId;
+    }
+
+    public String getLastMessagePreview() {
+        return lastMessagePreview;
+    }
+
+    public void setLastMessagePreview(String lastMessagePreview) {
+        this.lastMessagePreview = lastMessagePreview;
+    }
+
+    public Integer getBuyerUnreadCount() {
+        return buyerUnreadCount;
+    }
+
+    public void setBuyerUnreadCount(Integer buyerUnreadCount) {
+        this.buyerUnreadCount = buyerUnreadCount;
+    }
+
     private LocalDateTime lastMessageAt;
     private LocalDateTime completedAt;
     private LocalDateTime failedAt;
@@ -89,6 +131,12 @@ public class Conversation {
         }
         if (farmerDealConfirmed == null) {
             farmerDealConfirmed = false;
+        }
+        if (buyerUnreadCount == null) {
+            buyerUnreadCount = 0;
+        }
+        if (farmerUnreadCount == null) {
+            farmerUnreadCount = 0;
         }
     }
 

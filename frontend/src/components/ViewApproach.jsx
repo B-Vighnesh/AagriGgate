@@ -97,6 +97,7 @@ export default function ViewApproach() {
       if (!response.ok) throw new Error('Action failed.');
       showToast(accept ? 'Request accepted.' : 'Request rejected.', accept ? 'success' : 'info');
       await loadApproaches();
+      window.dispatchEvent(new CustomEvent('requests:count-updated'));
     } catch (err) {
       showToast(err.message || 'Unable to process request.', 'error');
     } finally {
@@ -134,7 +135,7 @@ export default function ViewApproach() {
       <div className="ag-container">
         <div className="view-approach-head">
           <div>
-            <h1>Buying Proposals</h1>
+            <h1>Buying Requests</h1>
             <p>Manage buyer requests for your crops.</p>
             {!error && approaches.length > 0 ? (
               <p className="view-all-pagination__info">
@@ -196,7 +197,7 @@ export default function ViewApproach() {
                 </span>
               </div>
 
-              <div className="approach-actions">
+              <div className={`approach-actions ${normalizedStatus === 'pending' ? 'approach-actions--pending' : ''}`.trim()}>
                 <Button variant="outline" size="sm" onClick={() => navigate(`/requests/${item.approachId}`)}>
                   Request Details
                 </Button>
@@ -220,6 +221,7 @@ export default function ViewApproach() {
                   <>
                     <Button
                       size="sm"
+                      className="approach-action-accept"
                       onClick={() => setPendingDecision({ approachId: item.approachId, type: 'accept', step: 1 })}
                       loading={isAccepting}
                       disabled={rowBusy}
@@ -229,6 +231,7 @@ export default function ViewApproach() {
                     <Button
                       variant="danger"
                       size="sm"
+                      className="approach-action-reject"
                       onClick={() => setPendingDecision({ approachId: item.approachId, step: 1 })}
                       loading={isRejecting}
                       disabled={rowBusy}

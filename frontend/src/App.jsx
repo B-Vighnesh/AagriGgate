@@ -8,6 +8,7 @@ import Market from './components/Market';
 import MarketAnalytics from './components/MarketAnalytics';
 import Weather from './components/Weather';
 import InsightsHub from './components/InsightsHub';
+import AboutUs from './components/AboutUs';
 import Login from './components/Login';
 import Logout from './components/Logout';
 import Trade from './components/Trade';
@@ -28,11 +29,13 @@ import DeleteApproach from './components/DeleteApproach';
 import ViewApproachForUser from './components/ViewApproachForUser';
 import RequestDetails from './components/RequestDetails';
 import Settings from './components/Settings';
+import SettingsPassword from './components/SettingsPassword';
+import SettingsDeleteAccount from './components/SettingsDeleteAccount';
 import Enquiry from './components/Enquiry';
 import Error from './components/Error';
 import Chat from './components/Chat';
 import Notifications from './components/Notifications';
-import NotificationPreferencesPage from './components/NotificationPreferencesPage';
+import NotificationPreferences from './components/NotificationPreferences';
 import ValidateToken from './components/ValidateToken';
 import BuyerDetails from './components/BuyerDetails';
 import Favorites from './components/Favorites';
@@ -40,6 +43,8 @@ import Cart from './components/Cart';
 import News from './pages/News';
 import NewsDetails from './components/NewsDetails';
 import MarketDetails from './components/MarketDetails';
+import { bootstrapSession } from './lib/auth';
+import { NavbarCountProvider } from './context/NavbarCountContext';
 import './index.css';
 
 function ScrollManager() {
@@ -76,47 +81,50 @@ function AppRoutes() {
         className={`app-main app-main--transition ${isChatRoute ? 'app-main--chat' : ''}`.trim()}
         key={`${location.pathname}${location.hash}`}
       >
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/account" element={<Account />} />
-            <Route path="/market" element={<Market />} />
-            <Route path="/market/analytics" element={<MarketAnalytics />} />
-            <Route path="/weather" element={<Weather />} />
-            <Route path="/insights" element={<InsightsHub />} />
-            <Route path="/trade" element={<Trade />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/logout" element={<Logout />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/add-crop" element={<AddCrop />} />
-            <Route path="/view-crop" element={<ViewCrop />} />
-            <Route path="/view-details/:cropId" element={<ViewDetails />} />
-            <Route path="/delete-crop/:cropId" element={<DeleteCrop />} />
-            <Route path="/update-crop/:cropId" element={<UpdateCrop />} />
-            <Route path="/contact-us" element={<ContactUs />} />
-            <Route path="/view-all-crops" element={<ViewAllCrop />} />
-            <Route path="/update-account" element={<UpdateAccount />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/approach-farmer" element={<ApproachFarmer />} />
-            <Route path="/view-approach" element={<ViewApproach />} />
-            <Route path="/view-approaches-user" element={<ViewApproachForUser />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/view-buyer/:buyerId" element={<BuyerDetails />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/news/:newsId" element={<NewsDetails />} />
-            <Route path="/delete-approach/:approachId" element={<DeleteApproach />} />
-            <Route path="/view-approaches/farmer/:farmerId/crop/:cropId" element={<ViewApproachByFarmerAndCrop />} />
-            <Route path="/requests/:approachId" element={<RequestDetails />} />
-            <Route path="/market/:marketId" element={<MarketDetails />} />
-            <Route path="/enquiry" element={<Enquiry />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/notification-preferences" element={<NotificationPreferencesPage />} />
-            <Route path="/chat/:conversationId?" element={<Chat />} />
-            <Route path="/validate-token" element={<ValidateToken />} />
-            <Route path="/404" element={<Error />} />
-            <Route path="*" element={<Error />} />
-          </Routes>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/market" element={<Market />} />
+          <Route path="/market/analytics" element={<MarketAnalytics />} />
+          <Route path="/weather" element={<Weather />} />
+          <Route path="/insights" element={<InsightsHub />} />
+          <Route path="/about-us" element={<AboutUs />} />
+          <Route path="/trade" element={<Trade />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/logout" element={<Logout />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/add-crop" element={<AddCrop />} />
+          <Route path="/view-crop" element={<ViewCrop />} />
+          <Route path="/view-details/:cropId" element={<ViewDetails />} />
+          <Route path="/delete-crop/:cropId" element={<DeleteCrop />} />
+          <Route path="/update-crop/:cropId" element={<UpdateCrop />} />
+          <Route path="/contact-us" element={<ContactUs />} />
+          <Route path="/view-all-crops" element={<ViewAllCrop />} />
+          <Route path="/update-account" element={<UpdateAccount />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/approach-farmer" element={<ApproachFarmer />} />
+          <Route path="/view-approach" element={<ViewApproach />} />
+          <Route path="/view-approaches-user" element={<ViewApproachForUser />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/settings/password" element={<SettingsPassword />} />
+          <Route path="/settings/delete-account" element={<SettingsDeleteAccount />} />
+          <Route path="/view-buyer/:buyerId" element={<BuyerDetails />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/news" element={<News />} />
+          <Route path="/news/:newsId" element={<NewsDetails />} />
+          <Route path="/delete-approach/:approachId" element={<DeleteApproach />} />
+          <Route path="/view-approaches/farmer/:farmerId/crop/:cropId" element={<ViewApproachByFarmerAndCrop />} />
+          <Route path="/requests/:approachId" element={<RequestDetails />} />
+          <Route path="/market/:marketId" element={<MarketDetails />} />
+          <Route path="/enquiry" element={<Enquiry />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/notification-preferences" element={<NotificationPreferences />} />
+          <Route path="/chat/:conversationId?" element={<Chat />} />
+          <Route path="/validate-token" element={<ValidateToken />} />
+          <Route path="/404" element={<Error />} />
+          <Route path="*" element={<Error />} />
+        </Routes>
       </main>
       <Footer />
     </div>
@@ -124,9 +132,31 @@ function AppRoutes() {
 }
 
 function App() {
+  const [sessionReady, setSessionReady] = React.useState(false);
+
+  useEffect(() => {
+    let active = true;
+    bootstrapSession().finally(() => {
+      if (active) setSessionReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!sessionReady) {
+    return (
+      <div className="page page--center">
+        <div className="ui-spinner ui-spinner--lg" />
+      </div>
+    );
+  }
+
   return (
     <Router>
-      <AppRoutes />
+      <NavbarCountProvider>
+        <AppRoutes />
+      </NavbarCountProvider>
     </Router>
   );
 }

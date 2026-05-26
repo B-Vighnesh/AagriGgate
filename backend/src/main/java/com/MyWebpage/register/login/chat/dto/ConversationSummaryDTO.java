@@ -24,6 +24,11 @@ public class ConversationSummaryDTO {
     private Boolean archived;
     private Boolean blockedByMe;
     private Boolean blockedMe;
+    private Integer buyerUnreadCount;
+    private Integer farmerUnreadCount;
+    private Integer unreadCount;
+    private Long lastMessageSenderId;
+    private String lastMessagePreview;
 
     public Long getConversationId() {
         return conversationId;
@@ -191,5 +196,45 @@ public class ConversationSummaryDTO {
 
     public void setBlockedMe(Boolean blockedMe) {
         this.blockedMe = blockedMe;
+    }
+
+    public Integer getBuyerUnreadCount() {
+        return buyerUnreadCount;
+    }
+
+    public void setBuyerUnreadCount(Integer buyerUnreadCount) {
+        this.buyerUnreadCount = buyerUnreadCount;
+    }
+
+    public Integer getFarmerUnreadCount() {
+        return farmerUnreadCount;
+    }
+
+    public void setFarmerUnreadCount(Integer farmerUnreadCount) {
+        this.farmerUnreadCount = farmerUnreadCount;
+    }
+
+    public Integer getUnreadCount() {
+        return unreadCount;
+    }
+
+    public void setUnreadCount(Integer unreadCount) {
+        this.unreadCount = unreadCount;
+    }
+
+    public Long getLastMessageSenderId() {
+        return lastMessageSenderId;
+    }
+
+    public void setLastMessageSenderId(Long lastMessageSenderId) {
+        this.lastMessageSenderId = lastMessageSenderId;
+    }
+
+    public String getLastMessagePreview() {
+        return lastMessagePreview;
+    }
+
+    public void setLastMessagePreview(String lastMessagePreview) {
+        this.lastMessagePreview = lastMessagePreview;
     }
 }

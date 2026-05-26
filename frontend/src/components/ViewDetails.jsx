@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -6,11 +6,12 @@ import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
 import DeleteCrop from './DeleteCrop';
 import ApproachFarmer from './ApproachFarmer';
-import { getApiBaseUrl } from '../lib/api';
+import Modal from './Modal';
+import { apiFetch } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 import { addFavorite, addToCart, getFavoriteStatus, removeFavorite } from '../api/buyerToolsApi';
-
-const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220"><rect width="360" height="220" fill="%23d8f3dc"/><text x="50%" y="55%" text-anchor="middle" font-size="28" fill="%231f6f54">Crop</text></svg>';
+import { createOrGetChatConversation } from '../api/chatApi';
+import { normalizeCropResponse } from '../api/cropApi';
 
 function DetailRow({ label, value }) {
   if (!value && value !== 0) return null;
@@ -20,6 +21,53 @@ function DetailRow({ label, value }) {
       <strong>{value}</strong>
     </div>
   );
+}
+
+function getApproachStatusValue(approachStatus) {
+  if (approachStatus && typeof approachStatus === 'object') {
+    return approachStatus.status;
+  }
+  return approachStatus;
+}
+
+function getApproachIdValue(approachStatus) {
+  if (approachStatus && typeof approachStatus === 'object') {
+    return approachStatus.approachId
+      ?? approachStatus.approachID
+      ?? approachStatus.approach_id
+      ?? approachStatus.id
+      ?? null;
+  }
+  return null;
+}
+
+function normalizeApproachStatus(approachStatus) {
+  const status = getApproachStatusValue(approachStatus);
+  if (typeof status === 'boolean') {
+    return status ? 'accepted' : 'pending';
+  }
+  if (status == null) return '';
+  return String(status).trim().toLowerCase();
+}
+
+function getApproachInfoAlert(status) {
+  const normalized = normalizeApproachStatus(status);
+  switch (normalized) {
+    case 'accepted':
+    case 'active':
+      return 'Farmer accepted your request. Check your chats for next steps.';
+    case 'pending':
+      return 'You already requested this crop. It is pending review.';
+    case 'completed':
+      return 'Deal was completed once for this crop.';
+    case 'failed':
+    case 'rejected':
+      return 'Deal was failed once for this crop.';
+    case 'expired':
+      return 'Deal was expired once for this crop.';
+    default:
+      return '';
+  }
 }
 
 export default function ViewDetails() {
@@ -43,22 +91,21 @@ export default function ViewDetails() {
   const [requestedQuantity, setRequestedQuantity] = useState('1');
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const [showApproachModal, setShowApproachModal] = useState(false);
+  const [approachPromptOpen, setApproachPromptOpen] = useState(false);
+  const [approachActionLoading, setApproachActionLoading] = useState(false);
+  const approachPromptShownRef = useRef(false);
 
-  const safeFetch = (path, options = {}) => {
-    return fetch(`${getApiBaseUrl()}${path}`, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...(options.headers || {}),
-      },
-    });
-  };
+  const safeFetch = (path, options = {}) => apiFetch(path, options);
 
   const parseJsonIfPresent = async (response) => {
     if (response.status === 204) return null;
     const text = await response.text();
     if (!text) return null;
-    return JSON.parse(text);
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
   };
 
   useEffect(() => {
@@ -73,7 +120,7 @@ export default function ViewDetails() {
         const detailRes = await safeFetch(`/crops/legacy/${cropId}`, { method: 'GET' });
         const imgRes = await safeFetch(`/crops/legacy/${cropId}/image`, { method: 'GET' });
         if (!detailRes.ok) throw new Error('This crop is not available.');
-        const detailData = await parseJsonIfPresent(detailRes);
+        const detailData = normalizeCropResponse(await parseJsonIfPresent(detailRes));
         if (!detailData.cropID) throw new Error('This crop is not available.');
 
         if (!mounted) return;
@@ -107,8 +154,7 @@ export default function ViewDetails() {
             const status = await parseJsonIfPresent(statusRes);
             if (!mounted) return;
             setApproachStatus(status);
-            if (status === true) setInfoAlert('Farmer accepted your request. Check your email for next steps.');
-            if (status === false) setInfoAlert('You already requested this crop. It is pending review.');
+            setInfoAlert(getApproachInfoAlert(status));
           }
         }
       } catch (err) {
@@ -125,6 +171,15 @@ export default function ViewDetails() {
       }
     };
   }, [cropId]);
+
+  useEffect(() => {
+    if (loading || role !== 'buyer' || approachPromptShownRef.current) return;
+    const status = normalizeApproachStatus(approachStatus);
+    if (status === 'pending' || status === 'accepted' || status === 'active') {
+      approachPromptShownRef.current = true;
+      setApproachPromptOpen(true);
+    }
+  }, [approachStatus, loading, role]);
 
   if (loading) {
     return (
@@ -151,6 +206,17 @@ export default function ViewDetails() {
 
   const isOwner = role === 'farmer' && cropDetails.ownedByCurrentUser === true;
   const isSold = (cropDetails.status || '').toLowerCase() === 'sold';
+  const normalizedApproachStatus = normalizeApproachStatus(approachStatus);
+  const approachId = getApproachIdValue(approachStatus);
+  const canViewApproachDetails = Boolean(approachId);
+  const hasOpenApproach = ['pending', 'accepted', 'active', 'completed'].includes(normalizedApproachStatus);
+  const approachButtonLabel = normalizedApproachStatus === 'pending'
+    ? 'Request Pending'
+    : normalizedApproachStatus === 'completed'
+      ? 'Deal Completed'
+      : normalizedApproachStatus === 'accepted' || normalizedApproachStatus === 'active'
+        ? 'Request Accepted'
+        : 'Send Request';
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -187,28 +253,92 @@ export default function ViewDetails() {
       setCartLoading(false);
     }
   };
+  const handleDetailImageLoad = (event) => {
+    const img = event.currentTarget;
+    img.closest('.view-crop__image-wrap')?.classList.toggle('landscape', img.naturalWidth > img.naturalHeight);
+  };
+  const handleDetailImageError = (event) => {
+    const img = event.currentTarget;
+    img.closest('.view-crop__image-wrap')?.classList.add('image-wrap--empty');
+    img.remove();
+  };
+
+  const handleApproachButtonClick = () => {
+    if (['pending', 'accepted', 'active'].includes(normalizedApproachStatus)) {
+      setApproachPromptOpen(true);
+      return;
+    }
+    setShowApproachModal(true);
+  };
+
+  const handleTrackRequest = () => {
+    if (!approachId) {
+      showToast('Request details are not available yet. Please refresh and try again.', 'info');
+      return;
+    }
+    setApproachPromptOpen(false);
+    navigate(`/requests/${approachId}`);
+  };
+
+  const handleOpenAcceptedChat = async () => {
+    if (!approachId) {
+      showToast('Chat is not available yet. Please refresh and try again.', 'info');
+      return;
+    }
+    setApproachActionLoading(true);
+    try {
+      const conversation = await createOrGetChatConversation(approachId);
+      setApproachPromptOpen(false);
+      navigate(`/chat/${conversation.conversationId}`);
+    } catch (errorValue) {
+      showToast(errorValue.message || 'Unable to open chat right now.', 'error');
+    } finally {
+      setApproachActionLoading(false);
+    }
+  };
 
   return (
     <section className="page view-details-page">
       <ValidateToken token={token} />
       <div className="ag-container">
-        <button className="link-back" onClick={() => navigate(-1)}>Back</button>
+        
 
         {infoAlert ? <p className="view-details-alert">{infoAlert}</p> : null}
 
         <div className="view-details-grid">
+          <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+          </button>
           <Card className="view-details-image-card">
-            <img src={imageUrl || PLACEHOLDER} alt={cropDetails.cropName} onError={(event) => { event.currentTarget.src = PLACEHOLDER; }} />
+            
+          <div className="view-crop__image-wrap">
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={cropDetails.cropName}
+                onLoad={handleDetailImageLoad}
+                onError={handleDetailImageError}
+              />
+            ) : <span className="crop-image-empty">No image</span>}
+            <span className="view-all-card__badge">{cropDetails.cropType}</span>
+          </div>
           </Card>
 
           <Card className="view-details-info-card">
             <div className="view-details-title-row">
               <h1>{cropDetails.cropName}</h1>
-              <span>{cropDetails.cropType}</span>
             </div>
 
             <DetailRow label="Farmer" value={cropDetails.farmerName} />
-            <DetailRow label="Region" value={cropDetails.region} />
+            <DetailRow label="Area" value={cropDetails.region} />
+            <DetailRow label="State" value={cropDetails.state} />
+            <DetailRow label="District" value={cropDetails.district} />
             <DetailRow label="Status" value={cropDetails.status} />
             <DetailRow label="Urgent Sale" value={cropDetails.isUrgent ? 'Yes' : 'No'} />
             <DetailRow label="Waste Sale" value={cropDetails.isWaste ? 'Yes' : 'No'} />
@@ -241,8 +371,13 @@ export default function ViewDetails() {
                     <Button onClick={handleAddToCart} loading={cartLoading} disabled={isSold}>
                       {isSold ? 'Sold Out' : 'Add to Cart'}
                     </Button>
-                    <Button variant="accent" onClick={() => setShowApproachModal(true)} disabled={isSold || approachStatus === true}>
-                      {approachStatus === true ? 'Request Accepted' : 'Send Approach'}
+                    {canViewApproachDetails ? (
+                      <Button variant="outline" onClick={() => navigate(`/requests/${approachId}`)}>
+                        View Request
+                      </Button>
+                    ) : null}
+                    <Button variant="accent" onClick={handleApproachButtonClick} disabled={isSold || normalizedApproachStatus === 'completed'}>
+                      {approachButtonLabel}
                     </Button>
                     <Button variant="ghost" onClick={() => navigate('/cart')}>Open Cart</Button>
                   </div>
@@ -254,7 +389,7 @@ export default function ViewDetails() {
               {isOwner ? (
                 <>
                   <Button variant="outline" onClick={() => navigate(`/update-crop/${cropId}`)}>Update Crop</Button>
-                  <Button variant="outline" onClick={() => navigate(`/view-approaches/farmer/${currentUserId}/crop/${cropId}`)}>View Approaches</Button>
+                  <Button variant="outline" onClick={() => navigate(`/view-approaches/farmer/${currentUserId}/crop/${cropId}`)}>View Requests</Button>
                   <Button variant="danger" onClick={() => setShowDeleteModal(true)}>Delete Crop</Button>
                 </>
               ) : null}
@@ -269,13 +404,38 @@ export default function ViewDetails() {
           cropId={cropId}
           initialQuantity={Number(requestedQuantity || 1)}
           onClose={() => setShowApproachModal(false)}
-          onSuccess={() => {
-            setApproachStatus(false);
+          onSuccess={(quantity, latestApproach) => {
+            approachPromptShownRef.current = true;
+            setApproachStatus(latestApproach || { status: 'Pending' });
             setInfoAlert('Your request is pending review from the farmer.');
             showToast('Approach request sent.', 'success');
           }}
         />
       ) : null}
+      <Modal
+        isOpen={approachPromptOpen}
+        title={normalizedApproachStatus === 'pending' ? 'Request Pending' : 'Request Accepted'}
+        message={
+          normalizedApproachStatus === 'pending'
+            ? 'Your request is pending with the farmer. Track the request to see the latest status.'
+            : 'Your request is accepted. Start the conversation with the farmer to continue the deal.'
+        }
+        onClose={() => setApproachPromptOpen(false)}
+        secondaryAction={{
+          label: normalizedApproachStatus === 'pending' ? 'Close' : 'View Request',
+          onClick: normalizedApproachStatus === 'pending'
+            ? () => setApproachPromptOpen(false)
+            : handleTrackRequest,
+        }}
+        primaryAction={{
+          label: normalizedApproachStatus === 'pending'
+            ? 'Track Request'
+            : approachActionLoading
+              ? 'Opening...'
+              : 'Open Chat',
+          onClick: normalizedApproachStatus === 'pending' ? handleTrackRequest : handleOpenAcceptedChat,
+        }}
+      />
       <Toast message={toast.message} type={toast.type} />
     </section>
   );

@@ -6,10 +6,9 @@ import com.MyWebpage.register.login.news.enums.DateRange;
 import com.MyWebpage.register.login.news.enums.NewsCategory;
 import com.MyWebpage.register.login.news.enums.NewsType;
 import com.MyWebpage.register.login.news.service.NewsService;
-import com.MyWebpage.register.login.security.jwt.JWTService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,16 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class NewsController {
 
     private final NewsService newsService;
-    private final JWTService jwtService;
 
-    public NewsController(NewsService newsService, JWTService jwtService) {
+    public NewsController(NewsService newsService) {
         this.newsService = newsService;
-        this.jwtService = jwtService;
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<NewsResponse>>> getNews(
-            HttpServletRequest request,
+            Authentication authentication,
             @RequestParam(required = false) NewsCategory category,
             @RequestParam(required = false) NewsType newsType,
             @RequestParam(required = false) String language,
@@ -41,14 +38,14 @@ public class NewsController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "newest") String sortBy
     ) {
-        Long currentUserId = extractCurrentUserId(request);
+        Long currentUserId = extractCurrentUserId(authentication);
         Page<NewsResponse> data = newsService.getAllNews(category, newsType, language, isImportant, keyword, dateRange, currentUserId, page, size, sortBy);
         return ResponseEntity.ok(ApiResponse.success("News fetched", data));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<NewsResponse>> getNewsById(@PathVariable Long id, HttpServletRequest request) {
-        Long currentUserId = extractCurrentUserId(request);
+    public ResponseEntity<ApiResponse<NewsResponse>> getNewsById(@PathVariable Long id, Authentication authentication) {
+        Long currentUserId = extractCurrentUserId(authentication);
         return ResponseEntity.ok(ApiResponse.success("News fetched", newsService.getNewsById(id, currentUserId)));
     }
 
@@ -67,7 +64,7 @@ public class NewsController {
     }
 */
 
-    private Long extractCurrentUserId(HttpServletRequest request) {
-        return jwtService.extractId(request.getHeader("Authorization").substring(7));
+    private Long extractCurrentUserId(Authentication authentication) {
+        return Long.parseLong(authentication.getName());
     }
 }

@@ -13,7 +13,8 @@ import java.util.List;
 import java.time.LocalDateTime;
 
 @Repository
-public interface CropRepo extends JpaRepository<Crop,Long> {
+public interface CropRepo extends JpaRepository<Crop, Long> {
+
     @Query("""
             SELECT c FROM Crop c
             WHERE c.farmer.farmerId = :farmerId
@@ -33,6 +34,9 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             """)
     Page<Crop> findPageByFarmerId(@Param("farmerId") Long farmerId, Pageable pageable);
 
+    // -----------------------------------------------------------------------
+    // findFilteredCropViews — used for farmer's own crop listing
+    // -----------------------------------------------------------------------
     @Query(
             value = """
                     SELECT new com.MyWebpage.register.login.crop.CropViewDTO(
@@ -40,6 +44,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                         c.cropName,
                         c.cropType,
                         c.region,
+                        c.state,
+                        c.district,
                         c.marketPrice,
                         c.quantity,
                         c.unit,
@@ -68,6 +74,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                       AND (:keyword IS NULL
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%')))
                       AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
+                      AND (:state IS NULL OR lower(c.state) LIKE lower(concat('%', :state, '%')))
+                      AND (:district IS NULL OR lower(c.district) LIKE lower(concat('%', :district, '%')))
                       AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
                       AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
                       AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
@@ -88,6 +96,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                       AND (:keyword IS NULL
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%')))
                       AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
+                      AND (:state IS NULL OR lower(c.state) LIKE lower(concat('%', :state, '%')))
+                      AND (:district IS NULL OR lower(c.district) LIKE lower(concat('%', :district, '%')))
                       AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
                       AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
                       AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
@@ -105,6 +115,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             @Param("farmerId") Long farmerId,
             @Param("keyword") String keyword,
             @Param("region") String region,
+            @Param("state") String state,
+            @Param("district") String district,
             @Param("category") String category,
             @Param("maxPrice") Double maxPrice,
             @Param("farmerName") String farmerName,
@@ -114,12 +126,108 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             @Param("discountOnly") Boolean discountOnly,
             Pageable pageable);
 
+    // -----------------------------------------------------------------------
+    // findAllFilteredCropViews — used for all buyers browsing available crops
+    // -----------------------------------------------------------------------
+    @Query(
+            value = """
+                    SELECT new com.MyWebpage.register.login.crop.CropViewDTO(
+                        c.cropID,
+                        c.cropName,
+                        c.cropType,
+                        c.region,
+                        c.state,
+                        c.district,
+                        c.marketPrice,
+                        c.quantity,
+                        c.unit,
+                        c.description,
+                        c.postDate,
+                        CASE
+                            WHEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, ''))) <> ''
+                            THEN trim(concat(coalesce(c.farmer.firstName, ''), ' ', coalesce(c.farmer.lastName, '')))
+                            ELSE c.farmer.username
+                        END,
+                        CASE
+                            WHEN :currentUserId IS NOT NULL AND c.farmer.farmerId = :currentUserId
+                            THEN true
+                            ELSE false
+                        END,
+                        c.isUrgent,
+                        c.isWaste,
+                        c.discountPrice,
+                        c.status
+                    )
+                    FROM Crop c
+                    WHERE c.active = true
+                      AND c.status = 'available'
+                      AND c.deletedAt IS NULL
+                      AND c.farmer.active = true
+                      AND (:keyword IS NULL
+                           OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%')))
+                      AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
+                      AND (:state IS NULL OR lower(c.state) LIKE lower(concat('%', :state, '%')))
+                      AND (:district IS NULL OR lower(c.district) LIKE lower(concat('%', :district, '%')))
+                      AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
+                      AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
+                      AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
+                      AND (:wasteOnly IS NULL OR c.isWaste = :wasteOnly)
+                      AND (:normalOnly IS NULL OR (coalesce(c.isUrgent, false) = false AND coalesce(c.isWaste, false) = false))
+                      AND (:discountOnly IS NULL OR coalesce(c.discountPrice, 0) > 0)
+                      AND (:farmerName IS NULL
+                           OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
+                           OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
+                           OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :farmerName, '%')))
+                    """,
+            countQuery = """
+                    SELECT COUNT(c) FROM Crop c
+                    WHERE c.active = true
+                      AND c.status = 'available'
+                      AND c.deletedAt IS NULL
+                      AND c.farmer.active = true
+                      AND (:keyword IS NULL
+                           OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%')))
+                      AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
+                      AND (:state IS NULL OR lower(c.state) LIKE lower(concat('%', :state, '%')))
+                      AND (:district IS NULL OR lower(c.district) LIKE lower(concat('%', :district, '%')))
+                      AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
+                      AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
+                      AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
+                      AND (:wasteOnly IS NULL OR c.isWaste = :wasteOnly)
+                      AND (:normalOnly IS NULL OR (coalesce(c.isUrgent, false) = false AND coalesce(c.isWaste, false) = false))
+                      AND (:discountOnly IS NULL OR coalesce(c.discountPrice, 0) > 0)
+                      AND (:farmerName IS NULL
+                           OR lower(coalesce(c.farmer.firstName, '')) LIKE lower(concat('%', :farmerName, '%'))
+                           OR lower(coalesce(c.farmer.lastName, '')) LIKE lower(concat('%', :farmerName, '%'))
+                           OR lower(coalesce(c.farmer.username, '')) LIKE lower(concat('%', :farmerName, '%')))
+                    """
+    )
+    Page<CropViewDTO> findAllFilteredCropViews(
+            @Param("currentUserId") Long currentUserId,
+            @Param("keyword") String keyword,
+            @Param("region") String region,
+            @Param("state") String state,
+            @Param("district") String district,
+            @Param("category") String category,
+            @Param("maxPrice") Double maxPrice,
+            @Param("farmerName") String farmerName,
+            @Param("urgentOnly") Boolean urgentOnly,
+            @Param("wasteOnly") Boolean wasteOnly,
+            @Param("normalOnly") Boolean normalOnly,
+            @Param("discountOnly") Boolean discountOnly,
+            Pageable pageable);
+
+    // -----------------------------------------------------------------------
+    // findCropViewById — single crop detail view
+    // -----------------------------------------------------------------------
     @Query("""
             SELECT new com.MyWebpage.register.login.crop.CropViewDTO(
                 c.cropID,
                 c.cropName,
                 c.cropType,
                 c.region,
+                c.state,
+                c.district,
                 c.marketPrice,
                 c.quantity,
                 c.unit,
@@ -148,6 +256,9 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             """)
     CropViewDTO findCropViewById(@Param("cropId") Long cropId, @Param("currentUserId") Long currentUserId);
 
+    // -----------------------------------------------------------------------
+    // findFilteredCropResponses — kept for backward compat, add state/district
+    // -----------------------------------------------------------------------
     @Query(
             value = """
                     SELECT new com.MyWebpage.register.login.crop.CropResponseDTO(
@@ -155,6 +266,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                         c.cropName,
                         c.cropType,
                         c.region,
+                        c.state,
+                        c.district,
                         c.marketPrice,
                         c.quantity,
                         c.unit,
@@ -178,6 +291,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                       AND (:keyword IS NULL
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%')))
                       AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
+                      AND (:state IS NULL OR lower(c.state) LIKE lower(concat('%', :state, '%')))
+                      AND (:district IS NULL OR lower(c.district) LIKE lower(concat('%', :district, '%')))
                       AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
                       AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
                       AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
@@ -198,6 +313,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                       AND (:keyword IS NULL
                            OR lower(c.cropName) LIKE lower(concat('%', :keyword, '%')))
                       AND (:region IS NULL OR lower(c.region) LIKE lower(concat('%', :region, '%')))
+                      AND (:state IS NULL OR lower(c.state) LIKE lower(concat('%', :state, '%')))
+                      AND (:district IS NULL OR lower(c.district) LIKE lower(concat('%', :district, '%')))
                       AND (:category IS NULL OR lower(c.cropType) LIKE lower(concat('%', :category, '%')))
                       AND (:maxPrice IS NULL OR c.marketPrice <= :maxPrice)
                       AND (:urgentOnly IS NULL OR c.isUrgent = :urgentOnly)
@@ -214,6 +331,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
             @Param("farmerId") Long farmerId,
             @Param("keyword") String keyword,
             @Param("region") String region,
+            @Param("state") String state,
+            @Param("district") String district,
             @Param("category") String category,
             @Param("maxPrice") Double maxPrice,
             @Param("farmerName") String farmerName,
@@ -229,6 +348,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                 c.cropName,
                 c.cropType,
                 c.region,
+                c.state,
+                c.district,
                 c.marketPrice,
                 c.quantity,
                 c.unit,
@@ -277,6 +398,8 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
                         c.cropName,
                         c.cropType,
                         c.region,
+                        c.state,
+                        c.district,
                         c.marketPrice,
                         c.quantity,
                         c.unit,
@@ -332,11 +455,11 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
     @Transactional
     @Modifying
     @Query("""
-    UPDATE Crop c
-    SET c.active = false, c.deletedAt = :deletedAt
-    WHERE (lower(coalesce(c.status, '')) = 'sold' OR c.quantity <= 0)
-      AND c.active = true
-""")
+            UPDATE Crop c
+            SET c.active = false, c.deletedAt = :deletedAt
+            WHERE (lower(coalesce(c.status, '')) = 'sold' OR c.quantity <= 0)
+              AND c.active = true
+            """)
     int softDeleteSoldCrops(@Param("deletedAt") LocalDateTime deletedAt);
 
     @Query("""
@@ -347,4 +470,14 @@ public interface CropRepo extends JpaRepository<Crop,Long> {
               AND c.farmer.active = true
             """)
     Crop findByCropID(@Param("productId") Long productId);
+
+
+    @Query("""
+            SELECT c.imageKey, c.thumbnailKey
+            FROM Crop c
+            WHERE c.cropID = :cropId
+              AND c.active = true
+              AND c.deletedAt IS NULL
+            """)
+    List<Object[]> findImageKeysByCropId(@Param("cropId") Long cropId);
 }

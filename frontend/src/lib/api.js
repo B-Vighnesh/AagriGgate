@@ -1,4 +1,4 @@
-import { clearAuth } from './auth';
+import { clearAuth, getToken } from './auth';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 const DEFAULT_TIMEOUT_MS = 15000;
@@ -12,19 +12,17 @@ export class ApiError extends Error {
   }
 }
 
-function getAuthToken() {
-  return localStorage.getItem('token');
-}
-
 function buildHeaders(optionsHeaders = {}, isFormData = false) {
-  const token = getAuthToken();
   const headers = { ...optionsHeaders };
+  const hasAuthorizationHeader = Object.keys(headers)
+    .some((header) => header.toLowerCase() === 'authorization');
 
   if (!isFormData && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
   }
 
-  if (token && !headers.Authorization) {
+  const token = getToken();
+  if (token && token !== 'cookie-session' && !hasAuthorizationHeader) {
     headers.Authorization = `Bearer ${token}`;
   }
 
@@ -59,6 +57,7 @@ export async function apiFetch(path, options = {}) {
     const headers = buildHeaders(options.headers || {}, isFormData);
     const response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
+      credentials: options.credentials || 'include',
       headers,
       signal: controller.signal,
     });

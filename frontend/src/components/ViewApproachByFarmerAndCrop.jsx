@@ -108,6 +108,7 @@ export default function ViewApproachByFarmerAndCrop() {
       if (!response.ok) throw new Error('Action failed. Try again.');
       showToast(accept ? 'Request accepted.' : 'Request rejected.', accept ? 'success' : 'info');
       await loadApproaches();
+      window.dispatchEvent(new CustomEvent('requests:count-updated'));
     } catch (requestError) {
       showToast(requestError.message || 'Unable to process request.', 'error');
     } finally {
@@ -142,8 +143,16 @@ export default function ViewApproachByFarmerAndCrop() {
       <div className="ag-container">
         <div className="approach-crop-head">
           <div>
-            <button className="link-back" onClick={() => navigate(-1)}>Back</button>
-            <h1>Crop Requests</h1>
+             <button
+                    type="button"
+                    className="chat-back-btn"
+                    onClick={() => navigate(-1)}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <i className="fa-solid fa-chevron-left" />
+          </button>
+          <h1>Crop Requests</h1>
             <p>Manage buyer requests for this crop.</p>
             {!error && approaches.length > 0 ? (
               <p className="view-all-pagination__info">
@@ -200,7 +209,7 @@ export default function ViewApproachByFarmerAndCrop() {
                     {getRequestStatusLabel(approach.status)}
                   </span>
 
-                  <div className="approach-crop-actions">
+                  <div className={`approach-crop-actions ${isPending ? 'approach-crop-actions--pending' : ''}`.trim()}>
                     <Button variant="outline" size="sm" onClick={() => navigate(`/requests/${approach.approachId}`)}>
                       Request Details
                     </Button>
@@ -227,6 +236,7 @@ export default function ViewApproachByFarmerAndCrop() {
                       <>
                         <Button
                           size="sm"
+                          className="approach-action-accept"
                           onClick={() => setPendingDecision({ approachId: approach.approachId, type: 'accept', step: 1 })}
                           loading={isAccepting}
                           disabled={rowBusy}
@@ -236,6 +246,7 @@ export default function ViewApproachByFarmerAndCrop() {
                         <Button
                           variant="danger"
                           size="sm"
+                          className="approach-action-reject"
                           onClick={() => setPendingDecision({ approachId: approach.approachId, step: 1 })}
                           loading={isRejecting}
                           disabled={rowBusy}

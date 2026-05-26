@@ -7,7 +7,8 @@ import com.MyWebpage.register.login.auth.dto.DeleteAccountRequestDTO;
 import com.MyWebpage.register.login.auth.dto.OtpLoginRequestDTO;
 import com.MyWebpage.register.login.cart.CartItemRepo;
 import com.MyWebpage.register.login.crop.CropService;
-import com.MyWebpage.register.login.farmer.FarmerRequestDTO;
+import com.MyWebpage.register.login.auth.dto.FarmerRequestDTO;
+import com.MyWebpage.register.login.exception.UserAlreadyExistsException;
 import com.MyWebpage.register.login.farmer.Farmer;
 import com.MyWebpage.register.login.farmer.FarmerRepo;
 import com.MyWebpage.register.login.favorite.FavoriteRepo;
@@ -28,7 +29,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -76,6 +79,9 @@ public class AuthServiceImpl implements AuthService {
         farmer.setRole(role);
         farmer.setActive(true);
         farmer.setDeletedAt(null);
+        farmer.setDistrict(dto.getDistrict());
+        farmer.setAadharNo(dto.getAadharNo());
+        farmer.setDob(dto.getDob());
 
         Long farmerId = farmerRepo.getNextUserSequence();
         String generatedUsername = generateUsername(dto.getFirstName(), farmerId);
@@ -128,7 +134,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void sendDeletionOtp(Long farmerId) {
-        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
+        Farmer farmer = findFarmerById(farmerId);
         String otp = otpService.issueOtp(farmer.getFarmerId().toString(), OtpPurpose.DELETION);
         emailService.sendDeletionOtpEmail(farmer, otp);
     }
@@ -160,7 +166,7 @@ public class AuthServiceImpl implements AuthService {
             String currentPassword,
             String newPassword) {
 
-        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
+        Farmer farmer = findFarmerById(farmerId);
 
         if (!passwordEncoder.matches(currentPassword, farmer.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
@@ -201,7 +207,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void softDeleteAccount(Long farmerId, DeleteAccountRequestDTO request, String role) {
-        Farmer farmer = findFarmerByPrincipal(farmerId.toString());
+        Farmer farmer = findFarmerById(farmerId);
 
         if(!otpService.verifyAndConsumeOtp(farmerId.toString(),OtpPurpose.DELETION, request.getOtp()))
         {
@@ -229,8 +235,22 @@ public class AuthServiceImpl implements AuthService {
     public void findUser(String email) {
         if(farmerRepo.existsByEmailAndActiveTrue(email))
         {
-            throw new RuntimeException("User already exists");
+            throw new UserAlreadyExistsException("User already exists");
         }
+    }
+
+    @Override
+    public Map<String, Object> getUserDetails(Long farmerId) {
+        Farmer farmer = farmerRepo.findById(farmerId)
+                .filter(Farmer::isActive)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("role", farmer.getRole());
+        response.put("farmerId", farmer.getFarmerId());
+        response.put("firstName", farmer.getFirstName());
+        response.put("lastName", farmer.getLastName());
+        response.put("username", farmer.getUsername());
+        return response;
     }
 
     private AuthResponseDTO buildResponse(
@@ -242,6 +262,7 @@ public class AuthServiceImpl implements AuthService {
         dto.setToken(token);
         dto.setFarmerId(farmer.getFarmerId());
         dto.setRole(farmer.getRole());
+        dto.setFirstName(farmer.getFirstName());
 
         return dto;
     }
@@ -250,6 +271,15 @@ public class AuthServiceImpl implements AuthService {
         Farmer farmer = principal.contains("@")
                 ? farmerRepo.findByEmailAndActiveTrue(principal).orElse(null)
                 : farmerRepo.findByUsernameAndActiveTrue(principal);
+        if (farmer == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+        ensureAccountActive(farmer);
+        return farmer;
+    }
+
+    private Farmer findFarmerById(Long farmerId) {
+        Farmer farmer = farmerRepo.findByFarmerId(farmerId);
         if (farmer == null) {
             throw new IllegalArgumentException("User not found");
         }

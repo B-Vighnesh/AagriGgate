@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import jakarta.servlet.http.Cookie;
+import java.util.Arrays;
 import java.util.Map;
 
 @Component
@@ -29,6 +31,16 @@ public class ChatWebSocketAuthInterceptor implements HandshakeInterceptor {
             String token = null;
             if (request instanceof ServletServerHttpRequest servletRequest) {
                 token = servletRequest.getServletRequest().getParameter("token");
+                if ((token == null || token.isBlank())) {
+                    Cookie[] cookies = servletRequest.getServletRequest().getCookies();
+                    if (cookies != null) {
+                        token = Arrays.stream(cookies)
+                                .filter(cookie -> "token".equals(cookie.getName()))
+                                .map(Cookie::getValue)
+                                .findFirst()
+                                .orElse(null);
+                    }
+                }
                 if ((token == null || token.isBlank())) {
                     String authHeader = servletRequest.getServletRequest().getHeader("Authorization");
                     if (authHeader != null && authHeader.startsWith("Bearer ")) {

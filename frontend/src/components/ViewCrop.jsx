@@ -1,13 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
 import Toast from './common/Toast';
 import ValidateToken from './ValidateToken';
-import { apiGet, apiFetch } from '../lib/api';
+import { apiGet } from '../lib/api';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
-
-const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180"><rect width="320" height="180" fill="%23d8f3dc"/><text x="50%" y="54%" text-anchor="middle" font-size="26" fill="%231f6f54">No Image</text></svg>';
+import { getCropImageBlob, normalizeCropPage } from '../api/cropApi';
 
 export default function ViewCrop() {
   const navigate = useNavigate();
@@ -31,6 +30,14 @@ export default function ViewCrop() {
   const [hasMore, setHasMore] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info' });
   const loadMoreRef = useRef(null);
+  const imageUrlRegistryRef = useRef(new Set());
+
+  const revokeAllImageUrls = useCallback(() => {
+    imageUrlRegistryRef.current.forEach((url) => {
+      try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+    });
+    imageUrlRegistryRef.current.clear();
+  }, []);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -41,6 +48,15 @@ export default function ViewCrop() {
     if (crop.isUrgent) return 'urgent';
     if (crop.isWaste) return 'waste';
     return 'normal';
+  };
+  const handleCropImageLoad = (event) => {
+    const img = event.currentTarget;
+    img.closest('.view-crop-card__image-wrap')?.classList.toggle('landscape', img.naturalWidth > img.naturalHeight);
+  };
+  const handleCropImageError = (event) => {
+    const img = event.currentTarget;
+    img.closest('.view-crop-card__image-wrap')?.classList.add('image-wrap--empty');
+    img.remove();
   };
 
   useEffect(() => {
@@ -75,6 +91,8 @@ export default function ViewCrop() {
         setLoading(true);
         setError('');
         setCrops([]);
+        setImages({});
+        revokeAllImageUrls();
         setTotalPages(0);
         setTotalElements(0);
         setHasMore(false);
@@ -105,7 +123,7 @@ export default function ViewCrop() {
 
         const response = await apiGet(`/crops/farmer/me/legacy?${params.toString()}`);
         if (!response.ok) throw new Error('Unable to load crops.');
-        const data = await response.json();
+        const data = normalizeCropPage(await response.json());
         if (!mounted) return;
         const cropList = Array.isArray(data?.content) ? data.content : [];
         const nextPage = Number(data?.number ?? page);
@@ -117,11 +135,18 @@ export default function ViewCrop() {
 
         cropList.forEach(async (crop) => {
           try {
-            const imgRes = await apiFetch(`/crops/legacy/${crop.cropID}/image`, { method: 'GET' });
-            if (!imgRes.ok) return;
-            const blob = await imgRes.blob();
+            const blob = await getCropImageBlob(crop.cropID, 'thumbnail');
+            if (!blob) return;
             if (!mounted) return;
-            setImages((prev) => ({ ...prev, [crop.cropID]: URL.createObjectURL(blob) }));
+            const objectUrl = URL.createObjectURL(blob);
+            imageUrlRegistryRef.current.add(objectUrl);
+            setImages((prev) => {
+              if (prev[crop.cropID]) {
+                try { URL.revokeObjectURL(prev[crop.cropID]); } catch { /* ignore */ }
+                imageUrlRegistryRef.current.delete(prev[crop.cropID]);
+              }
+              return { ...prev, [crop.cropID]: objectUrl };
+            });
           } catch {
             // keep placeholder image on failures
           }
@@ -141,11 +166,12 @@ export default function ViewCrop() {
 
     return () => {
       mounted = false;
-      Object.values(images).forEach((url) => {
-        try { URL.revokeObjectURL(url); } catch { /* ignore */ }
-      });
     };
-  }, [page, token, farmerId, role, navigate, appliedQuery, sortBy, listingFilter]);
+  }, [page, token, farmerId, role, navigate, appliedQuery, sortBy, listingFilter, revokeAllImageUrls]);
+
+  useEffect(() => () => {
+    revokeAllImageUrls();
+  }, [revokeAllImageUrls]);
 
   useEffect(() => {
     if (!loadMoreRef.current || !hasMore || loading || loadingMore) {
@@ -271,23 +297,27 @@ export default function ViewCrop() {
             {crops.map((crop) => (
               <Card key={crop.cropID} className={`view-crop-card view-crop-card--${getCardTone(crop)}`} onClick={() => navigate(`/view-details/${crop.cropID}`)}>
                 <div className="view-crop-card__image-wrap">
-                  <img
-                    src={images[crop.cropID] || PLACEHOLDER}
-                    alt={crop.cropName}
-                    onError={(event) => { event.currentTarget.src = PLACEHOLDER; }}
-                  />
+                  {images[crop.cropID] ? (
+                    <img
+                      src={images[crop.cropID]}
+                      alt={crop.cropName}
+                      onLoad={handleCropImageLoad}
+                      onError={handleCropImageError}
+                    />
+                  ) : <span className="crop-image-empty">No image</span>}
+                  <span className="view-all-card__badge">{crop.cropType}</span>
                 </div>
                 <div className="view-crop-card__body">
                   <div className="view-crop-card__top">
                     <h3>{crop.cropName}</h3>
-                    <span>{crop.cropType}</span>
-                  </div>
-                  <div className="crop-flag-row">
+
                     {crop.status ? <span className={`crop-flag crop-flag--${crop.status.toLowerCase()}`}>{crop.status}</span> : null}
                     {crop.isUrgent ? <span className="crop-flag crop-flag--urgent">Urgent</span> : null}
                     {crop.isWaste ? <span className="crop-flag crop-flag--waste">Waste</span> : null}
                   </div>
-                  <p className="region">{crop.region}</p>
+                  <p className="region">
+                    {[crop.region, crop.district, crop.state].filter(Boolean).join(' | ')}
+                  </p>
                   <div className="view-crop-card__price">
                     <strong>Rs {Number(crop.marketPrice || 0).toFixed(2)}</strong>
                     <small>per {crop.unit}</small>
@@ -298,32 +328,44 @@ export default function ViewCrop() {
                     <Button
                       variant="outline"
                       size="sm"
+                      aria-label="Edit crop"
+                      data-tooltip="Edit crop"
+                      title="Edit crop"
                       onClick={(event) => {
                         event.stopPropagation();
                         navigate(`/update-crop/${crop.cropID}`);
                       }}
                     >
-                      Edit
+                      <i className="fa-solid fa-pen-to-square view-crop-card__action-icon" aria-hidden="true" />
+                      <span className="view-crop-card__action-text">Update</span>
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
+                      aria-label="View requests for this crop"
+                      data-tooltip="View requests for this crop"
+                      title="View requests for this crop"
                       onClick={(event) => {
                         event.stopPropagation();
                         navigate(`/view-approaches/farmer/${farmerId}/crop/${crop.cropID}`);
                       }}
                     >
-                      Requests
+                      <i className="fa-solid fa-inbox view-crop-card__action-icon" aria-hidden="true" />
+                      <span className="view-crop-card__action-text">Requests</span>
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
+                      aria-label="Share crop"
+                      data-tooltip="Share crop"
+                      title="Share crop"
                       onClick={(event) => {
                         event.stopPropagation();
                         handleShare(crop);
                       }}
                     >
-                      Share
+                      <i className="fa-solid fa-share-nodes view-crop-card__action-icon" aria-hidden="true" />
+                      <span className="view-crop-card__action-text">Share</span>
                     </Button>
                   </div>
                 </div>
@@ -347,13 +389,10 @@ export default function ViewCrop() {
           </>
         )}
       </div>
-      <Link to="/add-crop" className="view-crop-fab" aria-label="Add crop">
+      <Link to="/add-crop" className="view-crop-fab" aria-label="Add crop" data-tooltip="Add crop" title="Add crop">
         <i className="fa-solid fa-plus" aria-hidden="true" />
       </Link>
       {toast.message ? <Toast message={toast.message} type={toast.type} /> : null}
     </section>
   );
 }
-
-
-

@@ -9,6 +9,9 @@ public class ChatMessageDTO {
     private String messageText;
     private String messageType;
     private LocalDateTime createdAt;
+    private Boolean isRead;
+    private LocalDateTime readAt;
+    private String deliveryStatus;
 
     public Long getMessageId() {
         return messageId;
@@ -56,5 +59,29 @@ public class ChatMessageDTO {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Boolean getIsRead() {
+        return isRead;
+    }
+
+    public void setIsRead(Boolean isRead) {
+        this.isRead = isRead;
+    }
+
+    public LocalDateTime getReadAt() {
+        return readAt;
+    }
+
+    public void setReadAt(LocalDateTime readAt) {
+        this.readAt = readAt;
+    }
+
+    public String getDeliveryStatus() {
+        return deliveryStatus;
+    }
+
+    public void setDeliveryStatus(String deliveryStatus) {
+        this.deliveryStatus = deliveryStatus;
     }
 }

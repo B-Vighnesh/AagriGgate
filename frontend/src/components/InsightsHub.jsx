@@ -1,39 +1,35 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Button from './common/Button';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Card from './common/Card';
 import ValidateToken from './ValidateToken';
 import { getFarmerId, getRole, getToken } from '../lib/auth';
 
-function InsightPreviewCard({ icon, title, subtitle, body, primaryLabel, primaryAction, secondaryLabel, secondaryAction }) {
-  return (
-    <Card className="insights-hub-card">
-      <div className="insights-hub-card__icon" aria-hidden="true">
-        <i className={icon} />
-      </div>
-      <div className="insights-hub-card__copy">
-        <p className="insights-hub-card__subtitle">{subtitle}</p>
-        <h3>{title}</h3>
-        <p>{body}</p>
-      </div>
-      <div className="insights-hub-card__actions">
-        <Button onClick={primaryAction}>{primaryLabel}</Button>
-        {secondaryLabel ? (
-          <Button variant="outline" onClick={secondaryAction}>
-            {secondaryLabel}
-          </Button>
-        ) : null}
-      </div>
-    </Card>
-  );
-}
+const INSIGHT_ITEMS = [
+  {
+    to: '/market',
+    icon: 'fa-scale-balanced',
+    title: 'Mandi Prices',
+    description: 'Check crop prices by commodity, date, state, and district.',
+  },
+  {
+    to: '/weather',
+    icon: 'fa-cloud-sun-rain',
+    title: 'Weather',
+    description: 'Review district forecasts, rain risk, humidity, and wind guidance.',
+  },
+  {
+    to: '/news',
+    icon: 'fa-newspaper',
+    title: 'News',
+    description: 'Track policy updates, crop alerts, farming tips, and market signals.',
+  },
+];
 
 export default function InsightsHub() {
   const navigate = useNavigate();
   const token = getToken();
   const role = getRole();
   const farmerId = getFarmerId();
-  const [activeTab, setActiveTab] = useState(role === 'farmer' ? 'weather' : 'news');
 
   useEffect(() => {
     if (!role) {
@@ -41,77 +37,32 @@ export default function InsightsHub() {
     }
   }, [navigate, role]);
 
-  useEffect(() => {
-    if (role !== 'farmer' && activeTab === 'weather') {
-      setActiveTab('news');
-    }
-  }, [activeTab, role]);
-
-  const tabOptions = useMemo(() => {
-    const options = [];
-    if (role === 'farmer') {
-      options.push({ key: 'weather', label: 'Weather' });
-    }
-    options.push({ key: 'news', label: 'News' });
-    return options;
-  }, [role]);
-
   return (
     <section className="page insights-hub-page">
       <ValidateToken token={token} role={role} farmerId={farmerId} />
-      <div className="ag-container">
-        <div className="insights-hub-head">
-          <div>
-            <p className="insights-hub-kicker">Insights</p>
-            <h1>Weather and market updates in one place</h1>
-            <p>Switch between quick insight panels instead of digging through the mobile drawer.</p>
-          </div>
-        </div>
 
-        <div className="insights-hub-tabs" role="tablist" aria-label="Insights sections">
-          {tabOptions.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === tab.key}
-              className={`insights-hub-tab ${activeTab === tab.key ? 'insights-hub-tab--active' : ''}`}
-              onClick={() => setActiveTab(tab.key)}
-            >
-              {tab.label}
-            </button>
+      <div className="ag-container insights-hub-shell">
+        <header className="insights-hub-topbar">
+          <div className="insights-hub-title-block">
+            <h1>Insights</h1>
+            <p>Open mandi prices, weather, and agriculture news from one place.</p>
+          </div>
+        </header>
+
+        <Card className="insights-hub-menu">
+          {INSIGHT_ITEMS.map((item) => (
+            <Link key={item.to} to={item.to} className="insights-hub-row">
+              <span className="insights-hub-row__icon" aria-hidden="true">
+                <i className={`fa-solid ${item.icon}`} />
+              </span>
+              <span className="insights-hub-row__copy">
+                <strong>{item.title}</strong>
+                <small>{item.description}</small>
+              </span>
+              <i className="fa-solid fa-chevron-right insights-hub-row__chevron" aria-hidden="true" />
+            </Link>
           ))}
-        </div>
-
-        {activeTab === 'weather' ? (
-          <div className="insights-hub-panel" role="tabpanel">
-            <InsightPreviewCard
-              icon="fa-solid fa-cloud-sun-rain"
-              subtitle="Field Planning"
-              title="Weather readiness for sellers"
-              body="Open the weather workspace to review live district conditions, harvest timing alerts, and rain or wind guidance before you move produce."
-              primaryLabel="Open Weather"
-              primaryAction={() => navigate('/weather')}
-              secondaryLabel="View News"
-              secondaryAction={() => setActiveTab('news')}
-            />
-          </div>
-        ) : null}
-
-        {activeTab === 'news' ? (
-          <div className="insights-hub-panel" role="tabpanel">
-            <InsightPreviewCard
-              icon="fa-regular fa-newspaper"
-              subtitle="Agri News"
-              title="Latest market and farming news"
-              body="Track policy updates, farming tips, market signals, and important crop news without leaving the app shell."
-              primaryLabel="Open News"
-              primaryAction={() => navigate('/news')}
-              secondaryLabel={role === 'farmer' ? 'Open Weather' : ''}
-              secondaryAction={() => setActiveTab('weather')}
-            />
-          </div>
-        ) : null}
+        </Card>
       </div>
     </section>
   );
