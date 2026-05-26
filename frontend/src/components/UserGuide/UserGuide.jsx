@@ -248,11 +248,7 @@ function UserGuide({ isOpen, onClose }) {
 
       <aside className="user-guide__drawer" role="dialog" aria-modal="true" aria-labelledby="user-guide-title">
         <header className="user-guide__header">
-          <div>
-            <p className="user-guide__kicker">Validated app guide</p>
-            <h2 id="user-guide-title">User Guide</h2>
-            <p className="user-guide__subtitle">Step-by-step help for farmers, buyers, privacy, market tools, and support.</p>
-          </div>
+          
           <button type="button" className="user-guide__close" aria-label="Close user guide" onClick={onClose}>
             <X size={22} aria-hidden="true" />
           </button>
