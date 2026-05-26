@@ -45,7 +45,7 @@
   min-height: auto;
   padding: 22px 28px 18px;
   background:
-    linear-gradient(90deg, rgba(220, 252, 231, 0.95) 0%, rgba(255, 255, 255, 0.98) 62%, #ffffff 100%);
+   #f0f7f0;
   border-bottom: 0;
   overflow: hidden;
 }
@@ -113,7 +113,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: transparent;
+  background: rgb(255, 255, 255);
   box-shadow: none;
 }
 
