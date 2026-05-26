@@ -231,7 +231,6 @@ function UserGuide({ isOpen, onClose }) {
       .filter((section) => section.cards.length > 0 || !normalizedQuery);
   }, [query]);
 
-  const visibleCardCount = visibleSections.reduce((total, section) => total + section.cards.length, 0);
   const handleFeedback = () => {};
 
   if (!isOpen) return null;
@@ -248,26 +247,20 @@ function UserGuide({ isOpen, onClose }) {
       <aside className="user-guide__drawer" role="dialog" aria-modal="true" aria-labelledby="user-guide-title">
         <header className="user-guide__header">
           <div className="user-guide__hero">
-          <div className="user-guide__hero-icon">
-            <Sprout size={22} aria-hidden="true" />
+            <div className="user-guide__hero-main">
+              <div className="user-guide__hero-icon">
+                <Sprout size={22} aria-hidden="true" />
+              </div>
+              <div>
+                <strong>AagriGate assistance</strong>
+                <span>{totalGuideCards} help topics</span>
+              </div>
+            </div>
+            <button type="button" className="user-guide__close" aria-label="Close user guide" onClick={onClose}>
+              <X size={18} aria-hidden="true" />
+            </button>
           </div>
-          <div>
-            <strong>AagriGate assistance</strong>
-            <span>{query ? `${visibleCardCount} matching topic${visibleCardCount === 1 ? '' : 's'}` : `${totalGuideCards} help topics`}</span>
-          </div>
-        </div>
-          <button type="button" className="user-guide__close" aria-label="Close user guide" onClick={onClose}>
-            <X size={22} aria-hidden="true" />
-          </button>
         </header>
-
-        
-
-        <div className="user-guide__chips" aria-label="Guide highlights">
-          <span>Farmer tools</span>
-          <span>Buyer requests</span>
-          <span>Privacy first</span>
-        </div>
 
         <label className="user-guide__search" htmlFor="user-guide-search">
           <Search size={18} aria-hidden="true" />
