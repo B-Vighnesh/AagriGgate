@@ -183,6 +183,8 @@ const guideSections = [
   },
 ];
 
+const totalGuideCards = guideSections.reduce((total, section) => total + section.cards.length, 0);
+
 function UserGuide({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
   const [openCardId, setOpenCardId] = useState(null);
@@ -229,9 +231,9 @@ function UserGuide({ isOpen, onClose }) {
       .filter((section) => section.cards.length > 0 || !normalizedQuery);
   }, [query]);
 
-  const handleFeedback = (sectionTitle, rating) => {
-    console.log('Guide feedback:', sectionTitle, rating);
-  };
+  const visibleCardCount = visibleSections.reduce((total, section) => total + section.cards.length, 0);
+
+  const handleFeedback = () => {};
 
   if (!isOpen) return null;
 
@@ -249,11 +251,28 @@ function UserGuide({ isOpen, onClose }) {
           <div>
             <p className="user-guide__kicker">Validated app guide</p>
             <h2 id="user-guide-title">User Guide</h2>
+            <p className="user-guide__subtitle">Step-by-step help for farmers, buyers, privacy, market tools, and support.</p>
           </div>
           <button type="button" className="user-guide__close" aria-label="Close user guide" onClick={onClose}>
             <X size={22} aria-hidden="true" />
           </button>
         </header>
+
+        <div className="user-guide__hero">
+          <div className="user-guide__hero-icon">
+            <Sprout size={22} aria-hidden="true" />
+          </div>
+          <div>
+            <strong>AagriGate assistance</strong>
+            <span>{query ? `${visibleCardCount} matching topic${visibleCardCount === 1 ? '' : 's'}` : `${totalGuideCards} help topics`}</span>
+          </div>
+        </div>
+
+        <div className="user-guide__chips" aria-label="Guide highlights">
+          <span>Farmer tools</span>
+          <span>Buyer requests</span>
+          <span>Privacy first</span>
+        </div>
 
         <label className="user-guide__search" htmlFor="user-guide-search">
           <Search size={18} aria-hidden="true" />
@@ -280,7 +299,10 @@ function UserGuide({ isOpen, onClose }) {
                     <span className="user-guide__section-icon">
                       <SectionIcon size={18} aria-hidden="true" />
                     </span>
-                    <h3>{section.title}</h3>
+                    <div>
+                      <h3>{section.title}</h3>
+                      <p>{section.cards.length} topic{section.cards.length === 1 ? '' : 's'}</p>
+                    </div>
                   </div>
 
                   <div className="user-guide__cards">
