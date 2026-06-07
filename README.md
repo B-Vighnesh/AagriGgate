@@ -15,7 +15,7 @@
   ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
   ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
   ![AWS](https://img.shields.io/badge/AWS-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)
-  ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+
   ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
   ![WebSocket](https://img.shields.io/badge/WebSocket-STOMP-F4A261?style=for-the-badge)
   ![GitHub Stars](https://img.shields.io/github/stars/B-Vighnesh/AagriGgate?style=for-the-badge&color=2D6A4F)
@@ -28,8 +28,7 @@
 <div align="center">
 
   [![🚀 Live on AWS](https://img.shields.io/badge/🚀_Live_on_AWS-2D6A4F?style=for-the-badge&logoColor=white)](https://d3bnt1t6yx1asq.cloudfront.net)
-  &nbsp;&nbsp;
-  [![▲ Live on Vercel](https://img.shields.io/badge/▲_Live_on_Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://aagriggate.vercel.app)
+
 
 </div>
 
@@ -131,7 +130,8 @@ graph TD
 ## 🛠️ TECH STACK
 
 <div align="center">
-  <img src="https://skillicons.dev/icons?i=java,spring,react,vite,mysql,aws,vercel,maven,git&theme=dark" alt="Tech Stack Icons" />
+  <img src="https://skillicons.dev/icons?i=java,spring,react,vite,mysql,aws,maven,git&theme=dark" alt="Tech Stack Icons" />
+
 </div>
 
 <br/>
@@ -457,13 +457,14 @@ OTP_CLEANUP_CRON=0 */5 * * * *
 | Component | Platform |
 |:----------|:---------|
 | 🖥️ Backend | AWS EC2 |
-| 🌐 Frontend | AWS CloudFront + Vercel |
+| 🌐 Frontend | AWS CloudFront |
 | 🗄️ Database | MySQL |
+
 
 ### 🔗 Live URLs
 
 * 🚀 [https://d3bnt1t6yx1asq.cloudfront.net](https://d3bnt1t6yx1asq.cloudfront.net)
-* ▲ [https://aagriggate.vercel.app](https://aagriggate.vercel.app)
+
 
 ---
 
