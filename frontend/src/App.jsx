@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './components/Home';
@@ -43,6 +43,8 @@ import Cart from './components/Cart';
 import News from './pages/News';
 import NewsDetails from './components/NewsDetails';
 import MarketDetails from './components/MarketDetails';
+import HelpFAB from './components/HelpFAB';
+import UserGuide from './components/UserGuide/UserGuide';
 import { bootstrapSession } from './lib/auth';
 import { NavbarCountProvider } from './context/NavbarCountContext';
 import './index.css';
@@ -71,6 +73,8 @@ function ScrollManager() {
 
 function AppRoutes() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [guideOpen, setGuideOpen] = React.useState(false);
   const isChatRoute = location.pathname.startsWith('/chat');
 
   return (
@@ -127,6 +131,11 @@ function AppRoutes() {
         </Routes>
       </main>
       <Footer />
+      <HelpFAB
+        onChatClick={() => navigate('/chat')}
+        onGuideClick={() => setGuideOpen(true)}
+      />
+      <UserGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     </div>
   );
 }
