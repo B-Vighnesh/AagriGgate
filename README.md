@@ -185,7 +185,14 @@ graph TD
 - Fully responsive UI
 
 ---
+## 🛠️ Key Technical Decisions
 
+- Designed the JWT + OTP dual-auth flow from scratch, supporting both password and OTP-based login
+- Architected the WebSocket STOMP broker for real-time farmer-buyer chat and live notifications
+- Chose Spring Data JPA over raw queries for maintainability and cleaner repository design
+- Deployed backend on AWS EC2 and frontend on CloudFront for CDN-level performance
+- Implemented scheduled cleanup jobs to prevent OTP and stale data table bloat
+---
 ## User Flow
 
 ### Farmer
