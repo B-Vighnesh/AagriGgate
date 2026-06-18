@@ -202,118 +202,103 @@ Register ──▶ ✉️ Verify OTP ──▶ 🔐 Login ──▶ 🔍 Browse 
 
 ---
 
-## 🗄️ DATABASE DESIGN
+## 🗄️ Database Design
 
-### 📋 Main Tables
+### Main tables
 
 | Table | Description |
 |:------|:------------|
-| 🧑‍🌾 `farmer` | Farmer accounts and profiles |
-| 🛒 `buyer` | Buyer accounts and profiles |
-| 🌾 `crop` | Crop listings with details |
-| 🛍️ `cart_item` | Buyer cart entries |
-| ❤️ `favorite` | Buyer saved favorites |
-| 🤝 `approach_farmer` | Buyer-to-Farmer requests |
-| 📈 `saved_market_data` | Saved market price records |
-| ❓ `enquiry` | Help & support enquiries |
-| 🔑 `login_otp` | Login OTP tokens |
-| 📝 `registration_otp` | Registration OTP tokens |
-| 🔓 `password_reset_otp` | Password reset OTP tokens |
-| 🔔 `notification` | System notifications |
-| 💬 `chat_message` | Chat conversation messages |
+| `farmer` | Farmer accounts and profiles |
+| `buyer` | Buyer accounts and profiles |
+| `crop` | Crop listings with details |
+| `cart_item` | Buyer cart entries |
+| `favorite` | Buyer saved favorites |
+| `approach_farmer` | Buyer-to-farmer requests |
+| `saved_market_data` | Saved market price records |
+| `enquiry` | Help and support enquiries |
+| `login_otp` | Login OTP tokens |
+| `registration_otp` | Registration OTP tokens |
+| `password_reset_otp` | Password reset OTP tokens |
+| `notification` | System notifications |
+| `chat_message` | Chat conversation messages |
 
-### 🔗 Relationships
+### Relationships
 
 | Relationship | Type |
 |:-------------|:-----|
-| 🧑‍🌾 One Farmer → Many Crops | `1:N` |
-| 🛒 One Buyer → Many Cart Items | `1:N` |
-| ❤️ One Buyer → Many Favorites | `1:N` |
-| 🤝 One Buyer → Many Approaches | `1:N` |
-| 🌾 One Crop → Many Approaches | `1:N` |
-| 💬 Farmer ↔ Buyer Chat Messages | `M:N` |
+| One farmer → many crops | `1:N` |
+| One buyer → many cart items | `1:N` |
+| One buyer → many favorites | `1:N` |
+| One buyer → many approaches | `1:N` |
+| One crop → many approaches | `1:N` |
+| Farmer ↔ buyer chat messages | `M:N` |
 
 ---
 
-## 🌐 API OVERVIEW
+## 🌐 API Overview
 
-<details>
-<summary>🔐 <b>Authentication</b></summary>
-<br/>
+**Authentication**
 
-* ![POST](https://img.shields.io/badge/POST-2D6A4F?style=flat-square) `/api/v1/auth/register`
-* ![POST](https://img.shields.io/badge/POST-2D6A4F?style=flat-square) `/api/v1/auth/login`
-* ![POST](https://img.shields.io/badge/POST-2D6A4F?style=flat-square) `/api/v1/auth/otp-login`
-* ![POST](https://img.shields.io/badge/POST-2D6A4F?style=flat-square) `/api/v1/auth/forgot-password`
-* ![POST](https://img.shields.io/badge/POST-2D6A4F?style=flat-square) `/api/v1/auth/reset-password`
+| Method | Endpoint |
+|:-------|:---------|
+| POST | `/api/v1/auth/register` |
+| POST | `/api/v1/auth/login` |
+| POST | `/api/v1/auth/otp-login` |
+| POST | `/api/v1/auth/forgot-password` |
+| POST | `/api/v1/auth/reset-password` |
 
-</details>
+**Crops**
 
-<details>
-<summary>🌾 <b>Crops</b></summary>
-<br/>
+| Method | Endpoint |
+|:-------|:---------|
+| POST | `/api/v1/crops` |
+| GET | `/api/v1/crops` |
+| GET | `/api/v1/crops/{id}` |
+| PUT | `/api/v1/crops/{id}` |
+| DELETE | `/api/v1/crops/{id}` |
 
-* ![POST](https://img.shields.io/badge/POST-2D6A4F?style=flat-square) `/api/v1/crops`
-* ![GET](https://img.shields.io/badge/GET-4479A1?style=flat-square) `/api/v1/crops`
-* ![GET](https://img.shields.io/badge/GET-4479A1?style=flat-square) `/api/v1/crops/{id}`
-* ![PUT](https://img.shields.io/badge/PUT-F4A261?style=flat-square) `/api/v1/crops/{id}`
-* ![DELETE](https://img.shields.io/badge/DELETE-E63946?style=flat-square) `/api/v1/crops/{id}`
+**Cart**
 
-</details>
+| Method | Endpoint |
+|:-------|:---------|
+| GET | `/api/v1/cart` |
+| POST | `/api/v1/cart/add` |
+| DELETE | `/api/v1/cart/remove` |
+| POST | `/api/v1/cart/checkout` |
 
-<details>
-<summary>🛒 <b>Cart</b></summary>
-<br/>
+**Favorites**
 
-* ![GET](https://img.shields.io/badge/GET-4479A1?style=flat-square) `/api/v1/cart`
-* ![POST](https://img.shields.io/badge/POST-2D6A4F?style=flat-square) `/api/v1/cart/add`
-* ![DELETE](https://img.shields.io/badge/DELETE-E63946?style=flat-square) `/api/v1/cart/remove`
-* ![POST](https://img.shields.io/badge/POST-2D6A4F?style=flat-square) `/api/v1/cart/checkout`
+| Method | Endpoint |
+|:-------|:---------|
+| POST | `/api/v1/favorites` |
+| GET | `/api/v1/favorites` |
+| DELETE | `/api/v1/favorites/{id}` |
 
-</details>
+**Approaches**
 
-<details>
-<summary>❤️ <b>Favorites</b></summary>
-<br/>
+| Method | Endpoint |
+|:-------|:---------|
+| POST | `/api/v1/approach` |
+| GET | `/api/v1/approach/buyer` |
+| GET | `/api/v1/approach/farmer` |
+| PUT | `/api/v1/approach/{id}/accept` |
+| PUT | `/api/v1/approach/{id}/reject` |
 
-* ![POST](https://img.shields.io/badge/POST-2D6A4F?style=flat-square) `/api/v1/favorites`
-* ![GET](https://img.shields.io/badge/GET-4479A1?style=flat-square) `/api/v1/favorites`
-* ![DELETE](https://img.shields.io/badge/DELETE-E63946?style=flat-square) `/api/v1/favorites/{id}`
+**Market and weather**
 
-</details>
+| Method | Endpoint |
+|:-------|:---------|
+| GET | `/api/v1/market/prices` |
+| GET | `/api/v1/weather` |
 
-<details>
-<summary>🤝 <b>Approaches</b></summary>
-<br/>
+**Chat and notifications**
 
-* ![POST](https://img.shields.io/badge/POST-2D6A4F?style=flat-square) `/api/v1/approach`
-* ![GET](https://img.shields.io/badge/GET-4479A1?style=flat-square) `/api/v1/approach/buyer`
-* ![GET](https://img.shields.io/badge/GET-4479A1?style=flat-square) `/api/v1/approach/farmer`
-* ![PUT](https://img.shields.io/badge/PUT-F4A261?style=flat-square) `/api/v1/approach/{id}/accept`
-* ![PUT](https://img.shields.io/badge/PUT-F4A261?style=flat-square) `/api/v1/approach/{id}/reject`
-
-</details>
-
-<details>
-<summary>📊 <b>Market & Weather</b></summary>
-<br/>
-
-* ![GET](https://img.shields.io/badge/GET-4479A1?style=flat-square) `/api/v1/market/prices`
-* ![GET](https://img.shields.io/badge/GET-4479A1?style=flat-square) `/api/v1/weather`
-
-</details>
-
-<details>
-<summary>💬 <b>Chat & Notifications</b></summary>
-<br/>
-
-* ![GET](https://img.shields.io/badge/GET-4479A1?style=flat-square) `/api/v1/chat`
-* ![POST](https://img.shields.io/badge/POST-2D6A4F?style=flat-square) `/api/v1/chat/send`
-* ![GET](https://img.shields.io/badge/GET-4479A1?style=flat-square) `/api/v1/notifications`
-* ![PUT](https://img.shields.io/badge/PUT-F4A261?style=flat-square) `/api/v1/notifications/read`
-
-</details>
-
+| Method | Endpoint |
+|:-------|:---------|
+| GET | `/api/v1/chat` |
+| POST | `/api/v1/chat/send` |
+| GET | `/api/v1/notifications` |
+| PUT | `/api/v1/notifications/read` |
 ---
 
 ## 🚀 LOCAL SETUP
