@@ -186,18 +186,18 @@ graph TD
 
 ---
 
-## 🔄 USER FLOW
+## User Flow
 
-### 🌾 Farmer Flow
-
-```
-Register ──▶ ✉️ Verify OTP ──▶ 🔐 Login ──▶ 🌱 Add Crop ──▶ 📩 Buyer Request ──▶ 💬 Chat ──▶ ✅ Accept ──▶ 🏆 Sold!
-```
-
-### 🛒 Buyer Flow
+### Farmer
 
 ```
-Register ──▶ ✉️ Verify OTP ──▶ 🔐 Login ──▶ 🔍 Browse ──▶ 🛒 Cart ──▶ 📨 Request ──▶ 💬 Chat ──▶ ✅ Accepted ──▶ 🎉 Done!
+Register → Verify OTP → Login → Add Crop → Receive Buyer Request → Chat → Accept → Sold
+```
+
+### Buyer
+
+```
+Register → Verify OTP → Login → Browse Crops → Add to Cart → Send Request → Chat → Accepted → Done
 ```
 
 ---
@@ -301,30 +301,25 @@ Register ──▶ ✉️ Verify OTP ──▶ 🔐 Login ──▶ 🔍 Browse 
 | PUT | `/api/v1/notifications/read` |
 ---
 
-## 🚀 LOCAL SETUP
+## 🚀 Local Setup
 
-### 📋 Prerequisites
+### Prerequisites
 
-* ☕ Java 21
-* 📦 Node.js
-* 📦 npm
-* 📦 Maven
-* 🐬 MySQL
+- Java 21
+- Node.js and npm
+- Maven
+- MySQL
 
-### ⚙️ Run Backend
+### Run backend
 
 ```bash
 cd backend
 ./mvnw spring-boot:run
 ```
 
-Backend URL:
+Backend runs at `http://localhost:8080/api/v1`
 
-```text
-http://localhost:8080/api/v1
-```
-
-### ⚛️ Run Frontend
+### Run frontend
 
 ```bash
 cd frontend
@@ -332,76 +327,44 @@ npm install
 npm run dev
 ```
 
-Frontend URL:
-
-```text
-http://localhost:5173
-```
+Frontend runs at `http://localhost:5173`
 
 ---
 
-## 🔑 ENVIRONMENT VARIABLES
+## 🔑 Environment Variables
+
+See `.env.example` in the repository root for all required variables. Key ones to configure:
 
 ```env
-SPRING_PROFILES_ACTIVE=dev
-SERVER_PORT=8080
-
 DB_URL=jdbc:mysql://localhost:3306/app
 DB_USERNAME=root
 DB_PASSWORD=replace_me
 
-EMAIL_USERNAME=your-email@example.com
-EMAIL_PASSWORD=replace_me
-
-APP_SECURITY_USER=dev-user
-APP_SECURITY_PASSWORD=replace_me
-
 JWT_SECRET=base64_encoded_32_byte_secret_here
 
-MARKET_API_INGEST_ON_STARTUP=false
-MARKET_API_STARTUP_STATE=Karnataka
-MARKET_API_STARTUP_DISTRICT=Bangalore
-
-WEATHER_API_URL=https://api.weatherapi.com/v1/current.json
 WEATHER_API_KEY=replace_me
-
-MARKET_API_URL=https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24
 MARKET_API_KEY=replace_me
-
-NEWS_GNEWS_URL=https://gnews.io/api/v4
 NEWS_API_KEY=replace_me
 
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=replace_me
-
-APP_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174
-
-NEWS_API_CLEANUP_CRON=0 0 0 * * *
-NEWS_API_QUOTA_RESET_CRON=0 0 0 * * *
-NEWS_API_SCHEDULER_CRON=0 0 0 * * *
-MARKET_API_INGESTION_CRON=0 0 9 * * *
-OTP_CLEANUP_CRON=0 */5 * * * *
+EMAIL_USERNAME=your-email@example.com
+EMAIL_PASSWORD=replace_me
 ```
 
 ---
 
-## ☁️ DEPLOYMENT
+## ☁️ Deployment
 
 | Component | Platform |
 |:----------|:---------|
-| 🖥️ Backend | AWS EC2 |
-| 🌐 Frontend | AWS CloudFront |
-| 🗄️ Database | MySQL |
+| Backend | AWS EC2 |
+| Frontend | AWS CloudFront |
+| Database | MySQL |
 
-
-### 🔗 Live URLs
-
-* 🚀 [https://d3bnt1t6yx1asq.cloudfront.net](https://d3bnt1t6yx1asq.cloudfront.net)
-
+Live at [https://d3bnt1t6yx1asq.cloudfront.net](https://d3bnt1t6yx1asq.cloudfront.net)
 
 ---
 
-## 👥 CONTRIBUTORS
+## 👥 Contributors
 
 <div align="center">
   <table>
@@ -430,21 +393,20 @@ OTP_CLEANUP_CRON=0 */5 * * * *
       </td>
     </tr>
   </table>
-
   <br/>
   <em>Made with ❤️ for Indian Farmers</em>
 </div>
 
 ---
 
-## 📄 LICENSE
+## 📄 License
 
 This project is licensed under the MIT License.
 
 ---
 
 <div align="center">
-  ⭐ Star this repo if AagriGgate inspired you &nbsp;|&nbsp; 🍴 Fork it &nbsp;|&nbsp; 🐛 Open Issues
+  Star this repo if AagriGgate inspired you &nbsp;|&nbsp; Fork it &nbsp;|&nbsp; Open an issue
 </div>
 
 <br/>
