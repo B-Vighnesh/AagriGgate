@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <em>🌾 India's direct agriculture marketplace — empowering farmers, eliminating middlemen, maximizing profits.</em>
+  <em>India's farm-to-buyer trade and decision platform : direct sourcing, mandi prices, weather insights, and real-time negotiation. No middlemen. No markups.</em>
 </p>
 
 <div align="center">
@@ -27,81 +27,61 @@
 
 <div align="center">
 
-  [![🚀 Live on AWS](https://img.shields.io/badge/🚀_Live_on_AWS-2D6A4F?style=for-the-badge&logoColor=white)](https://d3bnt1t6yx1asq.cloudfront.net)
-
+[![Live on AWS](https://img.shields.io/badge/Live_on_AWS-2D6A4F?style=for-the-badge&logoColor=white)](https://d3bnt1t6yx1asq.cloudfront.net)
 
 </div>
 
 ---
 
-## 🌍 PROJECT OVERVIEW
+## 🌍 Project Overview
 
-In India, farmers receive as little as 30–40% of the final price a buyer pays — the rest is absorbed by middlemen, commission agents, and logistics brokers. AagriGgate eliminates that chain entirely.
-AagriGgate is a full-stack agriculture marketplace where farmers list crops and buyers purchase directly — with real-time chat, live market prices, and weather-driven decisions built in. No agents. No markups. No information asymmetry.
+In India, farmers receive as little as 30–40% of the final price a buyer pays and the rest is absorbed by middlemen, commission agents, and logistics brokers. AagriGgate eliminates that chain entirely.
 
-AagriGgate enables:
+AagriGgate is a full-stack agriculture trade and decision-support platform where farmers list crops and buyers purchase directly with real-time chat, live mandi prices, and weather-driven decisions built in. No agents. No markups. No information asymmetry.
 
-* 🤝 Direct farmer-to-buyer trading
-* 🌱 Crop listing and request management
-* 💬 Real-time chat between farmers and buyers
-* 🔔 Real-time notifications system
-* 📊 Data-driven decision making using:
+**What the platform offers:**
 
-  * 📈 Market price data
-  * 🌦️ Weather information
-  * 📰 Agriculture-related updates
+- Direct farmer-to-buyer trading with no commission
+- Crop listing, request management, and in-app negotiation
+- Real-time chat between farmers and buyers post-acceptance
+- Live mandi (APMC) market prices and historical trends
+- Hyperlocal weather data for harvest and selling decisions
+- Agriculture news and updates
+- Urgent crop and waste crop selling to reduce post-harvest losses
+- Real-time notifications throughout the trade journey
+---
 
-The platform also includes features such as urgent crop selling and waste crop selling to help reduce crop wastage and improve selling efficiency.
+## ⚠️ The Problem We Solve
+
+In traditional agricultural trade, multiple intermediaries sit between the farmer and the buyer such as commission agents, brokers, and logistics middlemen where each taking a cut. The result: farmers receive a fraction of the final price, buyers overpay, and neither side has access to reliable market data when it matters.
+
+AagriGgate addresses this by giving both sides a direct, data-informed trading environment:
+
+- No commission agents or hidden fees
+- Open and Transparent MarketPlace
+- OTP and JWT-based secure authentication
+- Role-based dashboards for farmers and buyers
+- Crop listing, search, filter, and cart workflow
+- Buyer request and approach system
+- Weather and live mandi price integration
+- Real-time chat and notifications throughout the trade journey
 
 ---
 
-## ⚠️ PROBLEM STATEMENT
+## 🏗️ System Architecture
 
-Traditional agriculture marketplaces involve multiple intermediaries, which:
-
-* 📉 Reduce farmer profits
-* 💸 Increase buyer costs
-* 🚫 Limit access to real-time data
-
-This system addresses these issues by enabling:
-
-* 🤝 Direct interaction between farmers and buyers
-* 📊 Access to real-time market and weather data
-* 🧠 Improved decision-making and communication
-
----
-
-## 💡 SOLUTION
-
-AagriGgate provides:
-
-* 🏪 Direct farmer-to-buyer marketplace
-* 🌾 Crop listing and management
-* 🔍 Buyer search, filter, and cart workflow
-* 📨 Request/approach system
-* 📱 OTP-based authentication
-* 🔐 JWT-based authorization
-* 🌦️ Weather and market price integration
-* 💬 Real-time chat functionality
-* 🔔 Real-time notifications
-* 🎯 Role-based dashboards
-
----
-
-## 🏗️ SYSTEM ARCHITECTURE
-
-### Architecture Flow
+### Architecture flow
 
 ```mermaid
 graph TD
-    A["⚛️ React 18 + Vite Frontend"] -->|REST API| B["🍃 Spring Boot Backend"]
-    A -->|WebSocket STOMP| C["💬 Real-time Broker"]
-    B --> D[("🗄️ MySQL Database")]
-    B --> E["🌦️ Weather API"]
-    B --> F["📈 Market Price API"]
-    B --> G["📰 News API"]
-    C --> H["💬 Farmer ↔ Buyer Chat"]
-    C --> I["🔔 Live Notifications"]
+    A["React 18 + Vite Frontend"] -->|REST API| B["Spring Boot Backend"]
+    A -->|WebSocket STOMP| C["Real-time Broker"]
+    B --> D[("MySQL Database")]
+    B --> E["Weather API"]
+    B --> F["Market Price API"]
+    B --> G["News API"]
+    C --> H["Farmer to Buyer Chat"]
+    C --> I["Live Notifications"]
     style A fill:#2D6A4F,color:#FDFAF6,stroke:#1B4332,stroke-width:2px
     style B fill:#6DB33F,color:#fff,stroke:#4a8c2a,stroke-width:2px
     style D fill:#4479A1,color:#fff,stroke:#2d5a7b,stroke-width:2px
@@ -113,128 +93,96 @@ graph TD
     style I fill:#2D6A4F,color:#FDFAF6,stroke:#1B4332,stroke-width:2px
 ```
 
-### 📐 Layers
+### Layers
 
 | Layer | Technology | Responsibility |
 |:------|:-----------|:---------------|
-| 🖥️ Client | React + Vite | UI and API interaction |
-| 🔌 API Layer | Spring Boot | REST endpoints |
-| ⚙️ Service Layer | Spring Boot | Business logic |
-| 🔒 Security Layer | Spring Security + JWT | Authentication and authorization |
-| 💾 Persistence Layer | Spring Data JPA | Database operations |
-| 🗄️ Database | MySQL | Data storage |
-| 🌐 External Services | Weather API, Market API | External data |
+| Client | React + Vite | UI and API interaction |
+| API layer | Spring Boot | REST endpoints |
+| Service layer | Spring Boot | Business logic |
+| Security layer | Spring Security + JWT | Authentication and authorization |
+| Persistence layer | Spring Data JPA | Database operations |
+| Database | MySQL | Data storage |
+| External services | Weather API, Market API | External data |
 
 ---
 
-## 🛠️ TECH STACK
+## 🛠️ Tech Stack
 
 <div align="center">
   <img src="https://skillicons.dev/icons?i=java,spring,react,vite,mysql,aws,maven,git&theme=dark" alt="Tech Stack Icons" />
-
 </div>
 
 <br/>
 
 <table align="center">
   <tr>
-    <th>☕ Backend</th>
-    <th>⚛️ Frontend</th>
+    <th>Backend</th>
+    <th>Frontend</th>
   </tr>
   <tr>
     <td>
-      ☕ Java 21<br/>
-      🍃 Spring Boot<br/>
-      🛡️ Spring Security<br/>
-      💾 Spring Data JPA (Hibernate)<br/>
-      📦 Maven<br/>
-      🔐 JWT Authentication<br/>
-      ✉️ Spring Mail (OTP)
+      Java 21<br/>
+      Spring Boot<br/>
+      Spring Security<br/>
+      Spring Data JPA (Hibernate)<br/>
+      Maven<br/>
+      JWT Authentication<br/>
+      Spring Mail (OTP)
     </td>
     <td>
-      ⚛️ React 18<br/>
-      ⚡ Vite<br/>
-      🧭 React Router<br/>
-      🌐 Axios<br/>
-      🎨 CSS
+      React 18<br/>
+      Vite<br/>
+      React Router<br/>
+      Axios<br/>
+      CSS
     </td>
   </tr>
   <tr>
-    <th colspan="2">🗄️ Database</th>
+    <th colspan="2">Database</th>
   </tr>
   <tr>
     <td colspan="2" align="center">
-      🐬 MySQL &nbsp;|&nbsp; 🔄 Flyway (Production migrations)
+      MySQL &nbsp;|&nbsp; Flyway (production migrations)
     </td>
   </tr>
 </table>
 
 ---
 
-## ✨ CORE FEATURES
+## ✨ Core Features
 
-<details>
-<summary>🔐 <b>Authentication & Security</b></summary>
-<br/>
+**Authentication & Security**
 
-* ✅ Seller and buyer registration
-* ✅ OTP verification
-* ✅ Password login
-* ✅ OTP login
-* ✅ Forgot password with OTP
-* ✅ JWT-based authentication
-* ✅ Role-based authorization
+- Farmer and buyer registration with OTP verification
+- Password login and OTP-based login
+- Forgot password flow with OTP reset
+- JWT-based authentication and role-based authorization
 
-</details>
+**Farmer**
 
-<details>
-<summary>🧑‍🌾 <b>Farmer Features</b></summary>
-<br/>
+- Add, update, and delete crop listings with image uploads
+- Mark crops as urgent, waste, available, or sold
+- Set discount prices on listings
+- View, accept, or reject incoming buyer requests
+- Look up hyperlocal weather and live mandi prices
+- Real-time chat with buyers and instant notifications
 
-* ✅ Add, update, delete crops
-* ✅ Upload crop images
-* ✅ Mark crops (urgent, waste, available, sold)
-* ✅ Set discount price
-* ✅ View buyer requests
-* ✅ Accept/reject requests
-* ✅ Weather lookup
-* ✅ Market price lookup and save
-* ✅ Real-time buyer chat
-* ✅ Instant notifications
+**Buyer**
 
-</details>
+- Browse, search, filter, and sort crop listings
+- Add crops to cart or favorites
+- Send purchase requests and track them end to end
+- Checkout cart with bulk request support
+- Real-time chat with farmers and instant notifications
 
-<details>
-<summary>🛒 <b>Buyer Features</b></summary>
-<br/>
+**Platform**
 
-* ✅ Browse crops
-* ✅ Search crops
-* ✅ Filter and sort crops
-* ✅ Add to favorites
-* ✅ Add to cart
-* ✅ Send purchase request
-* ✅ Checkout cart
-* ✅ Track requests
-* ✅ Real-time farmer chat
-* ✅ Instant notifications
-
-</details>
-
-<details>
-<summary>🏗️ <b>Platform Features</b></summary>
-<br/>
-
-* ✅ Pagination
-* ✅ Filtering and sorting
-* ✅ DTO-based API responses
-* ✅ Separate image endpoints
-* ✅ Scheduled cleanup jobs
-* ✅ Responsive UI
-* ✅ Real-time communication system
-* ✅ Notification delivery system
-
-</details>
+- Paginated and filterable API responses with DTO-based design
+- Separate image endpoints for optimized delivery
+- Scheduled cleanup jobs for OTP and stale data
+- Real-time WebSocket communication and notification delivery system
+- Fully responsive UI
 
 ---
 
