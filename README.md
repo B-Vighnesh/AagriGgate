@@ -9,6 +9,7 @@
 <div align="center">
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-2D6A4F?style=for-the-badge)](LICENSE)
+  [![Live on AWS](https://img.shields.io/badge/Live_on_AWS-2D6A4F?style=for-the-badge&logoColor=white)](https://d3bnt1t6yx1asq.cloudfront.net)
   ![Java 21](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
   ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
   ![React 18](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
