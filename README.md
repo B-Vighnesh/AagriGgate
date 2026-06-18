@@ -53,9 +53,9 @@ AagriGgate is a full-stack agriculture trade and decision-support platform where
 ---
 
 <div align="center">
-  <img src="screenshots/dashboard.png" width="30%" />
-  <img src="screenshots/crop-listing.png" width="30%" />
-  <img src="screenshots/chat.png" width="30%" />
+  <img src="screenshots/farmer-dashboard.png" width="30%" />
+  <img src="screenshots/buyer-dashboard.png" width="30%" />
+  <img src="screenshots/marketplace.png" width="30%" />
 </div>
 
 
