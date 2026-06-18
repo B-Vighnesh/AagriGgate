@@ -52,6 +52,14 @@ AagriGgate is a full-stack agriculture trade and decision-support platform where
 - Real-time notifications throughout the trade journey
 ---
 
+<div align="center">
+  <img src="screenshots/dashboard.png" width="30%" />
+  <img src="screenshots/crop-listing.png" width="30%" />
+  <img src="screenshots/chat.png" width="30%" />
+</div>
+
+
+---
 ## ⚠️ The Problem We Solve
 
 In traditional agricultural trade, multiple intermediaries sit between the farmer and the buyer such as commission agents, brokers, and logistics middlemen where each taking a cut. The result: farmers receive a fraction of the final price, buyers overpay, and neither side has access to reliable market data when it matters.
