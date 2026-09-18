@@ -90,6 +90,9 @@ function LoggedInFooter({ role, year }) {
           <span className="footer-contact-pill">
             <span className="footer-contact-pill__value">Mangalore, Karnataka</span>
           </span>
+          <span className="footer-contact-pill">
+            <span className="footer-contact-pill__value">bvighneshkumar@gmail.com</span>
+          </span>
         </div>
       </div>
     </footer>
@@ -161,6 +164,9 @@ function GuestFooter({ year }) {
           </span>
           <span className="footer-contact-pill">
             <span className="footer-contact-pill__value">Mangalore, Karnataka</span>
+          </span>
+          <span className="footer-contact-pill">
+            <span className="footer-contact-pill__value">bvighneshkumar@gmail.com</span>
           </span>
         </div>
       </div>
