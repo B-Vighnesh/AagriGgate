@@ -9305,7 +9305,11 @@ a {
     overflow: visible;
   }
 
-  .chat-page .ag-container {
+  .ag-container, .ag-container.section{
+    padding-left:53px;
+    padding-right:53px;
+  }
+  .chat-page  {
     height: auto;
     min-height: 0;
   }
@@ -9760,8 +9764,8 @@ a {
     min-width: 0;
     width: 100%;
     max-width: 100%;
-    padding-left: 0;
-    padding-right: 0;
+    padding-left:53px;
+    padding-right:53px;
     overflow-x: hidden;
   }
 
@@ -11888,13 +11892,13 @@ img {
 
 @media (min-width: 1024px) {
   .ag-container {
-    padding-left: 12px;
-    padding-right: 12px;
+   padding-left:53px;
+    padding-right:53px;
   }
 
   .ag-container.section {
-    padding-left: 12px;
-    padding-right: 12px;
+   padding-left:53px;
+    padding-right:53px;
   }
 }
 
