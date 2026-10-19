@@ -86,12 +86,15 @@ function LoggedInFooter({ role, year }) {
      <div className="footer-bottom-wrap">
         <div className="ag-container footer-bottom">
           <span className="footer-bottom__copyright">&copy; {year} AagriGgate. All rights reserved.</span>
-         
+
           <span className="footer-contact-pill">
-            <span className="footer-contact-pill__value">Mangalore, Karnataka</span>
+            <span className="footer-contact-pill__value">vighneshsherergar2004@gmail.com</span>
           </span>
           <span className="footer-contact-pill">
             <span className="footer-contact-pill__value">bvighneshkumar@gmail.com</span>
+          </span>
+                   <span className="footer-contact-pill">
+            <span className="footer-contact-pill__value">8618402581</span>
           </span>
         </div>
       </div>
