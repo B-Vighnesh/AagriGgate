@@ -166,10 +166,13 @@ function GuestFooter({ year }) {
             &copy; {year} AagriGgate. All rights reserved.
           </span>
           <span className="footer-contact-pill">
-            <span className="footer-contact-pill__value">Mangalore, Karnataka</span>
+            <span className="footer-contact-pill__value">vighneshsherergar2004@gmail.com</span>
           </span>
           <span className="footer-contact-pill">
             <span className="footer-contact-pill__value">bvighneshkumar@gmail.com</span>
+          </span>
+                   <span className="footer-contact-pill">
+            <span className="footer-contact-pill__value">8618402581</span>
           </span>
         </div>
       </div>
