@@ -6,6 +6,7 @@ import Toast from './common/Toast';
 import { requestJson, ApiError } from '../lib/api';
 import { login as passwordLogin, loginWithOtp, sendLoginOtp } from '../api/authApi';
 import { getRole, isLoggedIn, setAuth, clearAuth, hasCompleteSession } from '../lib/auth';
+import GuestLoginOptions from './GuestLoginOptions';
 
 function normalizeRole(role) {
   if (!role) return '';
@@ -205,6 +206,13 @@ export default function Login() {
             {loading ? 'Signing in...' : loginMode === 'password' ? 'Sign In' : 'Login With OTP'}
           </Button>
         </form>
+
+        <div className="login-guest-access">
+          <p>Or explore with a guest account</p>
+          <GuestLoginOptions compact onSuccess={(guestRole) => navigate(
+            location.state?.from || (guestRole === 'farmer' ? '/account' : '/view-all-crops')
+          )} />
+        </div>
 
         <div className="auth-links">
           <Link to="/forgot-password">Forgot password?</Link>

@@ -8,6 +8,7 @@ import { getFarmerId, getToken, getRole } from '../lib/auth';
 import { getNews } from '../lib/newsApi';
 import { getRequestStatusLabel, normalizeRequestStatus } from '../lib/requestStatus';
 import { normalizeCropPage } from '../api/cropApi';
+import GuestLoginOptions from './GuestLoginOptions';
 
 // ─── Static Data ──────────────────────────────────────────────────────────────
 
@@ -605,6 +606,7 @@ export default function Home() {
   const isLoggedIn = Boolean(token && farmerId && role);
   const [openFaq, setOpenFaq]         = useState(null);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [guestPromptOpen, setGuestPromptOpen] = useState(() => !isLoggedIn);
 
   useEffect(() => {
     const currentTitle   = SLIDES[activeSlide]?.title || '';
@@ -616,6 +618,15 @@ export default function Home() {
     );
     return () => window.clearTimeout(timer);
   }, [activeSlide]);
+
+  useEffect(() => {
+    if (!guestPromptOpen) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setGuestPromptOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [guestPromptOpen]);
 
   const onPrimaryAction = (index) => {
     if (index === 0) { navigate(farmerId ? '/add-crop' : '/register'); return; }
@@ -638,6 +649,33 @@ export default function Home() {
   return (
     <div className="home-page">
       <ValidateToken token={token} role={role} farmerId={farmerId} />
+
+      {guestPromptOpen ? (
+        <div className="guest-access-overlay" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setGuestPromptOpen(false);
+        }}>
+          <section className="guest-access-dialog" role="dialog" aria-modal="true" aria-labelledby="guest-access-title">
+            <button
+              type="button"
+              className="guest-access-dialog__close"
+              onClick={() => setGuestPromptOpen(false)}
+              aria-label="Close guest login options"
+            >
+              <i className="fa-solid fa-xmark" aria-hidden="true" />
+            </button>
+            <span className="guest-access-dialog__eyebrow">Explore AagriGgate</span>
+            <h2 id="guest-access-title">Try the project as a guest</h2>
+            <p>Choose a demo account to explore the farmer or buyer experience.</p>
+            <GuestLoginOptions onSuccess={(guestRole) => {
+              setGuestPromptOpen(false);
+              navigate(guestRole === 'farmer' ? '/account' : '/view-all-crops');
+            }} />
+            <button type="button" className="guest-access-dialog__continue" onClick={() => setGuestPromptOpen(false)}>
+              Continue as visitor
+            </button>
+          </section>
+        </div>
+      ) : null}
 
       <Slider
         slides={SLIDES}

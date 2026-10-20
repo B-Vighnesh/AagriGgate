@@ -2863,6 +2863,139 @@ a {
   font-weight: 600;
 }
 
+.guest-access-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(19, 39, 30, 0.48);
+  backdrop-filter: blur(3px);
+}
+
+.guest-access-dialog {
+  position: relative;
+  width: min(100%, 440px);
+  padding: 30px;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(16, 48, 34, 0.24);
+}
+
+.guest-access-dialog__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f6f3;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.guest-access-dialog__close:hover {
+  background: #e3f1e9;
+  color: var(--color-primary-dark);
+}
+
+.guest-access-dialog__eyebrow {
+  color: var(--color-primary);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.guest-access-dialog h2 {
+  margin: 8px 32px 8px 0;
+  color: var(--color-primary-dark);
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+.guest-access-dialog > p {
+  margin: 0 0 20px;
+  color: var(--color-muted);
+}
+
+.guest-login-options__buttons {
+  display: grid;
+  gap: 10px;
+}
+
+.guest-login-options__buttons .ui-btn {
+  width: 100%;
+}
+
+.guest-login-options__message,
+.guest-login-options__hint {
+  margin: 10px 0 0;
+  color: var(--color-error);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.guest-login-options__hint {
+  color: var(--color-muted);
+}
+
+.guest-access-dialog__continue {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.guest-access-dialog__continue:hover {
+  text-decoration: underline;
+}
+
+.login-guest-access {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-border);
+}
+
+.login-guest-access > p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.guest-login-options--compact .guest-login-options__buttons {
+  grid-template-columns: 1fr 1fr;
+}
+
+.guest-login-options--compact .ui-btn {
+  padding-inline: 8px;
+  font-size: 0.84rem;
+}
+
+@media (max-width: 520px) {
+  .guest-access-dialog {
+    padding: 26px 20px 20px;
+    border-radius: 16px;
+  }
+
+  .guest-login-options--compact .guest-login-options__buttons {
+    grid-template-columns: 1fr;
+  }
+}
+
 .form {
   display: grid;
   gap: 12px;
