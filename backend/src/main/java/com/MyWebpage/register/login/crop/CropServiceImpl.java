@@ -59,14 +59,14 @@ public class CropServiceImpl implements CropService {
         crop.setFarmer(farmer);
         crop.setPostDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
         normalizeCropFlags(crop);
-        clearImageFields(crop);
-        ImageResult imageResult = productionImageStorageService.store(imageFile);
-        crop.setImageKey(imageResult.getKey());
-        System.out.println(imageResult);
-        ImageResult thumbResult = productionImageStorageService.storeThumbnail(imageFile);
-        crop.setThumbnailKey(thumbResult.getKey());
-        crop.setImageName(imageResult.getName());
-        crop.setImageType(imageResult.getType());
+//        clearImageFields(crop);
+//        ImageResult imageResult = productionImageStorageService.store(imageFile);
+//        crop.setImageKey(imageResult.getKey());
+//        System.out.println(imageResult);
+//        ImageResult thumbResult = productionImageStorageService.storeThumbnail(imageFile);
+//        crop.setThumbnailKey(thumbResult.getKey());
+//        crop.setImageName(imageResult.getName());
+//        crop.setImageType(imageResult.getType());
         Crop saved = cropRepo.save(crop);
         logger.info("[v1] Added crop {} for farmer {}", saved.getCropID(), farmerId);
         return ApiResponse.success("Crop added successfully", cropMapper.toResponse(saved));
@@ -89,19 +89,19 @@ public class CropServiceImpl implements CropService {
         existing.setUrgent(dto.isUrgent());
         existing.setWaste(dto.isWaste());
 
-        if (imageFile != null && !imageFile.isEmpty()) {
-            if (existing.getImageKey() != null) {
-                productionImageStorageService.delete(existing.getImageKey());
-            }
-            if (existing.getThumbnailKey() != null) {
-                productionImageStorageService.deleteThumbnail(existing.getThumbnailKey());
-            }
-            ImageResult result = productionImageStorageService.store(imageFile);
-            existing.setImageKey(result.getKey());
-
-            ImageResult thumbResult = productionImageStorageService.storeThumbnail(imageFile);
-            existing.setThumbnailKey(thumbResult.getKey());
-        }
+//        if (imageFile != null && !imageFile.isEmpty()) {
+//            if (existing.getImageKey() != null) {
+//                productionImageStorageService.delete(existing.getImageKey());
+//            }
+//            if (existing.getThumbnailKey() != null) {
+//                productionImageStorageService.deleteThumbnail(existing.getThumbnailKey());
+//            }
+//            ImageResult result = productionImageStorageService.store(imageFile);
+//            existing.setImageKey(result.getKey());
+//
+//            ImageResult thumbResult = productionImageStorageService.storeThumbnail(imageFile);
+//            existing.setThumbnailKey(thumbResult.getKey());
+//        }
 
         Crop saved = cropRepo.save(existing);
         logger.info("[v1] Updated crop {} for farmer {}", cropId, farmerId);
@@ -166,12 +166,12 @@ public class CropServiceImpl implements CropService {
     @Override
     public ApiResponse<Void> deleteCropByIdV1(Long farmerId, Long cropId) {
         Crop existing=requireOwnedCrop(cropId, farmerId);
-        if (existing.getImageKey() != null) {
-            productionImageStorageService.delete(existing.getImageKey());
-        }
-        if (existing.getThumbnailKey() != null) {
-            productionImageStorageService.deleteThumbnail(existing.getThumbnailKey());
-        }
+//        if (existing.getImageKey() != null) {
+//            productionImageStorageService.delete(existing.getImageKey());
+//        }
+//        if (existing.getThumbnailKey() != null) {
+//            productionImageStorageService.deleteThumbnail(existing.getThumbnailKey());
+//        }
         approachFarmerService.softDeleteApproachByCropId(cropId);
         favoriteService.removeFavorite(cropId);
         cartService.removeFromCart(cropId);

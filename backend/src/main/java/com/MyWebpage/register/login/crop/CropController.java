@@ -35,14 +35,14 @@ public class CropController {
     public ResponseEntity<ApiResponse<CropResponseDTO>> addCropV1(
             Authentication authentication,
             @RequestPart("crop") @Valid CropRequestDTO dto,
-            @RequestPart(value = "imageFile") MultipartFile imageFile) throws IOException {
-        if (imageFile == null || imageFile.isEmpty()) {
-            System.out.println("NULL or EMPTY");
-            System.out.println("imageFile == null: " + (imageFile == null));
-            System.out.println("imageFile.isEmpty(): " + imageFile.isEmpty());
-            System.out.println("Size: " + imageFile.getSize());
-            System.out.println("Original filename: " + imageFile.getOriginalFilename());
-        }
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
+//        if (imageFile == null || imageFile.isEmpty()) {
+//            System.out.println("NULL or EMPTY");
+//            System.out.println("imageFile == null: " + (imageFile == null));
+//            System.out.println("imageFile.isEmpty(): " + imageFile.isEmpty());
+//            System.out.println("Size: " + imageFile.getSize());
+//            System.out.println("Original filename: " + imageFile.getOriginalFilename());
+//        }
         Long farmerId = Long.parseLong(authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(cropService.addCropV1(farmerId, dto, imageFile));
     }
@@ -114,26 +114,28 @@ public class CropController {
 
     @GetMapping("/legacy/{cropId}/thumbnail")
     public ResponseEntity<byte[]> getCropThumbnail(@PathVariable Long cropId) {
-        ImageResult result = cropService.getCropThumbnail(cropId);
-        if (result == null || result.getData() == null || result.getData().length == 0) {
-            return ResponseEntity.notFound().build();
-        }
-        String contentType = result.getType() != null ? result.getType() : "image/jpeg";
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .body(result.getData());
+//        ImageResult result = cropService.getCropThumbnail(cropId);
+//        if (result == null || result.getData() == null || result.getData().length == 0) {
+//            return ResponseEntity.notFound().build();
+//        }
+//        String contentType = result.getType() != null ? result.getType() : "image/jpeg";
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.parseMediaType(contentType))
+//                .body(result.getData());
+        return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/legacy/{cropId}/image")
     public ResponseEntity<byte[]> getCropImage(@PathVariable Long cropId) {
-        ImageResult result = cropService.getCropImage(cropId);
-        if (result == null || result.getData() == null || result.getData().length == 0) {
-            return ResponseEntity.notFound().build();
-        }
-        String contentType = result.getType() != null ? result.getType() : "image/jpeg";
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .body(result.getData());
+//        ImageResult result = cropService.getCropImage(cropId);
+//        if (result == null || result.getData() == null || result.getData().length == 0) {
+//            return ResponseEntity.notFound().build();
+//        }
+//        String contentType = result.getType() != null ? result.getType() : "image/jpeg";
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.parseMediaType(contentType))
+//                .body(result.getData());
+        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/legacy/{cropId}")
