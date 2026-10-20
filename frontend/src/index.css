@@ -6185,15 +6185,6 @@ a {
   border: 1px solid transparent;
 }
 
-.approach-badge::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: currentColor;
-  flex-shrink: 0;
-}
-
 .approach-badge--pending {
   background: #faeeda;
   border-color: rgba(186, 117, 7, 0.12);
@@ -6336,15 +6327,6 @@ a {
   border: 1px solid transparent;
 }
 
-.approach-crop-status::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: currentColor;
-  flex-shrink: 0;
-}
-
 .approach-crop-status--pending {
   background: #faeeda;
   border-color: rgba(186, 117, 7, 0.12);
@@ -6480,15 +6462,6 @@ a {
   gap: 7px;
   line-height: 1;
   border: 1px solid transparent;
-}
-
-.user-requests-status::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: currentColor;
-  flex-shrink: 0;
 }
 
 .user-requests-status--pending {
@@ -7233,14 +7206,6 @@ a {
   font-weight: 700;
   line-height: 1;
   text-transform: uppercase;
-}
-
-.request-lifecycle-status::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: currentColor;
 }
 
 .request-lifecycle-status--pending {

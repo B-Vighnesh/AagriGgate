@@ -79,15 +79,6 @@
   border-radius: 20px;
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.status-dot--online { background: #2f9a74; box-shadow: 0 0 8px rgba(47, 154, 116, 0.5); }
-.status-dot--offline { background: #ccc; }
-
 .chat-search {
   position: relative;
   display: flex;

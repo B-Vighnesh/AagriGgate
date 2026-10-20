@@ -985,7 +985,6 @@ export default function Chat() {
             <div className="chat-sidebar__header-top">
               <h1>Messages</h1>
               <div className="chat-connection-status">
-                <span className={`status-dot ${socketReady ? 'status-dot--online' : 'status-dot--offline'}`} />
                 {socketReady ? 'Online' : 'Connecting...'}
               </div>
             </div>
