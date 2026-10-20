@@ -610,6 +610,19 @@ export default function Market() {
         </header>
 
         {!showSaved ? (
+          <aside className="market-data-notice" aria-label="Market data source and availability">
+            <strong>About this market data</strong>
+            <p>
+              This data comes from data.gov.in, provided by the Government of India’s Ministry of
+              Agriculture and Farmers Welfare. Requests from our application server, which is
+              hosted on a US network, are currently being blocked, so this market data feature may
+              not work reliably. When access is available, the source can provide crop market data
+              based on location.
+            </p>
+          </aside>
+        ) : null}
+
+        {!showSaved ? (
           <>
             <Card className="market-filter-card">
               <div className="market-filter-grid">

@@ -16,7 +16,6 @@
 }
 
 .ntf-layout {
-  max-width: none;
   margin: 0 auto;
   display: grid;
   gap: 12px;
@@ -593,11 +592,6 @@
 }
 
 @media (max-width: 860px) {
-  .ntf-layout {
-    max-width: 100%;
-    width: min(920px, 94%);
-  }
-
   .ntf-panel__header {
     padding: 8px 0 14px;
   }
@@ -606,11 +600,6 @@
 @media (max-width: 640px) {
   .ntf-page {
     padding: 10px 0 24px;
-  }
-
-  .ntf-layout {
-    width: 100%;
-    padding: 0;
   }
 
   .ntf-panel {
@@ -667,10 +656,6 @@
 }
 
 @media (max-width: 420px) {
-  .ntf-layout {
-    width: min(100%, 94%);
-  }
-
   .ntf-panel__header {
     padding: 4px 0 12px;
   }

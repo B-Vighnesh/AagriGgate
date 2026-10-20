@@ -3548,6 +3548,10 @@ a {
   color: var(--color-muted);
 }
 
+.market-page > .ag-container > .market-data-notice {
+  margin: 8px 0 16px;
+}
+
 .market-filter-card {
   margin-bottom: 16px;
 }
@@ -6456,6 +6460,24 @@ a {
 .ntf-detail-content {
   display: grid;
   gap: 18px;
+}
+
+.market-data-notice {
+  padding: 14px 16px;
+  border: 1px solid #ead6a5;
+  border-radius: 12px;
+  background: #fff9e9;
+  color: #5b4a22;
+  line-height: 1.6;
+}
+
+.market-data-notice strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.market-data-notice p {
+  margin: 0;
 }
 
 .ntf-detail-meta {
