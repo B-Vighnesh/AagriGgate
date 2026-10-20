@@ -337,7 +337,7 @@ export default function Navbar() {
 
       const unreadNotifications = notifications.filter((item) => item?.isRead !== true);
       const unreadAlerts = alerts.filter((item) => item?.isAcknowledged !== true);
-      setNotificationPreview(sortNotificationsByDate([...unreadAlerts, ...unreadNotifications]).slice(0, 5));
+      setNotificationPreview(sortNotificationsByDate([...unreadAlerts, ...unreadNotifications]).slice(0, 4));
     } catch {
       setNotificationPreview([]);
     } finally {
