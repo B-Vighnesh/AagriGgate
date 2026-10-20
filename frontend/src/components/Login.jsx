@@ -138,6 +138,15 @@ export default function Login() {
   return (
     <section className="page page--center auth-page">
       <Card className="auth-card">
+        <div className="login-guest-access login-guest-access--top">
+          <p>Explore with a guest account</p>
+          <GuestLoginOptions compact onSuccess={(guestRole) => navigate(
+            location.state?.from || (guestRole === 'farmer' ? '/account' : '/view-all-crops')
+          )} />
+        </div>
+
+        <div className="login-standard-access-label">Or log in with your account</div>
+
         <h1>Login to AagriGgate</h1>
         <p>Sign in with your account credentials. We will take you to the right dashboard automatically.</p>
         {loginMessage ? <p className="auth-inline-message">{loginMessage}</p> : null}
@@ -206,13 +215,6 @@ export default function Login() {
             {loading ? 'Signing in...' : loginMode === 'password' ? 'Sign In' : 'Login With OTP'}
           </Button>
         </form>
-
-        <div className="login-guest-access">
-          <p>Or explore with a guest account</p>
-          <GuestLoginOptions compact onSuccess={(guestRole) => navigate(
-            location.state?.from || (guestRole === 'farmer' ? '/account' : '/view-all-crops')
-          )} />
-        </div>
 
         <div className="auth-links">
           <Link to="/forgot-password">Forgot password?</Link>
