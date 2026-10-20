@@ -405,10 +405,10 @@ export default function UpdateCrop() {
             <div className="update-crop-image-row">
               
 
-              <label className="update-crop-upload crop-image-picker" htmlFor="cropImage">
-                <input className="crop-image-input" id="cropImage" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={handleImageChange} />
+              <label className="update-crop-upload crop-image-picker crop-image-option-disabled" htmlFor="cropImage" aria-disabled="true">
+                <input className="crop-image-input" id="cropImage" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={handleImageChange} disabled />
                 <span>Update Image</span>
-                <small>{image?.name || 'No image chosen'}</small>
+                <small>Temporarily disabled</small>
               </label>
                 {existingImage && !imagePreview ? (
                 <div className="update-crop-preview-wrap">

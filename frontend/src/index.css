@@ -2616,6 +2616,10 @@ a {
 }
 
 @media (max-width: 420px) {
+    /* .ag-container, .ag-container.section {
+        padding-left: 23px;
+        padding-right: 23px;
+    } */
   .about-hero {
     padding: 30px 14px 28px;
   }
@@ -5183,6 +5187,13 @@ a {
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.crop-image-option-disabled {
+  filter: blur(1.5px);
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .add-crop-preview {
@@ -9306,8 +9317,8 @@ a {
   }
 
   .ag-container, .ag-container.section{
-    padding-left:53px;
-    padding-right:53px;
+    padding-left:6%;
+    padding-right:6%;
   }
   .chat-page  {
     height: auto;
@@ -9764,8 +9775,8 @@ a {
     min-width: 0;
     width: 100%;
     max-width: 100%;
-    padding-left:53px;
-    padding-right:53px;
+    padding-left:6%px;
+    padding-right:6%px;
     overflow-x: hidden;
   }
 
@@ -11878,7 +11889,7 @@ img {
 }
 
 /* --- 4. Responsive container padding --- */
-@media (min-width: 768px) {
+/* @media (min-width: 768px) {
   .ag-container {
     padding-left: 12px;
     padding-right: 12px;
@@ -11888,17 +11899,17 @@ img {
     padding-left: 12px;
     padding-right: 12px;
   }
-}
+} */
 
 @media (min-width: 1024px) {
   .ag-container {
-   padding-left:53px;
-    padding-right:53px;
+   padding-left:6%;
+    padding-right:6%;
   }
 
   .ag-container.section {
-   padding-left:53px;
-    padding-right:53px;
+   padding-left:6%;
+    padding-right:6%;
   }
 }
 

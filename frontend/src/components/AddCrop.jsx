@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Card from './common/Card';
@@ -20,7 +20,6 @@ export default function AddCrop() {
   const farmerId = getFarmerId();
   const token = getToken();
   const role = getRole();
-  const imageFieldRef = useRef(null);
 
   const [cropData, setCropData] = useState({
     cropName: '',
@@ -67,10 +66,6 @@ export default function AddCrop() {
     const firstInvalid = event.currentTarget.querySelector(':invalid');
     if (event.target !== firstInvalid) return;
     setTimeout(() => scrollToField(firstInvalid), 0);
-  };
-
-  const scrollToImageField = () => {
-    imageFieldRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   useEffect(() => {
@@ -148,12 +143,6 @@ export default function AddCrop() {
       return;
     }
 
-    if (!image) {
-      showToast('Please select a crop photo.', 'error');
-      scrollToImageField();
-      return;
-    }
-
     setLoading(true);
 
     const formData = new FormData();
@@ -176,7 +165,7 @@ export default function AddCrop() {
     };
 
     formData.append('crop', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
-    formData.append('imageFile', image);
+    if (image) formData.append('imageFile', image);
 
     try {
       await addCrop(formData);
@@ -371,14 +360,14 @@ export default function AddCrop() {
               </label>
             </div>
 
-            <div className="add-crop-field" ref={imageFieldRef}>
-              <label htmlFor="imageFile">Crop Photo *</label>
-              <div className="add-crop-image-row">
-                <label className="crop-image-picker" htmlFor="imageFile">
+            <div className="add-crop-field">
+              <label htmlFor="imageFile">Crop Photo</label>
+              <div className="add-crop-image-row crop-image-option-disabled">
+                <label className="crop-image-picker" htmlFor="imageFile" aria-disabled="true">
                   <span>Choose Image</span>
-                  <small>{image?.name || 'No image chosen'}</small>
+                  <small>Temporarily disabled</small>
                 </label>
-                <input className="crop-image-input" id="imageFile" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={onImageChange} />
+                <input className="crop-image-input" id="imageFile" type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={onImageChange} disabled />
                 {imagePreview ? (
                   <div className="update-crop-preview-wrap">
                     <img src={imagePreview} alt="Crop preview" className="add-crop-preview" />

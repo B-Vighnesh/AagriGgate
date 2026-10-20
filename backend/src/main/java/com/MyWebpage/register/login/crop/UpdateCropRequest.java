@@ -34,7 +34,6 @@ import jakarta.validation.constraints.NotNull;
         @NotBlank(message = "Status is required")
         private String status;
 
-        @NotNull(message = "Discount price is required")
         @Min(value = 0, message = "Discount price cannot be negative")
         private Double discountPrice;
 
