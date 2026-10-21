@@ -94,7 +94,7 @@ function LoggedInFooter({ role, year }) {
             <span className="footer-contact-pill__value">bvighneshkumar@gmail.com</span>
           </span>
                    <span className="footer-contact-pill">
-            <span className="footer-contact-pill__value">8618402581</span>
+            <span className="footer-contact-pill__value">+91 8618402581</span>
           </span>
         </div>
       </div>
