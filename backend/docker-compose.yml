@@ -15,6 +15,7 @@ services:
 
   api:
     build: .
+    image: aagrigate-api
     env_file: .env
     environment:
       DB_URL: jdbc:mysql://db:3306/aagrigate?useSSL=false&allowPublicKeyRetrieval=true
